@@ -41,7 +41,9 @@
 #define MOTOR_HR20_PE_IN_P PINE
 
 // How many photoeye impulses maximal form one endposition to the other
+// The value measured on a HR20 are 820 to 900 = so more than 1000 should no occure
 #define	MOTOR_MAX_IMPULSES 1000
+#define	MOTOR_HYSTERESIS     50    // additional impulses for 0 or 100%
 
 #define MOTOR_QUIET_PWM     70     // duty cycle of PWM in quiet mode
 #define MOTOR_FULL_PWM      95     // duty cycle of PWM in normal mode
@@ -50,26 +52,32 @@
 /*****************************************************************************
 *   Typedefs
 *****************************************************************************/
-typedef enum {                                      // motormode
-    stop, open, close, open_quiet, close_quiet
-} motor_mode_t;
+typedef enum {                                      // motor direction
+    stop, open, close
+} motor_dir_t;
+
+typedef enum {                                      // motorSpeed
+    full, quiet
+} motor_speed_t;
 
 
 /*****************************************************************************
 *   Prototypes
 *****************************************************************************/
+void MOTOR_Init(void);                        // Init motor control
+void MOTOR_Stop(void);                        // stop motor
+bool MOTOR_Goto(uint8_t, motor_speed_t);      // Goto position in percent
+void MOTOR_CheckBlocked(void);                // stop if motor is blocked
+bool MOTOR_On(void);                          // is motor on
 
-void    MOTOR_Init(void);                      // Init motor control
-void    MOTOR_Calibrate(void);                 // calibrate the motor (find start end endposition
+bool MOTOR_Calibrate(uint8_t, motor_speed_t); // calibrate the motor and goto position in percent
+bool MOTOR_IsCalibrated(void);                // tre if successful calibrated
+void MOTOR_ResetCalibration(void);            // reset the calibration data
 
-void    MOTOR_SetPosition(void);               // set position of the motor (0-100%)
-uint8_t MOTOR_GetPosition(void);               // get position of the motor (0-100%)
+uint8_t  MOTOR_GetPosPercent(void);           // get position of the motor (0-100%)
+uint16_t MOTOR_GetPosAbs(void);               // get absolute position of the motor
 
-void    MOTOR_PhotoeyeImpulse(void);           // one photoeye impulse occured
-
-void MOTOR_Stop(void);
-void MOTOR_Control(motor_mode_t mode);
+void MOTOR_Control(motor_dir_t, motor_speed_t);
 
 
-
-
+void MOTOR_test(uint8_t);

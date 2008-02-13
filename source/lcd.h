@@ -46,10 +46,10 @@ void LCD_AllSegments(uint8_t);                 // Set all segments to LCD_MODE
 void LCD_ClearAll(void);                       // Clear all segments
 void LCD_ClearHourBar(void);                   // Clear 24 bar segments
 void LCD_ClearSymbols(void);                   // Clear AUTO MANU PROG SUN MOON SNOW
-void LCD_ClearNumbers(void);                   // Clear 7 Segments ans Collumns
+void LCD_ClearNumbers(void);                   // Clear 7 Segments and Collumns
 void LCD_PrintDec(uint8_t, uint8_t, uint8_t);  // Print DEC-val in two 7 Segments 0-99
 void LCD_PrintHex(uint8_t, uint8_t, uint8_t);  // Print HEX-val in two 7 Segments 0-ff
-void LCD_PrintChar(uint8_t, uint8_t, uint8_t); // Print one ditig in one 7 Segment
+void LCD_PrintChar(uint8_t, uint8_t, uint8_t); // Print one digit in one 7 Segment
 void LCD_PrintTemp(uint8_t, uint8_t);          // Print desired temperature (val+4,9)°C
 void LCD_PrintDayOfWeek(uint8_t, uint8_t);     // Print Day of Week (german)
 void LCD_SetSeg(uint8_t, uint8_t);             // Set one Segment to LCD_MODE (0-69)
@@ -85,6 +85,8 @@ bool LCD_ContrastAdjust(int8_t);               // Adjust the contrast
 #define LCD_CHAR_P     18  // char "P"
 #define LCD_CHAR_H     19  // char "H"
 #define LCD_CHAR_I     20  // char "I"
+#define LCD_CHAR_L     35  // char "L"
+#define LCD_CHAR_S      5  // char "5" = "S"
 
 #define LCD_CHAR_NULL  32  // space
 
