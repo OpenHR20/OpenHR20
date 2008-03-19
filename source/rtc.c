@@ -1,24 +1,35 @@
-//***************************************************************************
-//
-//  File........: rtc.c
-//
-//  Author(s)...:
-//
-//  Target(s)...: ATmega169 @ 4 MHz in Honnywell Rondostat HR20E
-//
-//  Compiler....: WinAVR-20071221
-//                avr-libc 1.6.0
-//                GCC 4.2.2
-//
-//  Description.: Functions used to control the Clock
-//
-//  Revisions...:
-//
-//  YYYYMMDD - VER. - COMMENT                                     - SIGN.
-//
-//  20080201   0.0    created                                     - D.Carluccio
-//
-//***************************************************************************
+/*
+ *  Open HR20
+ *
+ *  target:     ATmega169 @ 4 MHz in Honnywell Rondostat HR20E
+ *
+ *  ompiler:    WinAVR-20071221
+ *              avr-libc 1.6.0
+ *              GCC 4.2.2
+ *
+ *  copyright:  2008 Dario Carluccio (hr20-at-carluccio-dot-de)
+ *
+ *  license:    This program is free software; you can redistribute it and/or
+ *              modify it under the terms of the GNU Library General Public
+ *              License as published by the Free Software Foundation; either
+ *              version 2 of the License, or (at your option) any later version.
+ *
+ *              This program is distributed in the hope that it will be useful,
+ *              but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *              MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *              GNU General Public License for more details.
+ *
+ *              You should have received a copy of the GNU General Public License
+ *              along with this program. If not, see http:*www.gnu.org/licenses
+ */
+
+/*!
+ * \file       rtc.c
+ * \brief      functions to control clock and timers
+ * \author     Dario Carluccio <hr20-at-carluccio-dot-de>
+ * \date       01.02.2008
+ * $Rev: 35 $
+ */
 
 // AVR LibC includes
 #include <stdint.h>
@@ -34,67 +45,56 @@
 #include "rtc.h"
 
 // Vars
-volatile uint8_t RTC_hh;          // Global Time: Hours
-volatile uint8_t RTC_mm;          //              Minutes
-volatile uint8_t RTC_ss;          //              Seconds
-volatile uint8_t RTC_DD;          // Global Date  Day
-volatile uint8_t RTC_MM;          //              Month
-volatile uint8_t RTC_YY;          //              Years (0-255) -> 2000 - 2255
-volatile uint8_t RTC_DOW;         // Global Date  Day of Week
-volatile uint8_t RTC_DS;          // Daylightsaving Flag
 
-volatile uint8_t RTC_Dow_Timer[7][RTC_TIMERS_PER_DOW];  // DOW Timer entrys [dow][no]
-rtc_callback_t RTC_DowTimerCallbackFunc;                // DOW Timer callback function
+
+volatile uint8_t RTC_hh;   //!< \brief Time: Hours
+volatile uint8_t RTC_mm;   //!< \brief Time: Minutes
+volatile uint8_t RTC_ss;   //!< \brief Time: Seconds
+volatile uint8_t RTC_DD;   //!< \brief Date: Day
+volatile uint8_t RTC_MM;   //!< \brief Date: Month
+volatile uint8_t RTC_YY;   //!< \brief Date: Year (0-255) -> 2000 - 2255
+volatile uint8_t RTC_DOW;  //!< Date: Day of Week
+
+volatile uint8_t RTC_DS;     //!< Daylightsaving Flag
+volatile uint32_t RTC_Ticks; //!< Ticks since last RTC.Init
+volatile uint8_t RTC_Dow_Timer[7][RTC_TIMERS_PER_DOW];  //!< DOW Timer entrys
+rtc_callback_t RTC_DowTimerCallbackFunc; //!< Timer callback function
 
 // prototypes
-void RTC_AddOneSecond(void);                   // add one second to actual time
-void RTC_AddOneDay(void);                      // add one day to actual date
-uint8_t RTC_NoLeapyear(void);                  // is (RTC_YY) a leapyear?
-uint8_t RTC_DaysOfMonth(void);                 // how many days in (RTC_MM, RTC_YY)
-void    RTC_SetDayOfWeek(void);                // calc day of week (RTC_DD, RTC_MM, RTC_YY)
-bool    RTC_IsLastSunday(void);                // check if actual date is last Sunday in march / october
-
-// constants
+void    RTC_AddOneSecond(void);     // add one second to actual time
+void    RTC_AddOneDay(void);        // add one day to actual date
+uint8_t RTC_NoLeapyear(void);       // is (RTC_YY) a leapyear?
+uint8_t RTC_DaysOfMonth(void);      // how many days in (RTC_MM, RTC_YY)
+void    RTC_SetDayOfWeek(void);     // calc day of week (RTC_DD, RTC_MM, RTC_YY)
+bool    RTC_IsLastSunday(void);     // check actual date if last sun in mar/oct
 
 
+// Progmem constants
+
+//! day of month for each month from january to december
 uint8_t RTC_DayOfMonthTablePrgMem[] PROGMEM =
 {
-    31,    //  january
-    28,    //  february
-    31,    //  march
-    30,    //  april
-    31,    //  may
-    30,    //  june
-    31,    //  july
-    31,    //  august
-    30,    //  september
-    31,    //  october
-    30,    //  november
-    31     //  december
+    31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
 };
 
 
-/*****************************************************************************
-*
-*   function:       RTC_Init
-*
-*   returns:        None
-*
-*   parameters:     pFunc Callback function for DOW timer
-*
-*   purpose:        Start Timer/Counter2 in asynchronous operation 
-*                         using a 32.768kHz crystal
-*                   Set Date after Reset
-*
-*   global vars:    RTC_hh, RTC_mm, RTC_ss, RTC_DD, RTC_MM, RTC_YYYY, RTC_DOW
-*
-*****************************************************************************/
+/*!
+ *******************************************************************************
+ *  Init RTC
+ *
+ *  \note
+ *  - Start Timer/Counter2 in asynchronous operation using a 32.768kHz crystal
+ *  - Set Date after Reset
+ *  - set RTC_Ticks = 0
+ *
+ *  \param  pFunc   pointer to callback function for DOW timer
+ ******************************************************************************/
 void RTC_Init(rtc_callback_t pFunc)
 {
     RTC_DowTimerCallbackFunc = pFunc;   // callback function for DOW Timer
 
     TIMSK2 &= ~(1<<TOIE2);              // disable OCIE2A and TOIE2
-    ASSR = (1<<AS2);                    // select asynchronous operation of Timer2
+    ASSR = (1<<AS2);                    // Timer2 asynchronous operation
     TCNT2 = 0;                          // clear TCNT2A
     TCCR2A |= (1<<CS22) | (1<<CS20);    // select precaler: 32.768 kHz / 128 =
                                         // => 1 sec between each overflow
@@ -105,6 +105,8 @@ void RTC_Init(rtc_callback_t pFunc)
     TIFR2 = 0xFF;                       // clear interrupt-flags
     TIMSK2 |= (1<<TOIE2);               // enable Timer2 overflow interrupt
 
+    // Restart Tick Timer
+    RTC_Ticks=0;
     // initial time 00:00:00
     RTC_hh = 0;
     RTC_mm = 0;
@@ -118,350 +120,225 @@ void RTC_Init(rtc_callback_t pFunc)
 }
 
 
-/*****************************************************************************
-*
-*   function:       RTC_GetDay
-*
-*   returns:        actual date
-*
-*   parameters:     None
-*
-*   purpose:        read actual date
-*
-*   global vars:    RTC_DD
-*
-*****************************************************************************/
+/*!
+ *******************************************************************************
+ *  \returns actual date: day
+ ******************************************************************************/
 uint8_t RTC_GetDay(void)
 {
     return RTC_DD;
 }
 
 
-/*****************************************************************************
-*
-*   function:       RTC_GetMonth
-*
-*   returns:        actual date
-*
-*   parameters:     None
-*
-*   purpose:        read actual date
-*
-*   global vars:    RTC_MM
-*
-*****************************************************************************/
+/*!
+ *******************************************************************************
+ *  \returns actual date: month
+ ******************************************************************************/
 uint8_t RTC_GetMonth(void)
 {
     return RTC_MM;
 }
 
 
-/*****************************************************************************
-*
-*   function:       RTC_GetYearYY
-*
-*   returns:        actual date
-*
-*   parameters:     None
-*
-*   purpose:        read actual date
-*
-*   global vars:    RTC_YY
-*
-*****************************************************************************/
+/*!
+ *******************************************************************************
+ *  \returns actual date: year (0-255)
+ ******************************************************************************/
 uint8_t RTC_GetYearYY(void)
 {
     return RTC_YY;
 }
 
-
-/*****************************************************************************
-*
-*   function:       RTC_GetYearYYYY
-*
-*   returns:        actual date
-*
-*   parameters:     None
-*
-*   purpose:        read actual date
-*
-*   global vars:    RTC_YY
-*
-*****************************************************************************/
+/*!
+ *******************************************************************************
+ *  \returns actual date: year (e.g.: 2008)
+ ******************************************************************************/
 uint16_t RTC_GetYearYYYY(void)
 {
     return 2000 + (uint16_t) RTC_YY;
 }
 
-
-/*****************************************************************************
-*
-*   function:       RTC_GetDayOfWeek
-*
-*   returns:        actual day of week
-*
-*   parameters:     None
-*
-*   purpose:        read actual date
-*
-*   global vars:    RTC_DOW
-*
-*   Remarks:        0=Monday, 6=Sunday
-*
-*****************************************************************************/
+/*!
+ *******************************************************************************
+ *  \returns actual date: day of week
+ *  - 0: monday
+ *  - 6: sunday
+ ******************************************************************************/
 uint8_t RTC_GetDayOfWeek(void)
 {
     return RTC_DOW;
 }
 
 
-/*****************************************************************************
-*
-*   function:       RTC_GetHour
-*
-*   returns:        actual time
-*
-*   parameters:     None
-*
-*   purpose:        read actual time
-*
-*   global vars:    RTC_hh
-*
-*****************************************************************************/
+/*!
+ *******************************************************************************
+ *  \returns actual time: hours
+ ******************************************************************************/
 uint8_t RTC_GetHour(void)
 {
     return RTC_hh;
 }
 
-
-/*****************************************************************************
-*
-*   function:       RTC_GetMinute
-*
-*   returns:        actual time
-*
-*   parameters:     None
-*
-*   purpose:        read actual time
-*
-*   global vars:    RTC_mm
-*
-*****************************************************************************/
+/*!
+ *******************************************************************************
+ *  \returns actual time: minutes
+ ******************************************************************************/
 uint8_t RTC_GetMinute(void)
 {
     return RTC_mm;
 }
 
-
-/*****************************************************************************
-*
-*   function:       RTC_GetSecond
-*
-*   returns:        actual time 
-*
-*   parameters:     None
-*
-*   purpose:        read actual time
-*
-*   global vars:    RTC_ss
-*
-*****************************************************************************/
+/*!
+ *******************************************************************************
+ *  \returns actual time: seconds
+ ******************************************************************************/
 uint8_t RTC_GetSecond(void)
 {
     return RTC_ss;
 }
 
-
-/*****************************************************************************
-*
-*   function:       RTC_SetDay
-*
-*   returns:        None
-*
-*   parameters:     None
-*
-*   purpose:        set actual date
-*
-*   global vars:    RTC_DD
-*
-*****************************************************************************/
-void RTC_SetDay(uint8_t newday)
+/*!
+ *******************************************************************************
+ *  \returns actual Ticks since last RTC_Init
+ ******************************************************************************/
+uint32_t RTC_GetTicks(void)
 {
-    if ((newday > 0) && (newday < 32)) {
-        RTC_DD = newday;
+    return RTC_Ticks;
+}
+
+
+/*!
+ *******************************************************************************
+ *  set actual date
+ *  \param day new value for day
+ ******************************************************************************/
+void RTC_SetDay(uint8_t day)
+{
+    if ((day > 0) && (day < 32)) {
+        RTC_DD = day;
     }
     RTC_SetDayOfWeek();
 }
 
 
-/*****************************************************************************
-*
-*   function:       RTC_SetMonth
-*
-*   returns:        None
-*
-*   parameters:     None
-*
-*   purpose:        set actual date
-*
-*   global vars:    RTC_MM
-*
-*****************************************************************************/
-void RTC_SetMonth(uint8_t newmonth)
+/*!
+ *******************************************************************************
+ *  set actual date
+ *  \param month new value for month
+ ******************************************************************************/
+void RTC_SetMonth(uint8_t month)
 {
-    if ((newmonth > 0) && (newmonth < 13)) {
-        RTC_MM = newmonth;
+    if ((month > 0) && (month < 13)) {
+        RTC_MM = month;
     }
     RTC_SetDayOfWeek();
 }
 
-
-/*****************************************************************************
-*
-*   function:       RTC_SetYear
-*
-*   returns:        None
-*
-*   parameters:     None
-*
-*   purpose:        set actual date
-*
-*   global vars:    RTC_YYYY
-*
-*****************************************************************************/
-void RTC_SetYear(uint8_t newyear)
+/*!
+ *******************************************************************************
+ *  set actual date
+ *  \param year new value for year
+ ******************************************************************************/
+void RTC_SetYear(uint8_t year)
 {
-    RTC_YY = newyear;
+    RTC_YY = year;
     RTC_SetDayOfWeek();
 }
 
-
-/*****************************************************************************
-*
-*   function:       RTC_SetHour
-*
-*   returns:        None
-*
-*   parameters:     None
-*
-*   purpose:        set actual time
-*
-*   global vars:    RTC_hh
-*
-*****************************************************************************/
-void RTC_SetHour(uint8_t newhour)
+/*!
+ *******************************************************************************
+ *  set actual time
+ *  \param hour new value for hour
+ ******************************************************************************/
+void RTC_SetHour(uint8_t hour)
 {
-    if (newhour < 24) {
-        RTC_hh = newhour;
+    if (hour < 24) {
+        RTC_hh = hour;
     }
 }
 
 
-/*****************************************************************************
-*
-*   function:       RTC_SetMinute
-*
-*   returns:        None
-*
-*   parameters:     None
-*
-*   purpose:        set actual time
-*
-*   global vars:    RTC_mm
-*
-*****************************************************************************/
-void RTC_SetMinute(uint8_t newminute)
+/*!
+ *******************************************************************************
+ *  set actual time
+ *  \param minute new value for minute
+ ******************************************************************************/
+void RTC_SetMinute(uint8_t minute)
 {
-    if (newminute < 60) {
-        RTC_mm = newminute;
+    if (minute < 60) {
+        RTC_mm = minute;
     }
 }
 
 
-/*****************************************************************************
-*
-*   function:       RTC_SetSecond
-*
-*   returns:        None
-*
-*   parameters:     None
-*
-*   purpose:        set actual time
-*
-*   global vars:    RTC_ss
-*
-*****************************************************************************/
-void RTC_SetSecond(uint8_t newsecond)
+/*!
+ *******************************************************************************
+ *  set actual time
+ *  \param second new value for second
+ ******************************************************************************/
+void RTC_SetSecond(uint8_t second)
 {
-    if (newsecond < 60) {
-        RTC_ss = newsecond;
+    if (second < 60) {
+        RTC_ss = second;
     }
 }
 
-/*****************************************************************************
-*
-*   function:       RTC_DowTimerSet
-*
-*   returns:        None
-*
-*   parameters:     None
-*
-*   purpose:        Set time for a timerslot for one weekday
-*
-*   global vars:    RTC_Dow_Timer[day_of_week][timer_no]
-*
-*   Remarks:        - RTC_TIMERS_PER_DOW timers for each weekday
-*                   - only 10 minute intervals supported:
-*                     hh:m0 is coded in one byte: hh*1ß+m
-*                     e.g.: 12:00 = 120, 17:30 = 173, 22:10 = 221
-*                   - to deactivate timer: set value > 0xff
-*
-*****************************************************************************/
+/*!
+ *******************************************************************************
+ *
+ *  set timer for one timerslot for one weekday
+ *
+ *  \param dow day of week
+ *  \param slot timeslot number
+ *  \param time time
+ *
+ *  \note
+ *      - maximum timers for each weekday with \ref RTC_TIMERS_PER_DOW
+ *      - only 10 minute intervals supported: <BR>
+ *        hh:m0 is coded in one byte: hh*10 + m <BR>
+ *        e.g.: 12:00 = 120, 17:30 = 173, 22:10 = 221
+ *      - to deactivate timer: set value 0xff
+ *
+ ******************************************************************************/
 void RTC_DowTimerSet(rtc_dow_t dow, uint8_t slot, uint8_t time)
 {
     RTC_Dow_Timer[dow][slot] = time;
 }
 
-/*****************************************************************************
-*
-*   function:       RTC_DowTimerGet
-*
-*   returns:        time of selected timer
-*
-*   parameters:     None
-*
-*   purpose:        Get time for a timerslot for one weekday
-*
-*   global vars:    RTC_Dow_Timer[]
-*
-*   Remarks:        - RTC_TIMERS_PER_DOW timers for each weekday
-*                   - only 10 minute intervals supported:
-*                     hh:m0 is coded in one byte: hh*1ß+m
-*                     e.g.: 12:00 = 120, 17:30 = 173, 22:10 = 221
-*                   - to deactivate timer: set value > 0xff
-*
-*****************************************************************************/
+/*!
+ *******************************************************************************
+ *
+ *  get timer for one timerslot for one weekday
+ *
+ *  \param dow day of week
+ *  \param slot timeslot number
+ *  \returns switching time of dow-timer
+ *
+ *  \note
+ *      - maximum timers for each weekday with \ref RTC_TIMERS_PER_DOW
+ *      - only 10 minute intervals supported: <BR>
+ *        hh:m0 is coded in one byte: hh*10 + m <BR>
+ *        e.g.: 12:00 = 120, 17:30 = 173, 22:10 = 221
+ *      - deactivates timer returns 0xff
+ *
+ ******************************************************************************/
 uint8_t RTC_DowTimerGet(rtc_dow_t dow, uint8_t slot)
 {
     return RTC_Dow_Timer[dow][slot];
 }
 
-/*****************************************************************************
-*
-*   function:       RTC_DowTimerGetStartOfDay
-*
-*   returns:        timer index
-*
-*   parameters:     None
-*
-*   purpose:        Get timer index for last active timer 
-*
-*   global vars:    RTC_Dow_Timer[]
-*
-*   Remarks:        what is the last occured timer index
-*                   needed to calculate the actual valid timer index
-*
-*****************************************************************************/
+/*!
+ *******************************************************************************
+ *
+ *  get actual timer index
+ *
+ *  \returns timerslot index
+ *
+ *  \note
+ *       what is the last occured timer index
+ *       needed to calculate the actual valid timer index
+ *
+ ******************************************************************************/
 uint8_t RTC_DowTimerGetActualIndex(void)
 {
     uint8_t i;
@@ -478,7 +355,8 @@ uint8_t RTC_DowTimerGetActualIndex(void)
     // each timer until now
     for (i=1; i<RTC_TIMERS_PER_DOW; i++){
         // check if timer > maxtime and timer < actual time
-        if ((RTC_Dow_Timer[RTC_DOW][i] > maxtime) && !(RTC_Dow_Timer[RTC_DOW][i] > acttime)){
+        if ((RTC_Dow_Timer[RTC_DOW][i] > maxtime)
+            && !(RTC_Dow_Timer[RTC_DOW][i] > acttime)){
             maxtime = RTC_Dow_Timer[RTC_DOW][i];
             index=i;
         }
@@ -487,22 +365,18 @@ uint8_t RTC_DowTimerGetActualIndex(void)
 }
 
 
-/*****************************************************************************
-*
-*   function:       RTC_DowTimerGetStartOfDay
-*
-*   returns:        timer index 
-*
-*   parameters:     None
-*
-*   purpose:        Get timer index for last active timer for previous day
-*
-*   global vars:    RTC_Dow_Timer[]
-*
-*   Remarks:        what was status at 00:00 of the actual day
-*                   needed to calculate the actual valid timer index
-*
-*****************************************************************************/
+/*!
+ *******************************************************************************
+ *
+ *  get timer index for previous day
+ *
+ *  \returns timerslot index
+ *
+ *  \note
+ *        what was status at 00:00 of the actual day
+ *        needed to calculate the actual valid timer index
+ *
+ ******************************************************************************/
 uint8_t RTC_DowTimerGetStartOfDay(void)
 {
     uint8_t dow;
@@ -516,7 +390,7 @@ uint8_t RTC_DowTimerGetStartOfDay(void)
     day=0;
     
     // if previous day has no timer set, do this for last 7 days
-    while ((index == 0xff)&&(day<7)){
+    while ( (index == 0xff) && (day < 7) ){
     
         // dow of previous day
         dow = (RTC_DOW+6)%7;
@@ -524,7 +398,7 @@ uint8_t RTC_DowTimerGetStartOfDay(void)
         // dow of previous day
         for (i=1; i<RTC_TIMERS_PER_DOW; i++){
             // check if > maxtime and (active (<240)
-            if ((RTC_Dow_Timer[dow][i] > maxtime) && (RTC_Dow_Timer[dow][i] < 240)){
+            if ((RTC_Dow_Timer[dow][i]>maxtime) && (RTC_Dow_Timer[dow][i]<240)){
                 maxtime = RTC_Dow_Timer[RTC_DOW][i];
                 index=i;
             }
@@ -535,28 +409,20 @@ uint8_t RTC_DowTimerGetStartOfDay(void)
 }
 
 
-/*****************************************************************************
-*
-*   function:       RTC_AddOneSecond
-*
-*   returns:        None
-*
-*   parameters:     None
-*
-*   purpose:        Add one second to clock variables
-*                   calculate overflows, regarding leapyear, etc.
-*
-*   global vars:    RTC_YYYY,  RTC_MM,   RTC_DD,
-*                   RTC_hh,    RTC_mm,   RTC_ss,
-*                   RTC_DOW
-*
-*   Remarks:        Daylight-Saving:
-*                   a) last sunday in march 1:59:59 -> 3:00:00
-*                   b) last sunday in october 2:59:59 -> 2:00:00
-*                      ONLY ONE TIME -> set FLAG RTC_DS
-*                                       reset FLAG RTC_DS on November 1st
-*
-*****************************************************************************/
+/*!
+ *******************************************************************************
+ *
+ *  Add one second to clock variables
+ *
+ *  \note
+ *    - calculate overflows, regarding leapyear, etc.
+ *    - process daylight saving
+ *       - last sunday in march 1:59:59 -> 3:00:00
+ *       - last sunday in october 2:59:59 -> 2:00:00 <BR>
+ *         ONLY ONE TIME -> set FLAG RTC_DS <BR>
+ *         reset FLAG RTC_DS on November 1st
+ *
+ ******************************************************************************/
 void RTC_AddOneSecond(void)
 {
     uint8_t i;
@@ -598,20 +464,15 @@ void RTC_AddOneSecond(void)
 }
 
 
-/*****************************************************************************
-*
-*   function:       RTC_AddOneDay
-*
-*   returns:        None
-*
-*   parameters:     None
-*
-*   purpose:        Add one Day to Date variables
-*                   calculate overflows, regarding leapyear, etc.
-*
-*   global vars:    RTC_YYYY,  RTC_MM,   RTC_DD, RTC_DOW
-*
-*****************************************************************************/
+/*!
+ *******************************************************************************
+ *
+ *  Add one day to date variables
+ *
+ *  \note
+ *       calculate overflows, regarding leapyear, etc.
+ *
+ ******************************************************************************/
 void RTC_AddOneDay(void)
 {
     uint8_t dom;
@@ -634,24 +495,16 @@ void RTC_AddOneDay(void)
 }
 
 
-/*****************************************************************************
-*
-*   function:       RTC_DaysOfMonth
-*
-*   returns:        days in month
-*
-*   parameters:     month: 1-12
-*                   year:  0-255 (2000-2255)
-*
-*   purpose:        calculate maximal possible day for this month and year
-*
-*   global vars:    None
-*
-*****************************************************************************/
+/*!
+ *******************************************************************************
+ *
+ *  \returns number of days for actual month (1-12) and year (0-255: 2000-2255)
+ *
+ ******************************************************************************/
 uint8_t RTC_DaysOfMonth()
 {
     if (RTC_MM != 2) {
-	    return (uint8_t) pgm_read_byte(&RTC_DayOfMonthTablePrgMem[(uint8_t)RTC_MM]);
+	    return pgm_read_byte(&RTC_DayOfMonthTablePrgMem[RTC_MM]);
     } else {
         if (RTC_NoLeapyear() ) {
             return 28;  // february no leapyear
@@ -662,46 +515,30 @@ uint8_t RTC_DaysOfMonth()
 }
 
 
-/*****************************************************************************
-*
-*   function:       RTC_NoLeapyear
-*
-*   returns:        true if year is _not_ a leapyear
-*
-*   parameters:     year:  0-65535
-*
-*   purpose:        calculate leapyear
-*
-*   global vars:    None
-*
-*****************************************************************************/
+/*!
+ *******************************************************************************
+ *
+ *  \returns \ref true if actual year is not a leapyear
+ *
+ ******************************************************************************/
 bool RTC_NoLeapyear()
 {
 	if ( RTC_YY % 100) {
         return (bool) (RTC_YY % 4);
     } else {
         // year mod 100 = 0 is only every 400 years a leap year
-        // we calculate only till the year 2255, so  don't care
+        // we calculate only till the year 2255, so don't care
         return false;
     }
 }
 
 
-/*****************************************************************************
-*
-*   function:       RTC_IsLastSunday
-*
-*   returns:        true if last sunday of month
-*
-*   parameters:     None
-*
-*   purpose:        check if actual date is the last sunday of the month
-*
-*   global vars:    None
-*
-*   remark:         valid only in march and october, used for daylight saving
-*
-*****************************************************************************/
+/*!
+ *******************************************************************************
+ *
+ *  \returns \ref true if actual date is last sunday in march or october
+ *
+ ******************************************************************************/
 bool RTC_IsLastSunday(void)
 {
     int days_of_month;
@@ -729,23 +566,15 @@ bool RTC_IsLastSunday(void)
 }
 
 
-/*****************************************************************************
-*
-*   function:       RTC_SetDayOfWeek
-*
-*   returns:        Day of Week
-*
-*   parameters:     None
-*
-*   purpose:        calculate maximal possible day for this month and year
-*
-*   global vars:    RTC_DD: day   1-31
-*                   RTC_MM: month 1-12
-*                   RTC_YY: year  0-255 (2000-2255)
-*
-*   remark:         Valid for years from 2000 to 2255
-*
-*****************************************************************************/
+/*!
+ *******************************************************************************
+ *
+ *  set day of week for actual date
+ *
+ *  \note
+ *     valid for years from 2000 to 2255
+ *
+ ******************************************************************************/
 void RTC_SetDayOfWeek(void)
 {
     uint16_t day_of_year;
@@ -778,41 +607,36 @@ void RTC_SetDayOfWeek(void)
 }
 
 
-/*****************************************************************************
-*
-*   function:       Timer/Counter2 Overflow Interrupt Routine
-*
-*   returns:        None
-*
-*   parameters:     None
-*
-*   purpose:        add one second to internal clock
-*
-*   global vars:    None
-*
-*****************************************************************************/
+/*!
+ *******************************************************************************
+ *
+ *  timer/counter2 overflow interrupt routine
+ *
+ *  \note
+ *  - add one second to internal clock
+ *  - increment tick counter
+ *
+ ******************************************************************************/
 ISR(TIMER2_OVF_vect)
 {
+    RTC_Ticks++;          // overflow every 136 Years
     RTC_AddOneSecond();   // increment second and check Dow_Timer
 }
 
 
 #if HAS_CALIBRATE_RCO
-/*****************************************************************************
-*
-*   Function name : calibrate_rco
-*
-*   returns:        None
-*
-*   parameters:     None
-*
-*   purpose:        Calibrate the internal OSCCAL byte, using the external
-*                   32,768 kHz crystal as reference
-*
-*   remark:         global interrupt has to be disabled before
-*                   if not if will be disabled by this function.
-*
-*****************************************************************************/
+
+/*!
+ *******************************************************************************
+ *
+ *  Calibrate the internal OSCCAL byte,
+ *  using the external 32,768 kHz crystal as reference
+ *
+ *  \note
+ *     global interrupt has to be disabled before if not if will be
+ *     disabled by this function.
+ *
+ ******************************************************************************/
 void calibrate_rco(void)
 {
     unsigned char calibrate = FALSE;
@@ -822,15 +646,14 @@ void calibrate_rco(void)
     CLKPR = (1<<CLKPCE);                 // set Clock Prescaler Change Enable
     CLKPR = (1<<CLKPS1) | (1<<CLKPS0);   // set prescaler = 8  =>  1Mhz
     TIMSK2 = 0;                          // disable OCIE2A and TOIE2
-    ASSR = (1<<AS2);                     // select asynchronous operation of timer2 (32,768kHz)
+    ASSR = (1<<AS2);                     // timer2 asynchronous 32,768kHz)
     OCR2A = 200;                         // set timer2 compare value
     TIMSK0 = 0;                          // delete any interrupt sources
     TCCR1B = (1<<CS10);                  // start timer1 with no prescaling
     TCCR2A = (1<<CS20);                  // start timer2 with no prescaling
 
-    while((ASSR & 0x01) | (ASSR & 0x04));  // wait for TCN2UB and TCR2UB to be cleared
-
-    // delay(1000);                       // wait for external crystal to stabilise
+    while((ASSR & 0x01) | (ASSR & 0x04));// wait for clear TCN2UB and TCR2UB
+    // delay(1000);                      // wait for external crystal stabilise
 
     while(!calibrate)
     {
@@ -845,9 +668,9 @@ void calibrate_rco(void)
         TCCR1B = 0;     // stop timer1
 
         if (TIFR1 & (1<<TOV1))  {
-            temp = 0xFFFF;                    // timer1 overflow, set the temp to 0xFFFF
+            temp = 0xFFFF;                // timer1 overflow, set temp to 0xFFFF
         } else {
-            temp = (TCNT1H << 8) | TCNT1L;    // read out the timer1 counter value
+            temp = (TCNT1H << 8) | TCNT1L;  // read out the timer1 counter value
         }
 
         if (temp > 6250) {

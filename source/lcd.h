@@ -1,38 +1,49 @@
-//*****************************************************************************
-//
-//  File........: lcd.h
-//
-//  Author(s)...:
-//
-//  Target(s)...: ATmega169 @ 4 MHz in Honnywell Rondostat HR20E
-//
-//  Compiler....: WinAVR-20071221
-//                avr-libc 1.6.0
-//                GCC 4.2.2
-//
-//  Description.: Functions used to control the HR20 LCD
-//
-//  Revisions...: 0.1
-//
-//  YYYYMMDD - VER. - COMMENT                                     - SIGN.
-//
-//  20072412   0.0    created                                     - D.Carluccio
-//
-//*****************************************************************************
+/*
+ *  Open HR20
+ *
+ *  target:     ATmega169 @ 4 MHz in Honnywell Rondostat HR20E
+ *
+ *  ompiler:    WinAVR-20071221
+ *              avr-libc 1.6.0
+ *              GCC 4.2.2
+ *
+ *  copyright:  2008 Dario Carluccio (hr20-at-carluccio-dot-de)
+ *
+ *  license:    This program is free software; you can redistribute it and/or
+ *              modify it under the terms of the GNU Library General Public
+ *              License as published by the Free Software Foundation; either
+ *              version 2 of the License, or (at your option) any later version.
+ *
+ *              This program is distributed in the hope that it will be useful,
+ *              but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *              MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *              GNU General Public License for more details.
+ *
+ *              You should have received a copy of the GNU General Public License
+ *              along with this program. If not, see http:*www.gnu.org/licenses
+ */
+
+/*!
+ * \file       lcd.h  
+ * \brief      header file for lcd.c, functions to control the HR20 LCD
+ * \author     Dario Carluccio <hr20-at-carluccio-dot-de>
+ * \date       24.12.2007
+ * $Rev: 35 $
+ */
 
 /*****************************************************************************
 *   Macros
 *****************************************************************************/
 
 // Modes for LCD_SetSymbol
-#define LCD_MODE_OFF        0    // (0b00) segment off
-#define LCD_MODE_BLINK_1    1    // (0b01) segment on during 1. frame (blinking)
-#define LCD_MODE_BLINK_2    2    // (0b10) segment on during 2. frame (blinking)
-#define LCD_MODE_ON         3    // (0b11) segment on during 1. and 2. frame (on)
+#define LCD_MODE_OFF        0    //!< (0b00) segment off
+#define LCD_MODE_BLINK_1    1    //!< (0b01) segment on during 1. frame (blinking)
+#define LCD_MODE_BLINK_2    2    //!< (0b10) segment on during 2. frame (blinking)
+#define LCD_MODE_ON         3    //!< (0b11) segment permanent on
 
-#define LCD_CONTRAST_INITIAL  14 // initial LCD contrast (0-15)
-#define LCD_BLINK_FRAMES      24 // refreshes for each frame @ 48 frames/s
-                                 // 24 refreshes -> 2Hz Blink frequency
+#define LCD_CONTRAST_INITIAL  14 //!< initial LCD contrast (0-15)
+#define LCD_BLINK_FRAMES      24 //!< refreshes for each frame @ 48 frames/s
+                                 //!< 24 refreshes -> 2Hz Blink frequency
 /*****************************************************************************
 *   Global Vars
 *****************************************************************************/
@@ -41,73 +52,76 @@
 *   Prototypes
 *****************************************************************************/
 
-void LCD_Init(void);                           // Init the LCD Controller
-void LCD_AllSegments(uint8_t);                 // Set all segments to LCD_MODE
-void LCD_ClearAll(void);                       // Clear all segments
-void LCD_ClearHourBar(void);                   // Clear 24 bar segments
-void LCD_ClearSymbols(void);                   // Clear AUTO MANU PROG SUN MOON SNOW
-void LCD_ClearNumbers(void);                   // Clear 7 Segments and Collumns
-void LCD_PrintDec(uint8_t, uint8_t, uint8_t);  // Print DEC-val in two 7 Segments 0-99
-void LCD_PrintHex(uint8_t, uint8_t, uint8_t);  // Print HEX-val in two 7 Segments 0-ff
-void LCD_PrintChar(uint8_t, uint8_t, uint8_t); // Print one digit in one 7 Segment
-void LCD_PrintTemp(uint8_t, uint8_t);          // Print desired temperature (val+4,9)°C
+void LCD_Init(void);                       // Init the LCD Controller
+void LCD_AllSegments(uint8_t);             // Set all segments to LCD_MODE
+void LCD_ClearAll(void);                   // Clear all segments
+void LCD_ClearHourBar(void);               // Clear 24 bar segments
+void LCD_ClearSymbols(void);               // Clear AUTO MANU PROG SUN MOON SNOW
+void LCD_ClearNumbers(void);               // Clear 7 Segments and Collumns
+
+void LCD_PrintDec(uint8_t, uint8_t, uint8_t);  // Print DEC-val (0-99)
+void LCD_PrintHex(uint8_t, uint8_t, uint8_t);  // Print HEX-val (0-ff)
+void LCD_PrintChar(uint8_t, uint8_t, uint8_t); // Print one digit 
+void LCD_PrintTemp(uint8_t, uint8_t);          // Print temperature (val+4,9)°C
 void LCD_PrintDayOfWeek(uint8_t, uint8_t);     // Print Day of Week (german)
-void LCD_SetSeg(uint8_t, uint8_t);             // Set one Segment to LCD_MODE (0-69)
-void LCD_SetHourBarSeg(uint8_t, uint8_t);      // Set one Hour Bar Segment to LCD_MODE (0-23)
-void LCD_SetHourBarVal(uint8_t, uint8_t);      // Set only one (val) Hour Bar Segment to LCD_MODE (0-23)
-void LCD_SetHourBarBat(uint8_t, uint8_t);      // Set all Hour Bar Segments from 0 to val to LCD_MODE (0-23)
-void LCD_Update(void);                         // Request immidiate LCD-Update (normal only when bitplane changes)
-bool LCD_ContrastAdjust(int8_t);               // Adjust the contrast
+
+void LCD_SetSeg(uint8_t, uint8_t);         // Set one Segment (0-69) 
+void LCD_SetHourBarSeg(uint8_t, uint8_t);  // Set HBS (0-23) (Hour-Bar-Segment)
+void LCD_SetHourBarVal(uint8_t, uint8_t);  // Set only one (val) HBS
+void LCD_SetHourBarBat(uint8_t, uint8_t);  // Set all HBS from 0 to val (0-23)
+void LCD_Update(void);                     // Request immidiate LCD-Update
+bool LCD_ContrastAdjust(int8_t);           // Adjust contrast
 
 //***************************
 // LCD Chars:
 //***************************
-#define LCD_CHAR_0      0  // char "0"
-#define LCD_CHAR_1      1  // char "1"
-#define LCD_CHAR_2      2  // char "2"
-#define LCD_CHAR_3      3  // char "3"
-#define LCD_CHAR_4      4  // char "4"
-#define LCD_CHAR_5      5  // char "5"
-#define LCD_CHAR_6      6  // char "6"
+#define LCD_CHAR_0      0  //!< char "0"
+#define LCD_CHAR_1      1  //!< char "1"
+#define LCD_CHAR_2      2  //!< char "2"
+#define LCD_CHAR_3      3  //!< char "3"
+#define LCD_CHAR_4      4  //!< char "4"
+#define LCD_CHAR_5      5  //!< char "5"
+#define LCD_CHAR_6      6  //!< char "6"
 
-#define LCD_CHAR_7      7  // char "7"
-#define LCD_CHAR_8      8  // char "8"
-#define LCD_CHAR_9      9  // char "9"
-#define LCD_CHAR_A     10  // char "A"
-#define LCD_CHAR_B     11  // char "B"
-#define LCD_CHAR_C     12  // char "C"
-#define LCD_CHAR_D     13  // char "D"
+#define LCD_CHAR_7      7  //!< char "7"
+#define LCD_CHAR_8      8  //!< char "8"
+#define LCD_CHAR_9      9  //!< char "9"
+#define LCD_CHAR_A     10  //!< char "A"
+#define LCD_CHAR_B     11  //!< char "B"
+#define LCD_CHAR_C     12  //!< char "C"
+#define LCD_CHAR_D     13  //!< char "D"
 
-#define LCD_CHAR_E     14  // char "D"
-#define LCD_CHAR_F     15  // char "E"
-#define LCD_CHAR_deg   16  // symbol degree
-#define LCD_CHAR_n     17  // char "n"
-#define LCD_CHAR_P     18  // char "P"
-#define LCD_CHAR_H     19  // char "H"
-#define LCD_CHAR_I     20  // char "I"
-#define LCD_CHAR_L     35  // char "L"
-#define LCD_CHAR_S      5  // char "5" = "S"
+#define LCD_CHAR_E     14  //!< char "D"
+#define LCD_CHAR_F     15  //!< char "E"
+#define LCD_CHAR_deg   16  //!< symbol degree
+#define LCD_CHAR_n     17  //!< char "n"
+#define LCD_CHAR_P     18  //!< char "P"
+#define LCD_CHAR_H     19  //!< char "H"
+#define LCD_CHAR_I     20  //!< char "I"
+#define LCD_CHAR_L     35  //!< char "L"
+#define LCD_CHAR_S      5  //!< char "5" = "S"
 
-#define LCD_CHAR_NULL  32  // space
+#define LCD_CHAR_NULL  32  //!< space
 
+/*! \verbatim
+ *******************************************************************************
+ *  LCD Layout:
+ *
+ *        B|B|B|B|B|B|B|B|B|B|B |B |B |B |B |B |B |B |B |B |B |B |B |B |    
+ *        0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|    
+ *                                                                          
+ *        ---------------------------BAR24------------------------------    
+ *                                                                          
+ *      Auto      3A         2A                  1A         0A       SUN    
+ *             3F    3B   2F    2B            1F    1B   0F    0B           
+ *      Manu      3g         2g       Col2       1g         0g       MOON   
+ *             3E    3C   2E    2C            1E    1C   0E    0C           
+ *      Prog      3D         2D       Col1       1D         0D       STAR   
+ *                                                                          
+ *******************************************************************************
+ \endverbatim   */
 
-// LCD Layout:
-//****************************************************************************************
-//*
-//*  B0 B1 B2 B3 B4 B5 B6 B7 B8 B9 B10 B11 B12 B13 B14 B15 B16 B17 B18 B19 B20 B21 B22 B23
-//*  --------------------------------------BAR24------------------------------------------
-//*
-//*  Auto        3A           2A                     1A           0A           SUN
-//*           3F    3B     2F    2B               1F    1B     0F    0B
-//*  Manu        3g           2g        Col2         1g           0g           MOON
-//*           3E    3C     2E    2C               1E    1C     0E    0C
-//*  Prog        3D           2D        Col1         1D           0D           STAR
-//*
-//****************************************************************************************
-
-//*****************************************************************
-//  LCD_SEG:_xx for LCD_SetSeg // LCDDR | AtMega169 |  LCD_Data[]
-//*****************************************************************
+// LCD_SEG:_xx for LCD_SetSeg   // LCDDR | AtMega169 |  LCD_Data[]
 #define LCD_SEG_B0          0   //  0, 0 |  SEG000   |  [0], BIT 0
                                 //  0, 1 |  SEG001   |  [0], BIT 1
 #define LCD_SEG_B1          2   //  0, 2 |  SEG002   |  [0], BIT 2

@@ -1,24 +1,35 @@
-//***************************************************************************
-//
-//  File........: main.c
-//
-//  Author(s)...: 
-//
-//  Target(s)...: ATmega169 @ 4 MHz in Honnywell Rondostat HR20E
-//
-//  Compiler....: WinAVR-20071221
-//                avr-libc 1.6.0
-//                GCC 4.2.2
-//
-//  Description.: main HR20 thermo application
-//
-//  Revisions...: 
-//
-//  YYYYMMDD - VER. - COMMENT                                     - SIGN.
-//
-//  20072412   0.0    created                                     - D.Carluccio
-//
-//***************************************************************************
+/*
+ *  Open HR20
+ *
+ *  target:     ATmega169 @ 4 MHz in Honnywell Rondostat HR20E
+ *
+ *  ompiler:    WinAVR-20071221
+ *              avr-libc 1.6.0
+ *              GCC 4.2.2
+ *
+ *  copyright:  2008 Dario Carluccio (hr20-at-carluccio-dot-de)
+ *
+ *  license:    This program is free software; you can redistribute it and/or
+ *              modify it under the terms of the GNU Library General Public
+ *              License as published by the Free Software Foundation; either
+ *              version 2 of the License, or (at your option) any later version.
+ *
+ *              This program is distributed in the hope that it will be useful,
+ *              but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *              MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *              GNU General Public License for more details.
+ *
+ *              You should have received a copy of the GNU General Public License
+ *              along with this program. If not, see http:*www.gnu.org/licenses
+ */
+
+/*!
+ * \file       main.c
+ * \brief      the main file for Open HR20 project
+ * \author     Dario Carluccio <hr20-at-carluccio-dot-de>
+ * \date       24.12.2007
+ * $Rev: 40 $
+ */
 
 // AVR LibC includes 
 #include <stdint.h>
@@ -30,33 +41,36 @@
 
 // HR20 Project includes
 #include "main.h"
+#include "adc.h"
 #include "lcd.h"
 #include "rtc.h"
 #include "motor.h"
 
 // global Vars
-volatile bool    m_automatic_mode;          // auto mode (false: manu mode)
+volatile bool    m_automatic_mode;         // auto mode (false: manu mode)
 
 // global Vars for default values: temperatures and speed
-volatile uint8_t m_reftemp;                 // actual desired temperatur
-volatile uint8_t m_reftemp_mem[TEMP_SLOTS]; // desired temperatur memories (high, low)
-volatile motor_speed_t m_speed;             // motor speed
+volatile uint8_t m_reftemp;                // actual desired temperatur
+volatile uint8_t m_reftemp_mem[TEMP_SLOTS];// desired temperatur memories
+                                           // (high, low)
+volatile motor_speed_t m_speed;            // motor speed
 
 // global Vars for keypress and wheel status
-volatile bool    m_key_action;              // keypress ISR came up, process it
-volatile uint8_t m_state_keys;              // state of keys (Bits: see KEYMASK_
+volatile bool    m_key_action;             // keypress ISR came up, process it
+volatile uint8_t m_state_keys;             // state of keys (Bits: see KEYMASK_
 volatile uint8_t m_state_keys_prev;
-volatile uint8_t m_state_wheel;             // state of wheel sensor
+volatile uint8_t m_state_wheel;            // state of wheel sensor
 volatile uint8_t m_state_wheel_prev;
-volatile uint8_t m_wheel;                   // wheel position (0-0xff)
+volatile uint8_t m_wheel;                  // wheel position (0-0xff)
 
 
 // prototypes 
-int main(void);                           // main with main loop
-void init(void);                          // init the whole thing
-void load_defauls(void);                  // load default values (later from eeprom using config.c)
-void callback_settemp(uint8_t);           // called from RTC to set new reftemp
-void setautomode(bool);                   // activate/deactivate automode 
+int main(void);                            // main with main loop
+void init(void);                           // init the whole thing
+void load_defauls(void);                   // load default values
+                                           // (later from eeprom using config.c)
+void callback_settemp(uint8_t);            // called from RTC to set new reftemp
+void setautomode(bool);                    // activate/deactivate automode
 
 
 
@@ -67,41 +81,35 @@ void setautomode(bool);                   // activate/deactivate automode
 #endif
 
 
-/*****************************************************************************
-*
-*   Function name:  main
-*
-*   returns:        None
-*
-*   parameters:     None
-*
-*   purpose:        Contains the main loop of the program
-*
-*****************************************************************************/
-
+/*!
+ *******************************************************************************
+ * main program
+ ******************************************************************************/
 int main(void)
 {
-    bool last_state_mnt;        // motor mounted
-    bool state_mnt;             // motor mounted
-    bool err;                   // error
-    
-    uint8_t last_statekey;      // state of keys on last loop
-    uint8_t last_second;        // RTC-second of last main cycle
-    uint8_t ref_position;       // desired position in percent
-    motor_speed_t speed;        // motor speed (fast or quiet)
-    
-    uint8_t i;           
+    bool last_state_mnt;        //!< motor mounted
+    bool state_mnt;             //!< motor mounted
+    bool err;                   //!< error
+    bool ref_pos_changed;       //!< ref Position changed
 
-    // initalization
+    uint8_t last_statekey;      //!< state of keys on last loop
+    uint8_t last_second;        //!< RTC-second of last main cycle
+    uint8_t ref_position;       //!< desired position in percent
+    motor_speed_t speed;        //!< motor speed (fast or quiet)
+    uint8_t display_mode;       //!< desired display output
+    uint16_t value16;           //!< 16 Bit value
+    uint8_t value8;             //!<  8 Bit value
+
+    //! initalization
     init();
 
-    // load/set default values
+    //! load/set default values
     load_defauls();
     
-    // Enable interrupts
+    //! Enable interrupts
     sei();
 
-    // POST Screen
+    //! show POST Screen
     LCD_AllSegments(LCD_MODE_ON);                   // all segments on
     delay(1000);
     LCD_AllSegments(LCD_MODE_OFF);        
@@ -111,39 +119,43 @@ int main(void)
     delay(1000);
     LCD_AllSegments(LCD_MODE_OFF);                  // all off
 
-    // Send Wakeup MSG
-    // TODO
+    //! \todo Send Wakeup MSG
 
+    state_mnt=false;
+    ref_pos_changed=true;
+    last_second=99;
     speed=full;
     last_statekey = 0;
-    ref_position = 90;
+    last_state_mnt = false;
+    m_key_action = true;
+    ref_position = 10;
 
-    last_state_mnt = false ;      // motor not mounted
+    ISR(PCINT1_vect);                  // get keystate
 
-    ISR(PCINT1_vect);
-    //m_state_keys = ~PINB & 0x6f; // low active, mask for input keys (PB0,1,2,3,5,6,)
-    //m_key_action=true
-
-    // Main loop
-    // 1) process keypresses
-    //    - m_state_keys and m_wheel are set from IRQ, only process them
-    //    - you can set m_wheel to a new value
-    //    - controll content of LCD
-    // 2) calc new valveposition if new temp available
-    //    - temp is measured by IRQ
-    // 3) calibrate motor
-    //    - start calibration is valve mounted changed to on
-    //      (during calibration the main loop stops at least for 10 seconds)
-    //    - reset calibration is valve mounted changed to off
-    // 4) start motor if
-    //    - actual valveposition != desired valveposition && motor is off
-    // 5) if motor is on call MOTOR_CheckBlocked at least once a second
-    //    - that switches motor of if it is blocked
-    // 6) store keystate at end of loop before going to sleep
-    // 7) goto sleep if
-    //    - motor is of
-    //    - no key is pressed (AUTO, C, PROG)
-    //    - no serial communication active
+    /*!
+    ****************************************************************************
+    * main loop
+    *
+    * 1) process keypresses
+    *    - m_state_keys and m_wheel are set from IRQ, only process them
+    *    - you can set m_wheel to a new value
+    *    - controll content of LCD
+    * 2) \todo calc new valveposition if new temp available
+    *    - temp is measured by IRQ
+    * 3) calibrate motor
+    *    - start calibration is valve mounted changed to on
+    *      (during calibration the main loop stops at least for 10 seconds)
+    *    - reset calibration is valve mounted changed to off
+    * 4) start motor if
+    *    - actual valveposition != desired valveposition && motor is off
+    * 5) if motor is on call MOTOR_CheckBlocked at least once a second
+    *    - that switches motor of if it is blocked
+    * 6) store keystate at end of loop before going to sleep
+    * 7) \todo goto sleep if
+    *    - motor is of
+    *    - no key is pressed (AUTO, C, PROG)
+    *    - no serial communication active
+    ***************************************************************************/
     for (;;){        // change displaystate every 10 seconds 0 to 5
         // Activate Auto Mode
         // setautomode(true);
@@ -154,19 +166,25 @@ int main(void)
 
             // State of keys AUTO, C and PROG and valve mounted
             if (m_state_keys & KEYMASK_AUTO){
-                ref_position = 10;
+                display_mode--;
+                LCD_SetHourBarVal(display_mode+1, LCD_MODE_ON);
+                ref_pos_changed = true;
                 LCD_SetSeg(LCD_SEG_AUTO, LCD_MODE_ON);
             } else {
                 LCD_SetSeg(LCD_SEG_AUTO, LCD_MODE_OFF);
             }
             if (m_state_keys & KEYMASK_C){
-                ref_position = 50;
+                display_mode=0;
+                LCD_SetHourBarVal(display_mode+1, LCD_MODE_ON);                
+                ref_pos_changed = true;
                 LCD_SetSeg(LCD_SEG_MANU, LCD_MODE_ON);
             } else {
                 LCD_SetSeg(LCD_SEG_MANU, LCD_MODE_OFF);
             }
             if (m_state_keys & KEYMASK_PROG){
-                ref_position = 90;
+                display_mode++;
+                LCD_SetHourBarVal(display_mode+1, LCD_MODE_ON);
+                ref_pos_changed = true;
                 LCD_SetSeg(LCD_SEG_PROG, LCD_MODE_ON);
             } else {
                 LCD_SetSeg(LCD_SEG_PROG, LCD_MODE_OFF);
@@ -177,37 +195,38 @@ int main(void)
 
 
             // 3) calibrate motor
-            //    - start calibration is valve mounted changed to on
-            //      (during calibration the main loop stops at least for 10 seconds)
+            //    - start calibration if valve is now mounted
+            //      TODO:
+            //      (during calibration the main loop stops for a long time
+            //       maybe add global var to cancel callibration, e.g.: if
+            //       HR20 removed from ther gear)
             //    - reset calibration is valve mounted changed to off
             if (last_state_mnt != state_mnt) {
+                MOTOR_SetMountStatus(state_mnt);
                 if (state_mnt) {
+                    LCD_ClearNumbers();
                     LCD_PrintChar(LCD_CHAR_C, 3, LCD_MODE_ON);
                     LCD_PrintChar(LCD_CHAR_A, 2, LCD_MODE_ON);
                     LCD_PrintChar(LCD_CHAR_L, 1, LCD_MODE_ON);
                     LCD_Update();
-                    MOTOR_Calibrate(90, speed);
+                    // DEBUG: if next line is disabled, not calibration and no
+                    //        motor control is done
+                    // MOTOR_Calibrate(ref_position, speed);
                     LCD_ClearNumbers();
-                } else {
-                    MOTOR_ResetCalibration();
-                    LCD_PrintChar(LCD_CHAR_S, 0, LCD_MODE_ON);
-                }
+                } 
             }
 
             // 4) start motor if
             //    - actual valveposition != desired valveposition
             //    - motor is off
             //    - motor is calibrated
-            
-            if ((!MOTOR_On()) && (MOTOR_IsCalibrated())){
-                if (ref_position != MOTOR_GetPosPercent()){
-                    err = MOTOR_Goto(ref_position, speed);
-                }
+            if ((ref_pos_changed) && (MOTOR_IsCalibrated())){
+                err = MOTOR_Goto(ref_position, speed);
+                ref_pos_changed = false;
             }
 
             // 5) if motor is on call MOTOR_CheckBlocked at least once a second
             //    - that switches motor of if it is blocked
-
             if (MOTOR_On()){
                 if (last_second != RTC_GetSecond()){
                     MOTOR_CheckBlocked();
@@ -219,13 +238,37 @@ int main(void)
             // 6) store keystate at end of loop before going to sleep
             last_statekey = m_state_keys;
             last_state_mnt = state_mnt;
+            
             // 7) goto sleep if
             //    - motor is of
             //    - no key is pressed (AUTO, C, PROG)
             //    - no serial communication active
             
-
         }
+        
+        if (display_mode==0) {
+            ADC_Measure_Ub();
+            value16 = ADC_Get_Bat_Val();
+        }else if (display_mode==1) {
+            ADC_Measure_Temp();
+            value16 = ADC_Get_Temp_Val();
+        }else if (display_mode==2) {
+            ADC_Measure_Ub();            
+            value16 = ADC_Get_Bat_Voltage();
+        }else if (display_mode==3) {
+            ADC_Measure_Temp();
+            value16 = ADC_Get_Temp_Deg();
+        }else if (display_mode==4) {
+            value16 = 567;
+        }else{
+            value16 = display_mode;                      
+        }           
+        value8 = (uint8_t) (value16 / 100);
+        LCD_PrintDec(value8,  1, LCD_MODE_ON);
+        value8 = (uint8_t) (value16 % 100);
+        LCD_PrintDec(value8,  0, LCD_MODE_ON);
+                
+        /*
         // Bar 24 on if calibrated
         if (MOTOR_IsCalibrated()) {
             LCD_SetSeg(LCD_SEG_BAR24, LCD_MODE_ON);
@@ -247,6 +290,7 @@ int main(void)
             LCD_SetSeg(LCD_SEG_B1, LCD_MODE_OFF);
         }
 
+        
         if (!MOTOR_IsCalibrated()) {
             LCD_PrintChar(LCD_CHAR_E, 3, LCD_MODE_ON);
             LCD_PrintChar(LCD_CHAR_2, 2, LCD_MODE_ON);
@@ -254,6 +298,7 @@ int main(void)
             LCD_PrintDec(ref_position,  1, LCD_MODE_ON);
             LCD_PrintDec(MOTOR_GetPosPercent(),  0, LCD_MODE_ON);
         }
+        */
         
         // impulses = MOTOR_GetImpulses();
 
@@ -346,80 +391,70 @@ int main(void)
 #endif
 
 
-/*****************************************************************************
-*
-*   Function name:  init
-*
-*   returns:        None
-*
-*   parameters:     None
-*
-*   purpose:        Initializate the different modules
-*
-*****************************************************************************/
+/*!
+ *******************************************************************************
+ * Initializate all modules
+ ******************************************************************************/
 void init(void)
 {
-    // Calibrate the internal RC Oszillator
-    // TODO: test calibrate_rco();
+    //! Calibrate the internal RC Oszillator
+    //! \todo test calibrate_rco();
         
-    // set Clock to 4 Mhz
+    //! set Clock to 4 Mhz
     CLKPR = (1<<CLKPCE);            // prescaler change enable
     CLKPR = (1<<CLKPS0);            // prescaler = 2 (internal RC runs @ 8MHz)
 
-    // Disable Analog Comparator (power save)
+    //! Disable Analog Comparator (power save)
     ACSR = (1<<ACD);
 
-    // Disable Digital input on PF0-7 (power save)
+    //! Disable Digital input on PF0-7 (power save)
     DIDR0 = 0xFF;
 
-    // digital I/O port direction
-    DDRB = (1<<PB4)|(1<<PB7);
-    DDRG = (1<<PG3)|(1<<PG4);
-    DDRE = (1<<PE3);
+    //! digital I/O port direction
+    DDRB = (1<<PB4)|(1<<PB7); // PB4, PB7 Motor out
+    DDRG = (1<<PG3)|(1<<PG4); // PG3, PG4 Motor out
+    DDRE = (1<<PE3);          // PE3  activate lighteye
+    DDRF = (1<<PF3);          // PF3  activate tempsensor
 
-    // enable pullup on all inputs
-    // ATTENTION: no pullup on lighteye input watch circuit diagram
-    PORTB = (1<<PB0)|(1<<PB1)|(1<<PB2)|(1<<PB3)|(1<<PB5)|(1<<PB6);  // keys and m_wheel
+    //! enable pullup on all inputs (keys and m_wheel)
+    //! ATTENTION: no pullup on lighteye input watch circuit diagram
+    PORTB = (1<<PB0)|(1<<PB1)|(1<<PB2)|(1<<PB3)|(1<<PB5)|(1<<PB6);
 
-    // PCINT0_vect for lighteye (motor monitor) is activated in motor.c if needed
-    // PCMSK0 = (1<<PCINT4);
-    // PCINT1_vect for keyactions
+    //! remark for PCMSK0:
+    //!     PCINT0 for lighteye (motor monitor) is activated in motor.c using
+    //!     mask register PCMSK0: PCMSK0=(1<<PCINT4) and PCMSK0&=~(1<<PCINT4)
+
+    //! PCMSK1 for keyactions
     PCMSK1 = (1<<PCINT8)|(1<<PCINT9)|(1<<PCINT10)|(1<<PCINT11)|(1<<PCINT13);
-    // activate PCINT0 + PCINT1
+
+    //! activate PCINT0 + PCINT1
     EIMSK = (1<<PCIE1)|(1<<PCIE0);
+    
+    //! Initialize the USART
+    //! \todo USART_Init();
 
-    // Initialize the USART
-    // TODO: USART_Init();
-
-    // Initialize the LCD
+    //1 Initialize the LCD
     LCD_Init();                     
 
-    // Initialize the RTC, callback funcrion is settemp(rtc_timerslot_t)
+    //! Initialize the RTC, pass pointer to timer callback function
     RTC_Init(callback_settemp);
 
-    // Initialize the motor
+    //! Initialize the motor
     MOTOR_Init();
 }
 
 
-/*****************************************************************************
-*
-*   Function name:  load_defauls
-*
-*   returns:        None
-*
-*   parameters:     None
-*
-*   purpose:        Load default values from eeprom 
-*
-*   remark:         TODO: EEPROM management, untin now values are fix
-*
-*****************************************************************************/
+/*!
+ *******************************************************************************
+ * Load default values from eeprom
+ *
+ * \todo EEPROM management, until now values are fix
+ ******************************************************************************/
 void load_defauls(void)
 {
     uint8_t i;
 
-    // Set Time and date
+    //! Set Time and date
     RTC_SetDay   (BOOT_DD);
     RTC_SetMonth (BOOT_MM);
     RTC_SetYear  (BOOT_YY);
@@ -427,11 +462,11 @@ void load_defauls(void)
     RTC_SetMinute(BOOT_mm);
     RTC_SetSecond(0);
 
-    // m_reftemps (high and low)
+    //! m_reftemps (high and low)
     m_reftemp_mem[0] = DEG_2_UINT8 (BOOT_TEMP_H);
     m_reftemp_mem[1] = DEG_2_UINT8 (BOOT_TEMP_L);
 
-    // DOW times
+    //! DOW times
     for (i=0; i<7; i++){
         RTC_DowTimerSet(i, 0, BOOT_ON1);
         RTC_DowTimerSet(i, 1, BOOT_OFF1);
@@ -439,10 +474,10 @@ void load_defauls(void)
         RTC_DowTimerSet(i, 3, BOOT_OFF2);
     }
 
-    // motor speed
+    //! motor speed
     m_speed = full;
 
-    // initial keystates
+    //! initial keystates
     m_key_action = false;
     m_state_keys = 0;
     m_state_keys_prev = 0;
@@ -450,20 +485,14 @@ void load_defauls(void)
     m_state_wheel_prev = 0;
 }
 
-/*****************************************************************************
-*
-*   Function name:  settemp
-*
-*   returns:        None
-*
-*   parameters:     temperatre slot
-*
-*   global vars:    m_reftemp, m_reftemp_mem[]
-*
-*   purpose:        set desired m_reftemp from m_reftemp_mem[]
-*                   is called from RTC
-*
-*****************************************************************************/
+/*!
+ *******************************************************************************
+ * set desired m_reftemp from m_reftemp_mem[]
+ * is called from RTC
+ *
+ * \param slot temperatre slot, ID of DOW timer which called this function
+ *
+ ******************************************************************************/
 void callback_settemp(uint8_t slot){
     LCD_SetSeg(LCD_SEG_SNOW, LCD_MODE_ON);
     if (m_automatic_mode){
@@ -471,20 +500,14 @@ void callback_settemp(uint8_t slot){
     }
 }
 
-/*****************************************************************************
-*
-*   Function name:  setautomode
-*
-*   returns:        None
-*
-*   parameters:     true: auto, false: manu
-*
-*   global vars:    m_reftemp
-*                   m_automatic_mode
-*
-*   purpose:        achtivate or deactivate automatic mode
-*
-*****************************************************************************/
+/*!
+ *******************************************************************************
+ * achtivate or deactivate automatic mode
+ *
+ * \param newmode
+ *   true: auto
+ *   false: manu
+ ******************************************************************************/
 void setautomode(bool newmode){
     if (newmode){
         // set m_reftemp according to last occured timer index MOD 2
@@ -500,28 +523,18 @@ void setautomode(bool newmode){
 }
 
 
-/*****************************************************************************
-*
-*   Function name:  ISR(PCINT1_vect)
-*
-*   returns:        none
-*
-*   parameters:     Pinchange Interupt INT1
-*
-*   purpose:        process buttons, m_wheel and mount contact
-*
-*   global vars:    m_key_action
-*                   m_state_keys
-*                   m_state_keys_prev
-*                   m_state_wheel
-*                   m_state_wheel_prev
-*                   m_wheel
-*
-*****************************************************************************/
+/*!
+ *******************************************************************************
+ * Interupt Routine
+ *
+ *  - check state of buttons
+ *  - check state of wheel
+ *  - check mount contact
+ ******************************************************************************/
 ISR(PCINT1_vect){
 
     // keys
-    m_state_keys = ~PINB & 0x6f; // low active, mask for input keys (PB0,1,2,3,5,6,)
+    m_state_keys = ~PINB & 0x6f; // low active, mask for input (PB 0,1,2,3,5,6)
 
     if (m_state_keys_prev != m_state_keys){
         m_state_keys_prev = m_state_keys;
@@ -542,31 +555,25 @@ ISR(PCINT1_vect){
     }
 }
 
-/*****************************************************************************
-*
-*   Function name:  delay
-*
-*   returns:        None
-*
-*   parameters:     millisec
-*
-*   purpose:        delay-loop
-*
-*****************************************************************************/
+/*!
+ *******************************************************************************
+ * delay function
+ *  quick and dirty used only for test purpose
+ ******************************************************************************/
 void delay(uint16_t millisec)
 {
-	uint8_t i;
+    uint8_t i;
     while (millisec--){
-		for (i=0; i<255; i++){
-			asm volatile ("nop"::);
-		}
-		for (i=0; i<255; i++){
-			asm volatile ("nop"::);
-		}
-		for (i=0; i<255; i++){
-			asm volatile ("nop"::);
-		}
-	}
+        for (i=0; i<255; i++){
+            asm volatile ("nop"::);
+        }
+        for (i=0; i<255; i++){
+            asm volatile ("nop"::);
+        }
+        for (i=0; i<255; i++){            
+            asm volatile ("nop"::);
+        }
+    }
 }
 
 

@@ -72,6 +72,7 @@ SRC = $(TARGET).c
 # If there is more than one source file, append them above, or modify and
 # uncomment the following:
 SRC += \
+adc.c \
 lcd.c \
 rtc.c \
 motor.c \
