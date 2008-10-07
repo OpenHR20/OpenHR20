@@ -3,7 +3,7 @@
  *
  *  target:     ATmega169 @ 4 MHz in Honnywell Rondostat HR20E
  *
- *  ompiler:    WinAVR-20071221
+ *  compiler:    WinAVR-20071221
  *              avr-libc 1.6.0
  *              GCC 4.2.2
  *
@@ -38,8 +38,8 @@
 *   Macros
 *****************************************************************************/
 
-//! How many timers per day of week, original 4 (2 on and 2 off)
-#define RTC_TIMERS_PER_DOW    4
+//! How many timers per day of week, original 4 we use 8
+#define RTC_TIMERS_PER_DOW    8
 
 //! Do we support calibrate_rco
 #define	HAS_CALIBRATE_RCO     0
@@ -53,21 +53,26 @@ typedef enum {
     MO, TU, WE, TH, FR, SA, SU, TIMER_ACTIVE
 } rtc_dow_t;
 
-//! DOW timer callback function
-typedef void (*rtc_callback_t) (uint8_t);
+//! 
+typedef enum {
+    temperature0=0, temperature1=1, temperature2=2, temperature3=3
+} timermode_t;
 
 /*****************************************************************************
 *   Prototypes
 *****************************************************************************/
-extern volatile uint8_t RTC_hh;   //!< \brief Time: Hours
-extern volatile uint8_t RTC_mm;   //!< \brief Time: Minutes
-extern volatile uint8_t RTC_ss;   //!< \brief Time: Seconds
-extern volatile uint8_t RTC_DD;   //!< \brief Date: Day
-extern volatile uint8_t RTC_MM;   //!< \brief Date: Month
-extern volatile uint8_t RTC_YY;   //!< \brief Date: Year (0-255) -> 2000 - 2255
-extern volatile uint8_t RTC_DOW;  //!< Date: Day of Week
+extern uint8_t RTC_hh;   //!< \brief Time: Hours
+extern uint8_t RTC_mm;   //!< \brief Time: Minutes
+extern uint8_t RTC_ss;   //!< \brief Time: Seconds
+extern uint8_t RTC_DD;   //!< \brief Date: Day
+extern uint8_t RTC_MM;   //!< \brief Date: Month
+extern uint8_t RTC_YY;   //!< \brief Date: Year (0-255) -> 2000 - 2255
+extern uint8_t RTC_DOW;  //!< Date: Day of Week
+extern uint32_t RTC_Ticks; //!< Ticks since last RTC.Init
+extern uint16_t RTC_Dow_Timer[7+1][RTC_TIMERS_PER_DOW];  //!< DOW Timer entrys 7 days + 1 program for whole week
 
-void RTC_Init(rtc_callback_t);                 // init Timer, activate 500ms IRQ
+
+void RTC_Init();                 // init Timer, activate 500ms IRQ
 #define RTC_GetHour() ((uint8_t) RTC_hh)                 // get hour
 #define RTC_GetMinute() ((uint8_t) RTC_mm)               // get minute
 #define RTC_GetSecond() ((uint8_t) RTC_ss)               // get second
@@ -76,6 +81,7 @@ void RTC_Init(rtc_callback_t);                 // init Timer, activate 500ms IRQ
 #define RTC_GetYearYY() ((uint8_t) RTC_YY)               // get year (00-255)
 #define RTC_GetYearYYYY() (2000 + (uint16_t) RTC_YY)  // get year (2000-2255) 
 #define RTC_GetDayOfWeek() ((uint8_t) RTC_DOW)          // get day of week (0:monday)
+#define RTC_GetTicks() ((uint32_t) RTC_Ticks)          // get day of week (0:monday)
 
 
 void RTC_SetHour(uint8_t);                     // Set hour
@@ -86,10 +92,12 @@ void RTC_SetMonth(uint8_t);                    // Set month
 void RTC_SetYear(uint8_t);                     // Set year
 bool RTC_SetDate(uint8_t, uint8_t, uint8_t);   // Set Date, and do all the range checking
 
-void    RTC_DowTimerSet(rtc_dow_t, uint8_t, uint8_t); // set day of week timer
-uint8_t RTC_DowTimerGet(rtc_dow_t, uint8_t);          // get day of week timer
+void    RTC_DowTimerSet(rtc_dow_t, uint8_t, uint16_t, timermode_t timermode); // set day of week timer
+uint16_t RTC_DowTimerGet(rtc_dow_t dow, uint8_t slot, timermode_t *timermode);
 uint8_t RTC_DowTimerGetStartOfDay(void);              // timer status at 0:00
 uint8_t RTC_DowTimerGetActualIndex(void);             // timer status now
+
+bool RTC_AddOneSecond(void);
 
 #if	HAS_CALIBRATE_RCO
 void calibrate_rco(void);

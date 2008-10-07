@@ -8,6 +8,7 @@
  *              GCC 4.2.2
  *
  *  copyright:  2008 Dario Carluccio (hr20-at-carluccio-dot-de)
+ * 				2008 Jiri Dobry (jdobry-at-centrum-dot-cz)
  *
  *  license:    This program is free software; you can redistribute it and/or
  *              modify it under the terms of the GNU Library General Public
@@ -26,8 +27,8 @@
 /*!
  * \file       lcd.c
  * \brief      functions to control the HR20 LCD
- * \author     Dario Carluccio <hr20-at-carluccio-dot-de>
- * \date       24.12.2007
+ * \author     Dario Carluccio <hr20-at-carluccio-dot-de>, Jiri Dobry <jdobry-at-centrum-dot-cz>
+ * \date       02.10.2008
  * $Rev$
  */
 
@@ -42,20 +43,19 @@
 // HR20 Project includes
 #include "main.h"
 #include "lcd.h"
+#include "task.h"
+#include "eeprom.h"
 
 // Local Defines
 #define LCD_CONTRAST_MIN       0   //!< \brief contrast minimum
 #define LCD_CONTRAST_MAX      15   //!< \brief contrast maxmum
 #define LCD_MAX_POS            4   //!< \brief number of 7 segment chars
 #define LCD_MAX_CHARS  37   //!< \brief no. of chars in \ref LCD_CharTablePrgMem
-#define LCD_BITPLANES          2   //!< \brief two bitplanes for blinking
 #define LCD_REGISTER_COUNT     9   //!< \brief no. of registers each bitplane
 
 
 // Vars
-volatile uint8_t LCD_BlinkCounter;   //!< \brief counter for bitplane change
-volatile uint8_t LCD_Bitplane;       //!< \brief currently active bitplane
-volatile uint8_t LCD_UpdateRequired; //!< \brief LCD Update requested
+volatile uint8_t LCD_used_bitplanes = 1; //!< \brief number of used bitplanes / used for power save
 
 //! segment data for the segment registers in each bitplane
 volatile uint8_t LCD_Data[LCD_BITPLANES][LCD_REGISTER_COUNT];
@@ -158,6 +158,8 @@ uint8_t LCD_SegHourBarOffsetTablePrgMem[] PROGMEM =
 };
 
 
+static void LCD_calc_used_bitplanes(uint8_t mode);
+
 /*!
  *******************************************************************************
  *  Init LCD
@@ -172,7 +174,7 @@ void LCD_Init(void)
     LCD_AllSegments(false);
 
     //Set the initial LCD contrast level
-    LCD_ContrastAdjust(0);
+    LCDCCR = (config.lcd_contrast << LCDCC0);
 
     // LCD Control and Status Register B
     //   - clock source is TOSC1 pin
@@ -194,55 +196,7 @@ void LCD_Init(void)
     // Enable LCD start of frame interrupt
     LCDCRA |= (1<<LCDIE);
 
-}
-
-/*!
- *******************************************************************************
- *  Init LCD
- *
- *  \note
- *  - increase/decrese contrast
- *  - set LCD Contrast Control Register
- *
- *  \param mode
- *       -  0: set LCD Contrast Control Register to default
- *       -  1: increase contrast by 1<BR>
- *       - -1: decrease contrast by 1<BR>
- *
- *  \returns false if contrast at limit
- ******************************************************************************/
-bool LCD_ContrastAdjust (int8_t mode)
-{
-    uint8_t contrast_level;
-    
-    // read actual contrast
-    contrast_level = LCDCCR & 15;
-
-    // 0: contrast to default value
-    if (mode == 0) {
-        contrast_level = LCD_CONTRAST_INITIAL;
-    }
-    // 1: increase contrast
-    if (mode == 1) {
-        if (contrast_level < LCD_CONTRAST_MAX) {
-            contrast_level++;
-        } else {
-            return false;
-        }
-    }
-    // -1: decrese contrast
-    if (mode == -1) {
-        if (contrast_level> LCD_CONTRAST_MIN) {
-            contrast_level--;
-        } else {
-            return false;
-        }
-    }
-    // Set LCD Contrast Control Register
-    //   - don't care about LCDDC0:2 as they are 0
-    LCDCCR = (contrast_level << LCDCC0);
-    return true;
-
+	LCD_used_bitplanes=1;
 }
 
 
@@ -271,7 +225,8 @@ void LCD_AllSegments(uint8_t mode)
                 LCD_Data[bp][i] = val;
         }
     }
-    LCD_UpdateRequired = true;
+	LCD_used_bitplanes=1;
+    LCD_Update();
 }
 
 /*!
@@ -322,6 +277,7 @@ void LCD_PrintChar(uint8_t value, uint8_t pos, uint8_t mode)
             mask <<= 1;
         }
     }
+	LCD_calc_used_bitplanes(mode);
 }
 
 
@@ -402,9 +358,9 @@ void LCD_PrintDecW(uint16_t value, uint8_t mode)
     }
     // Print     
     tmp = (uint8_t) (value / 100);
-    LCD_PrintDec(tmp, 1, LCD_MODE_ON);
+    LCD_PrintDec(tmp, 1, mode);
     tmp = (uint8_t) (value % 100);
-    LCD_PrintDec(tmp, 0, LCD_MODE_ON);
+    LCD_PrintDec(tmp, 0, mode);
 }
 
 
@@ -423,9 +379,9 @@ void LCD_PrintHexW(uint16_t value, uint8_t mode)
     uint8_t tmp;
     // Print     
     tmp = (uint8_t) (value >> 8);
-    LCD_PrintHex(tmp, 1, LCD_MODE_ON);
+    LCD_PrintHex(tmp, 1, mode);
     tmp = (uint8_t) (value & 0xff);
-    LCD_PrintHex(tmp, 0, LCD_MODE_ON);
+    LCD_PrintHex(tmp, 0, mode);
 }
 
 
@@ -447,7 +403,6 @@ void LCD_PrintHexW(uint16_t value, uint8_t mode)
  ******************************************************************************/
 void LCD_PrintTemp(uint8_t temp, uint8_t mode)
 {
-    uint16_t tmp16;
     uint8_t tmp8;
 
     // Upper Column off
@@ -488,6 +443,7 @@ void LCD_PrintTemp(uint8_t temp, uint8_t mode)
         LCD_PrintChar(LCD_CHAR_C, 0, mode);
         LCD_SetSeg(LCD_SEG_COL1, mode);
     }
+	LCD_calc_used_bitplanes(mode);
 }
 
 
@@ -557,6 +513,8 @@ void LCD_PrintTempInt(int16_t temp, uint8_t mode)
     
     // Set collumn (,)        
     LCD_SetSeg(LCD_SEG_COL1, mode);    
+
+	LCD_calc_used_bitplanes(mode);
 }
 
 /*!
@@ -608,6 +566,7 @@ void LCD_SetHourBarSeg(uint8_t seg, uint8_t mode)
     segment = pgm_read_byte(&LCD_SegHourBarOffsetTablePrgMem[seg]);
     // Set segment 
     LCD_SetSeg(segment, mode);
+	LCD_calc_used_bitplanes(mode);
 }
 
 
@@ -688,7 +647,7 @@ void LCD_ClearAll(void)
 void LCD_ClearHourBar(void)
 {
     LCD_SetHourBarVal(23, LCD_MODE_OFF);
-    LCD_UpdateRequired = true;
+    LCD_Update();
 }
 
 
@@ -707,7 +666,9 @@ void LCD_ClearSymbols(void)
     LCD_SetSeg(LCD_SEG_SUN, LCD_MODE_OFF);
     LCD_SetSeg(LCD_SEG_MOON, LCD_MODE_OFF);
     LCD_SetSeg(LCD_SEG_SNOW, LCD_MODE_OFF);
-    LCD_UpdateRequired = true;
+	LCD_calc_used_bitplanes(LCD_MODE_OFF);
+
+    LCD_Update();
 }
 
 
@@ -725,7 +686,9 @@ void LCD_ClearNumbers(void)
     LCD_PrintChar(LCD_CHAR_NULL, 0, LCD_MODE_OFF);
     LCD_SetSeg(LCD_SEG_COL1, LCD_MODE_OFF);
     LCD_SetSeg(LCD_SEG_COL2, LCD_MODE_OFF);
-    LCD_UpdateRequired = true;
+	LCD_calc_used_bitplanes(LCD_MODE_OFF);
+
+    LCD_Update();
 }
 
 
@@ -760,62 +723,108 @@ void LCD_SetSeg(uint8_t seg, uint8_t mode)
             LCD_Data[bp][r] &= ~(1<<b);
         }
     }
+	LCD_calc_used_bitplanes(mode);
+
+}
+
+/*!
+ *******************************************************************************
+ *  LCD Interrupt Routine
+ *
+ *	\note used only for update LCD, in any other cases intterupt is dissabled
+ *  \note copy LCD_Data to LCDREG
+ *
+ ******************************************************************************/
+static void LCD_calc_used_bitplanes(uint8_t mode) {
+    uint8_t i;
+	if ((LCD_used_bitplanes==1) && 
+		((mode==LCD_MODE_OFF)||(mode==LCD_MODE_OFF))) {
+		return; // just optimalization, nothing to do
+	} 
+	if ((mode==LCD_MODE_BLINK_1)||(mode==LCD_MODE_BLINK_2)) {
+		LCD_used_bitplanes=2;
+		return; // just optimalization
+	}
+
+    for (i=0; i<LCD_REGISTER_COUNT; i++){
+		#if LCD_BITPLANES != 2
+			#error optimized for 2 bitplanes // TODO?
+		#endif
+		if (LCD_Data[0][i] != LCD_Data[1][i]) {
+			LCD_used_bitplanes=2;
+			return; // it is done
+		}
+	}
+	LCD_used_bitplanes=1;
+		
 }
 
 
 /*!
  *******************************************************************************
- *  Request LCD Update immediately
  *
- *  \note  update it is triggered automaticaly at change of each bitframe
+ *	LCD_BlinkCounter and LCD_Bitplane for LCD blink
  *
- *  \note  Must be called after usage of \ref LCD_SetSeg and \ref LCD_PrintChar
- *         to trigger update of LCDDR Registers
  ******************************************************************************/
-void LCD_Update(void)
-{
-    // Update at next LCD_ISR
-    LCD_UpdateRequired = true;
-}
+static uint8_t LCD_BlinkCounter;   //!< \brief counter for bitplane change
+static uint8_t LCD_Bitplane;       //!< \brief currently active bitplane
+uint8_t LCD_force_update=0;        //!< \brief force update LCD
 
 
 /*!
  *******************************************************************************
  *  LCD Interrupt Routine
  *
+ *	\note used only for update LCD, in any other cases intterupt is dissabled
  *  \note copy LCD_Data to LCDREG
  *
- *  \note cycle bitplanes every LCD_BLINK_FRAMES
+ ******************************************************************************/
+
+void task_lcd_update(void) {
+    if (++LCD_BlinkCounter > LCD_BLINK_FRAMES){
+		#if LCD_BITPLANES == 2
+			// optimized version for LCD_BITPLANES == 2
+			LCD_Bitplane = (LCD_Bitplane +1) & 1;
+		#else
+			LCD_Bitplane = (LCD_Bitplane +1) % LCD_BITPLANES;
+		#endif
+        LCD_BlinkCounter=0;
+		LCD_force_update=1;
+    }
+
+
+	if (LCD_force_update) {
+		LCD_force_update=0;
+		// Copy desired segment buffer to the real segments
+    	LCDDR0 = LCD_Data[LCD_Bitplane][0];
+    	LCDDR1 = LCD_Data[LCD_Bitplane][1];
+    	LCDDR2 = LCD_Data[LCD_Bitplane][2];
+    	LCDDR5 = LCD_Data[LCD_Bitplane][3];
+    	LCDDR6 = LCD_Data[LCD_Bitplane][4];
+    	LCDDR7 = LCD_Data[LCD_Bitplane][5];
+    	LCDDR10 = LCD_Data[LCD_Bitplane][6];
+    	LCDDR11 = LCD_Data[LCD_Bitplane][7];
+    	LCDDR12 = LCD_Data[LCD_Bitplane][8];
+	}
+
+
+
+	if (LCD_used_bitplanes == 1) {
+		// only one bitplane used, no blinking
+    	// Updated; disable LCD start of frame interrupt
+    	LCDCRA &= ~(1<<LCDIE);
+	}
+}
+
+/*!
+ *******************************************************************************
+ *  LCD Interrupt Routine
+ *
+ *	\note used only for update LCD, in any other cases intterupt is dissabled
+ *  \note copy LCD_Data to LCDREG
+ *
  ******************************************************************************/
 ISR(LCD_vect)
 {
-    // Bitplane 0 active
-    if (LCD_BlinkCounter == 0) {
-        LCD_Bitplane = 0;
-        LCD_UpdateRequired = true;
-    }
-    // Bitplane 1 active
-    if (LCD_BlinkCounter == LCD_BLINK_FRAMES) {
-        LCD_Bitplane = 1;
-        LCD_UpdateRequired = true;
-    }
-    if (LCD_UpdateRequired){
-        // Copy desired segment buffer to the real segments
-        LCDDR0 = LCD_Data[LCD_Bitplane][0];
-        LCDDR1 = LCD_Data[LCD_Bitplane][1];
-        LCDDR2 = LCD_Data[LCD_Bitplane][2];
-        LCDDR5 = LCD_Data[LCD_Bitplane][3];
-        LCDDR6 = LCD_Data[LCD_Bitplane][4];
-        LCDDR7 = LCD_Data[LCD_Bitplane][5];
-        LCDDR10 = LCD_Data[LCD_Bitplane][6];
-        LCDDR11 = LCD_Data[LCD_Bitplane][7];
-        LCDDR12 = LCD_Data[LCD_Bitplane][8];
-    }
-    // inc Blink Counter
-    LCD_BlinkCounter++;
-    // Restart Blink Counter
-    if (LCD_BlinkCounter > (2*LCD_BLINK_FRAMES)){
-        LCD_BlinkCounter=0;
-    }
-
+    task |= TASK_LCD;   // increment second and check Dow_Timer
 }

@@ -3,7 +3,7 @@
  *
  *  target:     ATmega169 @ 4 MHz in Honnywell Rondostat HR20E
  *
- *  ompiler:    WinAVR-20071221
+ *  compiler:   WinAVR-20071221
  *              avr-libc 1.6.0
  *              GCC 4.2.2
  *
@@ -59,8 +59,8 @@
 
 #define	MOTOR_HYSTERESIS     50    //!< additional impulses for 0 or 100%
 
-#define MOTOR_QUIET_PWM     70     //!< duty cycle of PWM in quiet mode
-#define MOTOR_FULL_PWM      95     //!< duty cycle of PWM in normal mode
+//#define MOTOR_QUIET_PWM     70     //!< duty cycle of PWM in quiet mode
+//#define MOTOR_FULL_PWM      95     //!< duty cycle of PWM in normal mode
 
 
 /*****************************************************************************
@@ -71,24 +71,20 @@ typedef enum {
     stop, open, close
 } motor_dir_t;
 
-// motorSpeed
-typedef enum {                                      
-    full, quiet
-} motor_speed_t;
-
-
 /*****************************************************************************
 *   Prototypes
 *****************************************************************************/
 void MOTOR_Init(void);                        // Init motor control
-void MOTOR_Stop(void);                        // stop motor
-bool MOTOR_Goto(uint8_t, motor_speed_t);      // Goto position in percent
+bool MOTOR_Goto(uint8_t);                     // Goto position in percent
 void MOTOR_CheckBlocked(void);                // stop if motor is blocked
 bool MOTOR_On(void);                          // is motor on
-void MOTOR_Do_Calibrate(void);                // cal. motor with default values
-bool MOTOR_Calibrate(uint8_t, motor_speed_t); // calibrate the motor
+void MOTOR_Calibrate(uint8_t percent);        // calibrate the motor
 bool MOTOR_IsCalibrated(void);                // is motor successful calibrated?
-void MOTOR_ResetCalibration(void);            // reset the calibration 
-void MOTOR_Control(motor_dir_t, motor_speed_t); // control H-bridge of motor
+void MOTOR_updateCalibration(bool unmounted, uint8_t percent);            // reset the calibration 
+void MOTOR_Control(motor_dir_t); // control H-bridge of motor
 void MOTOR_SetMountStatus(bool);     // set status if is mounted or not
 uint8_t MOTOR_GetPosPercent(void);  // get percental position of motor (0-100%)
+void MOTOR_update_pos(void);
+void MOTOR_timer(void);
+
+extern motor_dir_t MOTOR_Dir;

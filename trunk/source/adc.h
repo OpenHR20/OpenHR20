@@ -45,6 +45,14 @@
 #define ADC_ACT_TEMP       PF3     //!< Bit to activate the TempSensor
 #define ADC_ACT_TEMP_P     PORTF   //!< Prot of ADC_ACT_TEMP
 
+#define TEMP_RING_TYPE 1
+#define BAT_RING_TYPE 0
+#define temp_average (ring_average[TEMP_RING_TYPE])
+#define bat_average (ring_average[BAT_RING_TYPE])
+#define temp_difference (ring_difference[TEMP_RING_TYPE])
+#define bat_difference (ring_difference[BAT_RING_TYPE])
+
+
 
 /*****************************************************************************
 *   Typedefs
@@ -53,16 +61,15 @@
 /*****************************************************************************
 *   Prototypes
 *****************************************************************************/
-void ADC_Init(void);                        // Init motor control
-
-void ADC_Measure_Ub(void);                  // Sample battery voltage
-void ADC_Measure_Temp(void);                // Sample temperature value
 
 bool     ADC_Get_Bat_isOk(void);            // Status of battery ok?
-uint16_t ADC_Get_Temp_Val(void);            // Get temperature ADC value 0-1023
-int16_t  ADC_Get_Temp_Degree(void);         // Get temperature in 1/100 Deg °C
-uint16_t ADC_Get_Bat_Val(void);             // Get batteriy ADC value 0-1023
-uint16_t ADC_Get_Bat_Voltage(void);         // Get batteriy voltage in mV
 
-uint16_t ADC_Sample_Channel(uint8_t);
-int32_t  ADC_Convert_To_Degree(uint16_t);
+uint8_t task_ADC(void);
+void start_task_ADC(void);
+
+
+extern volatile uint8_t sleep_with_ADC;
+extern int32_t ring_average[];
+extern int16_t ring_difference[];
+
+

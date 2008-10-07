@@ -3,11 +3,12 @@
  *
  *  target:     ATmega169 @ 4 MHz in Honnywell Rondostat HR20E
  *
- *  ompiler:    WinAVR-20071221
+ *  compiler:   WinAVR-20071221
  *              avr-libc 1.6.0
  *              GCC 4.2.2
  *
  *  copyright:  2008 Dario Carluccio (hr20-at-carluccio-dot-de)
+ *              2008 Jiri Dobry (jdobry-at-centrum-dot-cz) 
  *
  *  license:    This program is free software; you can redistribute it and/or
  *              modify it under the terms of the GNU Library General Public
@@ -26,8 +27,8 @@
 /*!
  * \file       motor.c
  * \brief      functions to control the HR20 motor
- * \author     Dario Carluccio <hr20-at-carluccio-dot-de>
- * \date       08.02.2008
+ * \author     Dario Carluccio <hr20-at-carluccio-dot-de>; Jiri Dobry <jdobry-at-centrum-dot-cz>
+ * \date       06.10.2008
  * $Rev$
  */
 
@@ -45,20 +46,21 @@
 #include "main.h"
 #include "motor.h"
 #include "lcd.h"
-#include "com.h"
+#include "eeprom.h"
+#include "task.h"
 
 // typedefs
 
 
 // vars
-volatile uint16_t MOTOR_PosAct;      //!< actual position
-volatile uint16_t MOTOR_PosMax;      /*!< position if complete open (100%) <BR>
+static int16_t MOTOR_PosAct;      //!< actual position
+static int16_t MOTOR_PosMax;      /*!< position if complete open (100%) <BR>
                                           0 if not calibrated */
-volatile uint16_t MOTOR_PosStop;     //!< stop at this position
-volatile uint16_t MOTOR_PosLast;     //!< last position for check if blocked
-volatile motor_dir_t MOTOR_Dir;      //!< actual direction
-volatile bool MOTOR_Mounted;         //!< mountstatus true: if valve is mounted
-
+static int16_t MOTOR_PosStop;     //!< stop at this position
+motor_dir_t MOTOR_Dir;          //!< actual direction
+// bool MOTOR_Mounted;         //!< mountstatus true: if valve is mounted
+static int8_t MOTOR_calibration_step=-2; // not calibrated
+static uint8_t MOTOR_run_timeout=0;
 
 
 /*!
@@ -72,13 +74,12 @@ volatile bool MOTOR_Mounted;         //!< mountstatus true: if valve is mounted
  ******************************************************************************/
 void MOTOR_Init(void)
 {
-    MOTOR_PosAct=0;                  // not calibrated
-    MOTOR_PosMax=0;                  // not calibrated
-    MOTOR_PosStop=0;                 // not calibrated
-    MOTOR_Control(stop, full);       // stop motor
+    MOTOR_updateCalibration(true,0);
+    TIMSK0 = (1<<TOIE0); //enable interrupt from timer0 overflow
 }
 
 
+static uint8_t MOTOR_wait_for_new_calibration = 5;
 /*!
  *******************************************************************************
  *  Reset calibration data
@@ -86,12 +87,24 @@ void MOTOR_Init(void)
  *  \note
  *  - must be called if the motor is unmounted
  ******************************************************************************/
-void MOTOR_ResetCalibration(void)
+void MOTOR_updateCalibration(bool unmounted, uint8_t percent)
 {
-    MOTOR_PosAct=0;                  // not calibrated
-    MOTOR_PosMax=0;                  // not calibrated
-    MOTOR_PosStop=0;                 // not calibrated
-    MOTOR_Control(stop, full);       // stop motor
+    if (unmounted) {
+        MOTOR_PosAct=0;                  // not calibrated
+        MOTOR_PosMax=0;                  // not calibrated
+        MOTOR_PosStop=0;                 // not calibrated
+        MOTOR_calibration_step=-2;     // not calibrated
+        MOTOR_wait_for_new_calibration = 5;
+        MOTOR_Control(stop);       // stop motor
+    } else {
+        if (MOTOR_wait_for_new_calibration != 0) {
+            MOTOR_wait_for_new_calibration--;
+        } else {
+			if (MOTOR_calibration_step==-2) {
+            	MOTOR_Calibrate(percent);
+			}
+        }
+    }
 }
 
 
@@ -110,35 +123,6 @@ uint8_t MOTOR_GetPosPercent(void)
     }
 }
 
-
-/*!
- *******************************************************************************
- * Set the actual status for the motor
- *  \param value
- *   - true:  motor is mounted to valve
- *   - false: motor is not mounted
- ******************************************************************************/
-void MOTOR_SetMountStatus(bool value)
-{
-    MOTOR_Mounted = value;
-    if (value==false){
-        MOTOR_ResetCalibration();
-    }
-}
-
-
-/*!
- *******************************************************************************
- * \returns
- *   - true:  motor is on
- *   - false: motor is off
- ******************************************************************************/
-bool MOTOR_On(void)
-{
-    return (MOTOR_Dir != stop);
-}
-
-
 /*!
  *******************************************************************************
  * \returns
@@ -147,7 +131,7 @@ bool MOTOR_On(void)
  ******************************************************************************/
 bool MOTOR_IsCalibrated(void)
 {
-    return (MOTOR_PosMax != 0);
+    return ((MOTOR_PosMax != 0) && (MOTOR_calibration_step==0));
 }
 
 
@@ -157,158 +141,62 @@ bool MOTOR_IsCalibrated(void)
  * \param  percent desired endposition 0-100
  *         - 0 : closed
  *         - 100 : open
- * \param speed  motorspeed in percent for PWM
  *
  * \note   works only if calibrated before
  ******************************************************************************/
-bool MOTOR_Goto(uint8_t percent, motor_speed_t speed)
+bool MOTOR_Goto(uint8_t percent)
 {
     // works only if calibrated
-    if (MOTOR_PosMax > 0){
+    if (MOTOR_calibration_step==0){
         // set stop position
         if (percent == 100) {
-            MOTOR_PosStop = MOTOR_PosMax + MOTOR_HYSTERESIS;
+            MOTOR_PosStop = MOTOR_PosMax + config.motor_hysteresis - config.motor_protection;
         } else if (percent == 0) {
-            MOTOR_PosStop = 0;
-            MOTOR_PosAct += MOTOR_HYSTERESIS;
+            MOTOR_PosStop = config.motor_protection-config.motor_hysteresis;
         } else {
-            MOTOR_PosStop = (uint16_t) (percent * MOTOR_PosMax / 100);
+			// MOTOR_PosMax>>2 and 100>>2 => overload protection
+            MOTOR_PosStop = (int16_t) 
+                (percent * 
+                    ((MOTOR_PosMax-config.motor_protection-config.motor_protection)>>2) / (100>>2)
+                ) + config.motor_protection;
         }
         // switch motor on
         if (MOTOR_PosAct > MOTOR_PosStop){
-            MOTOR_Control(close, speed);
+            MOTOR_Control(close);
         } else if (MOTOR_PosAct < MOTOR_PosStop){
-            MOTOR_Control(open, speed);
+            MOTOR_Control(open);
         }
-        // Notify COM
-      	COM_setNotify(NOTIFY_VALVE);
         return true;
     } else {
         return false;
     }
 }
 
-
-/*!
- *******************************************************************************
- * calibrate the motor with default values
- *
- * \note called by com.c, but belongs here !
- * \todo: check if MOTOR_Calibrate(0, full) can be used instead
- ******************************************************************************/
-void MOTOR_Do_Calibrate(void)
-{
-	MOTOR_ResetCalibration();
-	MOTOR_Calibrate(0, full);
-	return;
-}
-
-
 /*!
  *******************************************************************************
  * calibrate the motor and drive it to position in percent
- * \ returns
- *    - true if calibration successfull 
- *    - false if not successfull possible reasons:
- *      - motor is not stopped after \ref MOTOR_MAX_IMPULSES impulses
- *      - motor has been dismounted
  *
  * \param  percent desired position after calibration 0-100
  *         - 0 : closed
  *         - 100 : open
  *
- * \param speed  motorspeed in percent for PWM
- *
  * \note minimises motor time (save power)
  ******************************************************************************/
-bool MOTOR_Calibrate(uint8_t percent, motor_speed_t speed)
+void MOTOR_Calibrate(uint8_t percent)
 {
-    uint16_t postmp;
+    MOTOR_PosAct=0;                  // not calibrated
+    MOTOR_PosMax=0;                  // not calibrated
+    MOTOR_PosStop=0;                 // not calibrated
+
     if (percent > 50) {
-        // - close till no movement or more than MOTOR_MAX_IMPULSES
-        MOTOR_PosAct = MOTOR_MAX_IMPULSES;
-        MOTOR_PosStop = 0;
-        MOTOR_Control(close, speed);
-        do {
-            postmp = MOTOR_PosAct;
-            delay(200);
-        } while ((MOTOR_Dir != stop) && (postmp != MOTOR_PosAct) &&
-                  MOTOR_Mounted); // motor still on, moving and mounted
-        // stopped by ISR?, turning too long, not mounted -> error
-        if ((MOTOR_Dir == stop) || (MOTOR_Mounted==false)){
-            return false;
-        }
-        // motor is on, but not turning any more -> endposition reached -> stop the motor
-        MOTOR_Control(stop, speed);
-        // now open till no movement or more than MOTOR_MAX_IMPULSES
-        MOTOR_PosAct = 0;
-        MOTOR_PosStop = MOTOR_MAX_IMPULSES;
-        MOTOR_Control(open, speed);
-        do {
-            postmp = MOTOR_PosAct;
-            delay(200);
-        } while ((MOTOR_Dir != stop) && (postmp != MOTOR_PosAct) &&
-                  MOTOR_Mounted); // motor still on, moving and mounted
-        // stopped by ISR?, turning too long, not mounted -> error
-        if ((MOTOR_Dir == stop) || (MOTOR_Mounted==false)){
-            return false;
-        }
-        // motor is on, but not turning any more -> endposition reached -> stop the motor
-        MOTOR_Control(stop, speed);
-        MOTOR_PosMax = MOTOR_PosAct;
+        MOTOR_PosStop= -MOTOR_MAX_IMPULSES;
+        MOTOR_Control(close);
     } else {
-        // - open till no movement or more than MOTOR_MAX_IMPULSES
-        MOTOR_PosAct = 0;
-        MOTOR_PosStop = MOTOR_MAX_IMPULSES;
-        MOTOR_Control(open, speed);
-        do {
-            postmp = MOTOR_PosAct;
-            delay(200);
-        } while ((MOTOR_Dir != stop) && (postmp != MOTOR_PosAct) &&
-                  MOTOR_Mounted); // motor still on, moving and mounted
-        // stopped by ISR?, turning too long, not mounted -> error
-        if ((MOTOR_Dir == stop) || (MOTOR_Mounted==false)){
-            return false;
-        }
-        // motor is on, but not turning any more -> endposition reached -> stop the motor
-        MOTOR_Control(stop, speed);
-        // now close till no movement or more than MOTOR_MAX_IMPULSES
-        MOTOR_PosAct = MOTOR_MAX_IMPULSES;
-        MOTOR_PosStop = 0;
-        MOTOR_Control(close, speed);
-        do {
-            postmp = MOTOR_PosAct;
-            delay(200);
-        } while ((MOTOR_Dir != stop) && (postmp != MOTOR_PosAct) &&
-                  MOTOR_Mounted); // motor still on, moving and mounted
-        // stopped by ISR?, turning too long, not mounted -> error
-        if ((MOTOR_Dir == stop) || (MOTOR_Mounted==false)){
-            return false;
-        }
-        // motor is on, but not turning any more -> endposition reached -> stop the motor
-        MOTOR_Control(stop, speed);
-        MOTOR_PosMax = MOTOR_MAX_IMPULSES - MOTOR_PosAct;
-        MOTOR_PosAct = 0;
+        MOTOR_PosStop= +MOTOR_MAX_IMPULSES;
+        MOTOR_Control(open);
     }
-    // now MOTOR_PosMax and MOTOR_PosAct calibated
-    // goto desired position
-    MOTOR_Goto(percent, speed);
-    // Send out notify to com.c
-    COM_setNotify(NOTIFY_CALIBRATE);	
-    // finished
-    return true;
+    MOTOR_calibration_step=1;
 }
-
-
-/*!
- *******************************************************************************
- * stop the motor
- ******************************************************************************/
-void MOTOR_Stop(void)
-{
-    MOTOR_Control(stop, full);
-}
-
 
 /*!
  *******************************************************************************
@@ -316,14 +204,8 @@ void MOTOR_Stop(void)
  *
  * \param  direction motordirection
  *         - stop
- *         - ope
+ *         - open
  *         - close
- *
- * \param  speed motorspeed
- *         - full   (MOTOR_FULL_PWM  /100) * 255
- *         - quiet  (MOTOR_QUIET_PWM /100) * 255
- *
- * \param speed motorspeed in percent for PWM
  *
  * \note PWM runs at 15,625 kHz
  *
@@ -333,7 +215,7 @@ void MOTOR_Stop(void)
        open:     0    1    1   invert. mode      1      on
        close:    1    0    0   non inv mode      1      on       \endverbatim
  ******************************************************************************/
-void MOTOR_Control(motor_dir_t direction, motor_speed_t speed)
+void MOTOR_Control(motor_dir_t direction)
 {
     if (direction == stop){                             // motor off
         // photo eye
@@ -350,14 +232,7 @@ void MOTOR_Control(motor_dir_t direction, motor_speed_t speed)
             // photo eye
             MOTOR_HR20_PE3_P |= (1<<MOTOR_HR20_PE3);    // activate photo eye
             PCMSK0 = (1<<PCINT4);                       // activate interrupt
-            // set pwm value to percentage ( factor 255/100)
-            if (speed == full){
-                OCR0A = MOTOR_FULL_PWM * 2.55;
-            } else {
-                OCR0A = MOTOR_QUIET_PWM * 2.55;
-            }
-            // Reset last Position for MOTOR_CheckBlocked
-            MOTOR_PosLast = 0xffff;
+        	MOTOR_run_timeout = config.motor_run_timeout;
             // open
             if ( direction == close) {
                 // set pins of H-Bridge
@@ -365,6 +240,7 @@ void MOTOR_Control(motor_dir_t direction, motor_speed_t speed)
                 MOTOR_HR20_PG4_P &= ~(1<<MOTOR_HR20_PG4);   // PG4 LOW
                 MOTOR_HR20_PB7_P &= ~(1<<MOTOR_HR20_PB7);   // PB7 LOW
                 // set PWM non inverting mode
+	            OCR0A = config.motor_speed_close; // set pwm value
                 TCCR0A = (1<<WGM00) | (1<<WGM01) | (1<<COM0A1) | (1<<CS00);
             // close
             } else {
@@ -373,37 +249,80 @@ void MOTOR_Control(motor_dir_t direction, motor_speed_t speed)
                 MOTOR_HR20_PG4_P |=  (1<<MOTOR_HR20_PG4);   // PG4 HIGH
                 MOTOR_HR20_PB7_P |=  (1<<MOTOR_HR20_PB7);   // PB7 HIGH
                 // set PWM inverting mode
+	            OCR0A = config.motor_speed_open;  // set pwm value
                 TCCR0A=(1<<WGM00)|(1<<WGM01)|(1<<COM0A1)|(1<<COM0A0)|(1<<CS00);
             }
-        }
+		}
     }
     // set new speed and direction
     MOTOR_Dir = direction;
 }
 
-
 /*!
  *******************************************************************************
- * check if motor is blocked 
+ * Update motor position
  *
- * \note stops the motor if blocked
+ * \note called by TASK_UPDATE_MOTOR_POS event
  *
- * \note checks if \ref MOTOR_PosAct == \ref MOTOR_PosLast
- *
- * \note must be called at least every 1s <BR>
- *       not quicker than 500ms
  ******************************************************************************/
-void MOTOR_CheckBlocked(void){
-    // blocked if last position == actual position
-    if (MOTOR_PosAct == MOTOR_PosLast){
-        MOTOR_Control(stop, full);
-        // Send out notify to com.c
-      	COM_setNotify(NOTIFY_MOTOR_BLOCKED);
+void MOTOR_update_pos(void){
+    MOTOR_run_timeout = config.motor_run_timeout;  
+    if (MOTOR_Dir == open) {
+        if (!(++MOTOR_PosAct < MOTOR_PosStop)){
+            MOTOR_Control(stop);
+            if (MOTOR_calibration_step != 0) {
+                MOTOR_calibration_step = -1;     // calibration error
+            }
+        }
     } else {
-        MOTOR_PosLast = MOTOR_PosAct;
+        if (!(--MOTOR_PosAct > MOTOR_PosStop)){
+            MOTOR_Control(stop);
+            if (MOTOR_calibration_step != 0) {
+                MOTOR_calibration_step = -1;     // calibration error
+            }
+        }
     }
 }
 
+/*!
+ *******************************************************************************
+ * motor timer
+ *
+ * \note called by TASK_MOTOR_TIMER event
+ *
+ ******************************************************************************/
+void MOTOR_timer(void) {
+    if (MOTOR_run_timeout>0) {
+       MOTOR_run_timeout--;
+    } else {
+        if (MOTOR_Dir == open) { // stopped on end
+            MOTOR_Control(stop); // position on end
+            MOTOR_PosMax = MOTOR_PosAct; // recalibrate it on the end
+            if (MOTOR_calibration_step == 1) {
+                MOTOR_Control(close);
+                MOTOR_PosStop= MOTOR_PosAct-MOTOR_MAX_IMPULSES;
+                MOTOR_calibration_step = 2;
+            } else if (MOTOR_calibration_step == 2) {
+                MOTOR_calibration_step = 0;     // calibration DONE
+            }
+        } else if (MOTOR_Dir == close) { // stopped on end
+            MOTOR_Control(stop); // position on end
+            MOTOR_PosMax -= MOTOR_PosAct; // recalibrate it on the end
+			MOTOR_PosAct = 0;
+            if (MOTOR_calibration_step == 1) {
+                MOTOR_PosStop= MOTOR_PosAct+MOTOR_MAX_IMPULSES;
+                MOTOR_Control(open);
+                MOTOR_calibration_step = 2;
+            } else if (MOTOR_calibration_step == 2) {
+                MOTOR_calibration_step = 0;     // calibration DONE
+            }
+        } else {
+            MOTOR_Control(stop); // just ensurance 
+        }  
+    }
+}
+
+// interrupts: 
 
 /*!
  *******************************************************************************
@@ -411,22 +330,25 @@ void MOTOR_CheckBlocked(void){
  *
  * \note count light eye impulss: \ref MOTOR_PosAct
  *
- * \note stops the motor if \ref MOTOR_PosStop is reached
+ * \note create TASK_UPDATE_MOTOR_POS
  ******************************************************************************/
 ISR (PCINT0_vect){
     // count only on HIGH impulses
     if (((PINE & (1<<PE4)) != 0)) {
-        if (MOTOR_Dir == open) {
-            MOTOR_PosAct++;
-            if (!(MOTOR_PosAct < MOTOR_PosStop)){
-                MOTOR_Control(stop, full);
-            }
-        } else {
-            MOTOR_PosAct--;
-            if (!(MOTOR_PosAct > MOTOR_PosStop)){
-                MOTOR_Control(stop, full);
-            }
-        }
+        task|=TASK_UPDATE_MOTOR_POS;
+    }
+}
+
+static uint8_t timer0_cnt=0; // non volatile, itsn't shared
+/*!
+ *******************************************************************************
+ * Timer0 overflow interupt
+ * runs at 15,625 kHz (variant 1953.125)
+ * \note Timer0 is active only if motor runing
+ ******************************************************************************/
+ISR (TIMER0_OVF_vect){
+    if ((++timer0_cnt) == 0) {  // 61.03515625 Hz (variant 7.62939453125)
+        task|=TASK_MOTOR_TIMER;
     }
 }
 

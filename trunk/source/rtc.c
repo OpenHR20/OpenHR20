@@ -3,11 +3,12 @@
  *
  *  target:     ATmega169 @ 4 MHz in Honnywell Rondostat HR20E
  *
- *  ompiler:    WinAVR-20071221
+ *  compiler:   WinAVR-20071221
  *              avr-libc 1.6.0
  *              GCC 4.2.2
  *
  *  copyright:  2008 Dario Carluccio (hr20-at-carluccio-dot-de)
+ *				2008 Jiri Dobry (jdobry-at-centrum-dot-cz)
  *
  *  license:    This program is free software; you can redistribute it and/or
  *              modify it under the terms of the GNU Library General Public
@@ -26,7 +27,7 @@
 /*!
  * \file       rtc.c
  * \brief      functions to control clock and timers
- * \author     Dario Carluccio <hr20-at-carluccio-dot-de>
+ * \author     Dario Carluccio <hr20-at-carluccio-dot-de>; Jiri Dobry <jdobry-at-centrum-dot-cz>
  * \date       01.02.2008
  * $Rev$
  */
@@ -43,26 +44,25 @@
 // HR20 Project includes
 #include "main.h"
 #include "rtc.h"
-#include "com.h"
+#include "task.h"
+#include "eeprom.h"
 
 // Vars
 
 
-volatile uint8_t RTC_hh;   //!< \brief Time: Hours
-volatile uint8_t RTC_mm;   //!< \brief Time: Minutes
-volatile uint8_t RTC_ss;   //!< \brief Time: Seconds
-volatile uint8_t RTC_DD;   //!< \brief Date: Day
-volatile uint8_t RTC_MM;   //!< \brief Date: Month
-volatile uint8_t RTC_YY;   //!< \brief Date: Year (0-255) -> 2000 - 2255
-volatile uint8_t RTC_DOW;  //!< Date: Day of Week
+uint8_t RTC_hh;   //!< \brief Time: Hours
+uint8_t RTC_mm;   //!< \brief Time: Minutes
+uint8_t RTC_ss;   //!< \brief Time: Seconds
+uint8_t RTC_DD;   //!< \brief Date: Day
+uint8_t RTC_MM;   //!< \brief Date: Month
+uint8_t RTC_YY;   //!< \brief Date: Year (0-255) -> 2000 - 2255
+uint8_t RTC_DOW;  //!< Date: Day of Week
 
-volatile uint8_t RTC_DS;     //!< Daylightsaving Flag
-volatile uint32_t RTC_Ticks; //!< Ticks since last RTC.Init
-volatile uint8_t RTC_Dow_Timer[7][RTC_TIMERS_PER_DOW];  //!< DOW Timer entrys
-rtc_callback_t RTC_DowTimerCallbackFunc; //!< Timer callback function
+uint8_t RTC_DS;     //!< Daylightsaving Flag
+uint32_t RTC_Ticks; //!< Ticks since last RTC.Init
+uint16_t RTC_Dow_Timer[7+1][RTC_TIMERS_PER_DOW];  //!< DOW Timer entrys 7 days + 1 program for whole week; data format \ref ee_timers
 
 // prototypes
-void    RTC_AddOneSecond(void);     // add one second to actual time
 void    RTC_AddOneDay(void);        // add one day to actual date
 uint8_t RTC_NoLeapyear(void);       // is (RTC_YY) a leapyear?
 uint8_t RTC_DaysOfMonth(void);      // how many days in (RTC_MM, RTC_YY)
@@ -90,17 +90,15 @@ uint8_t RTC_DayOfMonthTablePrgMem[] PROGMEM =
  *
  *  \param  pFunc   pointer to callback function for DOW timer
  ******************************************************************************/
-void RTC_Init(rtc_callback_t pFunc)
+void RTC_Init(void)
 {
-    RTC_DowTimerCallbackFunc = pFunc;   // callback function for DOW Timer
-
     TIMSK2 &= ~(1<<TOIE2);              // disable OCIE2A and TOIE2
     ASSR = (1<<AS2);                    // Timer2 asynchronous operation
     TCNT2 = 0;                          // clear TCNT2A
     TCCR2A |= (1<<CS22) | (1<<CS20);    // select precaler: 32.768 kHz / 128 =
                                         // => 1 sec between each overflow
-
-    // wait for TCN2UB and TCR2UB to be cleared
+	
+	// wait for TCN2UB and TCR2UB to be cleared
     while((ASSR & 0x01) | (ASSR & 0x04));   
 
     TIFR2 = 0xFF;                       // clear interrupt-flags
@@ -118,21 +116,9 @@ void RTC_Init(rtc_callback_t pFunc)
     RTC_YY = 8;
     // day of week
     RTC_SetDayOfWeek();
+    
+    eeprom_timers_init(); // read RTC_Dow_Timer from EEPROM
 }
-
-
-/*!
- *******************************************************************************
- *  \returns actual Ticks since last RTC_Init
- ******************************************************************************/
-uint32_t RTC_GetTicks(void)
-{
-    cli();
-    uint32_t retval=RTC_Ticks;
-    sei();
-    return retval;
-}
-
 
 /*!
  *******************************************************************************
@@ -146,7 +132,6 @@ void RTC_SetDay(uint8_t day)
     }
     RTC_SetDayOfWeek();
 }
-
 
 /*!
  *******************************************************************************
@@ -218,18 +203,18 @@ void RTC_SetSecond(uint8_t second)
  *  \param dow day of week
  *  \param slot timeslot number
  *  \param time time
+ *  \param timermode (type \ref timermode_t) 
  *
  *  \note
  *      - maximum timers for each weekday with \ref RTC_TIMERS_PER_DOW
- *      - only 10 minute intervals supported: <BR>
- *        hh:m0 is coded in one byte: hh*10 + m <BR>
- *        e.g.: 12:00 = 120, 17:30 = 173, 22:10 = 221
- *      - to deactivate timer: set value 0xff
+ *      - 1 minute intervals supported
+ *      - to deactivate timer: set value 0xfff
  *
  ******************************************************************************/
-void RTC_DowTimerSet(rtc_dow_t dow, uint8_t slot, uint8_t time)
+void RTC_DowTimerSet(rtc_dow_t dow, uint8_t slot, uint16_t time, timermode_t timermode)
 {
-    RTC_Dow_Timer[dow][slot] = time;
+    // to table format see to \ref ee_timers
+    RTC_Dow_Timer[dow][slot] = (time & 0x0fff) | ((uint16_t)timermode<<12);
 }
 
 /*!
@@ -239,19 +224,20 @@ void RTC_DowTimerSet(rtc_dow_t dow, uint8_t slot, uint8_t time)
  *
  *  \param dow day of week
  *  \param slot timeslot number
- *  \returns switching time of dow-timer
+ *  \param *timermode (type \ref timermode_t) 
+ *  \returns time 
  *
  *  \note
  *      - maximum timers for each weekday with \ref RTC_TIMERS_PER_DOW
- *      - only 10 minute intervals supported: <BR>
- *        hh:m0 is coded in one byte: hh*10 + m <BR>
- *        e.g.: 12:00 = 120, 17:30 = 173, 22:10 = 221
- *      - deactivates timer returns 0xff
+ *      - 1 minute intervals supported
+ *      - to deactivate timer: set value 0xfff
  *
  ******************************************************************************/
-uint8_t RTC_DowTimerGet(rtc_dow_t dow, uint8_t slot)
+uint16_t RTC_DowTimerGet(rtc_dow_t dow, uint8_t slot, timermode_t *timermode)
 {
-    return RTC_Dow_Timer[dow][slot];
+    // to table format see to \ref ee_timers
+    *timermode = (timermode_t) (RTC_Dow_Timer[dow][slot] >> 12);
+    return RTC_Dow_Timer[dow][slot] & 0xfff;
 }
 
 /*!
@@ -266,71 +252,22 @@ uint8_t RTC_DowTimerGet(rtc_dow_t dow, uint8_t slot)
  *       needed to calculate the actual valid timer index
  *
  ******************************************************************************/
-uint8_t RTC_DowTimerGetActualIndex(void)
+int8_t RTC_DowTimerGetIndex(uint8_t dow,uint16_t time_minutes)
 {
     uint8_t i;
-    uint8_t index;
-    uint8_t acttime;
-    uint8_t maxtime;
-
+    int8_t index;
+    uint16_t maxtime;
     maxtime=0;
-    acttime=(RTC_hh*10)+(RTC_mm/10);
-
-    // Get index from this day at 00:00
-    index = RTC_DowTimerGetStartOfDay();
-    
-    // each timer until now
+    index = -1;
+    // each timer until time_minutes
     for (i=1; i<RTC_TIMERS_PER_DOW; i++){
         // check if timer > maxtime and timer < actual time
-        if ((RTC_Dow_Timer[RTC_DOW][i] > maxtime)
-            && !(RTC_Dow_Timer[RTC_DOW][i] > acttime)){
-            maxtime = RTC_Dow_Timer[RTC_DOW][i];
+        uint16_t table_time = (RTC_Dow_Timer[dow][i]) & 0x0fff;
+        if ((table_time > maxtime)
+            && !(table_time > time_minutes)){
+            maxtime = table_time;
             index=i;
         }
-    }
-    return index;
-}
-
-
-/*!
- *******************************************************************************
- *
- *  get timer index for previous day
- *
- *  \returns timerslot index
- *
- *  \note
- *        what was status at 00:00 of the actual day
- *        needed to calculate the actual valid timer index
- *
- ******************************************************************************/
-uint8_t RTC_DowTimerGetStartOfDay(void)
-{
-    uint8_t dow;
-    uint8_t day;
-    uint8_t i;
-    uint8_t index;
-    uint8_t maxtime;
-
-    maxtime=0;
-    index=0xff;
-    day=0;
-    
-    // if previous day has no timer set, do this for last 7 days
-    while ( (index == 0xff) && (day < 7) ){
-    
-        // dow of previous day
-        dow = (RTC_DOW+6)%7;
-    
-        // dow of previous day
-        for (i=1; i<RTC_TIMERS_PER_DOW; i++){
-            // check if > maxtime and (active (<240)
-            if ((RTC_Dow_Timer[dow][i]>maxtime) && (RTC_Dow_Timer[dow][i]<240)){
-                maxtime = RTC_Dow_Timer[RTC_DOW][i];
-                index=i;
-            }
-        }
-        day++;
     }
     return index;
 }
@@ -349,14 +286,14 @@ uint8_t RTC_DowTimerGetStartOfDay(void)
  *         ONLY ONE TIME -> set FLAG RTC_DS <BR>
  *         reset FLAG RTC_DS on November 1st
  *
+ *  \returns true if minutes changed, false otherwise  
  ******************************************************************************/
-void RTC_AddOneSecond(void)
+bool RTC_AddOneSecond(void)
 {
-    uint8_t i;
+    RTC_Ticks++;          // overflow every 136 Years
 	if (++RTC_ss == 60) {
 		RTC_ss = 0;
 		// notify com.c about the changed minute
-    COM_setNotify(NOTIFY_TIME);             
 		if (++RTC_mm == 60) {
 			RTC_mm = 0;
 			// add ome hour
@@ -380,16 +317,9 @@ void RTC_AddOneSecond(void)
                 }
 			}
         }
-        // Dow_Timer check every 10 minutes
-        if ((RTC_mm % 10) == 0){
-            // RTC_DowTimerCallbackFunc(1); // to test callback
-            for (i=0; i<RTC_TIMERS_PER_DOW; i++){
-                if (RTC_Dow_Timer[RTC_DOW][i] == ((RTC_hh*10) + (RTC_mm/10))){
-                    RTC_DowTimerCallbackFunc(i);
-                }
-            }
-        }
+        return true;
  	}
+ 	return false;
 }
 
 
@@ -515,7 +445,7 @@ static const uint16_t daysInYear [12] PROGMEM= {
 	31+28+31+30+31+30+31,
 	31+28+31+30+31+30+31+31,
 	31+28+31+30+31+30+31+31+30,
-	31+28+31+30+31+30+31+31+30+31,
+    31+28+31+30+31+30+31+31+30+31,
 	31+28+31+30+31+30+31+31+30+31+30};
 
 void RTC_SetDayOfWeek(void)
@@ -534,6 +464,10 @@ void RTC_SetDayOfWeek(void)
 
     // calc weekday
     tmp_dow = RTC_YY + ((RTC_YY-1) / 4) - ((RTC_YY-1) / 100) + day_of_year;
+    // if (RTC_YY > 0) {  
+        tmp_dow++;                          // 2000 was leapyear
+    // }
+
     // set DOW
     RTC_DOW = (uint8_t) ((tmp_dow + 5) % 7) ;
 }
@@ -581,13 +515,12 @@ bool RTC_SetDate(uint8_t dd, uint8_t mm, uint8_t yy)
  ******************************************************************************/
 ISR(TIMER2_OVF_vect)
 {
-    RTC_Ticks++;          // overflow every 136 Years
-    RTC_AddOneSecond();   // increment second and check Dow_Timer
+    task |= TASK_RTC;   // increment second and check Dow_Timer
+
 }
 
 
 #if HAS_CALIBRATE_RCO
-
 /*!
  *******************************************************************************
  *

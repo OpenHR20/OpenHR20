@@ -42,11 +42,15 @@
 #define LCD_MODE_ON         3    //!< (0b11) segment permanent on
 
 #define LCD_CONTRAST_INITIAL  14 //!< initial LCD contrast (0-15)
-#define LCD_BLINK_FRAMES      24 //!< refreshes for each frame @ 48 frames/s
-                                 //!< 24 refreshes -> 2Hz Blink frequency
+#define LCD_BLINK_FRAMES      12 //!< refreshes for each frame @ 48 frames/s
+                                 //!< 12 refreshes -> 4Hz Blink frequency
+#define LCD_BITPLANES          2   //!< \brief two bitplanes for blinking
+
 /*****************************************************************************
 *   Global Vars
 *****************************************************************************/
+extern volatile uint8_t LCD_used_bitplanes; //!< \brief number of used bitplanes / used for power
+extern uint8_t LCD_force_update;        //!< \brief force update LCD
 
 /*****************************************************************************
 *   Prototypes
@@ -72,8 +76,15 @@ void LCD_SetSeg(uint8_t, uint8_t);         // Set one Segment (0-69)
 void LCD_SetHourBarSeg(uint8_t, uint8_t);  // Set HBS (0-23) (Hour-Bar-Segment)
 void LCD_SetHourBarVal(uint8_t, uint8_t);  // Set only one (val) HBS
 void LCD_SetHourBarBat(uint8_t, uint8_t);  // Set all HBS from 0 to val (0-23)
-void LCD_Update(void);                     // Request immidiate LCD-Update
-bool LCD_ContrastAdjust(int8_t);           // Adjust contrast
+// bool LCD_ContrastAdjust(int8_t);           // Adjust contrast
+
+void task_lcd_update(void);
+
+#define  LCD_Update()  ((LCDCRA |= (1<<LCDIE)),(LCD_force_update=1))
+	// Update at next LCD_ISR
+    // Enable LCD start of frame interrupt
+    
+
 
 //***************************
 // LCD Chars:

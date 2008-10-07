@@ -61,7 +61,7 @@ FORMAT = ihex
 
 
 # Target file name (without extension).
-TARGET = main
+TARGET = hr20
 
 
 # Object files directory
@@ -71,19 +71,15 @@ OBJDIR = obj
 
 
 # List C source files here. (C dependencies are automatically generated.)
-SRC = $(TARGET).c
-
-# If there is more than one source file, append them above, or modify and
-# uncomment the following:
-SRC += \
+SRC = main.c \
 adc.c \
 lcd.c \
 rtc.c \
 motor.c \
-com.c \
-rs232_hw.c \
-rs485_hw.c \
-engine.c
+eeprom.c \
+keyboard.c \
+menu.c \
+pid.c
 
 
 # List C++ source files here. (C dependencies are automatically generated.)

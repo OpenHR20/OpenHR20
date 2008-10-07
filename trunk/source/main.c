@@ -3,11 +3,12 @@
  *
  *  target:     ATmega169 @ 4 MHz in Honnywell Rondostat HR20E
  *
- *  ompiler:    WinAVR-20071221
+ *  compiler:    WinAVR-20071221
  *              avr-libc 1.6.0
  *              GCC 4.2.2
  *
  *  copyright:  2008 Dario Carluccio (hr20-at-carluccio-dot-de)
+ *				2008 Jiri Dobry (jdobry-at-centrum-dot-cz)
  *
  *  license:    This program is free software; you can redistribute it and/or
  *              modify it under the terms of the GNU Library General Public
@@ -26,8 +27,8 @@
 /*!
  * \file       main.c
  * \brief      the main file for Open HR20 project
- * \author     Dario Carluccio <hr20-at-carluccio-dot-de>
- * \date       24.12.2007
+ * \author     Dario Carluccio <hr20-at-carluccio-dot-de>; Jiri Dobry <jdobry-at-centrum-dot-cz>
+ * \date       02.10.2008
  * $Rev$
  */
 
@@ -43,12 +44,15 @@
 #include "config.h"
 #include "main.h"
 #include "adc.h"
-#include "com.h"
 #include "lcd.h"
 #include "motor.h"
 #include "rtc.h"
-#include "com.h"
-#include "engine.h"
+#include "task.h"
+#include "keyboard.h"
+#include "eeprom.h"
+#include "pid.h"
+#include "debug.h"
+#include "menu.h"
 
 // global Vars
 volatile bool    m_automatic_mode;         // auto mode (false: manu mode)
@@ -57,16 +61,6 @@ volatile bool    m_automatic_mode;         // auto mode (false: manu mode)
 volatile uint8_t m_reftemp;                // actual desired temperatur
 volatile uint8_t m_reftemp_mem[TEMP_SLOTS];// desired temperatur memories
                                            // (high, low)
-volatile motor_speed_t m_speed;            // motor speed
-
-// global Vars for keypress and wheel status
-volatile bool    m_key_action;             // keypress ISR came up, process it
-volatile uint8_t m_state_keys;             // state of keys (Bits: see KEYMASK_
-volatile uint8_t m_state_keys_prev;
-volatile uint8_t m_state_wheel;            // state of wheel sensor
-volatile uint8_t m_state_wheel_prev;
-volatile bool    m_wheel_action;           // wheel position changed
-volatile uint8_t m_wheel;                  // wheel position (0-0xff)
 
 // serial number
 uint16_t serialNumber;	//!< Unique serial number \todo move to CONFIG.H
@@ -79,6 +73,12 @@ void load_defauls(void);                   // load default values
 void callback_settemp(uint8_t);            // called from RTC to set new reftemp
 void setautomode(bool);                    // activate/deactivate automode
 uint8_t input_temp(uint8_t);
+
+int16_t temp_wanted=2000;   // Fixed value, TODO: change it by timer
+
+uint8_t test=0;
+
+static int16_t PID_update_timeout=-1;   // signed value, val<0 means reinit PID controler
 
 
 // Check AVR LibC Version >= 1.6.0
@@ -94,346 +94,141 @@ uint8_t input_temp(uint8_t);
  ******************************************************************************/
 int main(void)
 {
-    bool last_state_mnt;        //!< motor mounted
-    bool state_mnt;             //!< motor mounted
-    bool err;                   //!< error
-    bool ref_pos_changed;       //!< ref Position changed
-
-    uint8_t last_statekey;      //!< state of keys on last loop
-    uint8_t last_second;        //!< RTC-second of last main cycle
-    uint8_t ref_position;       //!< desired position in percent
-    motor_speed_t speed;        //!< motor speed (fast or quiet)
-    uint8_t display_mode;       //!< desired display output
-    uint16_t value16;           //!< 16 Bit value
-    int16_t value16s;           //!< signed 16 Bit value
-    uint8_t value8;             //!<  8 Bit value
-
     //! initalization
     init();
 
-    //! load/set default values
-    load_defauls();
-    
+	task=0;
+
     //! Enable interrupts
     sei();
 
-    //! show POST Screen
-    LCD_AllSegments(LCD_MODE_ON);                   // all segments on
-    delay(1000);
-    LCD_AllSegments(LCD_MODE_OFF);        
-    LCD_PrintDec(REVHIGH, 1, LCD_MODE_ON);          // print version
-    LCD_PrintDec(REVLOW, 0, LCD_MODE_ON);
-    LCD_Update();
-    delay(1000);
-    LCD_AllSegments(LCD_MODE_OFF);                  // all off
-
-    //! \todo Send Wakeup MSG
-
-    state_mnt=false;
-    ref_pos_changed=true;
-    last_second=99;
-    speed=full;
-    last_statekey = 0;
-    last_state_mnt = false;
-    m_key_action = true;
-    ref_position = 10;
-    display_mode=3;
-
     ISR(PCINT1_vect);                  // get keystate
 
-		// We should do the following once here to have valid data from the start
-    ADC_Measure_Ub();
-		ADC_Measure_Temp();
+    LCD_AllSegments(LCD_MODE_ON);                   // all segments on
+	LCD_Update();
+
+	// We should do the following once here to have valid data from the start
 
 		
     /*!
     ****************************************************************************
     * main loop
-    *
-    * 1) process keypresses
-    *    - m_state_keys and m_wheel are set from IRQ, only process them
-    *    - you can set m_wheel to a new value
-    *    - controll content of LCD
-    * 2) \todo calc new valveposition if new temp available
-    *    - temp is measured by IRQ
-    * 3) calibrate motor
-    *    - start calibration is valve mounted changed to on
-    *      (during calibration the main loop stops at least for 10 seconds)
-    *    - reset calibration is valve mounted changed to off
-    * 4) start motor if
-    *    - actual valveposition != desired valveposition && motor is off
-    * 5) if motor is on call MOTOR_CheckBlocked at least once a second
-    *    - that switches motor of if it is blocked
-    * 6) store keystate at end of loop before going to sleep
-    * 7) Check for serial command to process
-    * 8) \todo goto sleep if
-    *    - motor is of
-    *    - no key is pressed (AUTO, C, PROG)
-    *    - no serial communication active
     ***************************************************************************/
-    for (;;){        // change displaystate every 10 seconds 0 to 5
-        // Activate Auto Mode
-        // setautomode(true);
-
-        // 1) process keypresses
-        if (m_key_action){
-            m_key_action = false;
-            state_mnt = !(m_state_keys & KEYMASK_MOUNT);
-
-            // State of keys AUTO, C and PROG and valve mounted
-            if ((m_state_keys & KEYMASK_AUTO) != 0){
-                display_mode--;
-                LCD_SetHourBarVal(display_mode, LCD_MODE_ON);
-                ref_pos_changed = true;
-                LCD_SetSeg(LCD_SEG_AUTO, LCD_MODE_ON);
+    for (;;){        
+		// go to sleep with ADC concersion start
+		asm volatile ("cli");
+		if (! task) {
+  			// nothing to do, go to sleep
+            if(MOTOR_Dir!=stop) {
+			    SMCR = (0<<SM1)|(0<<SM0)|(1<<SE); // Idle mode
             } else {
-                LCD_SetSeg(LCD_SEG_AUTO, LCD_MODE_OFF);
+    			if (sleep_with_ADC) {
+    				SMCR = (0<<SM1)|(1<<SM0)|(1<<SE); // ADC noise reduction mode
+				} else {
+				    SMCR = (1<<SM1)|(1<<SM0)|(1<<SE); // Power-save mode
+                }
             }
-            if ((m_state_keys & KEYMASK_C) != 0){
-                if (display_mode==9){
-                      m_reftemp = input_temp(m_reftemp);                      
-                }                 
-                //LCD_SetHourBarVal(display_mode, LCD_MODE_ON);                
-                //ref_pos_changed = true;
-                //LCD_SetSeg(LCD_SEG_MANU, LCD_MODE_ON);
+            
+			if (sleep_with_ADC==1) {
+				sleep_with_ADC=0;
+				// start conversions
+		        ADCSRA |= (1<<ADSC);
+			}
+
+			DEBUG_BEFORE_SLEEP();
+			asm volatile ("sei");	//  sequence from ATMEL datasheet chapter 6.8.
+			asm volatile ("sleep");
+			asm volatile ("nop");
+			DEBUG_AFTER_SLEEP(); 
+			SMCR = (1<<SM1)|(1<<SM0)|(0<<SE); // Power-save mode
+		} else {
+			asm volatile ("sei");
+		}
+
+        // update LCD task
+		if (task & TASK_LCD) {
+			task&=~TASK_LCD;
+			task_lcd_update();
+			continue; // on most case we have only 1 task, iprove time to sleep
+		}
+
+		if (task & TASK_ADC) {
+			task&=~TASK_ADC;
+			if (task_ADC()==0) {
+                // ADC is done
+                // TODO
+            }
+			continue; // on most case we have only 1 task, iprove time to sleep
+		}
+		
+        // update motor possition
+		if (task & TASK_MOTOR_TIMER) {
+			task&=~TASK_MOTOR_TIMER;
+			// faster mont contact test if motor runs
+            MOTOR_updateCalibration(mont_contact_pooling(),50);  //test
+			MOTOR_timer();
+			// continue; // on most case we have only 1 task, iprove time to sleep
+		}
+        // update motor possition
+
+		if (task & TASK_UPDATE_MOTOR_POS) {
+			task&=~TASK_UPDATE_MOTOR_POS;
+			MOTOR_update_pos();
+			continue; // on most case we have only 1 task, iprove time to sleep
+		}
+
+		//! check keyboard and set keyboards events
+		if (task & TASK_KB) {
+			task&=~TASK_KB;
+			task_keyboard();
+		}
+
+		if (task & TASK_RTC) {
+            task&=~TASK_RTC;
+			if(RTC_AddOneSecond()) {
+                //minutes changed
+                //TODO: check timers
+                #if 0
+                if (wanted teperature changed) {
+                    PID_update_timeout=-1; // update now with PID reinit !
+                }
+                #endif
+            }
+            if (PID_update_timeout <= 0) {
+                //update now
+                if (PID_update_timeout < 0) {
+                    pid_Init(temp_average);
+                }
+                PID_update_timeout = (config.PID_interval * 10);
+                pid_Controller(temp_wanted, temp_average);
             } else {
-                LCD_SetSeg(LCD_SEG_MANU, LCD_MODE_OFF);
+                PID_update_timeout--;
             }
-            if ((m_state_keys & KEYMASK_PROG)!= 0){
-                display_mode++;
-                LCD_SetHourBarVal(display_mode+1, LCD_MODE_ON);
-                ref_pos_changed = true;
-                LCD_SetSeg(LCD_SEG_PROG, LCD_MODE_ON);
-            } else {
-                LCD_SetSeg(LCD_SEG_PROG, LCD_MODE_OFF);
+			task_keyboard_long_press_detect();
+            MOTOR_updateCalibration(mont_contact_pooling(),50);  //test
+//            MOTOR_updateCalibration(0,50);  //test
+			start_task_ADC();
+			if (menu_auto_update_timeout>0) {
+			     menu_auto_update_timeout--;
             }
-        }
 
-        // 2) calc new valveposition if new temp available
-        //    - temp is measured by IRQ
+            MOTOR_Goto(50); //test
 
+		}
 
-        // 3) calibrate motor
-        //    - start calibration if valve is now mounted
-        //      TODO:
-        //      (during calibration the main loop stops for a long time
-        //       maybe add global var to cancel callibration, e.g.: if
-        //       HR20 removed from ther gear)
-        //    - reset calibration is valve mounted changed to off
-        if (last_state_mnt != state_mnt) {
-            MOTOR_SetMountStatus(state_mnt);
-            if (state_mnt) {
-                LCD_ClearNumbers();
-                LCD_PrintChar(LCD_CHAR_C, 3, LCD_MODE_ON);
-                LCD_PrintChar(LCD_CHAR_A, 2, LCD_MODE_ON);
-                LCD_PrintChar(LCD_CHAR_L, 1, LCD_MODE_ON);
-                LCD_Update();
-                // DEBUG: if next line is disabled, not calibration and no
-                //        motor control is done
-                // MOTOR_Calibrate(ref_position, speed);
-                LCD_ClearNumbers();
+		// menu state machine
+		if (kb_events || (menu_auto_update_timeout==0)) {
+            bool update = menu_controller(false);
+            if (update) {
+                menu_controller(true); // menu updated, call it again
             } 
-        }
-
-        // 4) start motor if
-        //    - actual valveposition != desired valveposition
-        //    - motor is off
-        //    - motor is calibrated
-        if ((ref_pos_changed) && (MOTOR_IsCalibrated())){
-            err = MOTOR_Goto(ref_position, speed);
-            ref_pos_changed = false;
-        }
-
-        // 5) if motor is on call MOTOR_CheckBlocked at least once a second
-        //    - that switches motor of if it is blocked
-        if (MOTOR_On()){
-            if (last_second != RTC_GetSecond()){
-                MOTOR_CheckBlocked();
-                last_second = RTC_GetSecond();
-            }
-        }
-        
-        
-        // 6) store keystate at end of loop before going to sleep
-        last_statekey = m_state_keys;
-        last_state_mnt = state_mnt;
-	
-        
-        // 7) Check if there is a serial command to process
-        //    Loop until all is processed
-				e_meassure();	// test call to sample values and send them to serial port
-	
-        while( (COM_Process() == true) ){};
-
-        // 8) goto sleep if
-        //    - motor is of
-        //    - no key is pressed (AUTO, C, PROG)
-        //    - no serial communication active
-                
-        
-        if (display_mode==1) {
-            // Ub: ADC Value Hex 
-            ADC_Measure_Ub();
-            value16 = ADC_Get_Bat_Val();
-            LCD_PrintHexW(value16, LCD_MODE_ON);
-        }else if (display_mode==2) {
-            // Ub: ADC Value Decimal 
-            ADC_Measure_Ub();
-            value16 = ADC_Get_Bat_Val();
-            LCD_PrintDecW(value16, LCD_MODE_ON);
-        }else if (display_mode==3) {
-            // Ub: Voltage [mV]
-            ADC_Measure_Ub();            
-            value16 = ADC_Get_Bat_Voltage();
-            LCD_PrintDecW(value16, LCD_MODE_ON);
-        }else if (display_mode==4) {
-            // Temp: ADC Value Hex
-            ADC_Measure_Temp();
-            value16 = ADC_Get_Temp_Val();
-            LCD_PrintHexW(value16, LCD_MODE_ON);
-        }else if (display_mode==5) {
-            // Temp: ADC Value Decimal
-            ADC_Measure_Temp();
-            value16 = ADC_Get_Temp_Val();
-            LCD_PrintDecW(value16, LCD_MODE_ON);            
-        }else if (display_mode==6) {
-            // Temp: Temperature (Degree)
-            ADC_Measure_Temp();
-            value16s = ADC_Get_Temp_Degree();
-            LCD_PrintTempInt(value16s, LCD_MODE_ON);
-        }else if (display_mode==7) {
-            // - 9,87 °C            
-            value16s = -987;
-            LCD_PrintTempInt(value16s, LCD_MODE_ON);
-        }else if (display_mode==8) {
-            // 98,76 °C            
-            value16s = 9876;
-            LCD_PrintTempInt(value16s, LCD_MODE_ON);
-        }else{
-            value16 = display_mode;                      
-            LCD_PrintDecW(value16, LCD_MODE_ON);
-        }           
-        /*
-        // Bar 24 on if calibrated
-        if (MOTOR_IsCalibrated()) {
-            LCD_SetSeg(LCD_SEG_BAR24, LCD_MODE_ON);
-        } else {
-            LCD_SetSeg(LCD_SEG_BAR24, LCD_MODE_OFF);
-        }
-
-        // Hour 0 on if state_mnt
-        if (state_mnt) {
-            LCD_SetSeg(LCD_SEG_B0, LCD_MODE_ON);
-        } else {
-            LCD_SetSeg(LCD_SEG_B0, LCD_MODE_OFF);
-        }
-        
-        // Hour 1 on if last_state_mnt
-        if (last_state_mnt) {
-            LCD_SetSeg(LCD_SEG_B1, LCD_MODE_ON);
-        } else {
-            LCD_SetSeg(LCD_SEG_B1, LCD_MODE_OFF);
-        }
-
-        
-        if (!MOTOR_IsCalibrated()) {
-            LCD_PrintChar(LCD_CHAR_E, 3, LCD_MODE_ON);
-            LCD_PrintChar(LCD_CHAR_2, 2, LCD_MODE_ON);
-        } else {
-            LCD_PrintDec(ref_position,  1, LCD_MODE_ON);
-            LCD_PrintDec(MOTOR_GetPosPercent(),  0, LCD_MODE_ON);
-        }
-        */
-        
-        // impulses = MOTOR_GetImpulses();
-
-        // update Display each main loop
-        LCD_Update();
+            menu_view(update); // TODO: move it, it is wrong place
+			LCD_Update(); // TODO: move it, it is wrong place
+		}
     } //End Main loop
-    return 0;
+	return 0;
 }
 
-// Collection of functions which can be used from here
-#if 0
-
-    // ************
-    // *** KEYS ***
-    // ************
-    // m_state_keys stores values of keys
-    LCD_PrintHex(m_state_keys, 1, LCD_MODE_ON);
-    // m_wheel position 
-    LCD_PrintHex(m_wheel, 1, LCD_MODE_ON);
-
-    // *************
-    // *** MOTOR ***
-    // *************
-    // goto position
-    MOTOR_Goto(100, full);
-    // calibrate motor and goto position
-    MOTOR_Calibrate(100, fast);
-    // shal not be used from here, for test only
-    MOTOR_Control(stop, full);
-    MOTOR_Control(open, full);
-    MOTOR_Control(close, full);
-    MOTOR_Control(open, quiet);
-    MOTOR_Control(close, quiet);
-
-    // ***********
-    // *** LCD ***
-    // ***********
-    LCD_Update();
-    // print DEC and HEX values
-    LCD_PrintDec(i, 0, LCD_MODE_ON);
-    LCD_PrintHex(i, 1, LCD_MODE_ON);
-    // m_reftemp
-    LCD_PrintTemp(m_reftemp, LCD_MODE_ON);
-    LCD_PrintTemp (i, LCD_MODE_ON);
-    // Hour Bar shows displaystate
-    LCD_SetHourBarVal(i, LCD_MODE_ON);
-    LCD_SetHourBarBar(i, LCD_MODE_ON);
-    LCD_SetHourBarSeg(i, LCD_MODE_ON);
-    // mm:ss
-    LCD_PrintDec(RTC_GetMinute(), 1, LCD_MODE_ON);
-    LCD_PrintDec(RTC_GetSecond(), 0, LCD_MODE_ON);
-    // hh:mm
-    LCD_PrintDec(RTC_GetHour()  , 1, LCD_MODE_ON);
-    LCD_PrintDec(RTC_GetMinute(), 0, LCD_MODE_ON);
-    // DD.MM
-    LCD_PrintDec(RTC_GetDay()   , 1, LCD_MODE_ON);
-    LCD_PrintDec(RTC_GetMonth() , 0, LCD_MODE_ON);
-    // YY YY
-    tmp= RTC_GetYearYY();
-    LCD_PrintDec( (20+(tmp/100) ), 1, LCD_MODE_ON);
-    LCD_PrintDec( (tmp%100)      , 0, LCD_MODE_ON);
-    // Weekday
-    LCD_PrintDayOfWeek(RTC_GetDayOfWeek(), LCD_MODE_ON);
-    // 24 hour bar 
-    LCD_SetSeg(LCD_SEG_BAR24, LCD_MODE_ON);
-    LCD_SetHourBarSeg(i, LCD_MODE_OFF);
-    LCD_SetHourBarVal(12, LCD_MODE_ON);
-    LCD_SetHourBarBat(12, LCD_MODE_ON);
-    // column
-    LCD_SetSeg(LCD_SEG_COL1, LCD_MODE_ON);
-    LCD_SetSeg(LCD_SEG_COL2, LCD_MODE_ON);
-    LCD_SetSeg(LCD_SEG_COL1, LCD_MODE_BLINK_1);
-    LCD_SetSeg(LCD_SEG_COL2, LCD_MODE_BLINK_2);
-    // symbols
-    LCD_SetSeg(LCD_SEG_AUTO, LCD_MODE_ON);
-    LCD_SetSeg(LCD_SEG_MANU, LCD_MODE_ON);
-    LCD_SetSeg(LCD_SEG_PROG, LCD_MODE_ON);
-    LCD_SetSeg(LCD_SEG_COL1, LCD_MODE_ON);
-    LCD_SetSeg(LCD_SEG_COL2, LCD_MODE_ON);
-    LCD_SetSeg(LCD_SEG_SUN, LCD_MODE_ON);
-    LCD_SetSeg(LCD_SEG_MOON, LCD_MODE_ON);
-    LCD_SetSeg(LCD_SEG_SNOW, LCD_MODE_ON);
-    // control more segments at once
-    LCD_AllSegments(LCD_MODE_ON);
-    LCD_ClearHourBar();
-    LCD_ClearSymbols();
-    LCD_ClearNumbers();
-    LCD_AllSegments(LCD_MODE_OFF);
-
-#endif
 
 
 /*!
@@ -455,222 +250,45 @@ void init(void)
     //! Disable Digital input on PF0-7 (power save)
     DIDR0 = 0xFF;
 
+	//! Power reduction mode
+	PRR = (1<<PRTIM1)|(1<<PRSPI);  
+
     //! digital I/O port direction
     DDRB = (1<<PB4)|(1<<PB7); // PB4, PB7 Motor out
     DDRG = (1<<PG3)|(1<<PG4); // PG3, PG4 Motor out
-    DDRE = (1<<PE3);          // PE3  activate lighteye
+    DDRE = (1<<PE3)|(1<<PE2);          // PE3  activate lighteye
+	PORTE = 0x03;
     DDRF = (1<<PF3);          // PF3  activate tempsensor
+	PORTF = 0xf3;
 
     //! enable pullup on all inputs (keys and m_wheel)
-    //! ATTENTION: no pullup on lighteye input watch circuit diagram
-    PORTB = (1<<PB0)|(1<<PB1)|(1<<PB2)|(1<<PB3)|(1<<PB5)|(1<<PB6);
+    //! ATTENTION: PB0 & PB6 is input, but we will select it only for read
+    PORTB = (0<<PB0)|(1<<PB1)|(1<<PB2)|(1<<PB3)|(0<<PB6);
+    DDRB = (1<<PB0)|(1<<PB4)|(1<<PB7)|(1<<PB6); // PB4, PB7 Motor out
+
 
     //! remark for PCMSK0:
     //!     PCINT0 for lighteye (motor monitor) is activated in motor.c using
     //!     mask register PCMSK0: PCMSK0=(1<<PCINT4) and PCMSK0&=~(1<<PCINT4)
 
     //! PCMSK1 for keyactions
-    PCMSK1 = (1<<PCINT8)|(1<<PCINT9)|(1<<PCINT10)|(1<<PCINT11)|(1<<PCINT13);
+    PCMSK1 = (1<<PCINT9)|(1<<PCINT10)|(1<<PCINT11)|(1<<PCINT13);
 
     //! activate PCINT0 + PCINT1
     EIMSK = (1<<PCIE1)|(1<<PCIE0);
     
     //! Initialize the USART
-  	COM_Init(COM_BAUD_RATE);
+  	// COM_Init(COM_BAUD_RATE);
+
+    //! Initialize the RTC, pass pointer to timer callback function
+    RTC_Init();
+
+    //! Initialize the motor
+    MOTOR_Init();
+    
+    eeprom_config_init();
 
     //1 Initialize the LCD
     LCD_Init();                     
 
-    //! Initialize the RTC, pass pointer to timer callback function
-    RTC_Init(callback_settemp);
-
-    //! Initialize the motor
-    MOTOR_Init();
-		
-		// Init Engine
-		e_Init();
 }
-
-
-/*!
- *******************************************************************************
- * Load default values from eeprom
- *
- * \todo EEPROM management, until now values are fix
- ******************************************************************************/
-void load_defauls(void)
-{
-    uint8_t i;
-
-    //! Set Time and date
-    RTC_SetDay   (BOOT_DD);
-    RTC_SetMonth (BOOT_MM);
-    RTC_SetYear  (BOOT_YY);
-    RTC_SetHour  (BOOT_hh);
-    RTC_SetMinute(BOOT_mm);
-    RTC_SetSecond(0);
-
-    //! m_reftemps (high and low)
-    m_reftemp_mem[0] = DEG_2_UINT8 (BOOT_TEMP_H);
-    m_reftemp_mem[1] = DEG_2_UINT8 (BOOT_TEMP_L);
-
-    //! DOW times
-    for (i=0; i<7; i++){
-        RTC_DowTimerSet(i, 0, BOOT_ON1);
-        RTC_DowTimerSet(i, 1, BOOT_OFF1);
-        RTC_DowTimerSet(i, 2, BOOT_ON2);
-        RTC_DowTimerSet(i, 3, BOOT_OFF2);
-    }
-
-    //! motor speed
-    m_speed = full;
-
-    //! initial keystates
-    m_key_action = false;
-    m_state_keys = 0;
-    m_state_keys_prev = 0;
-    m_state_wheel = 0;
-    m_state_wheel_prev = 0;
-
-    //! serial number        
-    serialNumber = 0; // Zero = Not set !
-
-}
-
-
-/*!
- *******************************************************************************
- * Input the desired temperature using the Wheel. 
- * \note Exit function by pressing PROG 
- * \note Keys and wheel are processed on \ref ISR(PCINT1_vect)
- * \note This function uses global vars \ref m_wheel, \ref m_state_keys <BR>
- *        \ref m_key_action, \ref m_wheel_action, 
- * \param    default_val default value used as startvalue
- * \returns  choosen temmperature, format see \ref LCD_PrintTemp   
- ******************************************************************************/
-uint8_t input_temp(uint8_t default_val){   
-    
-    bool active;
-    active = true;
-    // set to default value
-    m_wheel = default_val;
-    // activate initial Output
-    m_wheel_action = true;
-    m_key_action = false;
-    // Loop    
-    while (active == true){
-        if (m_wheel_action){
-            if (m_wheel > 52){
-                m_wheel = 52;
-            }
-            LCD_PrintTemp(m_wheel, LCD_MODE_ON);
-        }
-        if (m_key_action == true){
-            if ((m_state_keys & KEYMASK_PROG) != 0){            
-                active = false;
-            }
-        }      
-    }
-    return m_wheel; 
-}
-
-
-/*!
- *******************************************************************************
- * set desired m_reftemp from m_reftemp_mem[]
- * is called from RTC
- *
- * \param slot temperatre slot, ID of DOW timer which called this function
- *
- ******************************************************************************/
-void callback_settemp(uint8_t slot){
-    LCD_SetSeg(LCD_SEG_SNOW, LCD_MODE_ON);
-    if (m_automatic_mode){
-        m_reftemp = m_reftemp_mem[(slot%2)];
-    }
-}
-
-/*!
- *******************************************************************************
- * achtivate or deactivate automatic mode
- *
- * \param newmode
- *   true: auto
- *   false: manu
- ******************************************************************************/
-void setautomode(bool newmode){
-    if (newmode){
-        // set m_reftemp according to last occured timer index MOD 2
-        // as timers 0, 2, .. are timers for high temp, 1, 3, .. for low temp.
-        m_reftemp = m_reftemp_mem[(RTC_DowTimerGetActualIndex()%2)];
-        LCD_SetSeg(LCD_SEG_AUTO, LCD_MODE_ON);
-        LCD_SetSeg(LCD_SEG_MANU, LCD_MODE_OFF);
-    } else {
-        LCD_SetSeg(LCD_SEG_AUTO, LCD_MODE_OFF);
-        LCD_SetSeg(LCD_SEG_MANU, LCD_MODE_ON);
-    }
-    m_automatic_mode = newmode;
-}
-
-
-/*!
- *******************************************************************************
- * Interupt Routine
- *
- *  - check state of buttons
- *  - check state of wheel
- *  - check mount contact
- ******************************************************************************/
-ISR(PCINT1_vect){
-
-    // keys
-    m_state_keys = ~PINB & 0x6f; // low active, mask for input (PB 0,1,2,3,5,6)
-
-    if (m_state_keys_prev != m_state_keys){
-        m_state_keys_prev = m_state_keys;
-
-        // m_wheel
-        m_state_wheel = ( m_state_keys & (0x60) );   // m_wheel on PB5 and PB6
-        if (m_state_wheel !=m_state_wheel_prev){
-            m_state_wheel_prev = m_state_wheel;
-             if ( (m_state_wheel == 0x20) || (m_state_wheel == 0x40) ) {
-                if (m_wheel < 0xff){
-                    m_wheel++;
-                    m_wheel_action = true;
-               }
-            } else if ( (m_state_wheel == 0x00) || (m_state_wheel == 0x60) ){
-                if (m_wheel > 0){
-                    m_wheel--;
-                    m_wheel_action = true;
-                }
-            }
-        }
-
-        // set flag for main
-        m_key_action = true;
-    }
-}
-
-/*!
- *******************************************************************************
- * delay function
- *  quick and dirty used only for test purpose
- ******************************************************************************/
-void delay(uint16_t millisec)
-{
-    uint8_t i;
-    while (millisec--){
-        for (i=0; i<255; i++){
-            asm volatile ("nop"::);
-        }
-        for (i=0; i<255; i++){
-            asm volatile ("nop"::);
-        }
-        for (i=0; i<255; i++){            
-            asm volatile ("nop"::);
-        }
-    }
-}
-
-
-
