@@ -1,4 +1,0 @@
-<area shape="rect" href="$main_8h.html" title="header file for main.c, the main file for Open HR20 project" alt="" coords="659,80,717,107">
-<area shape="rect" href="$lcd_8h.html" title="header file for lcd.c, functions to control the HR20 LCD" alt="" coords="741,80,789,107">
-<area shape="rect" href="$rtc_8h.html" title="header file for rtc.c, to control the HR20 clock and timers" alt="" coords="813,80,861,107">
-<area shape="rect" href="$motor_8h.html" title="header file for motor.c, functions to control the HR20 motor" alt="" coords="885,80,949,107">
