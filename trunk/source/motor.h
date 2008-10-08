@@ -27,7 +27,7 @@
  * \file       motor.h
  * \brief      header file for motor.c, functions to control the HR20 motor
  * \author     Dario Carluccio <hr20-at-carluccio-dot-de>
- * \date       07.02.2008
+ * \date       $Date$
  * $Rev$
  */
 
@@ -73,7 +73,6 @@ typedef enum {
 *****************************************************************************/
 void MOTOR_Init(void);                        // Init motor control
 bool MOTOR_Goto(uint8_t);                     // Goto position in percent
-void MOTOR_CheckBlocked(void);                // stop if motor is blocked
 bool MOTOR_On(void);                          // is motor on
 void MOTOR_Calibrate(uint8_t percent);        // calibrate the motor
 bool MOTOR_IsCalibrated(void);                // is motor successful calibrated?

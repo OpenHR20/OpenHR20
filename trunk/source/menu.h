@@ -27,8 +27,8 @@
  * \file       menu.h
  * \brief      menu view & controler for free HR20E project
  * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>
- * \date       06.10.2008
- * $Rev: 70 $
+ * \date       $Date$
+ * $Rev$
  */
 
 extern uint8_t menu_auto_update_timeout;

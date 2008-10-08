@@ -89,12 +89,12 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
     0x76, //19    ******   *                 *    *   *        *    *  *
     0x30, //20   1111001  1110001  1100011  1010100  1110011  1110110  0110000
 
-    0x08, //21   21:0x08  22:0x40  23:0x01  24:0x48  25:0x41  26:0x11  27:0x49
+    0x08, //21   21:0x08  22:0x40  23:0x01  24:0x48  25:0x41  26:0x09  27:0x49
     0x40, //22                      ******            ******   ******   ******
     0x01, //23
     0x48, //24             ******            ******   ******            ******
     0x41, //25
-    0x11, //26    ******                     ******            ******   ******
+    0x09, //26    ******                     ******            ******   ******
     0x49, //27   0001000  1000000  0000001  1001000  1000001  0001001  1001001
 
     0x50, //28   28:0x50  29:0x54  30:0x10  31:0x5c  32:0x00  33:0x33  34:0x27
@@ -105,13 +105,13 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
     0x33, //33    *        *    *   *        ******            *             *
     0x27, //34   1010000  1010100  0010000  1011100  0000000  0110011  0100111
 
-    0x38  //35   35:0x38
-          //36    *
+    0x38, //35   35:0x38  36:0x58  
+    0x58  //36    *
           //37    *
-          //38    *
-          //39    *
-          //40    ******
-          //41   0111000
+          //38    *        ******  
+          //39    *        *
+          //40    ******   ******
+          //41   0111000  1011000
 };
 
 // Look-up chars table for weekdays (german)
@@ -310,13 +310,13 @@ void LCD_PrintHex(uint8_t value, uint8_t pos, uint8_t mode)
 
 /*!
  *******************************************************************************
- *  Print decimal value in LCD field
+ *  Print decimal value in LCD field (only 2 digits)
  *
  *  \note You have to call \ref LCD_Update() to trigger update on LCD if not
  *        it is triggered automatic at change of bitframe
  *
  *  \param value value to be printed (0-99)
- *  \param pos   position in lcd 0:left, 1:right
+ *  \param pos   position in lcd 
  *  \param mode  \ref LCD_MODE_ON, \ref LCD_MODE_OFF, \ref LCD_MODE_BLINK_1
  ******************************************************************************/
 void LCD_PrintDec(uint8_t value, uint8_t pos, uint8_t mode)
@@ -331,6 +331,25 @@ void LCD_PrintDec(uint8_t value, uint8_t pos, uint8_t mode)
         // 2nd Digit at 1 (3)
         tmp = value / 10;
         LCD_PrintChar(tmp, pos, mode);
+    }
+}
+/*!
+ *******************************************************************************
+ *  Print decimal value in LCD field (3 digits)
+ *
+ *  \note You have to call \ref LCD_Update() to trigger update on LCD if not
+ *        it is triggered automatic at change of bitframe
+ *
+ *  \param value value to be printed (0-255)
+ *  \param pos   position in lcd
+ *  \param mode  \ref LCD_MODE_ON, \ref LCD_MODE_OFF, \ref LCD_MODE_BLINK_1
+ ******************************************************************************/
+void LCD_PrintDec3(uint8_t value, uint8_t pos, uint8_t mode)
+{
+    if (pos <= 1) {
+        // 3nd Digit 
+        LCD_PrintChar(value / 100, pos+2, mode);
+        LCD_PrintDec(value%100, pos, mode);
     }
 }
 

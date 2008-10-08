@@ -27,8 +27,8 @@
  * \file       main.c
  * \brief      the main file for Open HR20 project
  * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>
- * \date       02.10.2008
- * $Rev: 80 $
+ * \date       $Date$
+ * $Rev$
  */
 
 

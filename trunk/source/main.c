@@ -28,7 +28,7 @@
  * \file       main.c
  * \brief      the main file for Open HR20 project
  * \author     Dario Carluccio <hr20-at-carluccio-dot-de>; Jiri Dobry <jdobry-at-centrum-dot-cz>
- * \date       02.10.2008
+ * \date       $Date$
  * $Rev$
  */
 
@@ -214,6 +214,8 @@ int main(void)
 
             MOTOR_Goto(50); //test
 
+            menu_view(false); // TODO: move it, it is wrong place
+			LCD_Update(); // TODO: move it, it is wrong place
 		}
 
 		// menu state machine

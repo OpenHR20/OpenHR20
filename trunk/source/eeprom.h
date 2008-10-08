@@ -27,8 +27,8 @@
  * \file       keyboard.h
  * \brief      Keyboard driver header
  * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>
- * \date       02.10.2008
- * $Rev: 80 $
+ * \date       $Date$
+ * $Rev$
  */
 
 
@@ -134,8 +134,8 @@ void eeprom_timers_save(void);
 
 #define CONFIG_VALUE 0
 #define CONFIG_DEFAULT 1
-#define CONFIG_MIN 1
-#define CONFIG_MAX 1
+#define CONFIG_MIN 2
+#define CONFIG_MAX 3
 
 #ifdef __EEPROM_C__
 	//only for internal usage

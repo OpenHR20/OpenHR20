@@ -27,8 +27,8 @@
  * \file       eeprom.c
  * \brief      EEPROM storage
  * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>
- * \date       02.10.2008
- * $Rev: 70 $
+ * \date       $Date$
+ * $Rev$
  */
 
 #include <avr/eeprom.h>

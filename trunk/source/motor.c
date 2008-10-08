@@ -28,7 +28,7 @@
  * \file       motor.c
  * \brief      functions to control the HR20 motor
  * \author     Dario Carluccio <hr20-at-carluccio-dot-de>; Jiri Dobry <jdobry-at-centrum-dot-cz>
- * \date       06.10.2008
+ * \date       $Date$
  * $Rev$
  */
 
@@ -118,7 +118,7 @@ void MOTOR_updateCalibration(bool unmounted, uint8_t percent)
  ******************************************************************************/
 uint8_t MOTOR_GetPosPercent(void)
 {
-    if (MOTOR_PosMax > 10){
+    if ((MOTOR_PosMax > 10) && (MOTOR_calibration_step==0)){
         return (uint8_t) ( (MOTOR_PosAct * 10) / (MOTOR_PosMax/10) );
     } else {
         return 255;
@@ -237,7 +237,7 @@ void MOTOR_Control(motor_dir_t direction)
             // photo eye
             MOTOR_HR20_PE3_P |= (1<<MOTOR_HR20_PE3);    // activate photo eye / can generate false IRQ
         	MOTOR_run_timeout = config.motor_run_timeout;
-        	nop();
+			MOTOR_timer_buffer=0;
 
             //  remove false interrupt, we need some instructions between false int gen and this point 
             EIFR = (1<<PCIF0);                          

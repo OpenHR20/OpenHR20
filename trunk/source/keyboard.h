@@ -27,8 +27,8 @@
  * \file       keyboard.h
  * \brief      Keyboard driver header
  * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>
- * \date       02.10.2008
- * $Rev: 80 $
+ * \date       $Date$
+ * $Rev$
  */
 
 extern uint16_t kb_events;

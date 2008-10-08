@@ -28,7 +28,7 @@
  * \file       rtc.c
  * \brief      functions to control clock and timers
  * \author     Dario Carluccio <hr20-at-carluccio-dot-de>; Jiri Dobry <jdobry-at-centrum-dot-cz>
- * \date       01.02.2008
+ * \date       $Date$
  * $Rev$
  */
 

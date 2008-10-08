@@ -66,6 +66,8 @@
 // global vars
 extern uint16_t serialNumber;	//!< Unique serial number \todo move to CONFIG.H
 
+extern int16_t temp_wanted; //!< wanted temperature
+
 // public prototypes
 void delay(uint16_t);                   // delay
 

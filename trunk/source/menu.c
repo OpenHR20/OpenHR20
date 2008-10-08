@@ -27,8 +27,8 @@
  * \file       menu.c
  * \brief      menu view & controler for free HR20E project
  * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>
- * \date       06.10.2008
- * $Rev: 70 $
+ * \date       $Date$
+ * $Rev$
  */
 
 #include <stdint.h>
@@ -39,6 +39,11 @@
 #include "adc.h"
 #include "lcd.h"
 #include "rtc.h"
+#include "motor.h"
+#include "eeprom.h"
+
+
+static uint8_t service_idx;
 
 
 /*!
@@ -52,11 +57,11 @@ typedef enum {
     // startup
     menu_startup, menu_version,
     // home screens
-    menu_home, menu_home2, menu_home3,
+    menu_home, menu_home2, menu_home3, menu_home4,
     // lock message
     menu_lock,
     // service menu
-    menu_service,
+    menu_service1, menu_service2,
     // datetime setting
     menu_set_year, menu_set_month, menu_set_day, menu_set_hour, menu_set_minute,
     
@@ -98,10 +103,13 @@ static bool events_common(void) {
         locked = ! locked;
         kb_events = 0;
         ret=true;
-    } else if (kb_events & KB_EVENT_ALL_LONG) { // service menu
-        menu_state = menu_service;
-        kb_events = 0;
-        ret=true;
+    } else if (!locked) {    
+        if (kb_events & KB_EVENT_ALL_LONG) { // service menu
+            menu_state = menu_service1;
+            kb_events = 0;
+            service_idx = 0;
+            ret=true;
+        }
     }
     return ret;
 }
@@ -113,7 +121,7 @@ static bool events_common(void) {
  * \returns true for controler restart  
  ******************************************************************************/
 bool menu_controller(bool new_state) {
-	int8_t whell = wheel_proccess(); //signed number
+	int8_t wheel = wheel_proccess(); //signed number
 	bool ret = false;
     switch (menu_state) {
     case menu_startup:
@@ -139,7 +147,7 @@ bool menu_controller(bool new_state) {
         }
         break;
     case menu_set_year:
-        if (whell != 0) RTC_SetYear(RTC_GetYearYY()+whell);
+        if (wheel != 0) RTC_SetYear(RTC_GetYearYY()+wheel);
         if ( kb_events & KB_EVENT_PROG) {
             menu_state = menu_set_month;
             ret=true;
@@ -148,7 +156,7 @@ bool menu_controller(bool new_state) {
         }
         break;
     case menu_set_month:
-        if (whell != 0) RTC_SetMonth(RTC_GetMonth()+whell);
+        if (wheel != 0) RTC_SetMonth(RTC_GetMonth()+wheel);
         if ( kb_events & KB_EVENT_PROG ) {
             menu_state = menu_set_day;
             ret=true;
@@ -157,7 +165,7 @@ bool menu_controller(bool new_state) {
         }
         break;
     case menu_set_day:
-        if (whell != 0) RTC_SetDay(RTC_GetDay()+whell);
+        if (wheel != 0) RTC_SetDay(RTC_GetDay()+wheel);
         if ( kb_events & KB_EVENT_PROG ) {
             menu_state = menu_set_hour;
             ret=true;
@@ -166,7 +174,7 @@ bool menu_controller(bool new_state) {
         }
         break;
     case menu_set_hour:
-        if (whell != 0) RTC_SetHour(RTC_GetHour()+whell);
+        if (wheel != 0) RTC_SetHour(RTC_GetHour()+wheel);
         if ( kb_events & KB_EVENT_PROG ) {
             menu_state = menu_set_minute;
             ret=true;
@@ -175,18 +183,84 @@ bool menu_controller(bool new_state) {
         }
         break;
     case menu_set_minute:
-        if (whell != 0) {
-            RTC_SetMinute(RTC_GetMinute()+whell);
+        if (wheel != 0) {
+            RTC_SetMinute(RTC_GetMinute()+wheel);
             RTC_SetSecond(0);
         }
         if ( kb_events & KB_EVENT_PROG ) {
-            menu_state = menu_empty;
+            menu_state = menu_home;
             ret=true;
         } else {
             ret = events_common();
         }
         break;
+    case menu_home:         // wanted status
+    case menu_home2:        // real temperature
+    case menu_home3:        // valve pos
+    case menu_home4:        // time    
+        if (new_state) {
+            menu_auto_update_timeout=10;
+        }
+        if (menu_auto_update_timeout==0) {
+            menu_state=menu_home;
+            ret=true; 
+        }
+        if ( kb_events & KB_EVENT_C ) {
+            menu_state++;
+            if (menu_state > menu_home4) menu_state=menu_home;
+            ret=true; 
+        }
+        if (locked) {
+            if ( kb_events & (
+                    KB_EVENT_WHEEL_PLUS  | KB_EVENT_WHEEL_MINUS | KB_EVENT_PROG | KB_EVENT_C
+                    | KB_EVENT_AUTO | KB_EVENT_PROG_REWOKE | KB_EVENT_C_REWOKE | KB_EVENT_AUTO_REWOKE
+                    | KB_EVENT_PROG_LONG | KB_EVENT_C_LONG | KB_EVENT_AUTO_LONG )) {
+                menu_state=menu_lock;
+                ret=true;
+                }
+        } else {
+            // TODO whell
+            // TODO KB_EVENT_C
+            // TODO KB_EVENT_AUTO
+            // TODO ....  
+        } 
+        ret = ret || events_common();
+                   break;
     default:
+    case menu_lock:        // "bloc" message
+        if (! locked) { menu_state=menu_home; ret=true; } 
+        if (new_state) menu_auto_update_timeout=LONG_PRESS_THLD+1;
+        if (menu_auto_update_timeout==0) { menu_state=menu_home; ret=true; } 
+        ret = ret ||  events_common();
+        break;        
+    case menu_service1:        
+    case menu_service2:        
+        if ((new_state)||(wheel != 0)) menu_auto_update_timeout=20;
+        if ((menu_auto_update_timeout==0) || (kb_events & KB_EVENT_AUTO)) { 
+            menu_state=menu_home; 
+            ret=true;
+            eeprom_config_init(); 
+        }
+        if (kb_events & KB_EVENT_PROG) {
+            menu_auto_update_timeout=20;
+            if (menu_state == menu_service2) {
+                eeprom_config_save();
+                menu_state = menu_service1;
+            } else {
+                menu_state = menu_service2;
+            }
+        }
+        if (menu_state == menu_service1) {
+            service_idx = (service_idx+wheel+CONFIG_RAW_SIZE)%CONFIG_RAW_SIZE;
+        } else {
+            int16_t min = (int16_t)config_min(service_idx);
+            int16_t max_min_1 = (int16_t)(config_max(service_idx))-min+1;
+            config_raw[service_idx] = (uint8_t) (
+                    ((int16_t)(config_raw[service_idx])+(int16_t)wheel-min+max_min_1)%max_min_1+min);
+            if (service_idx==0) { LCD_Init(); ret=true; }
+        }
+        ret = ret ||  events_common();
+        break;        
 	case menu_empty: // show temperature, blackhole
         if (new_state || (menu_auto_update_timeout==0)) {
             menu_auto_update_timeout=1;
@@ -197,6 +271,44 @@ bool menu_controller(bool new_state) {
     kb_events = 0; // clear unused keys
     return ret;
 } 
+
+/*!
+ *******************************************************************************
+ * view helpers funcion for clear display
+ *******************************************************************************/
+/*
+    // not used generic version, easy to read but longer code
+    static void clr_show(uint8_t n, ...) {
+        uint8_t i;
+        uint8_t *p;
+        LCD_AllSegments(LCD_MODE_OFF);
+        p=&n+1;
+        for (i=0;i<n;i++) {
+            LCD_SetSeg(*p, LCD_MODE_ON);
+            p++;
+        }
+    }
+*/
+
+
+static void clr_show1(uint8_t seg1) {
+    LCD_AllSegments(LCD_MODE_OFF);
+    LCD_SetSeg(seg1, LCD_MODE_ON);
+}
+
+static void clr_show2(uint8_t seg1, uint8_t seg2) {
+    LCD_AllSegments(LCD_MODE_OFF);
+    LCD_SetSeg(seg1, LCD_MODE_ON);
+    LCD_SetSeg(seg2, LCD_MODE_ON);
+}
+
+static void clr_show3(uint8_t seg1, uint8_t seg2, uint8_t seg3) {
+    LCD_AllSegments(LCD_MODE_OFF);
+    LCD_SetSeg(seg1, LCD_MODE_ON);
+    LCD_SetSeg(seg2, LCD_MODE_ON);
+    LCD_SetSeg(seg3, LCD_MODE_ON);
+}
+
 
 /*!
  *******************************************************************************
@@ -211,57 +323,73 @@ void menu_view(bool update) {
         break;
     case menu_version:
         if (update) {
-            LCD_AllSegments(LCD_MODE_OFF);                   // all segments off
+            clr_show1(LCD_SEG_COL1);
             LCD_PrintHexW(VERSION_N,LCD_MODE_ON);
-            LCD_SetSeg(LCD_SEG_COL1, LCD_MODE_ON);           // decimal point
-        }
+        } 
         break;
     case menu_set_year:
-        if (update) {
-            LCD_AllSegments(LCD_MODE_OFF);                   // all segments off
-        }
+        if (update) LCD_AllSegments(LCD_MODE_OFF); // all segments off
         LCD_PrintDecW(RTC_GetYearYYYY(),LCD_MODE_BLINK_1);
        break;
     case menu_set_month:
-        if (update) {
-            LCD_AllSegments(LCD_MODE_OFF);                   // all segments off
-            LCD_SetSeg(LCD_SEG_COL1, LCD_MODE_ON);           // decimal point
-        }
+        if (update) clr_show1(LCD_SEG_COL1);           // decimal point
         LCD_PrintDec(RTC_GetMonth(), 2, LCD_MODE_BLINK_1);
         LCD_PrintDec(RTC_GetDay(), 0, LCD_MODE_ON);
        break;
     case menu_set_day:
-        if (update) {
-            LCD_AllSegments(LCD_MODE_OFF);                   // all segments off
-            LCD_SetSeg(LCD_SEG_COL1, LCD_MODE_ON);           // decimal point
-        }
+        if (update) clr_show1(LCD_SEG_COL1);           // decimal point
         LCD_PrintDec(RTC_GetMonth(), 2, LCD_MODE_ON);
         LCD_PrintDec(RTC_GetDay(), 0, LCD_MODE_BLINK_1);
        break;
     case menu_set_hour:
-        if (update) {
-            LCD_AllSegments(LCD_MODE_OFF);                   // all segments off
-            LCD_SetSeg(LCD_SEG_COL1, LCD_MODE_ON);           // decimal point
-            LCD_SetSeg(LCD_SEG_COL2, LCD_MODE_ON);           // decimal point
-        }
-        LCD_PrintDec(RTC_GetHour(), 2, LCD_MODE_BLINK_1);
-        LCD_PrintDec(RTC_GetMinute(), 0, LCD_MODE_ON);
-       break;
     case menu_set_minute:
-        if (update) {
-            LCD_AllSegments(LCD_MODE_OFF);                   // all segments off
-            LCD_SetSeg(LCD_SEG_COL1, LCD_MODE_ON);           // decimal point
-        }
-        LCD_PrintDec(RTC_GetHour(), 2, LCD_MODE_ON);
-        LCD_PrintDec(RTC_GetMinute(), 0, LCD_MODE_BLINK_1);
+    case menu_home4: // time
+        if (update) clr_show2(LCD_SEG_COL1,LCD_SEG_COL2);
+        LCD_PrintDec(RTC_GetHour(), 2, ((menu_state == menu_set_hour) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));
+        LCD_PrintDec(RTC_GetMinute(), 0, ((menu_state == menu_set_minute) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));
        break;
+    case menu_home: // wanted status / TODO
+        if (update) clr_show1(LCD_SEG_BAR24);
+        LCD_SetHourBarSeg(1, LCD_MODE_OFF); //just test TODO
+        LCD_PrintTempInt(temp_wanted,LCD_MODE_ON);
+       break;
+    case menu_home2: // real temperature
+        if (update) clr_show1(LCD_SEG_COL1);           // decimal point
+        LCD_PrintTempInt(temp_average,LCD_MODE_ON);
+        break;
+    case menu_home3: // valve pos
+        if (update) LCD_AllSegments(LCD_MODE_OFF);
+        // LCD_PrintDec3(MOTOR_GetPosPercent(), 1 ,LCD_MODE_ON);
+        // LCD_PrintChar(LCD_CHAR_2lines,0,LCD_MODE_ON);
+        {
+            uint8_t prc = MOTOR_GetPosPercent();
+            if (prc<=100) {
+                LCD_PrintDec3(MOTOR_GetPosPercent(), 0 ,LCD_MODE_ON);
+            } else {
+                LCD_PrintChar(LCD_CHAR_neg,2,LCD_MODE_ON);
+                LCD_PrintChar(LCD_CHAR_C  ,1,LCD_MODE_ON);
+                LCD_PrintChar(LCD_CHAR_neg,0,LCD_MODE_ON);
+            }
+        }
+        break;
+    case menu_lock:        // "bloc" message
+        if (update) LCD_AllSegments(LCD_MODE_OFF); // all segments off
+        LCD_PrintChar(LCD_CHAR_b,3,LCD_MODE_ON);
+        LCD_PrintChar(LCD_CHAR_1,2,LCD_MODE_ON);
+        LCD_PrintChar(LCD_CHAR_o,1,LCD_MODE_ON);
+        LCD_PrintChar(LCD_CHAR_c,0,LCD_MODE_ON);
+        break;
+    case menu_service1:
+    case menu_service2:
+        if (update) LCD_AllSegments(LCD_MODE_ON);
+        LCD_PrintHex(service_idx, 2, ((menu_state == menu_service1) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));
+        LCD_PrintHex(config_raw[service_idx], 0, ((menu_state == menu_service2) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));
+       break;
+
     default:
 	case menu_empty: // show temperature
-        if (update) {
-            LCD_AllSegments(LCD_MODE_OFF);                   // all segments off
-            LCD_SetSeg(LCD_SEG_COL1, LCD_MODE_ON);           // decimal point
-        }
-        LCD_PrintDecW(temp_average,LCD_MODE_ON);
+        if (update) clr_show1(LCD_SEG_COL1);           // decimal point
+        LCD_PrintTempInt(temp_average,LCD_MODE_ON);
         break;
     }
 }

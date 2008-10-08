@@ -64,6 +64,7 @@ void LCD_ClearSymbols(void);               // Clear AUTO MANU PROG SUN MOON SNOW
 void LCD_ClearNumbers(void);               // Clear 7 Segments and Collumns
 
 void LCD_PrintDec(uint8_t, uint8_t, uint8_t);  // Print DEC-val (0-99)
+void LCD_PrintDec3(uint8_t value, uint8_t pos, uint8_t mode); // Print DEC-val (0-255)
 void LCD_PrintDecW(uint16_t, uint8_t);         // Print DEC-val (0-9999)                       
 void LCD_PrintHex(uint8_t, uint8_t, uint8_t);  // Print HEX-val (0-ff)
 void LCD_PrintHexW(uint16_t, uint8_t);         // Print HEX-val (0-ffff) 
@@ -89,33 +90,37 @@ void task_lcd_update(void);
 //***************************
 // LCD Chars:
 //***************************
-#define LCD_CHAR_0      0  //!< char "0"
-#define LCD_CHAR_1      1  //!< char "1"
-#define LCD_CHAR_2      2  //!< char "2"
-#define LCD_CHAR_3      3  //!< char "3"
-#define LCD_CHAR_4      4  //!< char "4"
-#define LCD_CHAR_5      5  //!< char "5"
-#define LCD_CHAR_6      6  //!< char "6"
+#define LCD_CHAR_0       0  //!< char "0"
+#define LCD_CHAR_1       1  //!< char "1"
+#define LCD_CHAR_2       2  //!< char "2"
+#define LCD_CHAR_3       3  //!< char "3"
+#define LCD_CHAR_4       4  //!< char "4"
+#define LCD_CHAR_5       5  //!< char "5"
+#define LCD_CHAR_6       6  //!< char "6"
 
-#define LCD_CHAR_7      7  //!< char "7"
-#define LCD_CHAR_8      8  //!< char "8"
-#define LCD_CHAR_9      9  //!< char "9"
-#define LCD_CHAR_A     10  //!< char "A"
-#define LCD_CHAR_B     11  //!< char "B"
-#define LCD_CHAR_C     12  //!< char "C"
-#define LCD_CHAR_D     13  //!< char "D"
+#define LCD_CHAR_7       7  //!< char "7"
+#define LCD_CHAR_8       8  //!< char "8"
+#define LCD_CHAR_9       9  //!< char "9"
+#define LCD_CHAR_A      10  //!< char "A"
+#define LCD_CHAR_b      11  //!< char "b"
+#define LCD_CHAR_C      12  //!< char "C"
+#define LCD_CHAR_d      13  //!< char "d"
 
-#define LCD_CHAR_E     14  //!< char "E"
-#define LCD_CHAR_F     15  //!< char "F"
-#define LCD_CHAR_deg   16  //!< symbol degree
-#define LCD_CHAR_n     17  //!< char "n"
-#define LCD_CHAR_P     18  //!< char "P"
-#define LCD_CHAR_H     19  //!< char "H"
-#define LCD_CHAR_I     20  //!< char "I"
-#define LCD_CHAR_neg   22  //!< char "-"
-#define LCD_CHAR_r     28  //!< char "r"
-#define LCD_CHAR_L     35  //!< char "L"
-#define LCD_CHAR_S      5  //!< char "5" = "S"
+#define LCD_CHAR_E      14  //!< char "E"
+#define LCD_CHAR_F      15  //!< char "F"
+#define LCD_CHAR_deg    16  //!< symbol degree
+#define LCD_CHAR_n      17  //!< char "n"
+#define LCD_CHAR_P      18  //!< char "P"
+#define LCD_CHAR_H      19  //!< char "H"
+#define LCD_CHAR_I      20  //!< char "I"
+#define LCD_CHAR_neg    22  //!< char "-"
+#define LCD_CHAR_2lines 26  //!< line on top, line on bottom
+#define LCD_CHAR_3lines 27  //!< 3 horizontal lines
+#define LCD_CHAR_r      28  //!< char "r"
+#define LCD_CHAR_o      31  //!< char "r"
+#define LCD_CHAR_L      35  //!< char "L"
+#define LCD_CHAR_S       5  //!< char "5" = "S"
+#define LCD_CHAR_c      12  //!< char "c"
 
 #define LCD_CHAR_NULL  32  //!< space
 
