@@ -296,9 +296,7 @@ void LCD_PrintHex(uint8_t value, uint8_t pos, uint8_t mode)
 {
     uint8_t tmp;
     // Boundary Check
-    if (pos < 2) {
-        // Start at Pos 0 or 2
-        pos *= 2;
+    if (pos <= 2) {
         // 1st Digit at 0 (2)
         tmp = value % 16;
         LCD_PrintChar(tmp, pos, mode);
@@ -325,9 +323,7 @@ void LCD_PrintDec(uint8_t value, uint8_t pos, uint8_t mode)
 {
     uint8_t tmp;
     // Boundary Check
-    if ((pos < 2) && (value < 100)) {
-        // Start at Pos 0 or 2
-        pos *= 2;
+    if ((pos <= 2) && (value < 100)) {
         // 1st Digit at 0 (2)
         tmp = value % 10;
         LCD_PrintChar(tmp, pos, mode);
@@ -358,7 +354,7 @@ void LCD_PrintDecW(uint16_t value, uint8_t mode)
     }
     // Print     
     tmp = (uint8_t) (value / 100);
-    LCD_PrintDec(tmp, 1, mode);
+    LCD_PrintDec(tmp, 2, mode);
     tmp = (uint8_t) (value % 100);
     LCD_PrintDec(tmp, 0, mode);
 }
@@ -379,7 +375,7 @@ void LCD_PrintHexW(uint16_t value, uint8_t mode)
     uint8_t tmp;
     // Print     
     tmp = (uint8_t) (value >> 8);
-    LCD_PrintHex(tmp, 1, mode);
+    LCD_PrintHex(tmp, 2, mode);
     tmp = (uint8_t) (value & 0xff);
     LCD_PrintHex(tmp, 0, mode);
 }

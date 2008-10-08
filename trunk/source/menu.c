@@ -38,6 +38,7 @@
 #include "keyboard.h"
 #include "adc.h"
 #include "lcd.h"
+#include "rtc.h"
 
 
 /*!
@@ -63,12 +64,56 @@ typedef enum {
 } menu_t;
 
 menu_t menu_state;
+static bool locked = false; 
+
+
+/*!
+ *******************************************************************************
+ * kb_events common reactions
+ * 
+ * \returns true for controler restart
+ ******************************************************************************/
+
+static int8_t wheel_proccess(void) {
+    int8_t ret=0;
+    if (kb_events & KB_EVENT_WHEEL_PLUS) {
+        ret= 1;
+    } else if (kb_events & KB_EVENT_WHEEL_MINUS) {
+        ret= -1;
+    } 
+    return ret;
+}
+
+/*!
+ *******************************************************************************
+ * kb_events common reactions
+ * 
+ * \returns true for controler restart
+ ******************************************************************************/
+
+static bool events_common(void) {
+    bool ret=false;
+    if (kb_events & KB_EVENT_LOCK_LONG) {
+        menu_state = menu_lock;
+        locked = ! locked;
+        kb_events = 0;
+        ret=true;
+    } else if (kb_events & KB_EVENT_ALL_LONG) { // service menu
+        menu_state = menu_service;
+        kb_events = 0;
+        ret=true;
+    }
+    return ret;
+}
 
 /*!
  *******************************************************************************
  * menu Controller
+ * 
+ * \returns true for controler restart  
  ******************************************************************************/
 bool menu_controller(bool new_state) {
+	int8_t whell = wheel_proccess(); //signed number
 	bool ret = false;
     switch (menu_state) {
     case menu_startup:
@@ -79,17 +124,67 @@ bool menu_controller(bool new_state) {
             menu_state = menu_version;
             ret=true;
         }
-        kb_events = 0; //drop any key
         break;
     case menu_version:
         if (new_state) {
             menu_auto_update_timeout=2;
         }
         if (menu_auto_update_timeout==0) {
-            menu_state = menu_empty;
+            #if DEBUG_SKIP_DATETIME_SETTING_AFTER_RESET
+                menu_state = menu_home;
+            #else
+                menu_state = menu_set_year;
+            #endif
             ret=true;
         }
-        kb_events = 0; //drop any key
+        break;
+    case menu_set_year:
+        if (whell != 0) RTC_SetYear(RTC_GetYearYY()+whell);
+        if ( kb_events & KB_EVENT_PROG) {
+            menu_state = menu_set_month;
+            ret=true;
+        } else {
+            ret = events_common();
+        }
+        break;
+    case menu_set_month:
+        if (whell != 0) RTC_SetMonth(RTC_GetMonth()+whell);
+        if ( kb_events & KB_EVENT_PROG ) {
+            menu_state = menu_set_day;
+            ret=true;
+        } else {
+            ret = events_common();
+        }
+        break;
+    case menu_set_day:
+        if (whell != 0) RTC_SetDay(RTC_GetDay()+whell);
+        if ( kb_events & KB_EVENT_PROG ) {
+            menu_state = menu_set_hour;
+            ret=true;
+        } else {
+            ret = events_common();
+        }
+        break;
+    case menu_set_hour:
+        if (whell != 0) RTC_SetHour(RTC_GetHour()+whell);
+        if ( kb_events & KB_EVENT_PROG ) {
+            menu_state = menu_set_minute;
+            ret=true;
+        } else {
+            ret = events_common();
+        }
+        break;
+    case menu_set_minute:
+        if (whell != 0) {
+            RTC_SetMinute(RTC_GetMinute()+whell);
+            RTC_SetSecond(0);
+        }
+        if ( kb_events & KB_EVENT_PROG ) {
+            menu_state = menu_empty;
+            ret=true;
+        } else {
+            ret = events_common();
+        }
         break;
     default:
 	case menu_empty: // show temperature, blackhole
@@ -97,9 +192,9 @@ bool menu_controller(bool new_state) {
             menu_auto_update_timeout=1;
             // nothing todo, it is blackhole, just update value
         }
-        kb_events = 0; //drop any key
         //empty        
     }
+    kb_events = 0; // clear unused keys
     return ret;
 } 
 
@@ -121,6 +216,45 @@ void menu_view(bool update) {
             LCD_SetSeg(LCD_SEG_COL1, LCD_MODE_ON);           // decimal point
         }
         break;
+    case menu_set_year:
+        if (update) {
+            LCD_AllSegments(LCD_MODE_OFF);                   // all segments off
+        }
+        LCD_PrintDecW(RTC_GetYearYYYY(),LCD_MODE_BLINK_1);
+       break;
+    case menu_set_month:
+        if (update) {
+            LCD_AllSegments(LCD_MODE_OFF);                   // all segments off
+            LCD_SetSeg(LCD_SEG_COL1, LCD_MODE_ON);           // decimal point
+        }
+        LCD_PrintDec(RTC_GetMonth(), 2, LCD_MODE_BLINK_1);
+        LCD_PrintDec(RTC_GetDay(), 0, LCD_MODE_ON);
+       break;
+    case menu_set_day:
+        if (update) {
+            LCD_AllSegments(LCD_MODE_OFF);                   // all segments off
+            LCD_SetSeg(LCD_SEG_COL1, LCD_MODE_ON);           // decimal point
+        }
+        LCD_PrintDec(RTC_GetMonth(), 2, LCD_MODE_ON);
+        LCD_PrintDec(RTC_GetDay(), 0, LCD_MODE_BLINK_1);
+       break;
+    case menu_set_hour:
+        if (update) {
+            LCD_AllSegments(LCD_MODE_OFF);                   // all segments off
+            LCD_SetSeg(LCD_SEG_COL1, LCD_MODE_ON);           // decimal point
+            LCD_SetSeg(LCD_SEG_COL2, LCD_MODE_ON);           // decimal point
+        }
+        LCD_PrintDec(RTC_GetHour(), 2, LCD_MODE_BLINK_1);
+        LCD_PrintDec(RTC_GetMinute(), 0, LCD_MODE_ON);
+       break;
+    case menu_set_minute:
+        if (update) {
+            LCD_AllSegments(LCD_MODE_OFF);                   // all segments off
+            LCD_SetSeg(LCD_SEG_COL1, LCD_MODE_ON);           // decimal point
+        }
+        LCD_PrintDec(RTC_GetHour(), 2, LCD_MODE_ON);
+        LCD_PrintDec(RTC_GetMinute(), 0, LCD_MODE_BLINK_1);
+       break;
     default:
 	case menu_empty: // show temperature
         if (update) {
@@ -131,4 +265,3 @@ void menu_view(bool update) {
         break;
     }
 }
-

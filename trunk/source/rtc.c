@@ -107,13 +107,13 @@ void RTC_Init(void)
     // Restart Tick Timer
     RTC_Ticks=0;
     // initial time 00:00:00
-    RTC_hh = 0;
-    RTC_mm = 0;
+    RTC_hh = BOOT_hh;
+    RTC_mm = BOOT_mm;
     RTC_ss = 0;
     // initial date 1.01.2008
-    RTC_DD = 1;
-    RTC_MM = 1;
-    RTC_YY = 8;
+    RTC_DD = BOOT_DD;
+    RTC_MM = BOOT_MM;
+    RTC_YY = BOOT_YY;
     // day of week
     RTC_SetDayOfWeek();
     
@@ -125,11 +125,10 @@ void RTC_Init(void)
  *  set actual date
  *  \param day new value for day
  ******************************************************************************/
-void RTC_SetDay(uint8_t day)
+void RTC_SetDay(int8_t day)
 {
-    if ((day > 0) && (day < 32)) {
-        RTC_DD = day;
-    }
+    uint8_t day_in_m = RTC_DaysOfMonth();
+    RTC_DD = (day+(-1+day_in_m))%day_in_m + 1;
     RTC_SetDayOfWeek();
 }
 
@@ -138,11 +137,9 @@ void RTC_SetDay(uint8_t day)
  *  set actual date
  *  \param month new value for month
  ******************************************************************************/
-void RTC_SetMonth(uint8_t month)
+void RTC_SetMonth(int8_t month)
 {
-    if ((month > 0) && (month < 13)) {
-        RTC_MM = month;
-    }
+    RTC_MM = (month+(-1+12))%12 + 1;
     RTC_SetDayOfWeek();
 }
 
@@ -151,7 +148,7 @@ void RTC_SetMonth(uint8_t month)
  *  set actual date
  *  \param year new value for year
  ******************************************************************************/
-void RTC_SetYear(uint8_t year)
+void RTC_SetYear(int8_t year)
 {
     RTC_YY = year;
     RTC_SetDayOfWeek();
@@ -162,11 +159,9 @@ void RTC_SetYear(uint8_t year)
  *  set actual time
  *  \param hour new value for hour
  ******************************************************************************/
-void RTC_SetHour(uint8_t hour)
+void RTC_SetHour(int8_t hour)
 {
-    if (hour < 24) {
-        RTC_hh = hour;
-    }
+    RTC_hh = (hour+24)%24;
 }
 
 
@@ -175,11 +170,9 @@ void RTC_SetHour(uint8_t hour)
  *  set actual time
  *  \param minute new value for minute
  ******************************************************************************/
-void RTC_SetMinute(uint8_t minute)
+void RTC_SetMinute(int8_t minute)
 {
-    if (minute < 60) {
-        RTC_mm = minute;
-    }
+    RTC_mm = (minute+60)%60;
 }
 
 
@@ -188,11 +181,9 @@ void RTC_SetMinute(uint8_t minute)
  *  set actual time
  *  \param second new value for second
  ******************************************************************************/
-void RTC_SetSecond(uint8_t second)
+void RTC_SetSecond(int8_t second)
 {
-    if (second < 60) {
-        RTC_ss = second;
-    }
+    RTC_ss = (second+60)%60;
 }
 
 /*!
@@ -481,7 +472,7 @@ void RTC_SetDayOfWeek(void)
  *     return true if date is valid and set, otherwise false
  *
  ******************************************************************************/
-bool RTC_SetDate(uint8_t dd, uint8_t mm, uint8_t yy)
+bool RTC_SetDate(int8_t dd, int8_t mm, int8_t yy)
 {
 	// Get current date for restauration in case of an error
 	uint8_t old_yy = RTC_GetYearYY();
