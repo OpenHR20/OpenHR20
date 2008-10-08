@@ -27,7 +27,7 @@
  * \file       rtc.h
  * \brief      header file for rtc.c, to control the HR20 clock and timers
  * \author     Dario Carluccio <hr20-at-carluccio-dot-de>
- * \date       01.02.2008
+ * \date       $Date$
  * $Rev$
  */
 
@@ -81,7 +81,7 @@ void RTC_Init();                 // init Timer, activate 500ms IRQ
 #define RTC_GetYearYY() ((int8_t) RTC_YY)               // get year (00-255)
 #define RTC_GetYearYYYY() (2000 + (uint16_t) RTC_YY)  // get year (2000-2255) 
 #define RTC_GetDayOfWeek() ((uint8_t) RTC_DOW)          // get day of week (0:monday)
-#define RTC_GetTicks() ((uint32_t) RTC_Ticks)          // get day of week (0:monday)
+#define RTC_GetTicks() ((uint32_t) RTC_Ticks)          // 1s ticks from startup
 
 
 void RTC_SetHour(int8_t);                     // Set hour

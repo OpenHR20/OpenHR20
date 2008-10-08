@@ -118,6 +118,8 @@ void RTC_Init(void)
     RTC_SetDayOfWeek();
     
     eeprom_timers_init(); // read RTC_Dow_Timer from EEPROM
+    
+    //! \note OCR2A register and interrupt is used in \ref keyboard.c
 }
 
 /*!
@@ -509,7 +511,6 @@ ISR(TIMER2_OVF_vect)
     task |= TASK_RTC;   // increment second and check Dow_Timer
 
 }
-
 
 #if HAS_CALIBRATE_RCO
 /*!

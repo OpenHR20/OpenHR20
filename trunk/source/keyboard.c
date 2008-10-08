@@ -50,6 +50,8 @@ static uint8_t long_press;
 static uint8_t long_quiet;
 static volatile uint8_t keys = 0;  // must be volatile, shared into interrupt
 uint16_t kb_events = 0;
+static volatile bool kb_timeout = true;
+static volatile bool allow_rewoke = false; 
 
 
 /*!
@@ -78,28 +80,47 @@ void task_keyboard(void) {
  { // other keys
  	uint8_t front = keys & ( KBI_PROG | KBI_C | KBI_AUTO);
 	if (front != state_front_prev) {
-		if (front && (state_front_prev == 0)) {
+		if (front && (state_front_prev == 0) && kb_timeout) {
 			if (front == KBI_PROG) {
 				kb_events |= KB_EVENT_PROG;
+				allow_rewoke = true;
 			} else if (front == KBI_C) {
 				kb_events |= KB_EVENT_C;
+				allow_rewoke = true;
 			} else if (front == KBI_AUTO) {
 				kb_events |= KB_EVENT_AUTO;
+				allow_rewoke = true;
 			} 
 		}
 
-		// some key was pressed, and keep key pressed and add some other key
-		// we need "REVOKE" event
-		if ((state_front_prev == KBI_PROG) && ((front ^ KBI_PROG) != KBI_PROG)) {
-			kb_events |= KB_EVENT_PROG_REWOKE;
-		}
-		if ((state_front_prev == KBI_C) && ((front ^ KBI_C) != KBI_C)) {
-			kb_events |= KB_EVENT_C_REWOKE;
-		}
-		if ((state_front_prev == KBI_AUTO) && ((front ^ KBI_AUTO) != KBI_AUTO)) {
-			kb_events |= KB_EVENT_AUTO_REWOKE;
-		}
-		state_front_prev = front;
+        if (allow_rewoke) {
+    		// some key was pressed, and keep key pressed and add some other key
+    		// we need "REVOKE" event
+    		if ((state_front_prev == KBI_PROG) && ((front ^ KBI_PROG) != KBI_PROG)) {
+    			kb_events |= KB_EVENT_PROG_REWOKE;
+				allow_rewoke = false;
+    		}
+    		if ((state_front_prev == KBI_C) && ((front ^ KBI_C) != KBI_C)) {
+    			kb_events |= KB_EVENT_C_REWOKE;
+				allow_rewoke = false;
+    		}
+    		if ((state_front_prev == KBI_AUTO) && ((front ^ KBI_AUTO) != KBI_AUTO)) {
+    			kb_events |= KB_EVENT_AUTO_REWOKE;
+				allow_rewoke = false;
+    		}
+    	}
+		if (kb_timeout) { // keyboard noise cancelation
+            kb_timeout = false;
+            while (ASSR & ((1<<TCR2UB)|(1<<OCR2UB))) {
+                ;  //wait till asynchronous registers is not free
+            }
+            OCR2A = TCNT2 + KEYBOARD_NOISE_CANCELATION;
+            TIMSK2 |= (1<<OCIE2A);
+        }
+        state_front_prev = front;
+        
+
+        state_front_prev = front;
 		long_press = 0; // long press detection RESET
 		long_quiet = 0;
 	} 
@@ -203,3 +224,22 @@ ISR(PCINT1_vect){
     DDRB = (1<<PB0)|(1<<PB4)|(1<<PB7)|(1<<PB6); // PB4, PB7 Motor out
 }
 
+/*!
+ *******************************************************************************
+ *
+ *  timer/counter2 compare interrupt routine
+ *
+ *  \note - clear keyboard timeout flag
+ *  \note - disable this interrupt 
+ *
+ ******************************************************************************/
+ISR(TIMER2_COMP_vect)
+{
+    kb_timeout=1;   // for noise cancelation
+    while (ASSR & (1<<TCR2UB)) { // it never happen, just ensurance
+      // todo: check it in datasheet
+      nop(); // nice place for breakpoint
+      ;  //wait till asynchronous registers is not free
+    }
+    TIMSK2 &= ~(1<<OCIE2A);
+}

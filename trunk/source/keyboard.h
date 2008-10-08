@@ -51,6 +51,7 @@ extern uint16_t kb_events;
 #define LONG_PRESS_THLD 4
 #define LONG_QUIET_THLD 10
 
+#define KEYBOARD_NOISE_CANCELATION 50 //!< unit is 1/256s depend to RTC
 
 // names for keys
 #define KBI_MONT 	(1 << 0)
