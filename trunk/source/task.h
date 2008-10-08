@@ -28,7 +28,7 @@
  * \brief      task definition for main loop
  * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>
  * \date       02.10.2008
- * $Rev: 70 $
+ * $Rev$
  */
 
 // #include <stdint.h>

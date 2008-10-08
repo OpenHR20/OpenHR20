@@ -28,7 +28,7 @@
  * \brief      optimized version of PID controler for free HR20E project
  * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>, inspired from AVR221
  * \date       02.10.2008
- * $Rev: 70 $
+ * $Rev$
  */
  
 #include <stdint.h>
