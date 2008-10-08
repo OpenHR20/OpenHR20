@@ -34,7 +34,7 @@
 
 #define EEPROM __attribute__((section(".eeprom")))
 
-typedef struct { // each variables must be uint8_t without exception
+typedef struct { // each variables must be uint8_t or int8_t without exception
 	/*  0 */ uint8_t lcd_contrast;
     /*  1 */ uint8_t temperature0;   //!< temperature 0  - frost protection (unit is 0.5stC)
     /*  2 */ uint8_t temperature1;   //!< temperature 1  - energy save (unit is 0.5stC)
@@ -47,7 +47,7 @@ typedef struct { // each variables must be uint8_t without exception
     /*  9 */ uint8_t PID_interval; //!< PID_interval*5 = interval in seconds	
     /* 10 */ uint8_t motor_speed_open;   //!< PWM for motor open 
     /* 11 */ uint8_t motor_speed_close;  //!< PWM for motor close
-    /* 12 */ uint8_t motor_run_timeout; //!< motor_run_timeout (unit 61Hz timer ticks)
+    /* 12 */  int8_t motor_run_timeout; //!< motor_run_timeout (unit 61Hz timer ticks)
         /*! TODO: describe  motor_protection and motor_hysteresis better, picture wanted */
     /* 13 */ uint8_t motor_protection;  //!< defines area for regulation valve as valve range - 2*motor_protection (1* on bottom 1* on top)
     /* 14 */ uint8_t motor_hysteresis; //!< additional impulses for 0 or 100% relative to area for regulation
@@ -116,7 +116,7 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
     {240/5,     240/5,      20/5,   255},   //!< PID_interval*5 = interval in seconds;  min=20sec, max=21.25 minutes
     {180,	    200,        178,	234},	//!< open motor_speed PWM setting
     {180,	    200,        178,	234},	//!< close motor_speed PWM setting
-    {20,         20,        6,      120},   //!< motor_run_timeout (unit 61Hz timer ticks)   
+    {40,         40,        6,      120},   //!< motor_run_timeout (unit 61Hz timer ticks); !!signed value => max is 127!!    
     {15,         15,        0,      120},   //!< motor_protection
     {10,         10,        0,      120},   //!< additional impulses for 0 or 100%
 };

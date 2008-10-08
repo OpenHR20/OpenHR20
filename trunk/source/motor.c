@@ -60,7 +60,9 @@ static int16_t MOTOR_PosStop;     //!< stop at this position
 motor_dir_t MOTOR_Dir;          //!< actual direction
 // bool MOTOR_Mounted;         //!< mountstatus true: if valve is mounted
 static int8_t MOTOR_calibration_step=-2; // not calibrated
-static uint8_t MOTOR_run_timeout=0;
+static int8_t MOTOR_run_timeout=0;
+static volatile int8_t MOTOR_eye_buffer=0;
+static volatile int8_t MOTOR_timer_buffer=0;
 
 
 /*!
@@ -155,6 +157,9 @@ bool MOTOR_Goto(uint8_t percent)
             MOTOR_PosStop = config.motor_protection-config.motor_hysteresis;
         } else {
 			// MOTOR_PosMax>>2 and 100>>2 => overload protection
+			#if (MOTOR_MAX_IMPULSES>>2)*(100>>2) > INT16_MAX
+			 #error OVERLOAD possible
+			#endif
             MOTOR_PosStop = (int16_t) 
                 (percent * 
                     ((MOTOR_PosMax-config.motor_protection-config.motor_protection)>>2) / (100>>2)
@@ -230,9 +235,13 @@ void MOTOR_Control(motor_dir_t direction)
     } else {                                            // motor on
         if (MOTOR_Dir != direction){
             // photo eye
-            MOTOR_HR20_PE3_P |= (1<<MOTOR_HR20_PE3);    // activate photo eye
-            PCMSK0 = (1<<PCINT4);                       // activate interrupt
+            MOTOR_HR20_PE3_P |= (1<<MOTOR_HR20_PE3);    // activate photo eye / can generate false IRQ
         	MOTOR_run_timeout = config.motor_run_timeout;
+        	nop();
+
+            //  remove false interrupt, we need some instructions between false int gen and this point 
+            EIFR = (1<<PCIF0);                          
+            PCMSK0 = (1<<PCINT4);  // activate interrupt, false IRQ must be cleared before
             // open
             if ( direction == close) {
                 // set pins of H-Bridge
@@ -268,14 +277,22 @@ void MOTOR_Control(motor_dir_t direction)
 void MOTOR_update_pos(void){
     MOTOR_run_timeout = config.motor_run_timeout;  
     if (MOTOR_Dir == open) {
-        if (!(++MOTOR_PosAct < MOTOR_PosStop)){
+        cli();
+            MOTOR_PosAct+=MOTOR_eye_buffer;
+            MOTOR_eye_buffer=0;
+        sei();
+        if (!(MOTOR_PosAct < MOTOR_PosStop)){
             MOTOR_Control(stop);
             if (MOTOR_calibration_step != 0) {
                 MOTOR_calibration_step = -1;     // calibration error
             }
         }
     } else {
-        if (!(--MOTOR_PosAct > MOTOR_PosStop)){
+        cli();
+            MOTOR_PosAct-=MOTOR_eye_buffer;
+            MOTOR_eye_buffer=0;
+        sei();
+        if (!(MOTOR_PosAct > MOTOR_PosStop)){
             MOTOR_Control(stop);
             if (MOTOR_calibration_step != 0) {
                 MOTOR_calibration_step = -1;     // calibration error
@@ -293,8 +310,12 @@ void MOTOR_update_pos(void){
  ******************************************************************************/
 void MOTOR_timer(void) {
     if (MOTOR_run_timeout>0) {
-       MOTOR_run_timeout--;
-    } else {
+        cli();  // MOTOR_timer_ovf is interrupt handled
+            MOTOR_run_timeout-=MOTOR_timer_buffer;
+            MOTOR_timer_buffer=0;
+        sei();
+    }
+    if (MOTOR_run_timeout<=0) {  // time out
         if (MOTOR_Dir == open) { // stopped on end
             MOTOR_Control(stop); // position on end
             MOTOR_PosMax = MOTOR_PosAct; // recalibrate it on the end
@@ -324,6 +345,8 @@ void MOTOR_timer(void) {
 
 // interrupts: 
 
+// eye_timer is noise canceler for eye input / improve accuracy
+static uint8_t eye_timer=0; // non volatile, itsn't shared to non-interrupt code 
 /*!
  *******************************************************************************
  * Pinchange Interupt INT0
@@ -334,12 +357,14 @@ void MOTOR_timer(void) {
  ******************************************************************************/
 ISR (PCINT0_vect){
     // count only on HIGH impulses
-    if (((PINE & (1<<PE4)) != 0)) {
+    if ((((PINE & (1<<PE4)) != 0)) && (eye_timer==0)) {
         task|=TASK_UPDATE_MOTOR_POS;
+        MOTOR_eye_buffer++;
+        eye_timer = EYE_TIMER_NOISE_PROTECTION; // in timer0 overflow ticks
     }
 }
 
-static uint8_t timer0_cnt=0; // non volatile, itsn't shared
+static uint8_t timer0_cnt=0; // non volatile, itsn't shared to non-interrupt code 
 /*!
  *******************************************************************************
  * Timer0 overflow interupt
@@ -349,6 +374,8 @@ static uint8_t timer0_cnt=0; // non volatile, itsn't shared
 ISR (TIMER0_OVF_vect){
     if ((++timer0_cnt) == 0) {  // 61.03515625 Hz (variant 7.62939453125)
         task|=TASK_MOTOR_TIMER;
+        MOTOR_timer_buffer++;
     }
+    if (eye_timer) eye_timer--;
 }
 

@@ -53,14 +53,11 @@
 #define MOTOR_HR20_PE_IN_P PINE    //!< HR20: input port from photo eye
 
 //! How many photoeye impulses maximal form one endposition to the other. <BR>
-//! The value measured on a HR20 are 820 to 900 = so more than 1000 should
+//! The value measured on a HR20 are 737 to 740 = so more than 1000 should
 //! never occure if it is mounted
 #define	MOTOR_MAX_IMPULSES 1000
 
-#define	MOTOR_HYSTERESIS     50    //!< additional impulses for 0 or 100%
-
-//#define MOTOR_QUIET_PWM     70     //!< duty cycle of PWM in quiet mode
-//#define MOTOR_FULL_PWM      95     //!< duty cycle of PWM in normal mode
+#define EYE_TIMER_NOISE_PROTECTION 5 
 
 
 /*****************************************************************************
