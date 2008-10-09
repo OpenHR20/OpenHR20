@@ -45,7 +45,6 @@
 
 static uint8_t service_idx;
 
-
 /*!
  *******************************************************************************
  * menu_auto_update_timeout is timer for autoupdates of menu
@@ -194,20 +193,25 @@ bool menu_controller(bool new_state) {
             ret = events_common();
         }
         break;
-    case menu_home:         // wanted status
-    case menu_home2:        // real temperature
-    case menu_home3:        // valve pos
-    case menu_home4:        // time    
+    case menu_home:         // home screen
+    case menu_home2:        // alternate version, real temperature
+    case menu_home3:        // alternate version, valve pos
+    case menu_home4:        // alternate version, time    
         if (new_state) {
             menu_auto_update_timeout=10;
         }
+		if (wheel != 0) {
+            menu_auto_update_timeout = 10; //< \todo create symbol for constatnt
+            PID_force_update = 10; //< \todo create symbol for constatnt
+			temp_wanted+=wheel;
+			if (temp_wanted<TEMP_MIN-1) {
+				temp_wanted= TEMP_MIN-1;
+			} else if (temp_wanted>TEMP_MAX+1) {
+				temp_wanted= TEMP_MAX+1; 
+			}
+		}			 
         if (menu_auto_update_timeout==0) {
-            menu_state=menu_home;
-            ret=true; 
-        }
-        if ( kb_events & KB_EVENT_C ) {
-            menu_state++;
-            if (menu_state > menu_home4) menu_state=menu_home;
+            menu_state=menu_home; // retun to main home screen
             ret=true; 
         }
         if (locked) {
@@ -218,41 +222,49 @@ bool menu_controller(bool new_state) {
                 menu_state=menu_lock;
                 ret=true;
                 }
-        } else {
-            // TODO whell
-            // TODO KB_EVENT_C
+        } else { // not locked
+            if ( kb_events & KB_EVENT_C ) {
+                menu_state++;       // go to next alternate home screen
+                if (menu_state > menu_home4) menu_state=menu_home;
+                ret=true; 
+            } else if ( kb_events & KB_EVENT_PROG_LONG ) {
+    			menu_state=menu_set_year;
+                ret=true; 
+            }
             // TODO KB_EVENT_AUTO
             // TODO ....  
         } 
         ret = ret || events_common();
-                   break;
+        break;
     default:
     case menu_lock:        // "bloc" message
+        ret = events_common();
         if (! locked) { menu_state=menu_home; ret=true; } 
         if (new_state) menu_auto_update_timeout=LONG_PRESS_THLD+1;
         if (menu_auto_update_timeout==0) { menu_state=menu_home; ret=true; } 
-        ret = ret ||  events_common();
         break;        
-    case menu_service1:        
+    case menu_service1:     // service menu        
     case menu_service2:        
         if ((new_state)||(wheel != 0)) menu_auto_update_timeout=20;
         if ((menu_auto_update_timeout==0) || (kb_events & KB_EVENT_AUTO)) { 
             menu_state=menu_home; 
             ret=true;
-            eeprom_config_init(); 
+            eeprom_config_init(); //return to saved values
         }
         if (kb_events & KB_EVENT_PROG) {
             menu_auto_update_timeout=20;
             if (menu_state == menu_service2) {
-                eeprom_config_save();
+                eeprom_config_save(); // save current value
                 menu_state = menu_service1;
             } else {
                 menu_state = menu_service2;
             }
         }
         if (menu_state == menu_service1) {
+            // change index
             service_idx = (service_idx+wheel+CONFIG_RAW_SIZE)%CONFIG_RAW_SIZE;
         } else {
+            // change value in RAM, to save press PROG
             int16_t min = (int16_t)config_min(service_idx);
             int16_t max_min_1 = (int16_t)(config_max(service_idx))-min+1;
             config_raw[service_idx] = (uint8_t) (
@@ -348,10 +360,10 @@ void menu_view(bool update) {
         LCD_PrintDec(RTC_GetHour(), 2, ((menu_state == menu_set_hour) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));
         LCD_PrintDec(RTC_GetMinute(), 0, ((menu_state == menu_set_minute) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));
        break;
-    case menu_home: // wanted status / TODO
-        if (update) clr_show1(LCD_SEG_BAR24);
+    case menu_home: // wanted temp, status / TODO
+        if (update) clr_show2(LCD_SEG_BAR24,LCD_SEG_MANU);
         LCD_SetHourBarSeg(1, LCD_MODE_OFF); //just test TODO
-        LCD_PrintTempInt(temp_wanted,LCD_MODE_ON);
+        LCD_PrintTemp(temp_wanted,LCD_MODE_ON);
        break;
     case menu_home2: // real temperature
         if (update) clr_show1(LCD_SEG_COL1);           // decimal point
@@ -379,8 +391,9 @@ void menu_view(bool update) {
         LCD_PrintChar(LCD_CHAR_o,1,LCD_MODE_ON);
         LCD_PrintChar(LCD_CHAR_c,0,LCD_MODE_ON);
         break;
-    case menu_service1:
+    case menu_service1: 
     case menu_service2:
+        // service menu; left side index, right value
         if (update) LCD_AllSegments(LCD_MODE_ON);
         LCD_PrintHex(service_idx, 2, ((menu_state == menu_service1) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));
         LCD_PrintHex(config_raw[service_idx], 0, ((menu_state == menu_service2) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));

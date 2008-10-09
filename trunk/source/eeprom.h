@@ -57,6 +57,14 @@ extern config_t config;
 #define config_raw ((uint8_t *) &config)
 #define CONFIG_RAW_SIZE (sizeof(config_t))
 
+// Boot Timeslots -> move to CONFIG.H
+// 10 Minutes after BOOT_hh:00
+#define BOOT_ON1      BOOT_hh*10 + 1 //!< Boot Timeslot 0 \todo move to CONFIG.H
+#define BOOT_OFF1     BOOT_ON1 + 1   //!< Boot Timeslot 1 \todo move to CONFIG.H
+#define BOOT_ON2      BOOT_ON1 + 2   //!< Boot Timeslot 2 \todo move to CONFIG.H
+#define BOOT_OFF2     BOOT_ON1 + 3   //!< Boot Timeslot 3 \todo move to CONFIG.H
+
+
 
 
 #ifdef __EEPROM_C__
@@ -105,10 +113,10 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
 // order on this table depend to config_t
 //	{value,	default, 	min,	max},
     {14,	    14,         0,		15},	//!< lcd_contrast  (unit 0.5stC)
-    {10,	    10,         6,		60},	//!< temperature 0  - frost protection (unit is 0.5stC)
-    {34,	    34,         10,		60},    //!< temperature 1  - energy save (unit is 0.5stC)
-    {42,	    42,         10,		60},    //!< temperature 2  - comfort (unit is 0.5stC)
-    {48,	    48,         10,		60},    //!< temperature 3  - supercomfort (unit is 0.5stC)
+    {10,	    10,  TEMP_MIN,TEMP_MAX},	//!< temperature 0  - frost protection (unit is 0.5stC)
+    {34,	    34,  TEMP_MIN,TEMP_MAX},    //!< temperature 1  - energy save (unit is 0.5stC)
+    {42,	    42,  TEMP_MIN,TEMP_MAX},    //!< temperature 2  - comfort (unit is 0.5stC)
+    {48,	    48,  TEMP_MIN,TEMP_MAX},    //!< temperature 3  - supercomfort (unit is 0.5stC)
     {64,	    64,			0,		255},	//!< P_Factor;
     {12,	    12,			0,		255},	//!< I_Factor;
     {12,	    12,			0,		255},	//!< D_Factor;
@@ -116,7 +124,7 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
     {240/5,     240/5,      20/5,   255},   //!< PID_interval*5 = interval in seconds;  min=20sec, max=21.25 minutes
     {180,	    200,        178,	234},	//!< open motor_speed PWM setting
     {180,	    200,        178,	234},	//!< close motor_speed PWM setting
-    {40,         40,        6,      120},   //!< motor_run_timeout (unit 61Hz timer ticks); !!signed value => max is 127!!    
+    {20,         20,        6,      120},   //!< motor_run_timeout (unit 61Hz timer ticks); !!signed value => max is 127!!    
     {15,         15,        0,      120},   //!< motor_protection
     {10,         10,        0,      120},   //!< additional impulses for 0 or 100%
 };

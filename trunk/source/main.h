@@ -3,7 +3,7 @@
  *
  *  target:     ATmega169 @ 4 MHz in Honnywell Rondostat HR20E
  *
- *  ompiler:    WinAVR-20071221
+ *  compiler:   WinAVR-20071221
  *              avr-libc 1.6.0
  *              GCC 4.2.2
  *
@@ -27,7 +27,7 @@
  * \file       main.h
  * \brief      header file for main.c, the main file for Open HR20 project
  * \author     Dario Carluccio <hr20-at-carluccio-dot-de>
- * \date       24.12.2007
+ * \date       $Date$
  * $Rev$
  */
 
@@ -41,32 +41,18 @@
 #define F_CPU 4000000UL
 #endif
 
-// Bitmask for PortB where Keys are connected
-#define  KEYMASK_AUTO   (1<<PB3)   //!< bitmask for: AUTO Button
-#define  KEYMASK_PROG   (1<<PB2)   //!< bitmask for: PROG Button
-#define  KEYMASK_C      (1<<PB1)   //!< bitmask for:   �C Button
-#define  KEYMASK_MOUNT  (1<<PB0)   //!< bitmask for: mounted contact
-
-//! temperature slots: 2 different Temperatures can switched by DOW-Timer
-#define TEMP_SLOTS 2       //!< high, low
-
-// Boot Timeslots -> move to CONFIG.H
-// 10 Minutes after BOOT_hh:00
-#define BOOT_ON1      BOOT_hh*10 + 1 //!< Boot Timeslot 0 \todo move to CONFIG.H
-#define BOOT_OFF1     BOOT_ON1 + 1   //!< Boot Timeslot 1 \todo move to CONFIG.H
-#define BOOT_ON2      BOOT_ON1 + 2   //!< Boot Timeslot 2 \todo move to CONFIG.H
-#define BOOT_OFF2     BOOT_ON1 + 3   //!< Boot Timeslot 3 \todo move to CONFIG.H
-
-
-#define BOOT_TEMP_H   22 //! Boot Temperature high (22�C) -> move to CONFIG.H
-#define BOOT_TEMP_L   16 //! Boot Temperature low (16�C) -> move to CONFIG.H
-
 #define nop() asm("nop;")
 
 // global vars
 extern uint16_t serialNumber;	//!< Unique serial number \todo move to CONFIG.H
 
-extern int16_t temp_wanted; //!< wanted temperature
+extern uint8_t temp_wanted; //!< wanted temperature
+extern int8_t PID_force_update;      // signed value, val<0 means disable force updates
+
+#define c2temp(c) (c*2)
+#define calc_temp(t) (((uint16_t)t)*50)   // result unit is 1/100 C
+#define TEMP_MIN    c2temp (5)   // 5�C
+#define TEMP_MAX    c2temp (30) // 30�C
 
 // public prototypes
 void delay(uint16_t);                   // delay

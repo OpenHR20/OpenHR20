@@ -58,10 +58,9 @@
 volatile bool    m_automatic_mode;         // auto mode (false: manu mode)
 
 // global Vars for default values: temperatures and speed
-volatile uint8_t m_reftemp;                // actual desired temperatur
-volatile uint8_t m_reftemp_mem[TEMP_SLOTS];// desired temperatur memories
-                                           // (high, low)
-
+uint8_t temp_wanted=c2temp(20);   // actual desired temperatur, TODO: change it by timer
+uint8_t temp_wanted_last=0;   // desired temperatur value used for last PID control
+static uint8_t valve_wanted=0;
 // serial number
 uint16_t serialNumber;	//!< Unique serial number \todo move to CONFIG.H
 
@@ -74,11 +73,11 @@ void callback_settemp(uint8_t);            // called from RTC to set new reftemp
 void setautomode(bool);                    // activate/deactivate automode
 uint8_t input_temp(uint8_t);
 
-int16_t temp_wanted=2000;   // Fixed value, TODO: change it by timer
-
 uint8_t test=0;
 
-static int16_t PID_update_timeout=-1;   // signed value, val<0 means reinit PID controler
+static uint16_t PID_update_timeout=16;   // timer to next PID controler action/first is 16 sec after statup 
+int8_t PID_force_update=-1;      // signed value, val<0 means disable force updates
+
 
 
 // Check AVR LibC Version >= 1.6.0
@@ -185,35 +184,35 @@ int main(void)
 
 		if (task & TASK_RTC) {
             task&=~TASK_RTC;
-			if(RTC_AddOneSecond()) {
+			if (RTC_AddOneSecond()) {
                 //minutes changed
-                //TODO: check timers
-                #if 0
-                if (wanted teperature changed) {
-                    PID_update_timeout=-1; // update now with PID reinit !
-                }
-                #endif
+                ; //TODO: check timers
             }
-            if (PID_update_timeout <= 0) {
+            if (PID_update_timeout>0) PID_update_timeout--;
+            if (PID_force_update>0) PID_force_update--;
+            if ((PID_update_timeout == 0)||(PID_force_update==0)) {
                 //update now
-                if (PID_update_timeout < 0) {
+                if (temp_wanted!=temp_wanted_last) {
                     pid_Init(temp_average);
+                    temp_wanted_last=temp_wanted;
                 }
                 PID_update_timeout = (config.PID_interval * 10);
-                pid_Controller(temp_wanted, temp_average);
-            } else {
-                PID_update_timeout--;
+                PID_force_update = -1;
+                if (temp_wanted<TEMP_MIN) {
+    				valve_wanted = pid_Controller(500,temp_average); // frost protection to 5C
+    			} else if (temp_wanted>TEMP_MAX) {
+    				valve_wanted = 100;
+    			} else {
+    				valve_wanted = pid_Controller(calc_temp(temp_wanted),temp_average);
+    			} 
             }
+            MOTOR_updateCalibration(mont_contact_pooling(),valve_wanted);
+            MOTOR_Goto(valve_wanted);
 			task_keyboard_long_press_detect();
-            MOTOR_updateCalibration(mont_contact_pooling(),50);  //test
-//            MOTOR_updateCalibration(0,50);  //test
 			start_task_ADC();
 			if (menu_auto_update_timeout>0) {
 			     menu_auto_update_timeout--;
             }
-
-            MOTOR_Goto(50); //test
-
             menu_view(false); // TODO: move it, it is wrong place
 			LCD_Update(); // TODO: move it, it is wrong place
 		}

@@ -40,4 +40,4 @@ void pid_Init(int16_t processValue);
  *  \param setPoint  Desired value.
  *  \param processValue  Measured value.
  */
-int16_t pid_Controller(int16_t setPoint, int16_t processValue);
+int8_t pid_Controller(int16_t setPoint, int16_t processValue);

@@ -33,6 +33,7 @@
  
 #include <stdint.h>
 #include "eeprom.h"
+#include "pid.h"
 
 // Maximum value of variables
 #define MAX_INT         INT16_MAX
@@ -67,7 +68,9 @@ void pid_Init( int16_t processValue)
   lastProcessValue =  processValue;
   // Limits to avoid overflow
   maxError = MAX_INT / (P_Factor + 1);
-  maxSumError = MAX_I_TERM / (I_Factor + 1);
+  // not recomended to use => maxSumError = MAX_I_TERM / (I_Factor + 1);
+  // used limitation => P*maxError == I*maxSumError;
+  maxSumError = ((int32_t)maxError*(int32_t)P_Factor)/(int32_t)I_Factor;
 }
 
 
@@ -78,7 +81,7 @@ void pid_Init( int16_t processValue)
  *  \param setPoint  Desired value.
  *  \param processValue  Measured value.
  */
-int16_t pid_Controller(int16_t setPoint, int16_t processValue)
+int8_t pid_Controller(int16_t setPoint, int16_t processValue)
 {
   int16_t error, p_term, d_term;
   int32_t i_term, ret;
@@ -109,10 +112,10 @@ int16_t pid_Controller(int16_t setPoint, int16_t processValue)
 
   ret = (p_term + i_term + d_term) / scalling_factor;
 
-  if(ret > MAX_INT){
-    ret = MAX_INT;
-  } else if(ret < -MAX_INT){
-    ret = -MAX_INT;
+  if(ret > 100 /* MAX_INT */){
+    ret = 100; //MAX_INT;
+  } else if(ret < 0 /*-MAX_INT*/){
+    ret = 0; //-MAX_INT;
   }
-  return((int16_t)ret);
+  return((int8_t)ret);
 }

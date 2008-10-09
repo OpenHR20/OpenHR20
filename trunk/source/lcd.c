@@ -410,9 +410,9 @@ void LCD_PrintHexW(uint16_t value, uint8_t mode)
  *  \note  range for desired temperature 5,0°C - 30°C, OFF and ON 
  *
  *  \param temp<BR>
- *     -        0: \c OFF <BR>
- *     -  1 to 51: temperature = 4,5°C + (temp/2)  [5,0°C - 30°C]
- *     -       52: \c ON  <BR>
+ *     - TEMP_MIN-1          : \c OFF <BR>
+ *     - TEMP_MIN to TEMP_MAX : temperature = temp/2  [5,0°C - 30°C]
+ *     - TEMP_MAX+1          : \c ON  <BR>
  *     -    other: \c invalid <BR>
  *  \param mode  \ref LCD_MODE_ON, \ref LCD_MODE_OFF, \ref LCD_MODE_BLINK_1
  ******************************************************************************/
@@ -423,21 +423,21 @@ void LCD_PrintTemp(uint8_t temp, uint8_t mode)
     // Upper Column off
     LCD_SetSeg(LCD_SEG_COL2, LCD_MODE_OFF);
     
-    if (temp==0){
+    if (temp==TEMP_MIN-1){
         // OFF
         LCD_PrintChar(LCD_CHAR_0, 3, mode);
         LCD_PrintChar(LCD_CHAR_F, 2, mode);
         LCD_PrintChar(LCD_CHAR_F, 1, mode);
         LCD_PrintChar(LCD_CHAR_NULL, 0, mode);
         LCD_SetSeg(LCD_SEG_COL1, LCD_MODE_OFF);
-    } else if (temp==52){
+    } else if (temp==TEMP_MAX+1){
         // On
         LCD_PrintChar(LCD_CHAR_0, 3, mode);
         LCD_PrintChar(LCD_CHAR_n, 2, mode);
         LCD_PrintChar(LCD_CHAR_NULL, 1, mode);
         LCD_PrintChar(LCD_CHAR_NULL, 0, mode);
         LCD_SetSeg(LCD_SEG_COL1, LCD_MODE_OFF);
-    } else if (temp>52){
+    } else if (temp>TEMP_MAX+1){
         // Error -E rr 
         LCD_PrintChar(LCD_CHAR_NULL, 3, mode);
         LCD_PrintChar(LCD_CHAR_E, 2, mode);
@@ -445,15 +445,15 @@ void LCD_PrintTemp(uint8_t temp, uint8_t mode)
         LCD_PrintChar(LCD_CHAR_r, 0, mode);
         LCD_SetSeg(LCD_SEG_COL1, LCD_MODE_OFF);
     } else {
-        // temperature = 4,5 + (temp/2) )        
-        tmp8 = 5 + ((temp-1) / 2);
+        // temperature = temp/2        
+        tmp8 = (temp / 2);
         if (tmp8 < 10) {
             LCD_PrintChar(LCD_CHAR_NULL, 3, mode);
             LCD_PrintChar(tmp8, 2, mode);
         } else {
-            LCD_PrintDec(tmp8, 1, mode);
+            LCD_PrintDec(tmp8, 2, mode);
         }        
-        tmp8 = 5 * (1 - (temp & 0x01));        
+        tmp8 = 5 * (temp & 0x01);        
         LCD_PrintChar(tmp8, 1, mode);
         LCD_PrintChar(LCD_CHAR_C, 0, mode);
         LCD_SetSeg(LCD_SEG_COL1, mode);
