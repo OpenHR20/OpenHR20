@@ -64,6 +64,10 @@ static int8_t MOTOR_run_timeout=0;
 static volatile int8_t MOTOR_eye_buffer=0;
 static volatile int8_t MOTOR_timer_buffer=0;
 
+#define MOTOR_RUN_OVERLOAD (3+1)
+static uint8_t MOTOR_run_overload=0;
+
+
 
 /*!
  *******************************************************************************
@@ -242,6 +246,7 @@ void MOTOR_Control(motor_dir_t direction)
             //  remove false interrupt, we need some instructions between false int gen and this point 
             EIFR = (1<<PCIF0);                          
             PCMSK0 = (1<<PCINT4);  // activate interrupt, false IRQ must be cleared before
+			MOTOR_run_overload=0;
             // open
             if ( direction == close) {
                 // set pins of H-Bridge
@@ -282,10 +287,9 @@ void MOTOR_update_pos(void){
             MOTOR_eye_buffer=0;
         sei();
         if (!(MOTOR_PosAct < MOTOR_PosStop)){
-            MOTOR_Control(stop);
-            if (MOTOR_calibration_step != 0) {
-                MOTOR_calibration_step = -1;     // calibration error
-            }
+			// add small time to go over point of motor clock generation
+			// it improve precision
+            MOTOR_run_overload=MOTOR_RUN_OVERLOAD;
         }
     } else {
         cli();
@@ -293,10 +297,9 @@ void MOTOR_update_pos(void){
             MOTOR_eye_buffer=0;
         sei();
         if (!(MOTOR_PosAct > MOTOR_PosStop)){
-            MOTOR_Control(stop);
-            if (MOTOR_calibration_step != 0) {
-                MOTOR_calibration_step = -1;     // calibration error
-            }
+			// add small time to go over point of motor clock generation
+			// it improve precision
+            MOTOR_run_overload=MOTOR_RUN_OVERLOAD;
         }
     }
 }
@@ -309,6 +312,17 @@ void MOTOR_update_pos(void){
  *
  ******************************************************************************/
 void MOTOR_timer(void) {
+    if (MOTOR_run_overload>0) {
+		if (MOTOR_run_overload==1) {
+            MOTOR_Control(stop);
+			MOTOR_run_overload=0;
+            if (MOTOR_calibration_step != 0) {
+                MOTOR_calibration_step = -1;     // calibration error
+            }
+		} else {
+			MOTOR_run_overload--;
+		}
+	} 
     if (MOTOR_run_timeout>0) {
         cli();  // MOTOR_timer_ovf is interrupt handled
             MOTOR_run_timeout-=MOTOR_timer_buffer;
