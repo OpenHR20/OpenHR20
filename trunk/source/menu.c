@@ -200,7 +200,7 @@ bool menu_controller(bool new_state) {
         if (new_state) {
             menu_auto_update_timeout=10;
         }
-		if (wheel != 0) {
+		if ((wheel != 0) && (menu_state == menu_home)) {
             menu_auto_update_timeout = 10; //< \todo create symbol for constatnt
             PID_force_update = 10; //< \todo create symbol for constatnt
 			temp_wanted+=wheel;
@@ -344,14 +344,10 @@ void menu_view(bool update) {
         LCD_PrintDecW(RTC_GetYearYYYY(),LCD_MODE_BLINK_1);
        break;
     case menu_set_month:
-        if (update) clr_show1(LCD_SEG_COL1);           // decimal point
-        LCD_PrintDec(RTC_GetMonth(), 2, LCD_MODE_BLINK_1);
-        LCD_PrintDec(RTC_GetDay(), 0, LCD_MODE_ON);
-       break;
     case menu_set_day:
         if (update) clr_show1(LCD_SEG_COL1);           // decimal point
-        LCD_PrintDec(RTC_GetMonth(), 2, LCD_MODE_ON);
-        LCD_PrintDec(RTC_GetDay(), 0, LCD_MODE_BLINK_1);
+        LCD_PrintDec(RTC_GetMonth(), 0, ((menu_state==menu_set_month)?LCD_MODE_BLINK_1:LCD_MODE_ON));
+        LCD_PrintDec(RTC_GetDay(), 2, ((menu_state==menu_set_day)?LCD_MODE_BLINK_1:LCD_MODE_ON));
        break;
     case menu_set_hour:
     case menu_set_minute:
