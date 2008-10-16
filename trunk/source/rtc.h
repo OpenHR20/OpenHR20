@@ -72,7 +72,7 @@ extern uint32_t RTC_Ticks; //!< Ticks since last RTC.Init
 extern uint16_t RTC_Dow_Timer[7+1][RTC_TIMERS_PER_DOW];  //!< DOW Timer entrys 7 days + 1 program for whole week
 
 
-void RTC_Init();                 // init Timer, activate 500ms IRQ
+void RTC_Init(void);                 // init Timer, activate 500ms IRQ
 #define RTC_GetHour() ((int8_t) RTC_hh)                 // get hour
 #define RTC_GetMinute() ((int8_t) RTC_mm)               // get minute
 #define RTC_GetSecond() ((int8_t) RTC_ss)               // get second

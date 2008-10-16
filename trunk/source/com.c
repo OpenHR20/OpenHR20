@@ -68,7 +68,7 @@ static volatile uint8_t COM_commad_terminations=0;
 
 /*!
  *******************************************************************************
- *  transmit bytes
+ *  \brief transmit bytes
  *
  *  \note
  ******************************************************************************/
@@ -84,7 +84,7 @@ static int COM_putchar(char c, FILE *stream) {
 
 /*!
  *******************************************************************************
- *  support for interrupt for transmit bytes
+ *  \brief support for interrupt for transmit bytes
  *
  *  \note
  ******************************************************************************/
@@ -99,7 +99,7 @@ char COM_tx_char_isr(void) {
 
 /*!
  *******************************************************************************
- *  support for interrupt for receive bytes
+ *  \brief support for interrupt for receive bytes
  *
  *  \note
  ******************************************************************************/
@@ -121,12 +121,11 @@ void COM_rx_char_isr(char c) {
 
 /*!
  *******************************************************************************
- *  receive bytes
+ *  \brief receive bytes
  *
  *  \note
  ******************************************************************************/
-// static int COM_getchar(FILE *stream) {
-static char COM_getchar() {
+static char COM_getchar(void) {
 	cli();
 	char c='\0';
 	if (rx_buff_in!=rx_buff_out) {
@@ -139,7 +138,7 @@ static char COM_getchar() {
 
 /*!
  *******************************************************************************
- *  flush output buffer
+ *  \brief flush output buffer
  *
  *  \note
  ******************************************************************************/
@@ -154,7 +153,7 @@ static void COM_flush (void) {
 
 /*!
  *******************************************************************************
- *  helper function print 2 digit dec number
+ *  \brief helper function print 2 digit dec number
  *
  *  \note only unsigned numbers
  ******************************************************************************/
@@ -169,7 +168,7 @@ static void print_decXX(uint8_t i) {
 
 /*!
  *******************************************************************************
- *  helper function print 4 digit dec number
+ *  \brief helper function print 4 digit dec number
  *
  *  \note only unsigned numbers
  ******************************************************************************/
@@ -180,7 +179,7 @@ static void print_decXXXX(uint16_t i) {
 
 /*!
  *******************************************************************************
- *  helper function print 2 digit dec number
+ *  \brief helper function print 2 digit dec number
  *
  *  \note only unsigned numbers
  ******************************************************************************/
@@ -201,7 +200,7 @@ static void print_hexXX(uint8_t i) {
 
 /*!
  *******************************************************************************
- *  helper function print 4 digit dec number
+ *  \brief helper function print 4 digit dec number
  *
  *  \note only unsigned numbers
  ******************************************************************************/
@@ -213,7 +212,7 @@ static void print_hexXXXX(uint16_t i) {
 
 /*!
  *******************************************************************************
- *  helper function print string without \n2 digit dec number
+ *  \brief helper function print string without \n2 digit dec number
  *
  *  \note only unsigned numbers
  ******************************************************************************/
@@ -226,7 +225,7 @@ static void print_s_p(const char * s) {
 
 /*!
  *******************************************************************************
- *  helper function print version string
+ *  \brief helper function print version string
  *
  *  \note
  ******************************************************************************/
@@ -238,7 +237,7 @@ static void print_version(void) {
 
 /*!
  *******************************************************************************
- *  init communication
+ *  \brief init communication
  *
  *  \note
  ******************************************************************************/
@@ -252,7 +251,7 @@ void COM_init(void) {
 
 /*!
  *******************************************************************************
- *  Print debug line
+ *  \brief Print debug line
  *
  *  \note
  ******************************************************************************/
@@ -285,7 +284,7 @@ void COM_print_debug(uint8_t logtype) {
 
 /*!
  *******************************************************************************
- *  parse hex number (helper function)
+ *  \brief parse hex number (helper function)
  *
  *	\note hex numbers use ONLY lowcase chars, upcase is reserved for commands
  *  \note 2 digits only
@@ -312,17 +311,17 @@ static char COM_hex_parse (void) {
 
 /*!
  *******************************************************************************
- *  parse command
+ *  \brief parse command
  *
  *  \note command have FIXED format
  *  \note command X.....\n    - X is upcase char as commad name, \n is termination char
  *	\note hex numbers use ONLY lowcase chars, upcase is reserved for commands
  *	\note 		  V\n - print version information
  *	\note		  D\n - print status line 
- *	\note		  todo: Taa\n - print watched wariable aa (return 2 or 4 hex numbers) see to \ref watch.c
+ *	\note		  Taa\n - print watched wariable aa (return 2 or 4 hex numbers) see to \ref watch.c
  *	\note         Gaa\n - get configuration byte wit hex address aa see to \ref eeprom.h
  *	\note		  Saadd\n - set configuration byte aa to value dd (hex)
- *	\note		  todo: R1324\n - reboot, 1324 is password (fixed at this moment)
+ *	\note		  \todo: R1324\n - reboot, 1324 is password (fixed at this moment)
  *	
  ******************************************************************************/
 void COM_commad_parse (void) {
@@ -383,7 +382,7 @@ void COM_commad_parse (void) {
 			}
 			break;
 		//case 'R':
-			// \todo
+			// \todo command 'R'
 		//	break;
 		case '\n':
 			COM_commad_terminations--;

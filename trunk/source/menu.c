@@ -41,13 +41,14 @@
 #include "rtc.h"
 #include "motor.h"
 #include "eeprom.h"
+#include "debug.h"
 
 static uint8_t service_idx;
 
 /*!
  *******************************************************************************
- * menu_auto_update_timeout is timer for autoupdates of menu
- * val<0 means no autoupdate 
+ * \brief menu_auto_update_timeout is timer for autoupdates of menu
+ * \note val<0 means no autoupdate 
  ******************************************************************************/
 uint8_t menu_auto_update_timeout = 2;
 
@@ -72,7 +73,7 @@ static bool locked = false;
 
 /*!
  *******************************************************************************
- * kb_events common reactions
+ * \brief kb_events common reactions
  * 
  * \returns true for controler restart
  ******************************************************************************/
@@ -89,7 +90,7 @@ static int8_t wheel_proccess(void) {
 
 /*!
  *******************************************************************************
- * kb_events common reactions
+ * \brief kb_events common reactions
  * 
  * \returns true for controler restart
  ******************************************************************************/
@@ -114,7 +115,7 @@ static bool events_common(void) {
 
 /*!
  *******************************************************************************
- * menu Controller
+ * \brief menu Controller
  * 
  * \returns true for controler restart  
  ******************************************************************************/
@@ -323,7 +324,7 @@ static void clr_show3(uint8_t seg1, uint8_t seg2, uint8_t seg3) {
 
 /*!
  *******************************************************************************
- * menu View
+ * \brief menu View
  ******************************************************************************/
 void menu_view(bool update) {
   switch (menu_state) {
