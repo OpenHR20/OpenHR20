@@ -54,10 +54,10 @@ In this file we define only configuration parameters, for example what kind of c
 #define VERSION_N 0xF080 //! Version as HEX value F0.80 (F as free)  
 
 // Parameters for the COMM-Port
-// #define COM_BAUD_RATE 9600
+#define COM_BAUD_RATE 2400
 // Note we should only enable of of the following at one time
 /* we support RS232 */
-//#define COM_RS232 
+#define COM_RS232 1
 /* we support RS485 */
 /* #define COM_RS485  */
 /* Our default Adress, if not set or invalid */

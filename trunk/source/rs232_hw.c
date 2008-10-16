@@ -3,7 +3,7 @@
  *
  *  target:     ATmega169 @ 4 MHz in Honnywell Rondostat HR20E
  *
- *  ompiler:    WinAVR-20071221
+ *  compiler:   WinAVR-20071221
  *              avr-libc 1.6.0
  *              GCC 4.2.2
  *
@@ -49,7 +49,6 @@
 /* The following must be AFTER the last include line */
 #if defined COM_RS232
 
-volatile uint8_t 	byteToSend;	// counter which byte in the buffer we send next
 
 /*!
  *******************************************************************************
@@ -63,23 +62,11 @@ ISR(USART0_RX_vect)
 ISR(USART0_RX_vect)
 #endif
 {
-	register char c;
 	#ifdef _AVR_IOM169P_H_
-		c = UDR0;
+		COM_rx_char_isr(UDR0);	// Add char to input buffer
 	#elif _AVR_IOM169_H_
-		c = UDR;
+		COM_rx_char_isr(UDR);	// Add char to input buffer
 	#endif
-	COM_ReceiverChar(c);	// Add char to input buffer
-	// do local Echo
-	if (doLocalEcho)
-	{
-		//while(!(UCSRA & UDRE)){};	// wait till free, it should never realy be blocked, since we receive at the same baud
-	#ifdef _AVR_IOM169P_H_
-		UDR0 = c;
-	#elif _AVR_IOM169_H_
-		UDR = c ;
-	#endif
-	}
 }
 
 /*!
@@ -96,14 +83,14 @@ ISR(USART0_UDRE_vect)
 ISR(USART0_UDRE_vect)
 #endif
 {
-	if (byteToSend < COM_getBytesInBuffer())
+	char c;
+	if (c=COM_tx_char_isr())
 	{
 		#ifdef _AVR_IOM169P_H_
-			UDR0 = COM_getOutByte(byteToSend);
+			UDR0 = c;
 		#elif _AVR_IOM169_H_
-			UDR = COM_getOutByte(byteToSend);
+			UDR = c;
 		#endif
-		byteToSend++;
 	}
 	else	// no more chars, disable Interrupt
 	{
@@ -112,8 +99,6 @@ ISR(USART0_UDRE_vect)
 		#elif _AVR_IOM169_H_
 			UCSRB &= ~(_BV(UDRIE));
 		#endif
-		byteToSend = 0;
-		COM_finishedOutput();	// we are finished, do what ever you want with the buffer
 	}
 }
 
@@ -126,7 +111,6 @@ ISR(USART0_UDRE_vect)
  ******************************************************************************/
 void RS232_Init(uint16_t baud)
 {
-	byteToSend = 0;
 	
 	// Baudrate berechnen
 	//long ubrr_val = ((F_CPU)/(baud*16L)-1);
@@ -143,7 +127,7 @@ void RS232_Init(uint16_t baud)
 		UCSRB = (_BV(TXEN) | _BV(RXEN) | _BV(RXCIE));      // UART TX einschalten
 		UCSRC = (_BV(UCSZ0) | _BV(UCSZ1));     // Asynchron 8N1 
 	#else
-		#warn 'your CPU is not supported !'
+		#error 'your CPU is not supported !'
 	#endif
 }
 
@@ -154,44 +138,20 @@ void RS232_Init(uint16_t baud)
  *  \note
  *  - we send the first char to serial port
  *  - start the interrupt
- *  - increase our byte send marker
- *	- Calc checksum, if there is any
  ******************************************************************************/
 void RS232_startSend(void)
 {
-	if (COM_getBytesInBuffer() > 0)	// Is there something to send ?
-	{
-		if (byteToSend == 0)	// start sending, we have to start sending 1st byte NOW
-		{
-			/* if you have to do a Checksum, DO IT HERE !
-			You could easyly loop over the byte in the buffer
-			for (uint8_t i = 0 ; i < COM_getBytesInBuffer() ; i++)
-			{
-				chk += COM_getOutByte(i); // calc checksum
-			}
-			Now start sending the data and checksum.
-			Do not forget to call COM_finishedOutput() when done !!!
-			*/
-			
-			/*
-			We do not send out first byte here. It may be that the transmitter is still busy
-			sending. This could be caused by the local echo.
-			If the receiver is free we will get an interrupt after enabling it and all is done
-			by the ISR
-			*/
-			#ifdef _AVR_IOM169P_H_
-				//UDR0 = COM_getOutByte(byteToSend);
-			#elif _AVR_IOM169_H_
-				//UDR = COM_getOutByte(byteToSend);
-			#endif
-			//byteToSend++;
-		}
-		#ifdef _AVR_IOM169P_H_
+	#ifdef _AVR_IOM169P_H_
+		if (UCSR0B &= _BV(UDRIE0)) {
+			UDR0 = COM_tx_char_isr();
 			UCSR0B |= _BV(UDRIE0);	// save is save, we enable this every time
-		#elif _AVR_IOM169_H_
+		}
+	#elif _AVR_IOM169_H_
+		if (UCSRB &= _BV(UDRIE)) {
+			UDR = COM_tx_char_isr();
 			UCSRB |= _BV(UDRIE);	// save is save, we enable this every time
-		#endif
-	}
+		}
+	#endif
 }
 
 #endif /* COM_RS232 */

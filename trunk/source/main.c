@@ -53,6 +53,8 @@
 #include "pid.h"
 #include "debug.h"
 #include "menu.h"
+#include "com.h"
+#include "rs232_485.h"
 
 // global Vars
 volatile bool    m_automatic_mode;         // auto mode (false: manu mode)
@@ -60,7 +62,7 @@ volatile bool    m_automatic_mode;         // auto mode (false: manu mode)
 // global Vars for default values: temperatures and speed
 uint8_t temp_wanted=c2temp(20);   // actual desired temperatur, TODO: change it by timer
 uint8_t temp_wanted_last=0;   // desired temperatur value used for last PID control
-static uint8_t valve_wanted=0;
+uint8_t valve_wanted=0;
 // serial number
 uint16_t serialNumber;	//!< Unique serial number \todo move to CONFIG.H
 
@@ -101,7 +103,7 @@ int main(void)
     //! Enable interrupts
     sei();
 
-    ISR(PCINT1_vect);                  // get keystate
+	COM_init();
 
     LCD_AllSegments(LCD_MODE_ON);                   // all segments on
 	LCD_Update();
@@ -118,7 +120,7 @@ int main(void)
 		asm volatile ("cli");
 		if (! task) {
   			// nothing to do, go to sleep
-            if(MOTOR_Dir!=stop) {
+            if((MOTOR_Dir!=stop) || RS_need_clock()) {
 			    SMCR = (0<<SM1)|(0<<SM0)|(1<<SE); // Idle mode
             } else {
     			if (sleep_with_ADC) {
@@ -196,7 +198,7 @@ int main(void)
                     pid_Init(temp_average);
                     temp_wanted_last=temp_wanted;
                 }
-                PID_update_timeout = (config.PID_interval * 10);
+                PID_update_timeout = (config.PID_interval * 5);
                 PID_force_update = -1;
                 if (temp_wanted<TEMP_MIN) {
     				valve_wanted = pid_Controller(500,temp_average); // frost protection to 5C
@@ -205,6 +207,7 @@ int main(void)
     			} else {
     				valve_wanted = pid_Controller(calc_temp(temp_wanted),temp_average);
     			} 
+				debug_print();
             }
             MOTOR_updateCalibration(mont_contact_pooling(),valve_wanted);
             MOTOR_Goto(valve_wanted);
@@ -257,7 +260,7 @@ void init(void)
     //! digital I/O port direction
     DDRB = (1<<PB4)|(1<<PB7); // PB4, PB7 Motor out
     DDRG = (1<<PG3)|(1<<PG4); // PG3, PG4 Motor out
-    DDRE = (1<<PE3)|(1<<PE2);          // PE3  activate lighteye
+    DDRE = (1<<PE3)|(1<<PE2)|(1<<PE1);  // PE3  activate lighteye
 	PORTE = 0x03;
     DDRF = (1<<PF3);          // PF3  activate tempsensor
 	PORTF = 0xf3;

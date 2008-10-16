@@ -48,6 +48,7 @@
 #include "lcd.h"
 #include "eeprom.h"
 #include "task.h"
+#include "rs232_485.h"
 
 // typedefs
 
@@ -361,6 +362,7 @@ void MOTOR_timer(void) {
 
 // eye_timer is noise canceler for eye input / improve accuracy
 static uint8_t eye_timer=0; // non volatile, itsn't shared to non-interrupt code 
+static uint8_t pine_last=0;
 /*!
  *******************************************************************************
  * Pinchange Interupt INT0
@@ -370,12 +372,20 @@ static uint8_t eye_timer=0; // non volatile, itsn't shared to non-interrupt code
  * \note create TASK_UPDATE_MOTOR_POS
  ******************************************************************************/
 ISR (PCINT0_vect){
+	uint8_t pine=PINE;
+	#if (defined COM_RS232) || (defined COM_RS485)
+		if ((pine & (1<<PE0)) == 0) {
+			RS_enable_rx(); // it is macro, not function
+		    PCMSK0 &= ~(1<<PCINT0); // deactivate interrupt
+		}
+	#endif
     // count only on HIGH impulses
-    if ((((PINE & (1<<PE4)) != 0)) && (eye_timer==0)) {
+    if ((((pine & ~pine_last & (1<<PE4)) != 0)) && (eye_timer==0)) {
         task|=TASK_UPDATE_MOTOR_POS;
         MOTOR_eye_buffer++;
         eye_timer = EYE_TIMER_NOISE_PROTECTION; // in timer0 overflow ticks
     }
+	pine_last=pine;
 }
 
 static uint8_t timer0_cnt=0; // non volatile, itsn't shared to non-interrupt code 

@@ -11,3 +11,4 @@
     #define DEBUG_AFTER_SLEEP()
 #endif
 
+#define KEEP_ALIVE_FOR_COMMUNICATION DEBUG_MODE

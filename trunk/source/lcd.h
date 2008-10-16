@@ -3,7 +3,7 @@
  *
  *  target:     ATmega169 @ 4 MHz in Honnywell Rondostat HR20E
  *
- *  ompiler:    WinAVR-20071221
+ *  compiler:    WinAVR-20071221
  *              avr-libc 1.6.0
  *              GCC 4.2.2
  *

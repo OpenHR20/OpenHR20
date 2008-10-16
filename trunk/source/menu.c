@@ -42,7 +42,6 @@
 #include "motor.h"
 #include "eeprom.h"
 
-
 static uint8_t service_idx;
 
 /*!

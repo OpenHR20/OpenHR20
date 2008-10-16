@@ -32,6 +32,7 @@
  */
 
 #include <avr/eeprom.h>
+#include "debug.h"
 #include "main.h"
 #include "rtc.h"
 #define __EEPROM_C__

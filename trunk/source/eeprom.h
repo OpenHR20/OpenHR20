@@ -51,6 +51,9 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
         /*! TODO: describe  motor_protection and motor_hysteresis better, picture wanted */
     /* 13 */ uint8_t motor_protection;  //!< defines area for regulation valve as valve range - 2*motor_protection (1* on bottom 1* on top)
     /* 14 */ uint8_t motor_hysteresis; //!< additional impulses for 0 or 100% relative to area for regulation
+	/* 15 */ uint8_t motor_reserved1;
+	/* 16 */ uint8_t motor_reserved2;
+	/* 15 */ uint8_t keep_alive_for_communication;
 } config_t;
 
 extern config_t config;
@@ -127,6 +130,9 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 12 */  {20,         20,        6,      120},   //!< motor_run_timeout (unit 61Hz timer ticks); !!signed value => max is 127!!    
   /* 13 */  {15,         15,        0,      120},   //!< motor_protection
   /* 14 */  {10,         10,        0,      120},   //!< additional impulses for 0 or 100%
+  /* 15 */  {1,           1,        0,        1},   //!< motor_reserved1
+  /* 16 */  {1,           1,        0,        1},   //!< motor_reserved2
+  /* 17 */  {KEEP_ALIVE_FOR_COMMUNICATION,0,0,1},   //!< keep_alive_for_communication
 };
 
 
