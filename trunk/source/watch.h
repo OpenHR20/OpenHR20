@@ -24,20 +24,12 @@
  */
 
 /*!
- * \file       com.h
- * \brief      communication layer
+ * \file       watch.h
+ * \brief      watch variable for debug
  * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>
- * \date       $Date: 2008-10-08 20:51:30 +0200 (st, 08 X 2008) $
- * $Rev: 14 $
+ * \date       02.10.2008
+ * $Rev: 13 $
  */
 
+uint16_t watch(uint8_t addr);
 
-char COM_tx_char_isr(void);
-
-void COM_rx_char_isr(char c);
-
-void COM_init(void);
-
-void COM_print_debug(uint8_t logtype);
-
-void COM_commad_parse (void);

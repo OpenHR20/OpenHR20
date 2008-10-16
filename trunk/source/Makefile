@@ -14,6 +14,7 @@
 # Frederik Rouleau
 # Carlos Lamas
 # Dario Carluccio
+# Jiri Dobry
 #
 #----------------------------------------------------------------------------
 # On command line:
@@ -45,7 +46,7 @@
 #           command line parameters for "avr-size" on Linux and Windows.
 
 # MCU name
-MCU = atmega169
+MCU = atmega169p
 
 
 # Processor frequency.
@@ -79,7 +80,10 @@ motor.c \
 eeprom.c \
 keyboard.c \
 menu.c \
-pid.c
+pid.c \
+rs232_485_hw.c \
+com.c \
+watch.c
 
 
 # List C++ source files here. (C dependencies are automatically generated.)

@@ -49,12 +49,13 @@ In this file we define only configuration parameters, for example what kind of c
 
 // our Version
 #define REVHIGH  0  //! Revision number high
-#define REVLOW   61 //! Revision number low
+#define REVLOW   21 //! Revision number low
 #define SVNREV   1	//! Subversion Revision, aka build number
-#define VERSION_N 0xF080 //! Version as HEX value F0.80 (F as free)  
+#define VERSION_N 0xF021 //! Version as HEX value F0.80 (F as free)  
+#define VERSION_STRING  "V: OpenHR20 SW version 0.21 build " __DATE__ " " __TIME__
 
 // Parameters for the COMM-Port
-#define COM_BAUD_RATE 2400
+#define COM_BAUD_RATE 9600
 // Note we should only enable of of the following at one time
 /* we support RS232 */
 #define COM_RS232 1

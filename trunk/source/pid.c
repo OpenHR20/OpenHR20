@@ -44,7 +44,7 @@
 //! Last process value, used to find derivative of process value.
 static int16_t lastProcessValue;
 //! Summation of errors, used for integrate calculations
-static int32_t sumError;
+int32_t sumError;
 //! The Proportional tuning constant, multiplied with scalling_factor
 #define P_Factor (config.P_Factor)
 //! The Integral tuning constant, multiplied with scalling_factor

@@ -138,19 +138,15 @@ void eeprom_config_init(void) {
  *
  *  \note
  ******************************************************************************/
-void eeprom_config_save(void) {
-	
-	uint16_t i;
-	uint8_t *config_ptr = config_raw;
-	for (i=0;i<CONFIG_RAW_SIZE;i++) {
-		if (*config_ptr != config_value(i)) {
-			if ((*config_ptr < config_min(i)) //min
-		 	|| (*config_ptr > config_max(i))) { //max
-				*config_ptr = config_default(i); // default value
+void eeprom_config_save(uint8_t idx) {
+	if (idx<CONFIG_RAW_SIZE) {
+		if (config_raw[idx] != config_value(idx)) {
+			if ((config_raw[idx] < config_min(idx)) //min
+		 	|| (config_raw[idx] > config_max(idx))) { //max
+				config_raw[idx] = config_default(idx); // default value
 			}
-			config_write(i, *config_ptr);
+			config_write(idx, config_raw[idx]);
 		}
-		config_ptr++;
 	}
 }
 

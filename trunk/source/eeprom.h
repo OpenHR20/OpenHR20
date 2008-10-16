@@ -125,14 +125,11 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /*  7 */  {12,	    12,			0,		255},	//!< D_Factor;
   /*  8 */  {128,	    128,		1,		255},	//!< scalling_factor != 0
   /*  9 */  {240/5,     240/5,      20/5,   255},   //!< PID_interval*5 = interval in seconds;  min=20sec, max=21.25 minutes
-  /* 10 */  {180,	    180,        178,	234},	//!< open motor_speed PWM setting
-  /* 11 */  {200,	    200,        178,	234},	//!< close motor_speed PWM setting
-  /* 12 */  {20,         20,        6,      120},   //!< motor_run_timeout (unit 61Hz timer ticks); !!signed value => max is 127!!    
-  /* 13 */  {15,         15,        0,      120},   //!< motor_protection
-  /* 14 */  {10,         10,        0,      120},   //!< additional impulses for 0 or 100%
-  /* 15 */  {1,           1,        0,        1},   //!< motor_reserved1
-  /* 16 */  {1,           1,        0,        1},   //!< motor_reserved2
-  /* 17 */  {KEEP_ALIVE_FOR_COMMUNICATION,0,0,1},   //!< keep_alive_for_communication
+  /* 0a */  {180,	    180,        178,	234},	//!< open motor_speed PWM setting
+  /* 0b */  {200,	    200,        178,	234},	//!< close motor_speed PWM setting
+  /* 0c */  {20,         20,        6,      120},   //!< motor_run_timeout (unit 61Hz timer ticks); !!signed value => max is 127!!    
+  /* 0d */  {15,         15,        0,      120},   //!< motor_protection
+  /* 0e */  {10,         10,        0,      120},   //!< additional impulses for 0 or 100%
 };
 
 
@@ -142,7 +139,7 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
 uint8_t config_read(uint8_t cfg_address, uint8_t cfg_type);
 uint8_t EEPROM_read(uint16_t address);
 void eeprom_config_init(void);
-void eeprom_config_save(void);
+void eeprom_config_save(uint8_t idx);
 void eeprom_timers_init(void);
 void eeprom_timers_save(void);
 

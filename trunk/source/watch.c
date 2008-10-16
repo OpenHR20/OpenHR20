@@ -24,20 +24,47 @@
  */
 
 /*!
- * \file       com.h
- * \brief      communication layer
+ * \file       watch.h
+ * \brief      watch variable for debug
  * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>
- * \date       $Date: 2008-10-08 20:51:30 +0200 (st, 08 X 2008) $
- * $Rev: 14 $
+ * \date       02.10.2008
+ * $Rev: 13 $
  */
 
+#include <stdint.h>
+#include <stdlib.h>
+#include <avr/pgmspace.h>
 
-char COM_tx_char_isr(void);
+#include "main.h"
+#include "adc.h"
 
-void COM_rx_char_isr(char c);
+extern int32_t sumError;
 
-void COM_init(void);
 
-void COM_print_debug(uint8_t logtype);
+#define B8 0x0000
+#define B16 0x8000
+#define B_MASK 0x8000
 
-void COM_commad_parse (void);
+
+
+static uint16_t watch_map[] PROGMEM = {
+    /* 00 */ ((uint16_t) &temp_average) + B16, // temperature 
+    /* 01 */ ((uint16_t) &bat_average) + B16,  // battery 
+    /* 02 */ ((uint16_t) &sumError) + 2 + B16,
+    /* 03 */ ((uint16_t) &sumError) + B16,
+};
+
+
+
+uint16_t watch(uint8_t addr) {
+	uint16_t p;
+	if (addr >= sizeof(watch_map)/2) return 0;
+
+	p=pgm_read_word(&watch_map[addr]);
+	if ((p&B_MASK)==B16) { // 16 bit value
+		return *((uint16_t *)(p & ~B_MASK));
+	} else { // 8 bit value
+		return (uint16_t)(*((uint8_t *)(p & ~B_MASK)));
+	}
+}
+

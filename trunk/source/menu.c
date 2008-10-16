@@ -253,7 +253,7 @@ bool menu_controller(bool new_state) {
         if (kb_events & KB_EVENT_PROG) {
             menu_auto_update_timeout=20;
             if (menu_state == menu_service2) {
-                eeprom_config_save(); // save current value
+                eeprom_config_save(service_idx); // save current value
                 menu_state = menu_service1;
             } else {
                 menu_state = menu_service2;

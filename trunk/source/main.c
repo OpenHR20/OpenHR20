@@ -162,6 +162,13 @@ int main(void)
 			continue; // on most case we have only 1 task, iprove time to sleep
 		}
 		
+        // communication
+		if (task & TASK_COM) {
+			task&=~TASK_COM;
+			COM_commad_parse();
+			continue; // on most case we have only 1 task, iprove time to sleep
+		}
+
         // update motor possition
 		if (task & TASK_MOTOR_TIMER) {
 			task&=~TASK_MOTOR_TIMER;
@@ -207,7 +214,7 @@ int main(void)
     			} else {
     				valve_wanted = pid_Controller(calc_temp(temp_wanted),temp_average);
     			} 
-				debug_print();
+				COM_print_debug(0);
             }
             MOTOR_updateCalibration(mont_contact_pooling(),valve_wanted);
             MOTOR_Goto(valve_wanted);

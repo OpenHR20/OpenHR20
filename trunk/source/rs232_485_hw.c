@@ -60,10 +60,10 @@ ISR(USART0_RX_vect)
 {
 	#ifdef _AVR_IOM169P_H_
 		COM_rx_char_isr(UDR0);	// Add char to input buffer
-		UCSR0B &= ~_BV(RXEN0); // disable receive
+		UCSR0B &= ~(_BV(RXEN0)|_BV(RXCIE0)); // disable receive
 	#elif _AVR_IOM169_H_
 		COM_rx_char_isr(UDR);	// Add char to input buffer
-		UCSRB &= ~_BV(RXEN); // disable receive
+		UCSRB &= ~(_BV(RXEN)|_BV(RXCIE)); // disable receive
 	#endif
     PCMSK0 |= (1<<PCINT0); // activate interrupt
 }
@@ -145,12 +145,10 @@ void RS_Init(uint16_t baud)
 	#ifdef _AVR_IOM169P_H_
 		UBRR0H = (unsigned char)(ubrr_val>>8);
 		UBRR0L = (unsigned char)(ubrr_val & 0xFF);
-		UCSR0B = /*_BV(TXEN0) | _BV(RXEN0) | */ _BV(RXCIE0);
 		UCSR0C = (_BV(UCSZ00) | _BV(UCSZ01));     // Asynchron 8N1 
 	#elif _AVR_IOM169_H_
 		UBRRH = (unsigned char)(ubrr_val>>8);
 		UBRRL = (unsigned char)(ubrr_val & 0xFF);
-		UCSRB = /*_BV(TXEN) | _BV(RXEN) | */ _BV(RXCIE);
 		UCSRC = (_BV(UCSZ0) | _BV(UCSZ1));     // Asynchron 8N1 
 	#else
 		#error 'your CPU is not supported !'
@@ -179,14 +177,14 @@ void RS_startSend(void)
 			UCSR0B &= ~(_BV(TXCIE0));
 			UCSR0A |= _BV(TXC0); // clear interrupt flag
 			UCSR0B |= _BV(UDRIE0) | _BV(TXEN0);
-			UDR0 = COM_tx_char_isr();
+			// UDR0 = COM_tx_char_isr(); // done in interrupt
 		}
 	#elif _AVR_IOM169_H_
 		if ((UCSRB & _BV(UDRIE))==0) {
 			UCSRB &= ~(_BV(TXCIE));
 			UCSRA |= _BV(TXC); // clear interrupt flag
-			UCSRB |= _BV(UDRIE)  | _BV(TXEN0); 
-			UDR = COM_tx_char_isr();
+			UCSRB |= _BV(UDRIE)  | _BV(TXEN); 
+			//UDR = COM_tx_char_isr(); // done in interrupt
 		}
 	#endif
 	sei();

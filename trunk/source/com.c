@@ -43,6 +43,8 @@
 #include "main.h"
 #include "rtc.h"
 #include "adc.h"
+#include "task.h"
+#include "watch.h"
 
 
 #define TX_BUFF_SIZE 128
@@ -56,10 +58,11 @@ static uint8_t tx_buff_out=0;
 static uint8_t rx_buff_in=0;
 static uint8_t rx_buff_out=0;
 
-static int COM_getchar(FILE *stream);
 static int COM_putchar(char c, FILE *stream);
 static FILE COM_stdout = FDEV_SETUP_STREAM(COM_putchar, NULL, _FDEV_SETUP_WRITE);
-static FILE COM_stdin  = FDEV_SETUP_STREAM(NULL, COM_getchar, _FDEV_SETUP_READ);
+
+
+static volatile uint8_t COM_commad_terminations=0;
 
 
 
@@ -101,9 +104,18 @@ char COM_tx_char_isr(void) {
  *  \note
  ******************************************************************************/
 void COM_rx_char_isr(char c) {
-	if ((rx_buff_in+1)%RX_BUFF_SIZE!=rx_buff_out) {
+	if (c!='\0') {  // ascii based protocol, \0 char is not alloweed, ignore it
+		if (c=='\r') c='\n';  // mask diffrence between operating systems
 		rx_buff[rx_buff_in++]=c;
 		rx_buff_in%=RX_BUFF_SIZE;
+		if (rx_buff_in==rx_buff_out) { // buffer overloaded, drop oldest char 
+			rx_buff_out++;
+			rx_buff_out%=RX_BUFF_SIZE;
+		}
+		if (c=='\n') {
+			COM_commad_terminations++;
+			task |= TASK_COM;
+		}
 	}
 }
 
@@ -113,7 +125,8 @@ void COM_rx_char_isr(char c) {
  *
  *  \note
  ******************************************************************************/
-static int COM_getchar(FILE *stream) {
+// static int COM_getchar(FILE *stream) {
+static char COM_getchar() {
 	cli();
 	char c='\0';
 	if (rx_buff_in!=rx_buff_out) {
@@ -132,7 +145,6 @@ static int COM_getchar(FILE *stream) {
  ******************************************************************************/
 static void COM_flush (void) {
 	#if (defined COM_RS232) || (defined COM_RS485)
-		RS_Init(COM_BAUD_RATE);
 		RS_startSend();
 	#else 
 		#error "need todo"
@@ -174,13 +186,13 @@ static void print_decXXXX(uint16_t i) {
  ******************************************************************************/
 static void print_hexXX(uint8_t i) {
 	uint8_t x = i>>4;
-	if (x>10) {
+	if (x>=10) {
 		putchar(x+'a'-10);	
 	} else {
 		putchar(x+'0');
 	}	
 	x = i & 0xf;
-	if (x>10) {
+	if (x>=10) {
 		putchar(x+'a'-10);	
 	} else {
 		putchar(x+'0');
@@ -205,11 +217,23 @@ static void print_hexXXXX(uint16_t i) {
  *
  *  \note only unsigned numbers
  ******************************************************************************/
-static void print_s(char * s) {
-	while (*s != '\0') {
-		putchar(*(s++));
-	}
+static void print_s_p(const char * s) {
+	char c;
+	for (c = pgm_read_byte(s); c; ++s, c = pgm_read_byte(s)) {
+      putchar(c);
+   	}
 }
+
+/*!
+ *******************************************************************************
+ *  helper function print version string
+ *
+ *  \note
+ ******************************************************************************/
+static void print_version(void) {
+	print_s_p(PSTR(VERSION_STRING "\n"));
+}
+
 
 
 /*!
@@ -220,20 +244,20 @@ static void print_s(char * s) {
  ******************************************************************************/
 void COM_init(void) {
 	stdout = &COM_stdout;
-	stdin = &COM_stdin;
-	print_s("Hello, world!\n");
+	print_version();
+	RS_Init(COM_BAUD_RATE);
 	COM_flush();
 }
 
 
 /*!
  *******************************************************************************
- *  receive bytes
+ *  Print debug line
  *
  *  \note
  ******************************************************************************/
-void debug_print(void) {
-	print_s("D: ");
+void COM_print_debug(uint8_t logtype) {
+	print_s_p(PSTR("D: "));
 	print_decXX(RTC_GetDay());
 	putchar('.');
 	print_decXX(RTC_GetMonth());
@@ -245,14 +269,128 @@ void debug_print(void) {
 	print_decXX(RTC_GetMinute());
 	putchar(':');
 	print_decXX(RTC_GetSecond());
-	print_s(" V: ");
+	print_s_p(PSTR(" V: "));
 	print_decXX(valve_wanted); // or MOTOR_GetPosPercent()
-	print_s(" I: ");
+	print_s_p(PSTR(" I: "));
 	print_decXXXX(temp_average);
-	print_s(" S: ");
+	print_s_p(PSTR(" S: "));
 	print_decXXXX(calc_temp(temp_wanted));
+	if (logtype!=0) {
+		print_s_p(PSTR(" X"));
+	}
 	putchar('\n');
-	print_hexXXXX(0x1234);
 	COM_flush();
 }
 
+
+/*!
+ *******************************************************************************
+ *  parse hex number (helper function)
+ *
+ *	\note hex numbers use ONLY lowcase chars, upcase is reserved for commands
+ *  \note 2 digits only
+ *  \returns 0x00-0xff for correct input, -(char) for wrong char
+ *	
+ ******************************************************************************/
+static char COM_hex_parse (void) {
+	uint8_t hex=0;
+	char c=COM_getchar();
+	if ( c>='0' && c<='9') {
+		hex= (c-'0')<<4; 
+	} else if ( c>='a' && c<='f') {
+		hex= (c-('a'-10))<<4; 
+	} else return -(int16_t)c; //error
+	c=COM_getchar();
+	if ( c>='0' && c<='9') {
+		hex= (c-'0'); 
+	} else if ( c>='a' && c<='f') {
+		hex= (c-('a'-10)); 
+	} else return -(int16_t)c; //error
+	return (int16_t)hex;
+}
+
+
+/*!
+ *******************************************************************************
+ *  parse command
+ *
+ *  \note command have FIXED format
+ *  \note command X.....\n    - X is upcase char as commad name, \n is termination char
+ *	\note hex numbers use ONLY lowcase chars, upcase is reserved for commands
+ *	\note 		  V\n - print version information
+ *	\note		  D\n - print status line 
+ *	\note		  todo: Taa\n - print watched wariable aa (return 2 or 4 hex numbers) see to \ref watch.c
+ *	\note         Gaa\n - get configuration byte wit hex address aa see to \ref eeprom.h
+ *	\note		  Saadd\n - set configuration byte aa to value dd (hex)
+ *	\note		  todo: R1324\n - reboot, 1324 is password (fixed at this moment)
+ *	
+ ******************************************************************************/
+void COM_commad_parse (void) {
+	char c='\0';
+	while (COM_commad_terminations>0) {
+		if (c=='\0') c=COM_getchar();
+		switch(c) {
+		case 'V':
+			c=COM_getchar();
+			if (c=='\n') print_version();
+			break;
+		case 'D':
+			c=COM_getchar();
+			if (c=='\n') COM_print_debug(1);
+			break;
+		case 'T':
+			{
+				uint16_t val;
+				int16_t aa = COM_hex_parse();
+				if (aa<0) { c = -aa; break; }
+				print_s_p(PSTR("T: "));
+				print_hexXX(aa);
+				putchar(':');
+				val=watch(aa);
+				print_hexXX((uint8_t)(val>>8));
+				print_hexXX((uint8_t)(val&0xff));
+				putchar('\n');
+				c='\0';
+			}
+			break;
+		case 'G':
+			{
+				int16_t aa = COM_hex_parse();
+				if (aa<0) { c = -aa; break; }
+				print_s_p(PSTR("G: "));
+				print_hexXX(aa);
+				putchar(':');
+				print_hexXX(config_raw[aa]);
+				putchar('\n');
+				c='\0';
+			}
+			break;
+		case 'S':
+			{
+				int16_t dd;
+				int16_t aa = COM_hex_parse();
+				if (aa<0) { c = -aa; break; }
+				dd = COM_hex_parse();
+				if (dd<0) { c = -dd; break; }
+				if (aa<CONFIG_RAW_SIZE) {
+					config_raw[aa]=(uint8_t)dd;
+					eeprom_config_save(aa);
+					print_s_p(PSTR("S: OK\n"));
+				} else {
+					print_s_p(PSTR("S: KO!\n"));
+				}
+				c='\0';
+			}
+			break;
+		//case 'R':
+			// \todo
+		//	break;
+		case '\n':
+			COM_commad_terminations--;
+		default:
+			c='\0';
+			break;
+		}
+		COM_flush();
+	}
+}
