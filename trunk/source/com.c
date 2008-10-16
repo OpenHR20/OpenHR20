@@ -27,8 +27,8 @@
  * \file       com.c
  * \brief      comunication
  * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>
- * \date       $Date: 2008-10-11 09:25:54 +0200 (so, 11 X 2008) $
- * $Rev: 19 $
+ * \date       $Date$
+ * $Rev$
  */
 
 #include <stdint.h>

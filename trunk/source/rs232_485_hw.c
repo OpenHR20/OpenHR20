@@ -29,7 +29,7 @@
  * \brief      hardware layer of the rs232 and rs485
  * \author     Juergen Sachs (juergen-sachs-at-gmx-dot-de); Jiri Dobry <jdobry-at-centrum-dot-cz>
  * \date       12.04.2008
- * $Rev: 13 $
+ * $Rev$
  */
 
 // AVR LibC includes

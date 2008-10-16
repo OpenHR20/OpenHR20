@@ -27,8 +27,8 @@
  * \file       rs232_485.h
  * \brief      rs232 and rs485 header
  * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>
- * \date       $Date: 2008-10-09 13:10:20 +0200 (čt, 09 X 2008) $
- * $Rev: 16 $
+ * \date       $Date$
+ * $Rev$
  */
 
 #if (defined COM_RS232) || (defined COM_RS485)

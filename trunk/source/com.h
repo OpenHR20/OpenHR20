@@ -27,8 +27,8 @@
  * \file       com.h
  * \brief      communication layer
  * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>
- * \date       $Date: 2008-10-08 20:51:30 +0200 (st, 08 X 2008) $
- * $Rev: 14 $
+ * \date       $Date$
+ * $Rev$
  */
 
 
