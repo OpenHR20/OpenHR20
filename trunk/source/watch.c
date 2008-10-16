@@ -37,8 +37,7 @@
 
 #include "main.h"
 #include "adc.h"
-
-extern int32_t sumError;
+#include "pid.h"
 
 
 #define B8 0x0000

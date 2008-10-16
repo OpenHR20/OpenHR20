@@ -23,6 +23,8 @@
  *              along with this program. If not, see http:*www.gnu.org/licenses
  */
 
+extern int32_t sumError;
+
 /*!
  * \file       pid.h
  * \brief      optimized version of PID controler for free HR20E project

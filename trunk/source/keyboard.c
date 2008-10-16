@@ -24,7 +24,7 @@
  */
 
 /*!
- * \file       main.c
+ * \file       keyboard.c
  * \brief      the main file for Open HR20 project
  * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>
  * \date       $Date$

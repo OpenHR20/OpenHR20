@@ -24,7 +24,7 @@
  */
 
 /*!
- * \file       keyboard.h
+ * \file       eeprom.h
  * \brief      Keyboard driver header
  * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>
  * \date       $Date$
