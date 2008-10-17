@@ -143,11 +143,13 @@ static char COM_getchar(void) {
  *  \note
  ******************************************************************************/
 static void COM_flush (void) {
-	#if (defined COM_RS232) || (defined COM_RS485)
-		RS_startSend();
-	#else 
-		#error "need todo"
-	#endif
+	if (tx_buff_in!=tx_buff_out) {
+		#if (defined COM_RS232) || (defined COM_RS485)
+			RS_startSend();
+		#else 
+			#error "need todo"
+		#endif
+	}
 }
 
 
@@ -291,8 +293,8 @@ void COM_print_debug(uint8_t logtype) {
  *  \returns 0x00-0xff for correct input, -(char) for wrong char
  *	
  ******************************************************************************/
-static char COM_hex_parse (void) {
-	uint8_t hex=0;
+static int16_t COM_hex_parse (void) {
+	uint8_t hex;
 	char c=COM_getchar();
 	if ( c>='0' && c<='9') {
 		hex= (c-'0')<<4; 
@@ -301,9 +303,9 @@ static char COM_hex_parse (void) {
 	} else return -(int16_t)c; //error
 	c=COM_getchar();
 	if ( c>='0' && c<='9') {
-		hex= (c-'0'); 
+		hex+= (c-'0'); 
 	} else if ( c>='a' && c<='f') {
-		hex= (c-('a'-10)); 
+		hex+= (c-('a'-10)); 
 	} else return -(int16_t)c; //error
 	return (int16_t)hex;
 }
@@ -341,7 +343,7 @@ void COM_commad_parse (void) {
 			{
 				uint16_t val;
 				int16_t aa = COM_hex_parse();
-				if (aa<0) { c = -aa; break; }
+				if (aa<0) { c = (char)-aa; break; }
 				print_s_p(PSTR("T: "));
 				print_hexXX(aa);
 				putchar(':');
@@ -355,7 +357,7 @@ void COM_commad_parse (void) {
 		case 'G':
 			{
 				int16_t aa = COM_hex_parse();
-				if (aa<0) { c = -aa; break; }
+				if (aa<0) { c = (char)-aa; break; }
 				print_s_p(PSTR("G: "));
 				print_hexXX(aa);
 				putchar(':');
@@ -368,9 +370,9 @@ void COM_commad_parse (void) {
 			{
 				int16_t dd;
 				int16_t aa = COM_hex_parse();
-				if (aa<0) { c = -aa; break; }
+				if (aa<0) { c = (char)-aa; break; }
 				dd = COM_hex_parse();
-				if (dd<0) { c = -dd; break; }
+				if (dd<0) { c = (char)-dd; break; }
 				if (aa<CONFIG_RAW_SIZE) {
 					config_raw[aa]=(uint8_t)dd;
 					eeprom_config_save(aa);
