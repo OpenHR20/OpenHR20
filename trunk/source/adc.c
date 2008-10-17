@@ -72,7 +72,7 @@ static int16_t ring_buf [2][BUFFER_LEN];
 static uint8_t ring_pos=0;
 static uint8_t ring_used=1; 
 static int32_t ring_sum [2] = {0,0};
-int32_t ring_average [2] = {0,0};
+int16_t ring_average [2] = {0,0};
 int16_t ring_difference [2] = {INT16_MAX,INT16_MAX}; //INT16_MAX is error value;
 
 static void shift_ring(void) {

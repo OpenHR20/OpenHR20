@@ -72,7 +72,7 @@ void start_task_ADC(void);
 
 
 extern volatile uint8_t sleep_with_ADC;
-extern int32_t ring_average[];
+extern int16_t ring_average[];
 extern int16_t ring_difference[];
 
 
