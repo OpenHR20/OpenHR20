@@ -185,7 +185,7 @@ int16_t ADC_Convert_To_Degree(uint16_t adc)
     int32_t dummy;
     uint8_t i;
 
-    for (i=1; i<kz; i++){
+    for (i=1; i<kz-1; i++){
         if (adc<kx[i]){
             break;
         }        
