@@ -46,6 +46,7 @@
 #include "main.h"
 #include "adc.h"
 #include "task.h"
+#include "eeprom.h"
 
 // typedefs
 
@@ -162,25 +163,6 @@ bool ADC_Get_Bat_isOk(void)
 
 /*!
  *******************************************************************************
- * Values for ACD to Temperatur conversion. 
- * \todo stored in EEPROM, so they can be adapted later over cfg interface
- ******************************************************************************/
-#define TEMP_CAL_OFFSET 256 // step between 2 calibration points [1/100°C]
-#define TEMP_CAL_STEP 500 // step between 2 calibration points [1/100°C]
-#define TEMP_CAL_N 7 // // No. Values
-
-uint8_t kx_d[]={ 
-    295-TEMP_CAL_OFFSET,    // value for 35C => 295  
-    340-295,                // value for 30C => 340
-    397-340,                // value for 25C => 397
-    472-397,                // value for 20C => 472
-    549-472,                // value for 15C => 549
-    614-549,                // value for 10C => 614
-    675-614                 // value for 05C => 675
-};  // ADC Values
-
-/*!
- *******************************************************************************
  *  convert ACD value to temperatur 
  *
  *  \returns temperatur in 1/100 degrees Celsius
@@ -201,9 +183,8 @@ int16_t ADC_Convert_To_Degree(uint16_t adc)
     } // if condintion in loop is not reach i==TEMP_CAL_N-1
 
     /*! dummy never overload int16_t 
-     * \todo move it into configuration 
-     * \todo check values for this condition / prevent overload
-     *        values in kx_d[1]..kx_d[TEMP_CAL_N-1] is >=16 
+     *  check values for this condition / prevent overload
+     *        values in kx_d[1]..kx_d[TEMP_CAL_N-1] is >=16 see to \ref ee_config 
      *        ADC value is <1024 (OK, only 10-bit AD converter)
      */
     dummy = (((int32_t)(adc - kx))*(-TEMP_CAL_STEP))
@@ -212,8 +193,6 @@ int16_t ADC_Convert_To_Degree(uint16_t adc)
 
     return ((int16_t) dummy);        
 }
-
-
 
 
 /*!

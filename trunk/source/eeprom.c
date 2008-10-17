@@ -35,6 +35,7 @@
 #include "debug.h"
 #include "main.h"
 #include "rtc.h"
+#include "adc.h"
 #define __EEPROM_C__
 #include "eeprom.h"
 

@@ -52,6 +52,9 @@
 #define temp_difference (ring_difference[TEMP_RING_TYPE])
 #define bat_difference (ring_difference[BAT_RING_TYPE])
 
+#define TEMP_CAL_OFFSET 256 // offset of calibration points [ADC units]
+#define TEMP_CAL_STEP 500 // step between 2 calibration points [1/100°C]
+#define TEMP_CAL_N 7 // // No. Values
 
 
 /*****************************************************************************
