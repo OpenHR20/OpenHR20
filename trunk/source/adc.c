@@ -99,17 +99,6 @@ static void update_ring(uint8_t type, int16_t value) {
 
 /*!
  *******************************************************************************
- * Values for ACD to Temperatur conversion. 
- * \todo stored in EEPROM, so they can be adapted later over cfg interface
- ******************************************************************************/
-uint8_t  kz = 7;                                          // No. Values
-uint16_t kx[]={ 304,  340,  397,  472,  549,  614, 675};  // ADC Values
-uint16_t ky[]={3400, 3000, 2500, 2000, 1500, 1000, 500};  // Temp Values [1/100°C]
-
-
-
-/*!
- *******************************************************************************
  *  Get temperature
  *
  *  \returns temperature in 1/100 degrees Celsius (1987: 19,87°C)
@@ -171,6 +160,24 @@ bool ADC_Get_Bat_isOk(void)
 }
 #endif
 
+/*!
+ *******************************************************************************
+ * Values for ACD to Temperatur conversion. 
+ * \todo stored in EEPROM, so they can be adapted later over cfg interface
+ ******************************************************************************/
+#define TEMP_CAL_OFFSET 256 // step between 2 calibration points [1/100°C]
+#define TEMP_CAL_STEP 500 // step between 2 calibration points [1/100°C]
+#define TEMP_CAL_N 7 // // No. Values
+
+uint8_t kx_d[]={ 
+    295-TEMP_CAL_OFFSET,    // value for 35C => 295  
+    340-295,                // value for 30C => 340
+    397-340,                // value for 25C => 397
+    472-397,                // value for 20C => 472
+    549-472,                // value for 15C => 549
+    614-549,                // value for 10C => 614
+    675-614                 // value for 05C => 675
+};  // ADC Values
 
 /*!
  *******************************************************************************
@@ -182,27 +189,28 @@ bool ADC_Get_Bat_isOk(void)
  ******************************************************************************/
 int16_t ADC_Convert_To_Degree(uint16_t adc)
 {
-    int32_t dummy;
+    int16_t dummy;
     uint8_t i;
-
-    for (i=1; i<kz-1; i++){
-        if (adc<kx[i]){
+    int16_t kx=TEMP_CAL_OFFSET+(int16_t)kx_d[0];
+    for (i=1; i<TEMP_CAL_N-1; i++){
+        if (adc<kx+kx_d[i]){
             break;
-        }        
-    }
+        } else {       
+            kx+=kx_d[i];
+        }
+    } // if condintion in loop is not reach i==TEMP_CAL_N-1
 
-    dummy =  ((int32_t) ky[i] - (int32_t) ky[i-1]);
-	dummy *= ((int32_t) adc - (int32_t) kx[i-1]);
-    dummy /= ((int32_t) kx[i] - (int32_t) kx[i-1]);
-    dummy += (int32_t)  ky[i-1];
+    /*! dummy never overload int16_t 
+     * \todo move it into configuration 
+     * \todo check values for this condition / prevent overload
+     *        values in kx_d[1]..kx_d[TEMP_CAL_N-1] is >=16 
+     *        ADC value is <1024 (OK, only 10-bit AD converter)
+     */
+    dummy = (((int32_t)(adc - kx))*TEMP_CAL_STEP)
+            /(int32_t)(kx_d[i]) ; 
+    dummy += TEMP_CAL_N*TEMP_CAL_STEP-((int16_t)(i-1))*TEMP_CAL_STEP;
 
-    if (dummy < INT16_MIN){
-        return (INT16_MIN);
-    }else if (dummy > INT16_MAX){ 
-        return (INT16_MAX);
-    }else{ 
-        return ((int16_t) dummy);        
-    }
+    return ((int16_t) dummy);        
 }
 
 
