@@ -187,11 +187,13 @@ int16_t ADC_Convert_To_Degree(uint16_t adc)
      *        values in kx_d[1]..kx_d[TEMP_CAL_N-1] is >=16 see to \ref ee_config 
      *        ADC value is <1024 (OK, only 10-bit AD converter)
      */
-    dummy = (((int32_t)(adc - kx))*(-TEMP_CAL_STEP))
-            /(int32_t)(kx_d[i]) ; 
+    dummy = (int16_t) (
+            (((int32_t)(adc - kx))*(-TEMP_CAL_STEP))
+            /(int32_t)(kx_d[i])
+    ); 
     dummy += TEMP_CAL_N*TEMP_CAL_STEP-((int16_t)(i-1))*TEMP_CAL_STEP;
 
-    return ((int16_t) dummy);        
+    return (dummy);        
 }
 
 
