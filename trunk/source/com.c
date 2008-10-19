@@ -255,6 +255,8 @@ void COM_init(void) {
  ******************************************************************************/
 void COM_print_debug(uint8_t logtype) {
 	print_s_p(PSTR("D: "));
+    print_hexXX(RTC_GetDayOfWeek()+0xd0);
+	putchar(' ');
 	print_decXX(RTC_GetDay());
 	putchar('.');
 	print_decXX(RTC_GetMonth());
@@ -347,6 +349,8 @@ void print_idx(char t) {
  *	\note		  Rab\n - get timer for day a slot b, return cddd=(timermode c time ddd) (hex)
  *	\note		  Wabcddd\n - set timer  for day a slot b timermode c time ddd (hex)
  *	\note		  B1324\n - reboot, 1324 is password (fixed at this moment)
+ *	\note		  Yyymmdd\n - set, year yy, month mm, day dd; HEX values!!!
+ *	\note		  Hhhmmss\n - set, hour hh, minute mm, second ss; HEX values!!!
  *	
  ******************************************************************************/
 void COM_commad_parse (void) {
@@ -392,6 +396,20 @@ void COM_commad_parse (void) {
 			}
             print_idx(c);
 			print_hexXXXX(((uint16_t *)RTC_Dow_Timer)[(((com_hex[0])>>4)*RTC_TIMERS_PER_DOW)+ ((com_hex[0])&0xf)]);
+			break;
+		case 'Y':
+			if (COM_hex_parse(3*2)!='\0') { break; }
+			RTC_SetDate(com_hex[2],com_hex[1],com_hex[0]);
+			COM_print_debug(1);
+			c='\0';
+			break;
+		case 'H':
+			if (COM_hex_parse(3*2)!='\0') { break; }
+			RTC_SetHour(com_hex[0]);
+			RTC_SetMinute(com_hex[1]);
+			RTC_SetSecond(com_hex[2]);
+			COM_print_debug(1);
+			c='\0';
 			break;
 		case 'B':
 			{

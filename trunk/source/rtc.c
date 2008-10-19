@@ -285,20 +285,20 @@ int8_t RTC_DowTimerGetIndex(uint8_t dow,uint16_t time_minutes)
  *       - last sunday in march 1:59:59 -> 3:00:00
  *       - last sunday in october 2:59:59 -> 2:00:00 <BR>
  *         ONLY ONE TIME -> set FLAG RTC_DS <BR>
- *         reset FLAG RTC_DS on November 1st
+ *         reset FLAG RTC_DS on next day
  *
  *  \returns true if minutes changed, false otherwise  
  ******************************************************************************/
 bool RTC_AddOneSecond(void)
 {
     RTC_Ticks++;          // overflow every 136 Years
-	if (++RTC_ss == 60) {
+	if (++RTC_ss >= 60) {
 		RTC_ss = 0;
 		// notify com.c about the changed minute
-		if (++RTC_mm == 60) {
+		if (++RTC_mm >= 60) {
 			RTC_mm = 0;
-			// add ome hour
-			if (++RTC_hh == 24) {
+			// add one hour
+			if (++RTC_hh >= 24) {
 				RTC_hh = 0;
 				RTC_AddOneDay();
 			}
@@ -338,16 +338,14 @@ void RTC_AddOneDay(void)
     uint8_t dom;
     // How many day has actual month
     dom = RTC_DaysOfMonth();
-    if (++RTC_DD == (dom+1)) {                   // Next Month
+    if (++RTC_DD > dom) {                   // Next Month
 		RTC_DD = 1;
-		if (++RTC_MM == 13) {                    // Next year
+		if (++RTC_MM > 12) {                    // Next year
 			RTC_MM = 1;
 			RTC_YY++;
 		}
 		// Clear Daylight saving Flag
-		if (RTC_MM == 11) {                    
-            RTC_DS=0;
-        }
+        RTC_DS=0;
     // next day of week
     RTC_DOW++;
     RTC_DOW %= 7;
@@ -434,7 +432,7 @@ void RTC_SetDayOfWeek(void)
     // set DOW
     RTC_DOW = (uint8_t) ((tmp_dow + 6) % 7) ;
 }
-
+#if 0
 /*!
  *******************************************************************************
  *
@@ -465,6 +463,8 @@ bool RTC_SetDate(int8_t dd, int8_t mm, int8_t yy)
 	RTC_SetMonth(old_mm);
 	return false;
 }
+#endif
+
 
 /*!
  *******************************************************************************
