@@ -48,9 +48,9 @@ In this file we define only configuration parameters, for example what kind of c
 #include <avr/version.h>
 
 //! language
-//#define LANG en
+#define LANG uni
 //#define LANG de
-#define LANG cs
+//#define LANG cs
 
 // our Version
 #define REVHIGH  0  //! Revision number high
