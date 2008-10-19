@@ -142,7 +142,7 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
       {32, 1,22, 7}     //!<  1-7 
   };
 #elif LANG==cs
-  // Look-up chars table for weekdays (german)
+  // Look-up chars table for weekdays (czech)
   uint8_t LCD_WeekdayTablePrgMem[8][4] PROGMEM =
   {
       {32,29,14,22},    //!<  " nE "
@@ -569,8 +569,6 @@ void LCD_PrintTempInt(int16_t temp, uint8_t mode)
  *  Print day of week on LCD
  *
  *  \note  something weird due to 7 Segments
- *
- *  \note  using german format: <tt> Mo, Di, Mi, Do, Fr, Sa, So </tt>
  *
  *  \note You have to call \ref LCD_Update() to trigger update on LCD if not
  *         it is triggered automatic at change of bitframe
