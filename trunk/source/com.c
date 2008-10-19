@@ -34,10 +34,10 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <avr\wdt.h>
 
 
 #include "config.h"
-#include "eeprom.h"
 #include "com.h"
 #include "rs232_485.h"
 #include "main.h"
@@ -45,6 +45,7 @@
 #include "adc.h"
 #include "task.h"
 #include "watch.h"
+#include "eeprom.h"
 
 
 #define TX_BUFF_SIZE 128
@@ -60,10 +61,6 @@ static uint8_t rx_buff_out=0;
 
 static int COM_putchar(char c, FILE *stream);
 static FILE COM_stdout = FDEV_SETUP_STREAM(COM_putchar, NULL, _FDEV_SETUP_WRITE);
-
-
-static volatile uint8_t COM_commad_terminations=0;
-
 
 
 /*!
@@ -113,7 +110,6 @@ void COM_rx_char_isr(char c) {
 			rx_buff_out%=RX_BUFF_SIZE;
 		}
 		if (c=='\n') {
-			COM_commad_terminations++;
 			task |= TASK_COM;
 		}
 	}
@@ -126,8 +122,8 @@ void COM_rx_char_isr(char c) {
  *  \note
  ******************************************************************************/
 static char COM_getchar(void) {
-	cli();
 	char c='\0';
+	cli();
 	if (rx_buff_in!=rx_buff_out) {
 		c=rx_buff[rx_buff_out++];
 		rx_buff_out%=RX_BUFF_SIZE;
@@ -276,6 +272,8 @@ void COM_print_debug(uint8_t logtype) {
 	print_decXXXX(temp_average);
 	print_s_p(PSTR(" S: "));
 	print_decXXXX(calc_temp(temp_wanted));
+	print_s_p(PSTR(" B: "));
+	print_decXXXX(bat_average);
 	if (logtype!=0) {
 		print_s_p(PSTR(" X"));
 	}
@@ -283,32 +281,55 @@ void COM_print_debug(uint8_t logtype) {
 	COM_flush();
 }
 
+/*! 
+    \note dirty trick with shared array for \ref COM_hex_parse and \ref COM_commad_parse
+    code size optimalization
+*/
+static uint8_t com_hex[3];
+ 
 
 /*!
  *******************************************************************************
  *  \brief parse hex number (helper function)
  *
  *	\note hex numbers use ONLY lowcase chars, upcase is reserved for commands
- *  \note 2 digits only
- *  \returns 0x00-0xff for correct input, -(char) for wrong char
  *	
  ******************************************************************************/
-static int16_t COM_hex_parse (void) {
-	uint8_t hex;
-	char c=COM_getchar();
-	if ( c>='0' && c<='9') {
-		hex= (c-'0')<<4; 
-	} else if ( c>='a' && c<='f') {
-		hex= (c-('a'-10))<<4; 
-	} else return -(int16_t)c; //error
-	c=COM_getchar();
-	if ( c>='0' && c<='9') {
-		hex+= (c-'0'); 
-	} else if ( c>='a' && c<='f') {
-		hex+= (c-('a'-10)); 
-	} else return -(int16_t)c; //error
-	return (int16_t)hex;
+static char COM_hex_parse (uint8_t n) {
+	uint8_t i;
+	for (i=0;i<n;i++) {
+    	uint8_t c = COM_getchar()-'0';
+    	if ( c>9 ) {  // chars < '0' overload var c
+			if ((c>=('a'-'0')) && (c<=('f'-'0'))) {
+    			c-= (('a'-'0')-10);
+			} else return c+'0';
+		}
+    	if (i&1) {
+    	   com_hex[i>>1]+=c;
+        } else {
+    	   com_hex[i>>1]=(uint8_t)c<<4;
+        }
+    }
+	{
+		char c;
+    	if ((c=COM_getchar())!='\n') return c;
+	}
+	return '\0';
 }
+
+/*!
+ *******************************************************************************
+ *  \brief print X[xx]=
+ *
+ ******************************************************************************/
+void print_idx(char t) {
+    putchar(t);
+    putchar('[');
+    print_hexXX(com_hex[0]);
+    putchar(']');
+    putchar('=');
+}
+
 
 
 /*!
@@ -323,75 +344,72 @@ static int16_t COM_hex_parse (void) {
  *	\note		  Taa\n - print watched wariable aa (return 2 or 4 hex numbers) see to \ref watch.c
  *	\note         Gaa\n - get configuration byte wit hex address aa see to \ref eeprom.h
  *	\note		  Saadd\n - set configuration byte aa to value dd (hex)
- *	\note		  \todo: R1324\n - reboot, 1324 is password (fixed at this moment)
+ *	\note		  Rab\n - get timer for day a slot b, return cddd=(timermode c time ddd) (hex)
+ *	\note		  Wabcddd\n - set timer  for day a slot b timermode c time ddd (hex)
+ *	\note		  B1324\n - reboot, 1324 is password (fixed at this moment)
  *	
  ******************************************************************************/
 void COM_commad_parse (void) {
-	char c='\0';
-	while (COM_commad_terminations>0) {
-		if (c=='\0') c=COM_getchar();
+	char c;
+	while ((c=COM_getchar())!='\0') {
 		switch(c) {
 		case 'V':
-			c=COM_getchar();
-			if (c=='\n') print_version();
+			if (COM_getchar()=='\n') print_version();
+			c='\0';
 			break;
 		case 'D':
-			c=COM_getchar();
-			if (c=='\n') COM_print_debug(1);
+			if (COM_getchar()=='\n') COM_print_debug(1);
+			c='\0';
 			break;
 		case 'T':
 			{
-				uint16_t val;
-				int16_t aa = COM_hex_parse();
-				if (aa<0) { c = (char)-aa; break; }
-				print_s_p(PSTR("T: "));
-				print_hexXX(aa);
-				putchar(':');
-				val=watch(aa);
-				print_hexXX((uint8_t)(val>>8));
-				print_hexXX((uint8_t)(val&0xff));
-				putchar('\n');
-				c='\0';
+				if (COM_hex_parse(1*2)!='\0') { break; }
+                print_idx(c);
+  				print_hexXXXX(watch(com_hex[0]));
 			}
 			break;
 		case 'G':
-			{
-				int16_t aa = COM_hex_parse();
-				if (aa<0) { c = (char)-aa; break; }
-				print_s_p(PSTR("G: "));
-				print_hexXX(aa);
-				putchar(':');
-				print_hexXX(config_raw[aa]);
-				putchar('\n');
-				c='\0';
-			}
-			break;
 		case 'S':
+			if (c=='G') {
+				if (COM_hex_parse(1*2)!='\0') { break; }
+			} else {
+				if (COM_hex_parse(2*2)!='\0') { break; }
+  				if (com_hex[0]<CONFIG_RAW_SIZE) {
+  					config_raw[com_hex[0]]=(uint8_t)(com_hex[1]);
+  					eeprom_config_save(com_hex[0]);
+  				}
+			}
+            print_idx(c);
+			print_hexXX(config_raw[com_hex[0]]);
+			break;
+		case 'R':
+		case 'W':
+			if (c=='R') {
+				if (COM_hex_parse(1*2)!='\0') { break; }
+			} else {
+				if (COM_hex_parse(3*2)!='\0') { break; }
+  				RTC_DowTimerSet(com_hex[0]>>4, com_hex[0]&0xf, (((uint16_t) (com_hex[1])&0xf)<<8)+(uint16_t)(com_hex[2]), (com_hex[1])>>4);
+			}
+            print_idx(c);
+			print_hexXXXX(((uint16_t *)RTC_Dow_Timer)[(((com_hex[0])>>4)*RTC_TIMERS_PER_DOW)+ ((com_hex[0])&0xf)]);
+			break;
+		case 'B':
 			{
-				int16_t dd;
-				int16_t aa = COM_hex_parse();
-				if (aa<0) { c = (char)-aa; break; }
-				dd = COM_hex_parse();
-				if (dd<0) { c = (char)-dd; break; }
-				if (aa<CONFIG_RAW_SIZE) {
-					config_raw[aa]=(uint8_t)dd;
-					eeprom_config_save(aa);
-					print_s_p(PSTR("S: OK\n"));
-				} else {
-					print_s_p(PSTR("S: KO!\n"));
-				}
-				c='\0';
+				if (COM_hex_parse(2*2)!='\0') { break; }
+  				if ((com_hex[0]==0x13) && (com_hex[1]==0x24)) {
+                      cli();
+                      wdt_enable(WDTO_15MS); //wd on,15ms
+                      while(1); //loop till reset
+    			}
 			}
 			break;
-		//case 'R':
-			// \todo command 'R'
-		//	break;
-		case '\n':
-			COM_commad_terminations--;
+		//case '\n':
+		//case '\0':
 		default:
 			c='\0';
 			break;
 		}
+		if (c!='\0') putchar('\n');
 		COM_flush();
 	}
 }

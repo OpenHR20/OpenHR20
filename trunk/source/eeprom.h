@@ -60,6 +60,9 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
 	/* 15 */ uint8_t temp_cal_table4; //!< temperature calibration table
 	/* 16 */ uint8_t temp_cal_table5; //!< temperature calibration table
 	/* 17 */ uint8_t temp_cal_table6; //!< temperature calibration table
+	/* 18 */ uint8_t timer_mode; //!< =0 only one program, =1 programs for weekdays
+	/* 19 */ uint8_t bat_warning_thld; //!< treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
+	/* 1a */ uint8_t bat_low_thld; //!< treshold for battery low [unit 0.02V]=[unit 0.01V per cell]
 } config_t;
 
 extern config_t config;
@@ -69,12 +72,10 @@ extern config_t config;
 
 // Boot Timeslots -> move to CONFIG.H
 // 10 Minutes after BOOT_hh:00
-#define BOOT_ON1      BOOT_hh*10 + 1 //!< Boot Timeslot 0 \todo move to CONFIG.H
-#define BOOT_OFF1     BOOT_ON1 + 1   //!< Boot Timeslot 1 \todo move to CONFIG.H
-#define BOOT_ON2      BOOT_ON1 + 2   //!< Boot Timeslot 2 \todo move to CONFIG.H
-#define BOOT_OFF2     BOOT_ON1 + 3   //!< Boot Timeslot 3 \todo move to CONFIG.H
-
-
+#define BOOT_ON1       (7*60+0x2000) //!<  7:00
+#define BOOT_OFF1      (9*60+0x1000) //!<  9:00
+#define BOOT_ON2      (16*60+0x2000) //!<  16:00
+#define BOOT_OFF2     (21*60+0x1000) //!<  21:00
 
 
 #ifdef __EEPROM_C__
@@ -86,7 +87,7 @@ extern config_t config;
 
 uint32_t EEPROM ee_reserved1 = 0x00000000;   //4bytes reserved / do not use EEPROM address 0
 
-uint16_t EEPROM ee_timers[8][8] = { //128bytes 
+uint16_t EEPROM ee_timers[8][RTC_TIMERS_PER_DOW] = { //128bytes 
     // TODO add default timers, now it is empty
     /*! ee_timers value means:
      *          value & 0x0fff  = time in minutes from midnight
@@ -96,14 +97,14 @@ uint16_t EEPROM ee_timers[8][8] = { //128bytes
      *                            0x3000 - temperature 3  - supercomfort
      *          value & 0xc000  - reserved for future
      */                                 
-	{ 0x1FFF, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF, 0x2FFF},
-	{ 0x1FFF, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF, 0x2FFF},
-	{ 0x1FFF, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF, 0x2FFF},
-	{ 0x1FFF, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF, 0x2FFF},
-	{ 0x1FFF, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF, 0x2FFF},
-	{ 0x1FFF, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF, 0x2FFF},
-	{ 0x1FFF, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF, 0x2FFF},
-	{ 0x1FFF, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF, 0x2FFF}
+	{ BOOT_ON1, BOOT_OFF1, BOOT_ON2, BOOT_OFF2, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF},
+	{ BOOT_ON1, BOOT_OFF1, BOOT_ON2, BOOT_OFF2, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF},
+	{ BOOT_ON1, BOOT_OFF1, BOOT_ON2, BOOT_OFF2, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF},
+	{ BOOT_ON1, BOOT_OFF1, BOOT_ON2, BOOT_OFF2, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF},
+	{ BOOT_ON1, BOOT_OFF1, BOOT_ON2, BOOT_OFF2, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF},
+	{ BOOT_ON1, BOOT_OFF1, BOOT_ON2, BOOT_OFF2, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF},
+	{ BOOT_ON1, BOOT_OFF1, BOOT_ON2, BOOT_OFF2, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF},
+	{ BOOT_ON1, BOOT_OFF1, BOOT_ON2, BOOT_OFF2, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF}
 };
 
 uint8_t EEPROM ee_reserved2 [60] = {
@@ -146,6 +147,10 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 15 */  {549-472,549-472,      16,      255},   //!< value for 15C => 549 temperature calibration table
   /* 16 */  {614-549,614-549,      16,      255},   //!< value for 10C => 614 temperature calibration table
   /* 17 */  {675-614,675-614,      16,      255},   //!< value for 05C => 675 temperature calibration table
+  /* 18 */  {0,           0,        0,        1},   //!< timer_mode; =0 only one program, =1 programs for weekdays 
+  /* 19 */  {120,       120,       80,      160},   //!< bat_warning_thld; treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
+  /* 1a */  {100,       100,       80,      160},   //!< bat_low_thld; treshold for battery low [unit 0.02V]=[unit 0.01V per cell]
+
 };
 
 
@@ -157,7 +162,7 @@ uint8_t EEPROM_read(uint16_t address);
 void eeprom_config_init(void);
 void eeprom_config_save(uint8_t idx);
 void eeprom_timers_init(void);
-void eeprom_timers_save(void);
+void eeprom_timers_save(rtc_dow_t dow, uint8_t slot);
 
 #define CONFIG_VALUE 0
 #define CONFIG_DEFAULT 1

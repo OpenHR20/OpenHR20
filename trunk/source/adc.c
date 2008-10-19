@@ -46,6 +46,7 @@
 #include "main.h"
 #include "adc.h"
 #include "task.h"
+#include "rtc.h"
 #include "eeprom.h"
 
 // typedefs

@@ -47,6 +47,11 @@ In this file we define only configuration parameters, for example what kind of c
 #include <avr/sleep.h>
 #include <avr/version.h>
 
+//! language
+//#define LANG en
+//#define LANG de
+#define LANG cs
+
 // our Version
 #define REVHIGH  0  //! Revision number high
 #define REVLOW   21 //! Revision number low

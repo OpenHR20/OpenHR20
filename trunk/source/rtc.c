@@ -64,11 +64,13 @@ uint16_t RTC_Dow_Timer[7+1][RTC_TIMERS_PER_DOW];  //!< DOW Timer entrys 7 days +
 
 // prototypes
 void    RTC_AddOneDay(void);        // add one day to actual date
-uint8_t RTC_NoLeapyear(void);       // is (RTC_YY) a leapyear?
 uint8_t RTC_DaysOfMonth(void);      // how many days in (RTC_MM, RTC_YY)
 void    RTC_SetDayOfWeek(void);     // calc day of week (RTC_DD, RTC_MM, RTC_YY)
 bool    RTC_IsLastSunday(void);     // check actual date if last sun in mar/oct
 
+    // year mod 100 = 0 is only every 400 years a leap year
+    // we calculate only till the year 2255, so don't care
+#define RTC_NoLeapyear() (RTC_YY % 4) 
 
 // Progmem constants
 
@@ -204,10 +206,16 @@ void RTC_SetSecond(int8_t second)
  *      - to deactivate timer: set value 0xfff
  *
  ******************************************************************************/
-void RTC_DowTimerSet(rtc_dow_t dow, uint8_t slot, uint16_t time, timermode_t timermode)
+bool RTC_DowTimerSet(rtc_dow_t dow, uint8_t slot, uint16_t time, timermode_t timermode)
 {
+    if (dow>=8) return false;
+    if (slot>=RTC_TIMERS_PER_DOW) return false;
+    if (timermode>temperature3) return false;
+    if (time>0xfff) return false;
     // to table format see to \ref ee_timers
-    RTC_Dow_Timer[dow][slot] = (time & 0x0fff) | ((uint16_t)timermode<<12);
+    RTC_Dow_Timer[dow][slot] = time | ((uint16_t)timermode<<12);
+    eeprom_timers_save(dow, slot);
+    return true;
 }
 
 /*!
@@ -355,33 +363,10 @@ void RTC_AddOneDay(void)
  ******************************************************************************/
 uint8_t RTC_DaysOfMonth()
 {
-    if (RTC_MM != 2) {
-	    return pgm_read_byte(&RTC_DayOfMonthTablePrgMem[RTC_MM]);
-    } else {
-        if (RTC_NoLeapyear() ) {
-            return 28;  // february no leapyear
-        } else {
-            return 29;	// leapyear feb=29
-        }
-    }
-}
-
-
-/*!
- *******************************************************************************
- *
- *  \returns \ref true if actual year is not a leapyear
- *
- ******************************************************************************/
-bool RTC_NoLeapyear()
-{
-	if ( RTC_YY % 100) {
-        return (bool) (RTC_YY % 4);
-    } else {
-        // year mod 100 = 0 is only every 400 years a leap year
-        // we calculate only till the year 2255, so don't care
-        return false;
-    }
+    uint8_t dom = pgm_read_byte(&RTC_DayOfMonthTablePrgMem[RTC_MM]);
+    if ((RTC_MM == 2)&&(!RTC_NoLeapyear()))
+        return 29; // leapyear feb=29
+    return dom;
 }
 
 
@@ -393,28 +378,19 @@ bool RTC_NoLeapyear()
  ******************************************************************************/
 bool RTC_IsLastSunday(void)
 {
-    int days_of_month;
-    
+    if (RTC_DOW == 7){ // sunday ?
+        return 0;  // not sunday
+    }
     // March or October ?
     if (RTC_MM == 3){
-        days_of_month=31;
+        // last seven days of month
+        return (RTC_DD > (31-7));
     } else if (RTC_MM == 10){
-        days_of_month=30;
+        // last seven days of month
+        return (RTC_DD > (30-7));
     } else {
         return 0;  // not march or october
-    }
-    
-    // last seven days of month
-    if (RTC_DD << (days_of_month-7)){
-        return 0;  // not last seven days
-    }
-
-    // sunday
-    if (RTC_DOW == 7){
-        return 1;  // sunday
-    } else {
-        return 0;  // not a sunday
-    }
+    }    
 }
 
 
@@ -448,21 +424,15 @@ void RTC_SetDayOfWeek(void)
 
     // Day of year
     day_of_year = pgm_read_word(&(daysInYear[RTC_MM-1])) + RTC_DD;
-    
-    if (RTC_MM > 2) {                       // february
+    if (RTC_MM > 2) { // february
         if (! RTC_NoLeapyear() ){
             day_of_year ++;
         }
     }
-
     // calc weekday
     tmp_dow = RTC_YY + ((RTC_YY-1) / 4) - ((RTC_YY-1) / 100) + day_of_year;
-    // if (RTC_YY > 0) {  
-        tmp_dow++;                          // 2000 was leapyear
-    // }
-
     // set DOW
-    RTC_DOW = (uint8_t) ((tmp_dow + 5) % 7) ;
+    RTC_DOW = (uint8_t) ((tmp_dow + 6) % 7) ;
 }
 
 /*!

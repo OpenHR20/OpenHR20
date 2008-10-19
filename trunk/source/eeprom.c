@@ -172,17 +172,18 @@ void eeprom_timers_init(void) {
 
 /*!
  *******************************************************************************
- *  Update timers storage
+ *  Update timers storage for dow and slot
  *
  *  \note
  ******************************************************************************/
-void eeprom_timers_save(void) {
+void eeprom_timers_save(rtc_dow_t dow, uint8_t slot) {
 	uint16_t i;
-	uint8_t *timers_ptr = (uint8_t *) RTC_Dow_Timer;
-	for (i=0;i<sizeof(RTC_Dow_Timer);i++) {
-		if (*timers_ptr !=  EEPROM_read(((uint16_t)&ee_timers)+i)) {
-		  EEPROM_write(((uint16_t)&ee_timers)+i ,*timers_ptr);
-    }
+	uint8_t *timers_ptr = (uint8_t *) (RTC_Dow_Timer+RTC_TIMERS_PER_DOW*dow+slot);
+    uint16_t eeaddr = (uint16_t)(ee_timers+RTC_TIMERS_PER_DOW*dow+slot);
+	for (i=0;i<sizeof(RTC_Dow_Timer[0][0]);i++) {
+		if (*timers_ptr !=  EEPROM_read(eeaddr+i)) {
+		  EEPROM_write(eeaddr+i ,*timers_ptr);
+        }
 		timers_ptr++;
 	}
 }

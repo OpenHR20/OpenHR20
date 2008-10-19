@@ -44,6 +44,7 @@
 #include "main.h"
 #include "lcd.h"
 #include "task.h"
+#include "rtc.h"
 #include "eeprom.h"
 
 // Local Defines
@@ -114,17 +115,48 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
           //41   0111000  1011000
 };
 
-// Look-up chars table for weekdays (german)
-uint8_t LCD_WeekdayTablePrgMem[7][4] PROGMEM =
-{
-    {33,34,31,32},    //!<  Montag:     'rno '
-    {32,13,30,32},    //!<  Dienstag:   ' di '
-    {33,34,30,32},    //!<  Mittwoch:   'rni '
-    {32,13,31,32},    //!<  Donnerstag: ' do '
-    {32,15,28,32},    //!<  Freitag:    ' Fr '
-    {32, 5,10,32},    //!<  Samstag:    ' SA '
-    {32, 5,31,32}     //!<  Sonntag:    ' So '
-};
+#if LANG==en
+  // Look-up chars table for weekdays (german)
+  uint8_t LCD_WeekdayTablePrgMem[8][4] PROGMEM =
+  {
+      {32,22,01,22},    //!<  -1- \todo rno
+      {32,22,02,22},    //!<  -2- \todo th
+      {32,22,03,22},    //!<  -3- \todo 3
+      {32,22,04,22},    //!<  -4- \todo 4
+      {32,15,28,32},    //!<  ' Fr '
+      {32,22,06,22},    //!<  -6- \todo SA
+      {32,22,07,22},    //!<  -7- \todo Su
+      {32,01,22,07}     //!<  1-7 
+  };
+#elif LANG==de
+  // Look-up chars table for weekdays (german)
+  uint8_t LCD_WeekdayTablePrgMem[8][4] PROGMEM =
+  {
+      {33,34,31,32},    //!<  Montag:     'rno '
+      {32,13,30,32},    //!<  Dienstag:   ' di '
+      {33,34,30,32},    //!<  Mittwoch:   'rni '
+      {32,13,31,32},    //!<  Donnerstag: ' do '
+      {32,15,28,32},    //!<  Freitag:    ' Fr '
+      {32, 5,10,32},    //!<  Samstag:    ' SA '
+      {32, 5,31,32},    //!<  Sonntag:    ' So '
+      {32,01,22,07}     //!<  1-7 
+  };
+#elif LANG==cs
+  // Look-up chars table for weekdays (german)
+  uint8_t LCD_WeekdayTablePrgMem[8][4] PROGMEM =
+  {
+      {32,22,01,22},    //!<  -1- \todo Po
+      {32,22,02,22},    //!<  -2- \todo Ut
+      {32,22,03,22},    //!<  -3- \todo St
+      {32,22,04,22},    //!<  -4- \todo Ct
+      {32,22,05,22},    //!<  -5- \todo PA
+      {32,22,06,22},    //!<  -6- \todo So
+      {32,22,07,22},    //!<  -7- \todo NE
+      {32,01,22,07}     //!<  1-7 
+  };
+#endif
+
+
 
 // Look-up table to adress element F for one Position. ( 32 : 10 )
 uint8_t LCD_FieldOffsetTablePrgMem[] PROGMEM =

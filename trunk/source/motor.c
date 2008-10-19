@@ -46,6 +46,7 @@
 #include "main.h"
 #include "motor.h"
 #include "lcd.h"
+#include "rtc.h"
 #include "eeprom.h"
 #include "task.h"
 #include "rs232_485.h"

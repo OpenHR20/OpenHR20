@@ -50,7 +50,7 @@
 
 //! day of week
 typedef enum {
-    MO, TU, WE, TH, FR, SA, SU, TIMER_ACTIVE
+    COMPLETE_WEEK, MO, TU, WE, TH, FR, SA, SU 
 } rtc_dow_t;
 
 //! 
@@ -92,7 +92,7 @@ void RTC_SetMonth(int8_t);                    // Set month
 void RTC_SetYear(int8_t);                     // Set year
 bool RTC_SetDate(int8_t, int8_t, int8_t);   // Set Date, and do all the range checking
 
-void  RTC_DowTimerSet(rtc_dow_t, uint8_t, uint16_t, timermode_t timermode); // set day of week timer
+bool RTC_DowTimerSet(rtc_dow_t, uint8_t, uint16_t, timermode_t timermode); // set day of week timer
 uint16_t RTC_DowTimerGet(rtc_dow_t dow, uint8_t slot, timermode_t *timermode);
 uint8_t RTC_DowTimerGetStartOfDay(void);              // timer status at 0:00
 uint8_t RTC_DowTimerGetActualIndex(void);             // timer status now

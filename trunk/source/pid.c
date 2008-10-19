@@ -32,6 +32,8 @@
  */
  
 #include <stdint.h>
+#include "main.h"
+#include "rtc.h"
 #include "eeprom.h"
 #include "pid.h"
 
