@@ -157,7 +157,7 @@ static void COM_flush (void) {
  ******************************************************************************/
 static void print_decXX(uint8_t i) {
 	if (i>=100) {
-		putchar(i/100+'\0');
+		putchar(i/100+'0');
 		i%=100;
 	}
 	putchar(i/10+'0');
