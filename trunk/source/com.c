@@ -59,17 +59,13 @@ static uint8_t tx_buff_out=0;
 static uint8_t rx_buff_in=0;
 static uint8_t rx_buff_out=0;
 
-static int COM_putchar(char c, FILE *stream);
-static FILE COM_stdout = FDEV_SETUP_STREAM(COM_putchar, NULL, _FDEV_SETUP_WRITE);
-
-
 /*!
  *******************************************************************************
  *  \brief transmit bytes
  *
  *  \note
  ******************************************************************************/
-static int COM_putchar(char c, FILE *stream) {
+static void COM_putchar(char c) {
 	cli();
 	if ((tx_buff_in+1)%TX_BUFF_SIZE!=tx_buff_out) {
 		tx_buff[tx_buff_in++]=c;
@@ -157,11 +153,11 @@ static void COM_flush (void) {
  ******************************************************************************/
 static void print_decXX(uint8_t i) {
 	if (i>=100) {
-		putchar(i/100+'0');
+		COM_putchar(i/100+'0');
 		i%=100;
 	}
-	putchar(i/10+'0');
-	putchar(i%10+'0');
+	COM_putchar(i/10+'0');
+	COM_putchar(i%10+'0');
 }
 
 /*!
@@ -184,15 +180,15 @@ static void print_decXXXX(uint16_t i) {
 static void print_hexXX(uint8_t i) {
 	uint8_t x = i>>4;
 	if (x>=10) {
-		putchar(x+'a'-10);	
+		COM_putchar(x+'a'-10);	
 	} else {
-		putchar(x+'0');
+		COM_putchar(x+'0');
 	}	
 	x = i & 0xf;
 	if (x>=10) {
-		putchar(x+'a'-10);	
+		COM_putchar(x+'a'-10);	
 	} else {
-		putchar(x+'0');
+		COM_putchar(x+'0');
 	}	
 }
 
@@ -217,7 +213,7 @@ static void print_hexXXXX(uint16_t i) {
 static void print_s_p(const char * s) {
 	char c;
 	for (c = pgm_read_byte(s); c; ++s, c = pgm_read_byte(s)) {
-      putchar(c);
+      COM_putchar(c);
    	}
 }
 
@@ -240,7 +236,6 @@ static void print_version(void) {
  *  \note
  ******************************************************************************/
 void COM_init(void) {
-	stdout = &COM_stdout;
 	print_version();
 	RS_Init(COM_BAUD_RATE);
 	COM_flush();
@@ -256,17 +251,17 @@ void COM_init(void) {
 void COM_print_debug(uint8_t logtype) {
 	print_s_p(PSTR("D: "));
     print_hexXX(RTC_GetDayOfWeek()+0xd0);
-	putchar(' ');
+	COM_putchar(' ');
 	print_decXX(RTC_GetDay());
-	putchar('.');
+	COM_putchar('.');
 	print_decXX(RTC_GetMonth());
-	putchar('.');
+	COM_putchar('.');
 	print_decXX(RTC_GetYearYY());
-	putchar(' ');
+	COM_putchar(' ');
 	print_decXX(RTC_GetHour());
-	putchar(':');
+	COM_putchar(':');
 	print_decXX(RTC_GetMinute());
-	putchar(':');
+	COM_putchar(':');
 	print_decXX(RTC_GetSecond());
 	print_s_p(PSTR(" V: "));
 	print_decXX(valve_wanted); // or MOTOR_GetPosPercent()
@@ -279,7 +274,7 @@ void COM_print_debug(uint8_t logtype) {
 	if (logtype!=0) {
 		print_s_p(PSTR(" X"));
 	}
-	putchar('\n');
+	COM_putchar('\n');
 	COM_flush();
 }
 
@@ -325,11 +320,11 @@ static char COM_hex_parse (uint8_t n) {
  *
  ******************************************************************************/
 void print_idx(char t) {
-    putchar(t);
-    putchar('[');
+    COM_putchar(t);
+    COM_putchar('[');
     print_hexXX(com_hex[0]);
-    putchar(']');
-    putchar('=');
+    COM_putchar(']');
+    COM_putchar('=');
 }
 
 
@@ -427,7 +422,7 @@ void COM_commad_parse (void) {
 			c='\0';
 			break;
 		}
-		if (c!='\0') putchar('\n');
+		if (c!='\0') COM_putchar('\n');
 		COM_flush();
 	}
 }
