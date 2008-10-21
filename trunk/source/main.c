@@ -79,7 +79,7 @@ uint8_t input_temp(uint8_t);
 bool mode_auto=true;
 
 static uint16_t PID_update_timeout=16;   // timer to next PID controler action/first is 16 sec after statup 
-int8_t PID_force_update=-1;      // signed value, val<0 means disable force updates
+int8_t PID_force_update=16;      // signed value, val<0 means disable force updates
 
 
 
@@ -205,15 +205,13 @@ int main(void)
                     	temp_wanted=temp_auto; 
 						if ((PID_force_update<0)&&(temp_wanted!=temp_wanted_last)) {
 							PID_force_update=0;
-						} else {
-							PID_force_update = 4; //< \todo create symbol for constatant
-						}
+						} 
                 	}
 				}
             }
             if (PID_update_timeout>0) PID_update_timeout--;
             if (PID_force_update>0) PID_force_update--;
-            if ((PID_update_timeout == 0)&&(PID_force_update==0)) {
+            if ((PID_update_timeout == 0)||(PID_force_update==0)) {
                 //update now
                 if (temp_wanted<TEMP_MIN) temp_wanted=TEMP_MIN; 
                 if (temp_wanted>TEMP_MAX) temp_wanted=TEMP_MAX; 

@@ -115,7 +115,7 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
           //41   0111000  1011000  0111110  1111000
 };
 
-#if LANG==uni
+#if LANG==LANG_uni
   // Look-up chars table for weekdays (universal/numbers)
   uint8_t LCD_WeekdayTablePrgMem[8][4] PROGMEM =
   {
@@ -128,7 +128,7 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
       {32,22, 6,22},    //!<  " -6-" SA
       {32,22, 7,22},    //!<  " -7-" SU
   };
-#elif LANG==de
+#elif LANG==LANG_de
   // Look-up chars table for weekdays (german)
   uint8_t LCD_WeekdayTablePrgMem[8][4] PROGMEM =
   {
@@ -141,7 +141,7 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
       {32, 5,10,32},    //!<  Samstag:    ' SA '
       {32, 5,31,32},    //!<  Sonntag:    ' So '
   };
-#elif LANG==cs
+#elif LANG==LANG_cs
   // Look-up chars table for weekdays (czech)
   uint8_t LCD_WeekdayTablePrgMem[8][4] PROGMEM =
   {

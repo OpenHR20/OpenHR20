@@ -47,10 +47,14 @@ In this file we define only configuration parameters, for example what kind of c
 #include <avr/sleep.h>
 #include <avr/version.h>
 
+
+#define LANG_uni 1
+#define LANG_de 2
+#define LANG_cs 3
 //! language
-#define LANG uni
-//#define LANG de
-//#define LANG cs
+#define LANG LANG_uni
+//#define LANG LANG_de
+//#define LANG LANG_cs
 
 // our Version
 #define REVHIGH  0  //! Revision number high
