@@ -60,8 +60,9 @@
 volatile bool    m_automatic_mode;         // auto mode (false: manu mode)
 
 // global Vars for default values: temperatures and speed
-uint8_t temp_wanted=c2temp(20);   // actual desired temperatur, TODO: change it by timer
-uint8_t temp_wanted_last=0;   // desired temperatur value used for last PID control
+uint8_t temp_wanted=0;   // actual desired temperatur
+uint8_t temp_wanted_last=0xff;   // desired temperatur value used for last PID control
+uint8_t temp_auto=0;   // actual desired temperatur by timer
 uint8_t valve_wanted=0;
 // serial number
 uint16_t serialNumber;	//!< Unique serial number \todo move to CONFIG.H
@@ -75,7 +76,7 @@ void callback_settemp(uint8_t);            // called from RTC to set new reftemp
 void setautomode(bool);                    // activate/deactivate automode
 uint8_t input_temp(uint8_t);
 
-uint8_t test=0;
+bool mode_auto=true;
 
 static uint16_t PID_update_timeout=16;   // timer to next PID controler action/first is 16 sec after statup 
 int8_t PID_force_update=-1;      // signed value, val<0 means disable force updates
@@ -116,7 +117,7 @@ int main(void)
     * main loop
     ***************************************************************************/
     for (;;){        
-		// go to sleep with ADC concersion start
+		// go to sleep with ADC conversion start
 		asm volatile ("cli");
 		if (! task) {
   			// nothing to do, go to sleep
@@ -192,28 +193,46 @@ int main(void)
 		}
 
 		if (task & TASK_RTC) {
+            bool minute_ch;
             task&=~TASK_RTC;
-			if (RTC_AddOneSecond()) {
-                //minutes changed
-                ; //TODO: check timers
+            minute_ch = RTC_AddOneSecond(); 
+			if ( minute_ch || (temp_auto==0) ) {
+			    // minutes changed or we need return to timers
+				uint8_t t=RTC_ActualTimerTemperature(!(temp_auto==0));
+				if (t!=0) {
+					temp_auto=t;
+                	if (mode_auto) {
+                    	temp_wanted=temp_auto; 
+						if ((PID_force_update<0)&&(temp_wanted!=temp_wanted_last)) {
+							PID_force_update=0;
+						} else {
+							PID_force_update = 4; //< \todo create symbol for constatant
+						}
+                	}
+				}
             }
             if (PID_update_timeout>0) PID_update_timeout--;
             if (PID_force_update>0) PID_force_update--;
-            if ((PID_update_timeout == 0)||(PID_force_update==0)) {
+            if ((PID_update_timeout == 0)&&(PID_force_update==0)) {
                 //update now
+                if (temp_wanted<TEMP_MIN) temp_wanted=TEMP_MIN; 
+                if (temp_wanted>TEMP_MAX) temp_wanted=TEMP_MAX; 
                 if (temp_wanted!=temp_wanted_last) {
-                    pid_Init(temp_average);
                     temp_wanted_last=temp_wanted;
-                }
-                PID_update_timeout = (config.PID_interval * 5);
-                PID_force_update = -1;
-                if (temp_wanted<TEMP_MIN) {
-    				valve_wanted = pid_Controller(500,temp_average); // frost protection to 5C
-    			} else if (temp_wanted>TEMP_MAX) {
-    				valve_wanted = 100;
-    			} else {
-    				valve_wanted = pid_Controller(calc_temp(temp_wanted),temp_average);
+                    pid_Init(temp_average); // restart PID controler
+					PID_update_timeout = 0; //update now
+                } 
+				if (PID_update_timeout == 0) {
+                	PID_update_timeout = (config.PID_interval * 5); // new PID pooling
+	                if (temp_wanted<TEMP_MIN) {
+	    				valve_wanted = pid_Controller(500,temp_average); // frost protection to 5C
+    				} else if (temp_wanted>TEMP_MAX) {
+	    				valve_wanted = 100;
+   					} else {
+    					valve_wanted = pid_Controller(calc_temp(temp_wanted),temp_average);
+					}
     			} 
+                PID_force_update = -1;
 				COM_print_debug(0);
             }
             MOTOR_updateCalibration(mont_contact_pooling(),valve_wanted);
@@ -229,12 +248,12 @@ int main(void)
 
 		// menu state machine
 		if (kb_events || (menu_auto_update_timeout==0)) {
-            bool update = menu_controller(false);
-            if (update) {
-                menu_controller(true); // menu updated, call it again
-            } 
-            menu_view(update); // TODO: move it, it is wrong place
-			LCD_Update(); // TODO: move it, it is wrong place
+           bool update = menu_controller(false);
+           if (update) {
+               menu_controller(true); // menu updated, call it again
+           } 
+           menu_view(update); // TODO: move it, it is wrong place
+	       LCD_Update(); // TODO: move it, it is wrong place
 		}
     } //End Main loop
 	return 0;

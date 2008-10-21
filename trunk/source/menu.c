@@ -63,6 +63,9 @@ typedef enum {
     menu_service1, menu_service2,
     // datetime setting
     menu_set_year, menu_set_month, menu_set_day, menu_set_hour, menu_set_minute,
+
+    // datetime setting
+    menu_set_timmer_dow, menu_set_timmer,
     
     menu_empty
 } menu_t;
@@ -109,9 +112,25 @@ static bool events_common(void) {
             service_idx = 0;
             ret=true;
         }
-    }
+		if ( kb_events & KB_EVENT_PROG_LONG ) {
+    			menu_state=menu_set_year;
+                ret=true; 
+        }    
+	}
     return ret;
 }
+
+/*!
+ *******************************************************************************
+ * local menu static variables
+ ******************************************************************************/
+static uint8_t menu_set_dow;
+static uint16_t menu_set_time;
+static timermode_t menu_set_mode;
+static uint8_t menu_set_slot;
+static uint8_t menu_temp_rewoke1;
+static uint8_t menu_temp_rewoke2;
+
 
 /*!
  *******************************************************************************
@@ -200,16 +219,6 @@ bool menu_controller(bool new_state) {
         if (new_state) {
             menu_auto_update_timeout=10;
         }
-		if ((wheel != 0) && (menu_state == menu_home)) {
-            menu_auto_update_timeout = 10; //< \todo create symbol for constatnt
-            PID_force_update = 10; //< \todo create symbol for constatnt
-			temp_wanted+=wheel;
-			if (temp_wanted<TEMP_MIN-1) {
-				temp_wanted= TEMP_MIN-1;
-			} else if (temp_wanted>TEMP_MAX+1) {
-				temp_wanted= TEMP_MAX+1; 
-			}
-		}			 
         if (menu_auto_update_timeout==0) {
             menu_state=menu_home; // retun to main home screen
             ret=true; 
@@ -223,18 +232,89 @@ bool menu_controller(bool new_state) {
                 ret=true;
                 }
         } else { // not locked
+			if ((wheel != 0) && (menu_state == menu_home)) {
+            	menu_auto_update_timeout = 10; //< \todo create symbol for constatnt
+            	PID_force_update = 10; //< \todo create symbol for constatant
+				temp_wanted+=wheel;
+				if (temp_wanted<TEMP_MIN-1) {
+					temp_wanted= TEMP_MIN-1;
+				} else if (temp_wanted>TEMP_MAX+1) {
+					temp_wanted= TEMP_MAX+1; 
+				}
+			}			 
             if ( kb_events & KB_EVENT_C ) {
                 menu_state++;       // go to next alternate home screen
                 if (menu_state > menu_home4) menu_state=menu_home;
                 ret=true; 
-            } else if ( kb_events & KB_EVENT_PROG_LONG ) {
-    			menu_state=menu_set_year;
+            } 
+            if ( kb_events & KB_EVENT_AUTO ) {
+				if (!mode_auto || (temp_wanted!=temp_auto)) {
+					menu_temp_rewoke1=temp_wanted;
+					menu_temp_rewoke2=temp_auto;
+				} else {
+					menu_temp_rewoke1=0;
+					menu_temp_rewoke2=0;
+				}
+                mode_auto=!mode_auto;
+                if (mode_auto) temp_wanted=temp_auto; 
+                menu_state=menu_home;
+				PID_force_update = 10; //< \todo create symbol for constatant
                 ret=true; 
             }
-            // TODO KB_EVENT_AUTO
+            if ( kb_events & KB_EVENT_AUTO_REWOKE ) {
+				if (mode_auto || (menu_temp_rewoke2==temp_auto)) {
+					temp_wanted=menu_temp_rewoke1;
+				}
+                mode_auto=!mode_auto;
+                menu_state=menu_home;
+                ret=true; 
+            }
+            if ( kb_events & KB_EVENT_PROG ) {
+				menu_state=menu_set_timmer_dow;
+                ret=true; 
+            }
             // TODO ....  
         } 
-        ret = ret || events_common();
+        break;
+    case menu_set_timmer_dow:
+        if (new_state) menu_set_dow=((config.timer_mode==1)?RTC_GetDayOfWeek():0);
+		if (wheel != 0) menu_set_dow=(menu_set_dow+wheel+8)%8;
+        if ( kb_events & KB_EVENT_PROG ) {
+            menu_state=menu_set_timmer;
+            menu_set_slot=0;
+            config.timer_mode = (menu_set_dow>0);
+            eeprom_config_save((uint16_t)(&config.timer_mode)-(uint16_t)(&config)); // save value to eeprom
+            ret=true; 
+        }
+        if ( kb_events & KB_EVENT_AUTO ) { // exit without save
+            menu_state=menu_home;
+            ret=true; 
+        }
+        break;        
+    case menu_set_timmer:
+        if (new_state) {
+            menu_set_time= RTC_DowTimerGet(menu_set_dow, menu_set_slot, &menu_set_mode);
+			if (menu_set_time>24*60) menu_set_time=24*60;
+        }
+        if (wheel != 0) {
+            menu_set_time=((menu_set_time/10+(24*6+1)+wheel)%(24*6+1))*10;
+        }
+        if ( kb_events & KB_EVENT_C ) {
+            menu_set_mode=(menu_set_mode+5)%4;
+        }
+        if ( kb_events & KB_EVENT_PROG ) {
+            RTC_DowTimerSet(menu_set_dow, menu_set_slot, menu_set_time, menu_set_mode);
+            if (++menu_set_slot>=RTC_TIMERS_PER_DOW) {
+                if (menu_set_dow!=0) menu_set_dow=menu_set_timmer_dow%7+1; 
+                menu_state=menu_set_timmer_dow;
+            }
+			temp_auto=0;
+            ret=true; 
+        }
+        if ( kb_events & KB_EVENT_AUTO ) { // exit without save
+            menu_state=menu_home;
+            ret=true; 
+        }
         break;
     default:
     case menu_lock:        // "bloc" message
@@ -280,6 +360,7 @@ bool menu_controller(bool new_state) {
         }
         //empty        
     }
+    ret = ret || events_common();
     kb_events = 0; // clear unused keys
     return ret;
 } 
@@ -358,6 +439,11 @@ void menu_view(bool update) {
        break;
     case menu_home: // wanted temp, status / TODO
         if (update) clr_show2(LCD_SEG_BAR24,LCD_SEG_MANU);
+        //! \todo update "hourbar" status from chache
+        //! \todo update "hourbar" chache after timer change or day change
+        //! \note hourbar status calculation is complex we don't want calculate it every view, use chache
+        LCD_SetSeg(LCD_SEG_AUTO, ((mode_auto && (temp_auto==temp_wanted))?LCD_MODE_ON:LCD_MODE_OFF));
+        LCD_SetSeg(LCD_SEG_MANU, (mode_auto?LCD_MODE_OFF:LCD_MODE_ON));
         LCD_SetHourBarSeg(1, LCD_MODE_OFF); //just test TODO
         LCD_PrintTemp(temp_wanted,LCD_MODE_ON);
        break;
@@ -378,6 +464,45 @@ void menu_view(bool update) {
                 LCD_PrintChar(LCD_CHAR_C  ,1,LCD_MODE_ON);
                 LCD_PrintChar(LCD_CHAR_neg,0,LCD_MODE_ON);
             }
+        }
+        break;
+    case menu_set_timmer_dow:
+        if (update) clr_show1(LCD_SEG_PROG); // all segments off
+        LCD_PrintDayOfWeek(menu_set_dow, LCD_MODE_BLINK_1);
+        break;
+    case menu_set_timmer:
+        //! \todo calculate "hourbar" status, actual position in mode LCD_MODE_BLINK_1
+        if (update) clr_show3(LCD_SEG_COL1,LCD_SEG_COL2,LCD_SEG_PROG);
+        if (menu_set_time < 24*60) {
+            LCD_PrintDec(menu_set_time/60, 2, LCD_MODE_BLINK_1);
+            LCD_PrintDec(menu_set_time%60, 0, LCD_MODE_BLINK_1);        
+        } else {
+            LCD_PrintChar(LCD_CHAR_neg,3,LCD_MODE_BLINK_1);
+            LCD_PrintChar(LCD_CHAR_neg,2,LCD_MODE_BLINK_1);
+            LCD_PrintChar(LCD_CHAR_neg,1,LCD_MODE_BLINK_1);
+            LCD_PrintChar(LCD_CHAR_neg,0,LCD_MODE_BLINK_1);
+        }
+        switch (menu_set_mode) { //!< \todo move it into function
+            case temperature0: 
+                LCD_SetSeg(LCD_SEG_SNOW, LCD_MODE_BLINK_1);
+                LCD_SetSeg(LCD_SEG_SUN , LCD_MODE_OFF);
+                LCD_SetSeg(LCD_SEG_MOON, LCD_MODE_OFF);
+                break;
+            case temperature1: 
+                LCD_SetSeg(LCD_SEG_SNOW, LCD_MODE_OFF);
+                LCD_SetSeg(LCD_SEG_SUN , LCD_MODE_OFF);
+                LCD_SetSeg(LCD_SEG_MOON, LCD_MODE_BLINK_1);
+                break;
+            case temperature2: 
+                LCD_SetSeg(LCD_SEG_SNOW, LCD_MODE_OFF);
+                LCD_SetSeg(LCD_SEG_SUN , LCD_MODE_BLINK_1);
+                LCD_SetSeg(LCD_SEG_MOON, LCD_MODE_BLINK_1);
+                break;
+            case temperature3: 
+                LCD_SetSeg(LCD_SEG_SNOW, LCD_MODE_OFF);
+                LCD_SetSeg(LCD_SEG_SUN , LCD_MODE_BLINK_1);
+                LCD_SetSeg(LCD_SEG_MOON, LCD_MODE_OFF);
+                break;
         }
         break;
     case menu_lock:        // "bloc" message

@@ -211,7 +211,7 @@ bool RTC_DowTimerSet(rtc_dow_t dow, uint8_t slot, uint16_t time, timermode_t tim
     if (dow>=8) return false;
     if (slot>=RTC_TIMERS_PER_DOW) return false;
     if (timermode>temperature3) return false;
-    if (time>0xfff) return false;
+    if (time>=60*25) time=0xfff;
     // to table format see to \ref ee_timers
     RTC_Dow_Timer[dow][slot] = time | ((uint16_t)timermode<<12);
     eeprom_timers_save(dow, slot);
@@ -253,7 +253,7 @@ uint16_t RTC_DowTimerGet(rtc_dow_t dow, uint8_t slot, timermode_t *timermode)
  *       needed to calculate the actual valid timer index
  *
  ******************************************************************************/
-int8_t RTC_DowTimerGetIndex(uint8_t dow,uint16_t time_minutes)
+static int8_t RTC_DowTimerGetIndex(uint8_t dow,uint16_t time_minutes, bool exact)
 {
     uint8_t i;
     int8_t index;
@@ -264,8 +264,8 @@ int8_t RTC_DowTimerGetIndex(uint8_t dow,uint16_t time_minutes)
     for (i=1; i<RTC_TIMERS_PER_DOW; i++){
         // check if timer > maxtime and timer < actual time
         uint16_t table_time = (RTC_Dow_Timer[dow][i]) & 0x0fff;
-        if ((table_time > maxtime)
-            && !(table_time > time_minutes)){
+        if ((table_time > maxtime) && 
+            (((table_time < time_minutes) && !exact) || (table_time == time_minutes))) {
             maxtime = table_time;
             index=i;
         }
@@ -273,6 +273,38 @@ int8_t RTC_DowTimerGetIndex(uint8_t dow,uint16_t time_minutes)
     return index;
 }
 
+/*!
+ *******************************************************************************
+ *
+ *  get actual temperature from timers
+ *  
+ *  \param exact=true time must be equal  
+ *
+ *  \returns temperature [see to \ref c2temp]
+ *
+ ******************************************************************************/
+
+uint8_t RTC_ActualTimerTemperature(bool exact) {
+    uint16_t minutes=RTC_hh*60 + RTC_mm;
+    int8_t dow=((config.timer_mode==1)?RTC_DOW:0);
+    int8_t index=RTC_DowTimerGetIndex(dow,minutes,exact);
+    
+    if ((index<0) && ! exact) {
+        uint8_t i;
+        uint8_t search_timers=(config.timer_mode==1)?7:1;
+        for (i=0;i<search_timers;i--) {
+            if (config.timer_mode==1) dow=(dow+7-2)%7+1;            
+            index=RTC_DowTimerGetIndex(dow,24*60,exact);
+            if (index>=0) {
+                break;
+            }
+            
+        }
+    }
+    
+    if (index<0) return 0; //not found
+    else return temperature_table((RTC_Dow_Timer[dow][index] & 0x3000) >> 12);
+}
 
 /*!
  *******************************************************************************
@@ -399,6 +431,7 @@ bool RTC_IsLastSunday(void)
  *
  *  \note
  *     valid for years from 2000 to 2255
+ *  \return 1=monday to 7=sunday
  *
  ******************************************************************************/
 static const uint16_t daysInYear [12] PROGMEM= {
@@ -430,7 +463,7 @@ void RTC_SetDayOfWeek(void)
     // calc weekday
     tmp_dow = RTC_YY + ((RTC_YY-1) / 4) - ((RTC_YY-1) / 100) + day_of_year;
     // set DOW
-    RTC_DOW = (uint8_t) ((tmp_dow + 6) % 7) ;
+    RTC_DOW = (uint8_t) ((tmp_dow + 5) % 7) +1;
 }
 #if 0
 /*!

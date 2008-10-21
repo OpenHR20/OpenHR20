@@ -72,7 +72,6 @@ static void COM_putchar(char c) {
 		tx_buff_in%=TX_BUFF_SIZE;
 	}
 	sei();
-	return 0;
 }
 
 /*!
@@ -268,7 +267,11 @@ void COM_print_debug(uint8_t logtype) {
 	print_s_p(PSTR(" I: "));
 	print_decXXXX(temp_average);
 	print_s_p(PSTR(" S: "));
-	print_decXXXX(calc_temp(temp_wanted));
+	if (temp_wanted_last>TEMP_MAX) {
+		print_s_p(PSTR("BOOT"));
+	} else {
+		print_decXXXX(calc_temp(temp_wanted_last));
+	}
 	print_s_p(PSTR(" B: "));
 	print_decXXXX(bat_average);
 	if (logtype!=0) {
@@ -388,6 +391,7 @@ void COM_commad_parse (void) {
 			} else {
 				if (COM_hex_parse(3*2)!='\0') { break; }
   				RTC_DowTimerSet(com_hex[0]>>4, com_hex[0]&0xf, (((uint16_t) (com_hex[1])&0xf)<<8)+(uint16_t)(com_hex[2]), (com_hex[1])>>4);
+				temp_auto=0;
 			}
             print_idx(c);
 			print_hexXXXX(((uint16_t *)RTC_Dow_Timer)[(((com_hex[0])>>4)*RTC_TIMERS_PER_DOW)+ ((com_hex[0])&0xf)]);

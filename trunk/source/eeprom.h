@@ -68,6 +68,7 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
 extern config_t config;
 #define config_raw ((uint8_t *) &config)
 #define kx_d ((uint8_t *) &config.temp_cal_table0)
+#define temperature_table(i) (((uint8_t *) &config.temperature0)[i])
 #define CONFIG_RAW_SIZE (sizeof(config_t))
 
 // Boot Timeslots -> move to CONFIG.H

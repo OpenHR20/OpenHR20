@@ -3,7 +3,7 @@
  *
  *  target:     ATmega169 @ 4 MHz in Honnywell Rondostat HR20E
  *
- *  ompiler:    WinAVR-20071221
+ *  compiler:    WinAVR-20071221
  *              avr-libc 1.6.0
  *              GCC 4.2.2
  *
@@ -119,40 +119,40 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
   // Look-up chars table for weekdays (universal/numbers)
   uint8_t LCD_WeekdayTablePrgMem[8][4] PROGMEM =
   {
-      {32,22, 7,22},    //!<  " -7-" SU
+      {32, 1,22, 7},    //!<  " 1-7" 
       {32,22, 1,22},    //!<  " -1-" MO
       {32,22, 2,22},    //!<  " -2-" TU
       {32,22, 3,22},    //!<  " -3-" WE
       {32,22, 4,22},    //!<  " -4-" TH
       {32,22, 5,22},    //!<  " -5-" FR
       {32,22, 6,22},    //!<  " -6-" SA
-      {32, 1,22, 7}     //!<  " 1-7" 
+      {32,22, 7,22},    //!<  " -7-" SU
   };
 #elif LANG==de
   // Look-up chars table for weekdays (german)
   uint8_t LCD_WeekdayTablePrgMem[8][4] PROGMEM =
   {
-      {32, 5,31,32},    //!<  Sonntag:    ' So '
+      {32, 1,22, 7},    //!<  " 1-7" 
       {33,34,31,32},    //!<  Montag:     'rno '
       {32,13,30,32},    //!<  Dienstag:   ' di '
       {33,34,30,32},    //!<  Mittwoch:   'rni '
       {32,13,31,32},    //!<  Donnerstag: ' do '
       {32,15,28,32},    //!<  Freitag:    ' Fr '
       {32, 5,10,32},    //!<  Samstag:    ' SA '
-      {32, 1,22, 7}     //!<  1-7 
+      {32, 5,31,32},    //!<  Sonntag:    ' So '
   };
 #elif LANG==cs
   // Look-up chars table for weekdays (czech)
   uint8_t LCD_WeekdayTablePrgMem[8][4] PROGMEM =
   {
-      {32,29,14,22},    //!<  " nE "
+      {32, 1,22, 7},    //!<  " 1-7" 
       {32,18,31,22},    //!<  " Po "
       {32,37,38,22},    //!<  " Ut "
       {32, 5,38,22},    //!<  " St "
       {32,12,38,22},    //!<  " Ct "
       {32,18,10,22},    //!<  " PA "
       {32, 5,31,22},    //!<  " So "
-      {32, 1,22, 7}     //!<  1-7 
+      {32,29,14,22},    //!<  " nE "
   };
 #endif
 
@@ -574,23 +574,20 @@ void LCD_PrintTempInt(int16_t temp, uint8_t mode)
  *         it is triggered automatic at change of bitframe
  *
  *  \param dow day of week<BR>
- *     -     0 : monday<BR>
- *     -     7 : sunday<BR>
+ *     -     0 : " 1-7" as whole week <br />
+ *     -     1 : monday it is not <br />
+ *     -     7 : sunday <br />
  *  \param mode  \ref LCD_MODE_ON, \ref LCD_MODE_OFF, \ref LCD_MODE_BLINK_1
  ******************************************************************************/
 void LCD_PrintDayOfWeek(uint8_t dow, uint8_t mode)
 {
     uint8_t i;
     uint8_t tmp;
-    // Boundary correction
-    dow %= 7;
     // Put 4 chars
     for (i=0; i<4; i++) {
         tmp = pgm_read_byte(&LCD_WeekdayTablePrgMem[dow][i]);
         LCD_PrintChar(tmp, 3-i, mode);
     }
-    LCD_SetSeg(LCD_SEG_COL1, LCD_MODE_OFF);
-    LCD_SetSeg(LCD_SEG_COL2, LCD_MODE_OFF);
 }
 
 

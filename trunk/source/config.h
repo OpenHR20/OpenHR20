@@ -69,6 +69,8 @@ In this file we define only configuration parameters, for example what kind of c
 /* Our default Adress, if not set or invalid */
 /* #define COM_DEF_ADR 1 */
 
+#define DEFAULT_TEMPERATURE 2000 
+
 
 // Some default Values
 #define BOOT_DD         1  //!< Boot-Up date: day

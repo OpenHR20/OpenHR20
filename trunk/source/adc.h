@@ -36,9 +36,6 @@
 *   Macros
 *****************************************************************************/
 
-#define ADC_LOW_BATT_LEVEL 2000	   //!< Level for LOW Batt warning 
-                                   //!< \todo move to config.h
-
 // hardware configuration 
 #define ADC_TEMP_MUX       0x02    //!< ADC-Channel for Temp-Sensor (ADMUX)
 #define ADC_UB_MUX         0x1E    //!< ADC-Channel for Ub          (ADMUX)
