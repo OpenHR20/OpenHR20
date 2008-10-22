@@ -339,17 +339,19 @@ void print_idx(char t) {
  *
  *  \note command have FIXED format
  *  \note command X.....\n    - X is upcase char as commad name, \n is termination char
- *	\note hex numbers use ONLY lowcase chars, upcase is reserved for commands
- *	\note 		  V\n - print version information
- *	\note		  D\n - print status line 
- *	\note		  Taa\n - print watched wariable aa (return 2 or 4 hex numbers) see to \ref watch.c
- *	\note         Gaa\n - get configuration byte wit hex address aa see to \ref eeprom.h
- *	\note		  Saadd\n - set configuration byte aa to value dd (hex)
- *	\note		  Rab\n - get timer for day a slot b, return cddd=(timermode c time ddd) (hex)
- *	\note		  Wabcddd\n - set timer  for day a slot b timermode c time ddd (hex)
- *	\note		  B1324\n - reboot, 1324 is password (fixed at this moment)
- *	\note		  Yyymmdd\n - set, year yy, month mm, day dd; HEX values!!!
- *	\note		  Hhhmmss\n - set, hour hh, minute mm, second ss; HEX values!!!
+ *  \note hex numbers use ONLY lowcase chars, upcase is reserved for commands
+ *  \note   V\n - print version information
+ *  \note   D\n - print status line 
+ *  \note   Taa\n - print watched wariable aa (return 2 or 4 hex numbers) see to \ref watch.c
+ *  \note   Gaa\n - get configuration byte wit hex address aa see to \ref eeprom.h
+ *  \note   Saadd\n - set configuration byte aa to value dd (hex)
+ *  \note   Rab\n - get timer for day a slot b, return cddd=(timermode c time ddd) (hex)
+ *  \note   Wabcddd\n - set timer  for day a slot b timermode c time ddd (hex)
+ *  \note   B1324\n - reboot, 1324 is password (fixed at this moment)
+ *  \note   Yyymmdd\n - set, year yy, month mm, day dd; HEX values!!!
+ *  \note   Hhhmmss\n - set, hour hh, minute mm, second ss; HEX values!!!
+ *  \note   Axx\n - set wanted temperature [unit 0.5C]
+ *  \note   Mxx\n - set mode to 0=manu 1=auto
  *	
  ******************************************************************************/
 void COM_commad_parse (void) {
@@ -421,6 +423,20 @@ void COM_commad_parse (void) {
     			}
 			}
 			break;
+        case 'A':
+            if (COM_hex_parse(1*2)!='\0') { break; }
+            mode_auto=(com_hex[0]==1);
+            CTL_need_update();
+            COM_print_debug(1);
+            break;
+        case 'M':
+            if (COM_hex_parse(1*2)!='\0') { break; }
+            if (com_hex[0]<TEMP_MIN-1) { break; }
+            if (com_hex[0]>TEMP_MAX+1) { break; }
+            temp_wanted=com_hex[0];
+            CTL_need_update();
+            COM_print_debug(1);
+            break;
 		//case '\n':
 		//case '\0':
 		default:
