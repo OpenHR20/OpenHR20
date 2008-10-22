@@ -116,8 +116,8 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
 };
 
 #if LANG==LANG_uni
-  // Look-up chars table for weekdays (universal/numbers)
-  uint8_t LCD_WeekdayTablePrgMem[8][4] PROGMEM =
+  // Look-up chars table for LCD strings (universal/numbers)
+  uint8_t LCD_StringTable[][4] PROGMEM =
   {
       {32, 1,22, 7},    //!<  " 1-7" 
       {32,22, 1,22},    //!<  " -1-" MO
@@ -127,10 +127,17 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
       {32,22, 5,22},    //!<  " -5-" FR
       {32,22, 6,22},    //!<  " -6-" SA
       {32,22, 7,22},    //!<  " -7-" SU
+      {11, 1,31,36},    //!<  "b1oc"    LCD_STRING_bloc
+      {22,22,22,22},    //!<  "----"    LCD_STRING_4xminus
+      {32,22,12,22},    //!<  " -C-"    LCD_STRING_minusCminus
+      {32,14,28,28},    //!<  " Err"    LCD_STRING_Err
+      { 0,15,15,32},    //!<  "OFF "    LCD_STRING_OFF
+      { 0,29,32,32},    //!<  "On  "    LCD_STRING_On
+
   };
 #elif LANG==LANG_de
-  // Look-up chars table for weekdays (german)
-  uint8_t LCD_WeekdayTablePrgMem[8][4] PROGMEM =
+  // Look-up chars table for LCD strings (german)
+  uint8_t LCD_StringTable[][4] PROGMEM =
   {
       {32, 1,22, 7},    //!<  " 1-7" 
       {33,34,31,32},    //!<  Montag:     'rno '
@@ -140,10 +147,16 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
       {32,15,28,32},    //!<  Freitag:    ' Fr '
       {32, 5,10,32},    //!<  Samstag:    ' SA '
       {32, 5,31,32},    //!<  Sonntag:    ' So '
+      {11, 1,31,36},    //!<  "b1oc"    LCD_STRING_bloc
+      {22,22,22,22},    //!<  "----"    LCD_STRING_4xminus
+      {32,22,12,22},    //!<  " -C-"    LCD_STRING_minusCminus
+      {32,14,28,28},    //!<  " Err"    LCD_STRING_Err
+      { 0,15,15,32},    //!<  "OFF "    LCD_STRING_OFF
+      { 0,29,32,32},    //!<  "On  "    LCD_STRING_On
   };
 #elif LANG==LANG_cs
-  // Look-up chars table for weekdays (czech)
-  uint8_t LCD_WeekdayTablePrgMem[8][4] PROGMEM =
+  // Look-up chars table for LCD strings (czech)
+  uint8_t LCD_StringTable[][4] PROGMEM =
   {
       {32, 1,22, 7},    //!<  " 1-7" 
       {32,18,31,22},    //!<  " Po "
@@ -153,6 +166,12 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
       {32,18,10,22},    //!<  " PA "
       {32, 5,31,22},    //!<  " So "
       {32,29,14,22},    //!<  " nE "
+      {11, 1,31,36},    //!<  "b1oc"    LCD_STRING_bloc
+      {22,22,22,22},    //!<  "----"    LCD_STRING_4xminus
+      {32,22,12,22},    //!<  " -C-"    LCD_STRING_minusCminus
+      {32,14,28,28},    //!<  " Err"    LCD_STRING_Err
+      { 0,15,15,32},    //!<  "OFF "    LCD_STRING_OFF
+      { 0,29,32,32},    //!<  "On  "    LCD_STRING_On
   };
 #endif
 
@@ -457,24 +476,15 @@ void LCD_PrintTemp(uint8_t temp, uint8_t mode)
     
     if (temp==TEMP_MIN-1){
         // OFF
-        LCD_PrintChar(LCD_CHAR_0, 3, mode);
-        LCD_PrintChar(LCD_CHAR_F, 2, mode);
-        LCD_PrintChar(LCD_CHAR_F, 1, mode);
-        LCD_PrintChar(LCD_CHAR_NULL, 0, mode);
+        LCD_PrintStringID(LCD_STRING_OFF,mode); 
         LCD_SetSeg(LCD_SEG_COL1, LCD_MODE_OFF);
     } else if (temp==TEMP_MAX+1){
         // On
-        LCD_PrintChar(LCD_CHAR_0, 3, mode);
-        LCD_PrintChar(LCD_CHAR_n, 2, mode);
-        LCD_PrintChar(LCD_CHAR_NULL, 1, mode);
-        LCD_PrintChar(LCD_CHAR_NULL, 0, mode);
+        LCD_PrintStringID(LCD_STRING_On,mode); 
         LCD_SetSeg(LCD_SEG_COL1, LCD_MODE_OFF);
     } else if (temp>TEMP_MAX+1){
-        // Error -E rr 
-        LCD_PrintChar(LCD_CHAR_NULL, 3, mode);
-        LCD_PrintChar(LCD_CHAR_E, 2, mode);
-        LCD_PrintChar(LCD_CHAR_r, 1, mode);
-        LCD_PrintChar(LCD_CHAR_r, 0, mode);
+        // Error -E rr
+        LCD_PrintStringID(LCD_STRING_Err,mode); 
         LCD_SetSeg(LCD_SEG_COL1, LCD_MODE_OFF);
     } else {
         // temperature = temp/2        
@@ -566,26 +576,18 @@ void LCD_PrintTempInt(int16_t temp, uint8_t mode)
 
 /*!
  *******************************************************************************
- *  Print day of week on LCD
+ *  Print LCD string from table
  *
  *  \note  something weird due to 7 Segments
  *
- *  \note You have to call \ref LCD_Update() to trigger update on LCD if not
- *         it is triggered automatic at change of bitframe
- *
- *  \param dow day of week<BR>
- *     -     0 : " 1-7" as whole week <br />
- *     -     1 : monday it is not <br />
- *     -     7 : sunday <br />
  *  \param mode  \ref LCD_MODE_ON, \ref LCD_MODE_OFF, \ref LCD_MODE_BLINK_1
  ******************************************************************************/
-void LCD_PrintDayOfWeek(uint8_t dow, uint8_t mode)
-{
+void LCD_PrintStringID(uint8_t id, uint8_t mode) {
     uint8_t i;
     uint8_t tmp;
     // Put 4 chars
     for (i=0; i<4; i++) {
-        tmp = pgm_read_byte(&LCD_WeekdayTablePrgMem[dow][i]);
+        tmp = pgm_read_byte(&LCD_StringTable[id][i]);
         LCD_PrintChar(tmp, 3-i, mode);
     }
 }
@@ -622,6 +624,7 @@ void LCD_SetHourBarSeg(uint8_t seg, uint8_t mode)
  *  \param seg No of the last hour bar segment to be set 0-23
  *  \param mode  \ref LCD_MODE_ON, \ref LCD_MODE_OFF, \ref LCD_MODE_BLINK_1
  ******************************************************************************/
+#if 0
 void LCD_SetHourBarBar(uint8_t val, uint8_t mode)
 {
     uint8_t i;
@@ -638,6 +641,7 @@ void LCD_SetHourBarBar(uint8_t val, uint8_t mode)
         } 
     }
 }
+#endif
 
 
 /*!
@@ -650,6 +654,7 @@ void LCD_SetHourBarBar(uint8_t val, uint8_t mode)
  *  \param seg No of the hour bar segment to be set 0-23
  *  \param mode  \ref LCD_MODE_ON, \ref LCD_MODE_OFF, \ref LCD_MODE_BLINK_1
  ******************************************************************************/
+#if 0
 void LCD_SetHourBarVal(uint8_t val, uint8_t mode)
 {
     uint8_t i;
@@ -666,6 +671,7 @@ void LCD_SetHourBarVal(uint8_t val, uint8_t mode)
         }
     }
 }
+#endif
 
 
 /*!
@@ -674,11 +680,12 @@ void LCD_SetHourBarVal(uint8_t val, uint8_t mode)
  *
  *  \note Sets all Segments of the to \ref LCD_MODE_OFF
  ******************************************************************************/
+#if 0
 void LCD_ClearAll(void)
 {
     LCD_AllSegments(LCD_MODE_OFF);
 }
-
+#endif
 
 /*!
  *******************************************************************************
@@ -686,12 +693,13 @@ void LCD_ClearAll(void)
  *
  *  \note Sets all Hour-Bar Segments to \ref LCD_MODE_OFF
  ******************************************************************************/
+#if 0
 void LCD_ClearHourBar(void)
 {
     LCD_SetHourBarVal(23, LCD_MODE_OFF);
     LCD_Update();
 }
-
+#endif
 
 /*!
  *******************************************************************************
@@ -700,6 +708,7 @@ void LCD_ClearHourBar(void)
  *  \note  Sets Symbols <tt> AUTO MANU PROG SUN MOON SNOW</tt>
  *         to \ref LCD_MODE_OFF
  ******************************************************************************/
+#if 0
 void LCD_ClearSymbols(void)
 {
     LCD_SetSeg(LCD_SEG_AUTO, LCD_MODE_OFF);
@@ -712,7 +721,7 @@ void LCD_ClearSymbols(void)
 
     LCD_Update();
 }
-
+#endif
 
 /*!
  *******************************************************************************
@@ -720,6 +729,7 @@ void LCD_ClearSymbols(void)
  *
  *  \note  Sets the four 7 Segment and the Columns to \ref LCD_MODE_OFF
  ******************************************************************************/
+#if 0
 void LCD_ClearNumbers(void)
 {
     LCD_PrintChar(LCD_CHAR_NULL, 3, LCD_MODE_OFF);
@@ -732,7 +742,7 @@ void LCD_ClearNumbers(void)
 
     LCD_Update();
 }
-
+#endif
 
 /*!
  *******************************************************************************

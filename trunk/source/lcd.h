@@ -72,12 +72,13 @@ void LCD_PrintChar(uint8_t, uint8_t, uint8_t); // Print one digit
 void LCD_PrintTemp(uint8_t, uint8_t);          // Print temperature (val+4,9)°C
 void LCD_PrintTempInt(int16_t , uint8_t);      // Print temperature (val/100)°C
 void LCD_PrintDayOfWeek(uint8_t, uint8_t);     // Print Day of Week (german)
+void LCD_PrintStringID(uint8_t id, uint8_t mode); // Print LCD string ID
+#define LCD_PrintDayOfWeek(dow,mode) (LCD_PrintStringID(dow,mode))
 
 void LCD_SetSeg(uint8_t, uint8_t);         // Set one Segment (0-69) 
 void LCD_SetHourBarSeg(uint8_t, uint8_t);  // Set HBS (0-23) (Hour-Bar-Segment)
 void LCD_SetHourBarVal(uint8_t, uint8_t);  // Set only one (val) HBS
 void LCD_SetHourBarBat(uint8_t, uint8_t);  // Set all HBS from 0 to val (0-23)
-// bool LCD_ContrastAdjust(int8_t);           // Adjust contrast
 
 void task_lcd_update(void);
 
@@ -212,3 +213,16 @@ void task_lcd_update(void);
                                 // 12, 4 |  SEG220   |  [8], BIT 4
 #define LCD_SEG_MOON       69   // 12, 5 |  SEG221   |  [8], BIT 5
 //*****************************************************************
+
+//***************************
+// LCD Strings:
+//***************************
+
+#define LCD_STRING_bloc         8
+#define LCD_STRING_4xminus      9
+#define LCD_STRING_minusCminus 10
+#define LCD_STRING_Err         11
+#define LCD_STRING_OFF         12
+#define LCD_STRING_On          13
+
+

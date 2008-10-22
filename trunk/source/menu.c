@@ -460,9 +460,7 @@ void menu_view(bool update) {
             if (prc<=100) {
                 LCD_PrintDec3(MOTOR_GetPosPercent(), 0 ,LCD_MODE_ON);
             } else {
-                LCD_PrintChar(LCD_CHAR_neg,2,LCD_MODE_ON);
-                LCD_PrintChar(LCD_CHAR_C  ,1,LCD_MODE_ON);
-                LCD_PrintChar(LCD_CHAR_neg,0,LCD_MODE_ON);
+                LCD_PrintStringID(LCD_STRING_minusCminus,LCD_MODE_ON);
             }
         }
         break;
@@ -477,10 +475,7 @@ void menu_view(bool update) {
             LCD_PrintDec(menu_set_time/60, 2, LCD_MODE_BLINK_1);
             LCD_PrintDec(menu_set_time%60, 0, LCD_MODE_BLINK_1);        
         } else {
-            LCD_PrintChar(LCD_CHAR_neg,3,LCD_MODE_BLINK_1);
-            LCD_PrintChar(LCD_CHAR_neg,2,LCD_MODE_BLINK_1);
-            LCD_PrintChar(LCD_CHAR_neg,1,LCD_MODE_BLINK_1);
-            LCD_PrintChar(LCD_CHAR_neg,0,LCD_MODE_BLINK_1);
+            LCD_PrintStringID(LCD_STRING_4xminus,LCD_MODE_BLINK_1);
         }
         switch (menu_set_mode) { //!< \todo move it into function
             case temperature0: 
@@ -507,10 +502,7 @@ void menu_view(bool update) {
         break;
     case menu_lock:        // "bloc" message
         if (update) LCD_AllSegments(LCD_MODE_OFF); // all segments off
-        LCD_PrintChar(LCD_CHAR_b,3,LCD_MODE_ON);
-        LCD_PrintChar(LCD_CHAR_1,2,LCD_MODE_ON);
-        LCD_PrintChar(LCD_CHAR_o,1,LCD_MODE_ON);
-        LCD_PrintChar(LCD_CHAR_c,0,LCD_MODE_ON);
+        LCD_PrintStringID(LCD_STRING_bloc,LCD_MODE_ON);
         break;
     case menu_service1: 
     case menu_service2:
