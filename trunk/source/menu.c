@@ -477,27 +477,17 @@ void menu_view(bool update) {
         } else {
             LCD_PrintStringID(LCD_STRING_4xminus,LCD_MODE_BLINK_1);
         }
-        switch (menu_set_mode) { //!< \todo move it into function
-            case temperature0: 
-                LCD_SetSeg(LCD_SEG_SNOW, LCD_MODE_BLINK_1);
-                LCD_SetSeg(LCD_SEG_SUN , LCD_MODE_OFF);
-                LCD_SetSeg(LCD_SEG_MOON, LCD_MODE_OFF);
-                break;
-            case temperature1: 
-                LCD_SetSeg(LCD_SEG_SNOW, LCD_MODE_OFF);
-                LCD_SetSeg(LCD_SEG_SUN , LCD_MODE_OFF);
-                LCD_SetSeg(LCD_SEG_MOON, LCD_MODE_BLINK_1);
-                break;
-            case temperature2: 
-                LCD_SetSeg(LCD_SEG_SNOW, LCD_MODE_OFF);
-                LCD_SetSeg(LCD_SEG_SUN , LCD_MODE_BLINK_1);
-                LCD_SetSeg(LCD_SEG_MOON, LCD_MODE_BLINK_1);
-                break;
-            case temperature3: 
-                LCD_SetSeg(LCD_SEG_SNOW, LCD_MODE_OFF);
-                LCD_SetSeg(LCD_SEG_SUN , LCD_MODE_BLINK_1);
-                LCD_SetSeg(LCD_SEG_MOON, LCD_MODE_OFF);
-                break;
+        { //!< \todo move it into function
+            //  temperature0    SNOW         
+            //  temperature1         MOON    
+            //  temperature2         MOON SUN
+            //  temperature3              SUN
+            LCD_SetSeg(LCD_SEG_SNOW,((menu_set_mode==temperature0)
+                ?LCD_MODE_BLINK_1:LCD_MODE_OFF));
+            LCD_SetSeg(LCD_SEG_MOON,(((menu_set_mode==temperature1)||(menu_set_mode==temperature2))
+                ?LCD_MODE_BLINK_1:LCD_MODE_OFF));
+            LCD_SetSeg(LCD_SEG_SUN,((menu_set_mode>=temperature2)
+                ?LCD_MODE_BLINK_1:LCD_MODE_OFF));
         }
         break;
     case menu_lock:        // "bloc" message
