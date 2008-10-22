@@ -29,7 +29,7 @@ extern int32_t sumError;
  * \file       pid.h
  * \brief      optimized version of PID controler for free HR20E project
  * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>
- * \date       02.10.2008
+ * \date       $Date$
  * $Rev$
  */
 

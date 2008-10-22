@@ -28,7 +28,7 @@
  * \file       rs232_485_hw.c
  * \brief      hardware layer of the rs232 and rs485
  * \author     Juergen Sachs (juergen-sachs-at-gmx-dot-de); Jiri Dobry <jdobry-at-centrum-dot-cz>
- * \date       12.04.2008
+ * \date       $Date$
  * $Rev$
  */
 

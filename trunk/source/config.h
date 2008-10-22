@@ -28,7 +28,7 @@
  * \file       config.h
  * \brief      This headerfile only contains information about the configuration of the HR20E and its functionality
  * \author     Juergen Sachs (juergen-sachs-at-gmx-dot-de) Jiri Dobry <jdobry-at-centrum-dot-cz>
- * \date       01.10.2008
+ * \date       $Date$
  * $Rev$
  */
 

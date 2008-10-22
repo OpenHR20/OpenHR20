@@ -28,7 +28,7 @@
  * \file       adc.c
  * \brief      functions to control Analog / Digtial - Converter
  * \author     Dario Carluccio <hr20-at-carluccio-dot-de>; Jiri Dobry <jdobry-at-centrum-dot-cz>
- * \date       02.10.2008
+ * \date       $Date$
  * $Rev$
  */
 
@@ -103,14 +103,14 @@ static void update_ring(uint8_t type, int16_t value) {
  *******************************************************************************
  *  Get temperature
  *
- *  \returns temperature in 1/100 degrees Celsius (1987: 19,87°C)
+ *  \returns temperature in 1/100 degrees Celsius (1987: 19,87ï¿½C)
  *
  *  \note
  *  - measurment has been performed before using \ref ADC_Measure_Temp
  *  - Attention: negative values are possible 
  ******************************************************************************/
 #if 0
-int16_t ADC_Get_Temp_Degree(void)            // Get Temperature in 1/100 Deg °C
+int16_t ADC_Get_Temp_Degree(void)            // Get Temperature in 1/100 Deg ï¿½C
 {
     int32_t degree;
 

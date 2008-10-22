@@ -42,6 +42,7 @@
 #include "motor.h"
 #include "eeprom.h"
 #include "debug.h"
+#include "controller.h"
 
 static uint8_t service_idx;
 
@@ -234,7 +235,7 @@ bool menu_controller(bool new_state) {
         } else { // not locked
 			if ((wheel != 0) && (menu_state == menu_home)) {
             	menu_auto_update_timeout = 10; //< \todo create symbol for constatnt
-            	PID_force_update = 10; //< \todo create symbol for constatant
+            	CTL_need_update(); //< \todo create symbol for constatant
 				temp_wanted+=wheel;
 				if (temp_wanted<TEMP_MIN-1) {
 					temp_wanted= TEMP_MIN-1;
@@ -248,9 +249,9 @@ bool menu_controller(bool new_state) {
                 ret=true; 
             } 
             if ( kb_events & KB_EVENT_AUTO ) {
-				if (!mode_auto || (temp_wanted!=temp_auto)) {
+				if (!mode_auto || CTL_changed_temp()) {
 					menu_temp_rewoke1=temp_wanted;
-					menu_temp_rewoke2=temp_auto;
+					menu_temp_rewoke2=temp_auto; // \todo 
 				} else {
 					menu_temp_rewoke1=0;
 					menu_temp_rewoke2=0;
@@ -258,7 +259,7 @@ bool menu_controller(bool new_state) {
                 mode_auto=!mode_auto;
                 if (mode_auto) temp_wanted=temp_auto; 
                 menu_state=menu_home;
-				PID_force_update = 10; //< \todo create symbol for constatant
+				CTL_need_update(); //< \todo create symbol for constatant
                 ret=true; 
             }
             if ( kb_events & KB_EVENT_AUTO_REWOKE ) {
@@ -308,7 +309,7 @@ bool menu_controller(bool new_state) {
                 if (menu_set_dow!=0) menu_set_dow=menu_set_timmer_dow%7+1; 
                 menu_state=menu_set_timmer_dow;
             }
-			temp_auto=0;
+            CTL_need_auto();
             ret=true; 
         }
         if ( kb_events & KB_EVENT_AUTO ) { // exit without save

@@ -24,23 +24,25 @@
  */
 
 /*!
- * \file       debug.h
- * \brief      debug options for project
+ * \file       controller.h
+ * \brief      Controller for temperature
  * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>
  * \date       $Date$
- * $Rev$
+ * $Rev: 39 $
  */
 
+extern uint8_t temp_wanted; //!< wanted temperature
+extern uint8_t temp_wanted_last;   // desired temperatur value used for last PID control
+extern uint8_t temp_auto;
 
-#define DEBUG_MODE 1
-#define DEBUG_SKIP_DATETIME_SETTING_AFTER_RESET 0
+extern int8_t PID_force_update;      // signed value, val<0 means disable force updates
 
-#if DEBUG_MODE == 1
-    #define DEBUG_BEFORE_SLEEP() (PORTE &= ~(1<<PE2))
-    #define DEBUG_AFTER_SLEEP() (PORTE |= (1<<PE2))
-#else
-    #define DEBUG_BEFORE_SLEEP()
-    #define DEBUG_AFTER_SLEEP()
-#endif
+#define CTL_need_update() (PID_force_update = 10)
 
-#define KEEP_ALIVE_FOR_COMMUNICATION DEBUG_MODE
+#define CTL_changed_temp() (temp_wanted!=temp_auto)
+
+#define CTL_need_auto() (temp_auto=0)
+
+#define CTL_temp_wanted temp_wanted_last
+
+uint8_t CTL_update(bool minute_ch, uint8_t valve);

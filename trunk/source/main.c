@@ -60,9 +60,6 @@
 volatile bool    m_automatic_mode;         // auto mode (false: manu mode)
 
 // global Vars for default values: temperatures and speed
-uint8_t temp_wanted=0;   // actual desired temperatur
-uint8_t temp_wanted_last=0xff;   // desired temperatur value used for last PID control
-uint8_t temp_auto=0;   // actual desired temperatur by timer
 uint8_t valve_wanted=0;
 // serial number
 uint16_t serialNumber;	//!< Unique serial number \todo move to CONFIG.H
@@ -77,9 +74,6 @@ void setautomode(bool);                    // activate/deactivate automode
 uint8_t input_temp(uint8_t);
 
 bool mode_auto=true;
-
-static uint16_t PID_update_timeout=16;   // timer to next PID controler action/first is 16 sec after statup 
-int8_t PID_force_update=16;      // signed value, val<0 means disable force updates
 
 
 
@@ -130,7 +124,7 @@ int main(void)
 				    SMCR = (1<<SM1)|(1<<SM0)|(1<<SE); // Power-save mode
                 }
             }
-            
+
 			if (sleep_with_ADC==1) {
 				sleep_with_ADC=0;
 				// start conversions
@@ -192,57 +186,20 @@ int main(void)
 			task_keyboard();
 		}
 
-		if (task & TASK_RTC) {
+        if (task & TASK_RTC) {
             bool minute_ch;
             task&=~TASK_RTC;
-            minute_ch = RTC_AddOneSecond(); 
-			if ( minute_ch || (temp_auto==0) ) {
-			    // minutes changed or we need return to timers
-				uint8_t t=RTC_ActualTimerTemperature(!(temp_auto==0));
-				if (t!=0) {
-					temp_auto=t;
-                	if (mode_auto) {
-                    	temp_wanted=temp_auto; 
-						if ((PID_force_update<0)&&(temp_wanted!=temp_wanted_last)) {
-							PID_force_update=0;
-						} 
-                	}
-				}
-            }
-            if (PID_update_timeout>0) PID_update_timeout--;
-            if (PID_force_update>0) PID_force_update--;
-            if ((PID_update_timeout == 0)||(PID_force_update==0)) {
-                //update now
-                if (temp_wanted<TEMP_MIN) temp_wanted=TEMP_MIN; 
-                if (temp_wanted>TEMP_MAX) temp_wanted=TEMP_MAX; 
-                if (temp_wanted!=temp_wanted_last) {
-                    temp_wanted_last=temp_wanted;
-                    pid_Init(temp_average); // restart PID controler
-					PID_update_timeout = 0; //update now
-                } 
-				if (PID_update_timeout == 0) {
-                	PID_update_timeout = (config.PID_interval * 5); // new PID pooling
-	                if (temp_wanted<TEMP_MIN) {
-	    				valve_wanted = pid_Controller(500,temp_average); // frost protection to 5C
-    				} else if (temp_wanted>TEMP_MAX) {
-	    				valve_wanted = 100;
-   					} else {
-    					valve_wanted = pid_Controller(calc_temp(temp_wanted),temp_average);
-					}
-    			} 
-                PID_force_update = -1;
-				COM_print_debug(0);
-            }
+            valve_wanted = CTL_update(RTC_AddOneSecond(),valve_wanted);
             MOTOR_updateCalibration(mont_contact_pooling(),valve_wanted);
             MOTOR_Goto(valve_wanted);
-			task_keyboard_long_press_detect();
-			start_task_ADC();
-			if (menu_auto_update_timeout>0) {
-			     menu_auto_update_timeout--;
+            task_keyboard_long_press_detect();
+            start_task_ADC();
+            if (menu_auto_update_timeout>0) {
+                menu_auto_update_timeout--;
             }
             menu_view(false); // TODO: move it, it is wrong place
-			LCD_Update(); // TODO: move it, it is wrong place
-		}
+            LCD_Update(); // TODO: move it, it is wrong place
+        }
 
 		// menu state machine
 		if (kb_events || (menu_auto_update_timeout==0)) {
@@ -267,7 +224,7 @@ void init(void)
 {
     //! Calibrate the internal RC Oszillator
     //! \todo test calibrate_rco();
-        
+
     //! set Clock to 4 Mhz
     CLKPR = (1<<CLKPCE);            // prescaler change enable
     CLKPR = (1<<CLKPS0);            // prescaler = 2 (internal RC runs @ 8MHz)
@@ -278,16 +235,16 @@ void init(void)
     //! Disable Digital input on PF0-7 (power save)
     DIDR0 = 0xFF;
 
-	//! Power reduction mode
-	PRR = (1<<PRTIM1)|(1<<PRSPI);  
+    //! Power reduction mode
+    PRR = (1<<PRTIM1)|(1<<PRSPI);  
 
     //! digital I/O port direction
     DDRB = (1<<PB4)|(1<<PB7); // PB4, PB7 Motor out
     DDRG = (1<<PG3)|(1<<PG4); // PG3, PG4 Motor out
     DDRE = (1<<PE3)|(1<<PE2)|(1<<PE1);  // PE3  activate lighteye
-	PORTE = 0x03;
+    PORTE = 0x03;
     DDRF = (1<<PF3);          // PF3  activate tempsensor
-	PORTF = 0xf3;
+    PORTF = 0xf3;
 
     //! enable pullup on all inputs (keys and m_wheel)
     //! ATTENTION: PB0 & PB6 is input, but we will select it only for read
@@ -304,19 +261,16 @@ void init(void)
 
     //! activate PCINT0 + PCINT1
     EIMSK = (1<<PCIE1)|(1<<PCIE0);
-    
-    //! Initialize the USART
-  	// COM_Init(COM_BAUD_RATE);
 
     //! Initialize the RTC, pass pointer to timer callback function
     RTC_Init();
 
     //! Initialize the motor
     MOTOR_Init();
-    
+
     eeprom_config_init();
 
     //1 Initialize the LCD
-    LCD_Init();                     
+    LCD_Init();
 
 }

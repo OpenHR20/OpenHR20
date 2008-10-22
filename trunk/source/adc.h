@@ -27,7 +27,7 @@
  * \file       adc.h
  * \brief      header file for adc.c, functions to control A/D Converter
  * \author     Dario Carluccio <hr20-at-carluccio-dot-de>
- * \date       15.03.2008
+ * \date       $Date$
  * $Rev$
  */
 
@@ -50,7 +50,7 @@
 #define bat_difference (ring_difference[BAT_RING_TYPE])
 
 #define TEMP_CAL_OFFSET 256 // offset of calibration points [ADC units]
-#define TEMP_CAL_STEP 500 // step between 2 calibration points [1/100°C]
+#define TEMP_CAL_STEP 500 // step between 2 calibration points [1/100ï¿½C]
 #define TEMP_CAL_N 7 // // No. Values
 
 

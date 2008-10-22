@@ -46,11 +46,8 @@
 // global vars
 extern uint16_t serialNumber;	//!< Unique serial number \todo move to CONFIG.H
 
-extern uint8_t temp_wanted; //!< wanted temperature
-extern uint8_t temp_wanted_last;   // desired temperatur value used for last PID control
-extern uint8_t temp_auto;
+
 extern uint8_t valve_wanted;
-extern int8_t PID_force_update;      // signed value, val<0 means disable force updates
 
 #define c2temp(c) (c*2)
 #define calc_temp(t) (((uint16_t)t)*50)   // result unit is 1/100 C

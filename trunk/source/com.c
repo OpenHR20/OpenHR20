@@ -34,7 +34,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <avr\wdt.h>
+#include <avr/wdt.h>
 
 
 #include "config.h"
@@ -46,6 +46,7 @@
 #include "task.h"
 #include "watch.h"
 #include "eeprom.h"
+#include "controller.h"
 
 
 #define TX_BUFF_SIZE 128
@@ -267,7 +268,7 @@ void COM_print_debug(uint8_t logtype) {
 	print_s_p(PSTR(" I: "));
 	print_decXXXX(temp_average);
 	print_s_p(PSTR(" S: "));
-	if (temp_wanted_last>TEMP_MAX) {
+	if (CTL_temp_wanted>TEMP_MAX) {
 		print_s_p(PSTR("BOOT"));
 	} else {
 		print_decXXXX(calc_temp(temp_wanted_last));

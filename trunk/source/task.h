@@ -27,7 +27,7 @@
  * \file       task.h
  * \brief      task definition for main loop
  * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>
- * \date       02.10.2008
+ * \date       $Date$
  * $Rev$
  */
 

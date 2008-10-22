@@ -27,7 +27,7 @@
  * \file       watch.h
  * \brief      watch variable for debug
  * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>
- * \date       02.10.2008
+ * \date       $Date$
  * $Rev$
  */
 
@@ -38,7 +38,7 @@
 #include "main.h"
 #include "adc.h"
 #include "pid.h"
-
+#include "controller.h"
 
 #define B8 0x0000
 #define B16 0x8000

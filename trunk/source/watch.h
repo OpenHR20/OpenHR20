@@ -27,7 +27,7 @@
  * \file       watch.h
  * \brief      watch variable for debug
  * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>
- * \date       02.10.2008
+ * \date       $Date$
  * $Rev$
  */
 

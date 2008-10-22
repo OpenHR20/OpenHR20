@@ -83,7 +83,8 @@ menu.c \
 pid.c \
 rs232_485_hw.c \
 com.c \
-watch.c
+watch.c \
+controller.c
 
 
 # List C++ source files here. (C dependencies are automatically generated.)
