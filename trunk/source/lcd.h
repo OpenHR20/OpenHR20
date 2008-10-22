@@ -27,7 +27,7 @@
  * \file       lcd.h  
  * \brief      header file for lcd.c, functions to control the HR20 LCD
  * \author     Dario Carluccio <hr20-at-carluccio-dot-de>
- * \date       24.12.2007
+ * \date       $Date$
  * $Rev$
  */
 

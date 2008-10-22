@@ -28,7 +28,7 @@
  * \file       lcd.c
  * \brief      functions to control the HR20 LCD
  * \author     Dario Carluccio <hr20-at-carluccio-dot-de>, Jiri Dobry <jdobry-at-centrum-dot-cz>
- * \date       02.10.2008
+ * \date       $Date$
  * $Rev$
  */
 
