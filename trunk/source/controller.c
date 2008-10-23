@@ -41,14 +41,16 @@
 #include "pid.h"
 #include "adc.h"
 #include "eeprom.h"
+#include "controller.h"
 
 // global Vars for default values: temperatures and speed
-uint8_t temp_wanted=0;   // actual desired temperatur
-uint8_t temp_wanted_last=0xff;   // desired temperatur value used for last PID control
-uint8_t temp_auto=0;   // actual desired temperatur by timer
+uint8_t CTL_temp_wanted=0;   // actual desired temperatur
+uint8_t CTL_temp_wanted_last=0xff;   // desired temperatur value used for last PID control
+uint8_t CTL_temp_auto=0;   // actual desired temperatur by timer
+bool CTL_mode_auto=true;   // actual desired temperatur by timer
 
 static uint16_t PID_update_timeout=16;   // timer to next PID controler action/first is 16 sec after statup 
-int8_t PID_force_update=16;      // signed value, val<0 means disable force updates
+int8_t PID_force_update=16;      // signed value, val<0 means disable force updates \todo rename
 
 
 /*!
@@ -59,14 +61,14 @@ int8_t PID_force_update=16;      // signed value, val<0 means disable force upda
  *  \returns valve position
  ******************************************************************************/
 uint8_t CTL_update(bool minute_ch, uint8_t valve) {
-    if ( minute_ch || (temp_auto==0) ) {
+    if ( minute_ch || (CTL_temp_auto==0) ) {
         // minutes changed or we need return to timers
-        uint8_t t=RTC_ActualTimerTemperature(!(temp_auto==0));
+        uint8_t t=RTC_ActualTimerTemperature(!(CTL_temp_auto==0));
         if (t!=0) {
-            temp_auto=t;
-            if (mode_auto) {
-                temp_wanted=temp_auto; 
-                if ((PID_force_update<0)&&(temp_wanted!=temp_wanted_last)) {
+            CTL_temp_auto=t;
+            if (CTL_mode_auto) {
+                CTL_temp_wanted=CTL_temp_auto; 
+                if ((PID_force_update<0)&&(CTL_temp_wanted!=CTL_temp_wanted_last)) {
                     PID_force_update=0;
                 }
             }
@@ -76,25 +78,70 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
     if (PID_force_update>0) PID_force_update--;
     if ((PID_update_timeout == 0)||(PID_force_update==0)) {
         //update now
-        if (temp_wanted<TEMP_MIN) temp_wanted=TEMP_MIN;
-        if (temp_wanted>TEMP_MAX) temp_wanted=TEMP_MAX;
-        if (temp_wanted!=temp_wanted_last) {
-            temp_wanted_last=temp_wanted;
+        if (CTL_temp_wanted!=CTL_temp_wanted_last) {
+            CTL_temp_wanted_last=CTL_temp_wanted;
             pid_Init(temp_average); // restart PID controler
             PID_update_timeout = 0; //update now
         }
         if (PID_update_timeout == 0) {
             PID_update_timeout = (config.PID_interval * 5); // new PID pooling
-            if (temp_wanted<TEMP_MIN) {
+            if (CTL_temp_wanted<TEMP_MIN) {
                 valve = pid_Controller(500,temp_average); // frost protection to 5C
-            } else if (temp_wanted>TEMP_MAX) {
+            } else if (CTL_temp_wanted>TEMP_MAX) {
                 valve = 100;
             } else {
-                valve = pid_Controller(calc_temp(temp_wanted),temp_average);
+                valve = pid_Controller(calc_temp(CTL_temp_wanted),temp_average);
             }
         } 
         PID_force_update = -1;
         COM_print_debug(0);
     }
     return valve;
+}
+
+/*!
+ *******************************************************************************
+ *  Change controller temperature (+-)
+ *
+ *  \param ch relative change
+ ******************************************************************************/
+void CTL_temp_change_inc (int8_t ch) {
+    CTL_temp_wanted+=ch;
+	if (CTL_temp_wanted<TEMP_MIN-1) {
+		CTL_temp_wanted= TEMP_MIN-1;
+	} else if (CTL_temp_wanted>TEMP_MAX+1) {
+		CTL_temp_wanted= TEMP_MAX+1; 
+	}    
+    PID_force_update = 10; 
+}
+
+static uint8_t menu_temp_rewoke1;
+static uint8_t menu_temp_rewoke2;
+/*!
+ *******************************************************************************
+ *  Change controller mode
+ *
+ ******************************************************************************/
+void CTL_change_mode(int8_t m) {
+    if (m == CTL_CHANGE_MODE) {
+        // change
+    	if (!CTL_mode_auto || (CTL_temp_wanted!=CTL_temp_auto)) {
+    		menu_temp_rewoke1=CTL_temp_wanted;
+    		menu_temp_rewoke2=CTL_temp_auto; // \todo 
+    	} else {
+    		menu_temp_rewoke1=0;
+    		menu_temp_rewoke2=0;
+    	}
+        CTL_mode_auto=!CTL_mode_auto;
+        if (CTL_mode_auto) CTL_temp_wanted=CTL_temp_auto;
+    } else if (m == CTL_CHANGE_MODE_REWOKE) {
+        //rewoke
+    	if (CTL_mode_auto || (menu_temp_rewoke2==CTL_temp_auto)) {
+    		CTL_temp_wanted=menu_temp_rewoke1;
+    	}
+        CTL_mode_auto=!CTL_mode_auto;
+    } else {
+        CTL_mode_auto=m;
+    }
+    PID_force_update = 10; 
 }

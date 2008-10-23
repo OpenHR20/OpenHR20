@@ -271,7 +271,7 @@ void COM_print_debug(uint8_t logtype) {
 	if (CTL_temp_wanted>TEMP_MAX) {
 		print_s_p(PSTR("BOOT"));
 	} else {
-		print_decXXXX(calc_temp(temp_wanted_last));
+		print_decXXXX(calc_temp(CTL_temp_wanted_last));
 	}
 	print_s_p(PSTR(" B: "));
 	print_decXXXX(bat_average);
@@ -394,7 +394,7 @@ void COM_commad_parse (void) {
 			} else {
 				if (COM_hex_parse(3*2)!='\0') { break; }
   				RTC_DowTimerSet(com_hex[0]>>4, com_hex[0]&0xf, (((uint16_t) (com_hex[1])&0xf)<<8)+(uint16_t)(com_hex[2]), (com_hex[1])>>4);
-				temp_auto=0;
+				CTL_update_temp_auto();
 			}
             print_idx(c);
 			print_hexXXXX(((uint16_t *)RTC_Dow_Timer)[(((com_hex[0])>>4)*RTC_TIMERS_PER_DOW)+ ((com_hex[0])&0xf)]);
@@ -423,18 +423,16 @@ void COM_commad_parse (void) {
     			}
 			}
 			break;
-        case 'A':
+        case 'M':
             if (COM_hex_parse(1*2)!='\0') { break; }
-            mode_auto=(com_hex[0]==1);
-            CTL_need_update();
+            CTL_change_mode(com_hex[0]==1);
             COM_print_debug(1);
             break;
-        case 'M':
+        case 'A':
             if (COM_hex_parse(1*2)!='\0') { break; }
             if (com_hex[0]<TEMP_MIN-1) { break; }
             if (com_hex[0]>TEMP_MAX+1) { break; }
-            temp_wanted=com_hex[0];
-            CTL_need_update();
+            CTL_set_temp(com_hex[0]);
             COM_print_debug(1);
             break;
 		//case '\n':

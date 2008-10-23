@@ -129,9 +129,6 @@ static uint8_t menu_set_dow;
 static uint16_t menu_set_time;
 static timermode_t menu_set_mode;
 static uint8_t menu_set_slot;
-static uint8_t menu_temp_rewoke1;
-static uint8_t menu_temp_rewoke2;
-
 
 /*!
  *******************************************************************************
@@ -235,13 +232,7 @@ bool menu_controller(bool new_state) {
         } else { // not locked
 			if ((wheel != 0) && (menu_state == menu_home)) {
             	menu_auto_update_timeout = 10; //< \todo create symbol for constatnt
-            	CTL_need_update(); //< \todo create symbol for constatant
-				temp_wanted+=wheel;
-				if (temp_wanted<TEMP_MIN-1) {
-					temp_wanted= TEMP_MIN-1;
-				} else if (temp_wanted>TEMP_MAX+1) {
-					temp_wanted= TEMP_MAX+1; 
-				}
+				CTL_temp_change_inc(wheel);
 			}			 
             if ( kb_events & KB_EVENT_C ) {
                 menu_state++;       // go to next alternate home screen
@@ -249,24 +240,12 @@ bool menu_controller(bool new_state) {
                 ret=true; 
             } 
             if ( kb_events & KB_EVENT_AUTO ) {
-				if (!mode_auto || CTL_changed_temp()) {
-					menu_temp_rewoke1=temp_wanted;
-					menu_temp_rewoke2=temp_auto; // \todo 
-				} else {
-					menu_temp_rewoke1=0;
-					menu_temp_rewoke2=0;
-				}
-                mode_auto=!mode_auto;
-                if (mode_auto) temp_wanted=temp_auto; 
+                CTL_change_mode(CTL_CHANGE_MODE); // change mode
                 menu_state=menu_home;
-				CTL_need_update(); //< \todo create symbol for constatant
                 ret=true; 
             }
             if ( kb_events & KB_EVENT_AUTO_REWOKE ) {
-				if (mode_auto || (menu_temp_rewoke2==temp_auto)) {
-					temp_wanted=menu_temp_rewoke1;
-				}
-                mode_auto=!mode_auto;
+                CTL_change_mode(CTL_CHANGE_MODE_REWOKE); // change mode
                 menu_state=menu_home;
                 ret=true; 
             }
@@ -309,7 +288,7 @@ bool menu_controller(bool new_state) {
                 if (menu_set_dow!=0) menu_set_dow=menu_set_timmer_dow%7+1; 
                 menu_state=menu_set_timmer_dow;
             }
-            CTL_need_auto();
+            CTL_update_temp_auto();
             ret=true; 
         }
         if ( kb_events & KB_EVENT_AUTO ) { // exit without save
@@ -443,10 +422,10 @@ void menu_view(bool update) {
         //! \todo update "hourbar" status from chache
         //! \todo update "hourbar" chache after timer change or day change
         //! \note hourbar status calculation is complex we don't want calculate it every view, use chache
-        LCD_SetSeg(LCD_SEG_AUTO, ((mode_auto && (temp_auto==temp_wanted))?LCD_MODE_ON:LCD_MODE_OFF));
-        LCD_SetSeg(LCD_SEG_MANU, (mode_auto?LCD_MODE_OFF:LCD_MODE_ON));
+        LCD_SetSeg(LCD_SEG_AUTO, (CTL_test_auto()?LCD_MODE_ON:LCD_MODE_OFF));
+        LCD_SetSeg(LCD_SEG_MANU, (CTL_mode_auto?LCD_MODE_OFF:LCD_MODE_ON));
         LCD_SetHourBarSeg(1, LCD_MODE_OFF); //just test TODO
-        LCD_PrintTemp(temp_wanted,LCD_MODE_ON);
+        LCD_PrintTemp(CTL_temp_wanted,LCD_MODE_ON);
        break;
     case menu_home2: // real temperature
         if (update) clr_show1(LCD_SEG_COL1);           // decimal point

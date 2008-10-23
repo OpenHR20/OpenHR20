@@ -55,6 +55,7 @@
 #include "menu.h"
 #include "com.h"
 #include "rs232_485.h"
+#include "controller.h"
 
 // global Vars
 volatile bool    m_automatic_mode;         // auto mode (false: manu mode)
@@ -72,10 +73,6 @@ void load_defauls(void);                   // load default values
 void callback_settemp(uint8_t);            // called from RTC to set new reftemp
 void setautomode(bool);                    // activate/deactivate automode
 uint8_t input_temp(uint8_t);
-
-bool mode_auto=true;
-
-
 
 // Check AVR LibC Version >= 1.6.0
 #if __AVR_LIBC_VERSION__ < 10600UL
@@ -187,7 +184,6 @@ int main(void)
 		}
 
         if (task & TASK_RTC) {
-            bool minute_ch;
             task&=~TASK_RTC;
             valve_wanted = CTL_update(RTC_AddOneSecond(),valve_wanted);
             MOTOR_updateCalibration(mont_contact_pooling(),valve_wanted);

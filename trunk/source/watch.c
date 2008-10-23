@@ -51,9 +51,9 @@ static uint16_t watch_map[] PROGMEM = {
     /* 01 */ ((uint16_t) &bat_average) + B16,  // battery 
     /* 02 */ ((uint16_t) &sumError) + 2 + B16,
     /* 03 */ ((uint16_t) &sumError) + B16,
-	/* 04 */ ((uint16_t) &temp_wanted) + B8,
-	/* 05 */ ((uint16_t) &temp_wanted_last) +B8,
-	/* 06 */ ((uint16_t) &temp_auto) +B8
+	/* 04 */ ((uint16_t) &CTL_temp_wanted) + B8,
+	/* 05 */ ((uint16_t) &CTL_temp_wanted_last) +B8,
+	/* 06 */ ((uint16_t) &CTL_temp_auto) +B8
 };
 
 

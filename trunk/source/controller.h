@@ -31,18 +31,22 @@
  * $Rev: 39 $
  */
 
-extern uint8_t temp_wanted; //!< wanted temperature
-extern uint8_t temp_wanted_last;   // desired temperatur value used for last PID control
-extern uint8_t temp_auto;
-
+extern uint8_t CTL_temp_wanted; //!< wanted temperature
+extern uint8_t CTL_temp_wanted_last;   // desired temperatur value used for last PID control
+extern uint8_t CTL_temp_auto;
+extern uint8_t CTL_mode_auto;
 extern int8_t PID_force_update;      // signed value, val<0 means disable force updates
 
-#define CTL_need_update() (PID_force_update = 10)
-
-#define CTL_changed_temp() (temp_wanted!=temp_auto)
-
-#define CTL_need_auto() (temp_auto=0)
-
-#define CTL_temp_wanted temp_wanted_last
+#define CTL_update_temp_auto() (CTL_temp_auto=0)
+#define CTL_test_auto() (CTL_mode_auto && (CTL_temp_auto==CTL_temp_wanted))
+#define CTL_set_temp(t) (PID_force_update = 10, CTL_temp_wanted=t)
 
 uint8_t CTL_update(bool minute_ch, uint8_t valve);
+void CTL_temp_change_inc (int8_t ch);
+
+#define CTL_CHANGE_MODE        -1
+#define CTL_CHANGE_MODE_REWOKE -2
+void CTL_change_mode(int8_t dif);
+
+
+
