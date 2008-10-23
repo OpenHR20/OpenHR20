@@ -120,8 +120,11 @@ void task_lcd_update(void);
 #define LCD_CHAR_r      28  //!< char "r"
 #define LCD_CHAR_o      31  //!< char "r"
 #define LCD_CHAR_L      35  //!< char "L"
+#define LCD_CHAR_c      36  //!< char "c"
+#define LCD_CHAR_U      37  //!< char "U"
+#define LCD_CHAR_t      38  //!< char "t"
+#define LCD_CHAR_y      39  //!< char "y"
 #define LCD_CHAR_S       5  //!< char "5" = "S"
-#define LCD_CHAR_c      12  //!< char "c"
 
 #define LCD_CHAR_NULL  32  //!< space
 
@@ -224,5 +227,8 @@ void task_lcd_update(void);
 #define LCD_STRING_Err         11
 #define LCD_STRING_OFF         12
 #define LCD_STRING_On          13
+#define LCD_STRING_OPEn        14
+#define LCD_STRING_CyCL        15
+#define LCD_STRING_BAtt        16
 
 

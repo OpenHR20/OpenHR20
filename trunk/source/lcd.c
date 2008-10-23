@@ -106,13 +106,13 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
     0x33, //33    *        *    *   *        ******            *             *
     0x27, //34   1010000  1010100  0010000  1011100  0000000  0110011  0100111
 
-    0x38, //35   35:0x38  36:0x58  37:0x3e  38:0x78
-    0x58, //36    *                 *    *   *
-    0x3e, //37    *                 *    *   *
-    0x78  //38    *        ******   *    *   ******
-          //39    *        *        *    *   *
-          //40    ******   ******   ******   ******
-          //41   0111000  1011000  0111110  1111000
+    0x38, //35   35:0x38  36:0x58  37:0x3e  38:0x78  39:0x6e
+    0x58, //36    *                 *    *   *        *    *
+    0x3e, //37    *                 *    *   *        *    *
+    0x78, //38    *        ******   *    *   ******   ******
+    0x6e  //39    *        *        *    *   *             *
+          //40    ******   ******   ******   ******   ******
+          //41   0111000  1011000  0111110  1111000  1101110
 };
 
 #if LANG==LANG_uni
@@ -133,7 +133,9 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
       {32,14,28,28},    //!<  " Err"    LCD_STRING_Err
       { 0,15,15,32},    //!<  "OFF "    LCD_STRING_OFF
       { 0,29,32,32},    //!<  "On  "    LCD_STRING_On
-
+      { 0,18,14,29},    //!<  "OPEn"    LCD_STRING_OPEn
+      {12,39,12,35},    //!<  "CyCL"    LCD_STRING_CyCL
+      {11,10,38,38},    //!<  "BAtt"    LCD_STRING_BAtt
   };
 #elif LANG==LANG_de
   // Look-up chars table for LCD strings (german)
@@ -153,6 +155,9 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
       {32,14,28,28},    //!<  " Err"    LCD_STRING_Err
       { 0,15,15,32},    //!<  "OFF "    LCD_STRING_OFF
       { 0,29,32,32},    //!<  "On  "    LCD_STRING_On
+      { 0,18,14,29},    //!<  "OPEn"    LCD_STRING_OPEn
+      {12,39,12,35},    //!<  "CyCL"    LCD_STRING_CyCL
+      {11,10,38,38},    //!<  "BAtt"    LCD_STRING_BAtt
   };
 #elif LANG==LANG_cs
   // Look-up chars table for LCD strings (czech)
@@ -172,6 +177,9 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
       {32,14,28,28},    //!<  " Err"    LCD_STRING_Err
       { 0,15,15,32},    //!<  "OFF "    LCD_STRING_OFF
       { 0,29,32,32},    //!<  "On  "    LCD_STRING_On
+      { 0,18,14,29},    //!<  "OPEn"    LCD_STRING_OPEn
+      {12,39,12,35},    //!<  "CyCL"    LCD_STRING_CyCL
+      {11,10,38,38},    //!<  "BAtt"    LCD_STRING_BAtt
   };
 #endif
 
