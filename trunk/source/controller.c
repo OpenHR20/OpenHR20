@@ -52,6 +52,7 @@ bool CTL_mode_auto=true;   // actual desired temperatur by timer
 static uint16_t PID_update_timeout=16;   // timer to next PID controler action/first is 16 sec after statup 
 int8_t PID_force_update=16;      // signed value, val<0 means disable force updates \todo rename
 
+uint8_t CTL_error=0;
 
 /*!
  *******************************************************************************
@@ -96,6 +97,18 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
         PID_force_update = -1;
         COM_print_debug(0);
     }
+    // batt error detection
+    if (bat_average < 20*(uint16_t)config.bat_warning_thld) {
+        CTL_error |=  CTL_ERR_BATT_WARNING;
+    } else {
+        CTL_error &= ~CTL_ERR_BATT_WARNING;
+    }
+    if (bat_average < 20*(uint16_t)config.bat_low_thld) {
+        CTL_error |=  CTL_ERR_BATT_LOW;
+    } else {
+        CTL_error &= ~CTL_ERR_BATT_LOW;
+    }
+    
     return valve;
 }
 

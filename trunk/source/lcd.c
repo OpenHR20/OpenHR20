@@ -51,7 +51,7 @@
 #define LCD_CONTRAST_MIN       0   //!< \brief contrast minimum
 #define LCD_CONTRAST_MAX      15   //!< \brief contrast maxmum
 #define LCD_MAX_POS            4   //!< \brief number of 7 segment chars
-#define LCD_MAX_CHARS  37   //!< \brief no. of chars in \ref LCD_CharTablePrgMem
+#define LCD_MAX_CHARS  (sizeof(LCD_CharTablePrgMem))   //!< \brief no. of chars in \ref LCD_CharTablePrgMem
 #define LCD_REGISTER_COUNT     9   //!< \brief no. of registers each bitplane
 
 
@@ -136,6 +136,8 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
       { 0,18,14,29},    //!<  "OPEn"    LCD_STRING_OPEn
       {12,39,12,35},    //!<  "CyCL"    LCD_STRING_CyCL
       {11,10,38,38},    //!<  "BAtt"    LCD_STRING_BAtt
+      {32,14, 2,32},    //!<  " E2 "    LCD_STRING_E2
+      {32,14, 3,32},    //!<  " E3 "    LCD_STRING_E3
   };
 #elif LANG==LANG_de
   // Look-up chars table for LCD strings (german)
@@ -158,6 +160,8 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
       { 0,18,14,29},    //!<  "OPEn"    LCD_STRING_OPEn
       {12,39,12,35},    //!<  "CyCL"    LCD_STRING_CyCL
       {11,10,38,38},    //!<  "BAtt"    LCD_STRING_BAtt
+      {32,14, 2,32},    //!<  " E2 "    LCD_STRING_E2
+      {32,14, 3,32},    //!<  " E3 "    LCD_STRING_E3
   };
 #elif LANG==LANG_cs
   // Look-up chars table for LCD strings (czech)
@@ -180,6 +184,8 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
       { 0,18,14,29},    //!<  "OPEn"    LCD_STRING_OPEn
       {12,39,12,35},    //!<  "CyCL"    LCD_STRING_CyCL
       {11,10,38,38},    //!<  "BAtt"    LCD_STRING_BAtt
+      {32,14, 2,32},    //!<  " E2 "    LCD_STRING_E2
+      {32,14, 3,32},    //!<  " E3 "    LCD_STRING_E3
   };
 #endif
 
@@ -328,11 +334,7 @@ void LCD_PrintChar(uint8_t value, uint8_t pos, uint8_t mode)
         for (i=0; i<7; i++){
             seg = fieldbase + pgm_read_byte(&LCD_SegOffsetTablePrgMem[i]);
             // Set or Clear?
-            if (bitmap & mask){
-                LCD_SetSeg(seg, mode);
-            } else {
-                LCD_SetSeg(seg, LCD_MODE_OFF);
-            }
+            LCD_SetSeg(seg,((bitmap & mask)?mode:LCD_MODE_OFF));
             mask <<= 1;
         }
     }

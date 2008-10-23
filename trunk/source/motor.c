@@ -50,6 +50,7 @@
 #include "eeprom.h"
 #include "task.h"
 #include "rs232_485.h"
+#include "controller.h"
 
 // typedefs
 
@@ -245,9 +246,7 @@ void MOTOR_Control(motor_dir_t direction)
         	MOTOR_run_timeout = config.motor_run_timeout;
 			MOTOR_timer_buffer=0;
 
-            //  remove false interrupt, we need some instructions between false int gen and this point 
-            EIFR = (1<<PCIF0);                          
-            PCMSK0 = (1<<PCINT4);  // activate interrupt, false IRQ must be cleared before
+            PCMSK0 |= (1<<PCINT4);  // activate interrupt, false IRQ must be cleared before
 			MOTOR_run_overload=0;
             // open
             if ( direction == close) {
@@ -356,6 +355,12 @@ void MOTOR_timer(void) {
         } else {
             MOTOR_Control(stop); // just ensurance 
         }  
+        if ((MOTOR_calibration_step == 0) &&
+            ((MOTOR_PosAct>MOTOR_MAX_IMPULSES+1) || (MOTOR_PosMax<MOTOR_MIN_IMPULSES))) {
+            CTL_error |=  CTL_ERR_MOTOR;
+        } else {
+            CTL_error &= ~CTL_ERR_MOTOR;
+        }
     }
 }
 

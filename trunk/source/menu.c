@@ -418,14 +418,26 @@ void menu_view(bool update) {
         LCD_PrintDec(RTC_GetMinute(), 0, ((menu_state == menu_set_minute) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));
        break;
     case menu_home: // wanted temp, status / TODO
-        if (update) clr_show2(LCD_SEG_BAR24,LCD_SEG_MANU);
+        if (update) clr_show1(LCD_SEG_BAR24);
         //! \todo update "hourbar" status from chache
         //! \todo update "hourbar" chache after timer change or day change
         //! \note hourbar status calculation is complex we don't want calculate it every view, use chache
         LCD_SetSeg(LCD_SEG_AUTO, (CTL_test_auto()?LCD_MODE_ON:LCD_MODE_OFF));
         LCD_SetSeg(LCD_SEG_MANU, (CTL_mode_auto?LCD_MODE_OFF:LCD_MODE_ON));
         LCD_SetHourBarSeg(1, LCD_MODE_OFF); //just test TODO
-        LCD_PrintTemp(CTL_temp_wanted,LCD_MODE_ON);
+        if (CTL_error==0) {
+            LCD_PrintTemp(CTL_temp_wanted,LCD_MODE_ON);
+        } else {
+            if (CTL_error & CTL_ERR_BATT_LOW) {
+                LCD_PrintStringID(LCD_STRING_BAtt,LCD_MODE_BLINK_1);
+            } else if (CTL_error & CTL_ERR_MONTAGE) {
+                LCD_PrintStringID(LCD_STRING_E2,LCD_MODE_ON);
+            } else if (CTL_error & CTL_ERR_MOTOR) {
+                LCD_PrintStringID(LCD_STRING_E3,LCD_MODE_ON);
+            } else if (CTL_error & CTL_ERR_BATT_WARNING) {
+                LCD_PrintStringID(LCD_STRING_BAtt,LCD_MODE_ON);
+            }
+        }
        break;
     case menu_home2: // real temperature
         if (update) clr_show1(LCD_SEG_COL1);           // decimal point

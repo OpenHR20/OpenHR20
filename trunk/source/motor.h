@@ -56,6 +56,7 @@
 //! The value measured on a HR20 are 737 to 740 = so more than 1000 should
 //! never occure if it is mounted
 #define	MOTOR_MAX_IMPULSES 1000
+#define	MOTOR_MIN_IMPULSES 100
 
 #define EYE_TIMER_NOISE_PROTECTION 5 
 

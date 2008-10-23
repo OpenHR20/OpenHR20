@@ -36,6 +36,7 @@ extern uint8_t CTL_temp_wanted_last;   // desired temperatur value used for last
 extern uint8_t CTL_temp_auto;
 extern uint8_t CTL_mode_auto;
 extern int8_t PID_force_update;      // signed value, val<0 means disable force updates
+extern uint8_t CTL_error;
 
 #define CTL_update_temp_auto() (CTL_temp_auto=0)
 #define CTL_test_auto() (CTL_mode_auto && (CTL_temp_auto==CTL_temp_wanted))
@@ -48,5 +49,12 @@ void CTL_temp_change_inc (int8_t ch);
 #define CTL_CHANGE_MODE_REWOKE -2
 void CTL_change_mode(int8_t dif);
 
-
-
+// ERRORS
+#define CTL_ERR_BATT_LOW                (1<<7)
+#define CTL_ERR_BATT_WARNING            (1<<6)
+#define CTL_ERR_NA_5                    (1<<5)    
+#define CTL_ERR_NA_4                    (1<<4)    
+#define CTL_ERR_MOTOR                   (1<<3)    
+#define CTL_ERR_MONTAGE                 (1<<2)
+#define CTL_ERR_NA_1                    (1<<1)    
+#define CTL_ERR_NA_0                    (1<<0)    

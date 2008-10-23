@@ -41,6 +41,7 @@
 #include "main.h"
 #include "task.h"
 #include "keyboard.h"
+#include "controller.h"
 
 
 // global Vars for keypress and wheel status
@@ -196,6 +197,11 @@ bool mont_contact_pooling(void){
     PORTB &= ~(0<<PB0);
     DDRB = (1<<PB0)|(1<<PB4)|(1<<PB7)|(1<<PB6); // PB4, PB7 Motor out
 	sei();
+    if (mont_contact) { 
+        CTL_error |=  CTL_ERR_MONTAGE;
+    } else {
+        CTL_error &= ~CTL_ERR_MONTAGE;
+    }
     return mont_contact;
 }
 

@@ -268,13 +268,17 @@ void COM_print_debug(uint8_t logtype) {
 	print_s_p(PSTR(" I: "));
 	print_decXXXX(temp_average);
 	print_s_p(PSTR(" S: "));
-	if (CTL_temp_wanted>TEMP_MAX) {
+	if (CTL_temp_wanted_last>TEMP_MAX) {
 		print_s_p(PSTR("BOOT"));
 	} else {
 		print_decXXXX(calc_temp(CTL_temp_wanted_last));
 	}
 	print_s_p(PSTR(" B: "));
 	print_decXXXX(bat_average);
+    if (CTL_error!=0) {
+		print_s_p(PSTR(" E:"));
+        print_hexXX(CTL_error);
+    }
 	if (logtype!=0) {
 		print_s_p(PSTR(" X"));
 	}
