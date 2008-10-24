@@ -338,7 +338,6 @@ void LCD_PrintChar(uint8_t value, uint8_t pos, uint8_t mode)
             mask <<= 1;
         }
     }
-	LCD_calc_used_bitplanes(mode);
 }
 
 
@@ -479,38 +478,23 @@ void LCD_PrintHexW(uint16_t value, uint8_t mode)
  ******************************************************************************/
 void LCD_PrintTemp(uint8_t temp, uint8_t mode)
 {
-    uint8_t tmp8;
-
-    // Upper Column off
-    LCD_SetSeg(LCD_SEG_COL2, LCD_MODE_OFF);
-    
     if (temp==TEMP_MIN-1){
         // OFF
         LCD_PrintStringID(LCD_STRING_OFF,mode); 
-        LCD_SetSeg(LCD_SEG_COL1, LCD_MODE_OFF);
     } else if (temp==TEMP_MAX+1){
         // On
         LCD_PrintStringID(LCD_STRING_On,mode); 
-        LCD_SetSeg(LCD_SEG_COL1, LCD_MODE_OFF);
     } else if (temp>TEMP_MAX+1){
         // Error -E rr
         LCD_PrintStringID(LCD_STRING_Err,mode); 
-        LCD_SetSeg(LCD_SEG_COL1, LCD_MODE_OFF);
     } else {
-        // temperature = temp/2        
-        tmp8 = (temp / 2);
-        if (tmp8 < 10) {
+        LCD_PrintDec3(temp*5, 1, mode);        
+        if (temp < 100/5) {
             LCD_PrintChar(LCD_CHAR_NULL, 3, mode);
-            LCD_PrintChar(tmp8, 2, mode);
-        } else {
-            LCD_PrintDec(tmp8, 2, mode);
         }        
-        tmp8 = 5 * (temp & 0x01);        
-        LCD_PrintChar(tmp8, 1, mode);
         LCD_PrintChar(LCD_CHAR_C, 0, mode);
         LCD_SetSeg(LCD_SEG_COL1, mode);
     }
-	LCD_calc_used_bitplanes(mode);
 }
 
 
@@ -524,18 +508,13 @@ void LCD_PrintTemp(uint8_t temp, uint8_t mode)
  *
  *  \param temp temperature in 1/100 deg C<BR>
  *     min:  -999 => -9,9°C
- *     max: -9999 => 99,9°C
+ *     max:  9999 => 99,9°C
   *  \param mode  \ref LCD_MODE_ON, \ref LCD_MODE_OFF, \ref LCD_MODE_BLINK_1
  ******************************************************************************/
 void LCD_PrintTempInt(int16_t temp, uint8_t mode)
 {
-    int16_t dummy;
-    uint8_t tmp8;
     bool neg;
 
-    // Upper Column off
-    LCD_SetSeg(LCD_SEG_COL2, LCD_MODE_OFF);
- 
     // check min / max
     if (temp < -999){
         temp = -999;
@@ -546,42 +525,22 @@ void LCD_PrintTempInt(int16_t temp, uint8_t mode)
     // negative ?    
     neg = (temp < 0); 
     if (neg){        
-        temp *= -1;    
+        temp = -temp;    
     } 
 
     // 1/100°C not printed
-    dummy = temp/10;               
+    LCD_PrintDec3(temp/10, 1, mode);
     
-    // 3rd Digit: 1/10°C
-    tmp8 = (uint8_t) (dummy % 10);     
-    LCD_PrintChar(tmp8, 1, mode);
-    
-    // 2nd Digit: 1°C
-    dummy /= 10;                   
-    tmp8 = (uint8_t) (dummy % 10); 
-    LCD_PrintChar(tmp8, 2, mode);
-    
-    // 1st Digit: 1°C
     if (neg){
         // negative Temp      
         LCD_PrintChar(LCD_CHAR_neg, 3, mode);
     } else if (temp < 1000){
         // Temp < 10°C
         LCD_PrintChar(LCD_CHAR_NULL, 3, mode);
-    } else {
-        // Temp > 10°C
-        dummy /= 10;                   
-        tmp8 = (uint8_t) (dummy % 10);
-        LCD_PrintChar(tmp8, 3, mode);
-    }                              
+    }                             
 
     // Print C on last segment
     LCD_PrintChar(LCD_CHAR_C, 0, mode);
-    
-    // Set collumn (,)        
-    LCD_SetSeg(LCD_SEG_COL1, mode);    
-
-	LCD_calc_used_bitplanes(mode);
 }
 
 /*!
@@ -600,6 +559,7 @@ void LCD_PrintStringID(uint8_t id, uint8_t mode) {
         tmp = pgm_read_byte(&LCD_StringTable[id][i]);
         LCD_PrintChar(tmp, 3-i, mode);
     }
+    LCD_SetSeg(LCD_SEG_COL1, LCD_MODE_OFF);
 }
 
 
@@ -620,7 +580,6 @@ void LCD_SetHourBarSeg(uint8_t seg, uint8_t mode)
     segment = pgm_read_byte(&LCD_SegHourBarOffsetTablePrgMem[seg]);
     // Set segment 
     LCD_SetSeg(segment, mode);
-	LCD_calc_used_bitplanes(mode);
 }
 
 
@@ -727,7 +686,6 @@ void LCD_ClearSymbols(void)
     LCD_SetSeg(LCD_SEG_SUN, LCD_MODE_OFF);
     LCD_SetSeg(LCD_SEG_MOON, LCD_MODE_OFF);
     LCD_SetSeg(LCD_SEG_SNOW, LCD_MODE_OFF);
-	LCD_calc_used_bitplanes(LCD_MODE_OFF);
 
     LCD_Update();
 }
@@ -748,7 +706,6 @@ void LCD_ClearNumbers(void)
     LCD_PrintChar(LCD_CHAR_NULL, 0, LCD_MODE_OFF);
     LCD_SetSeg(LCD_SEG_COL1, LCD_MODE_OFF);
     LCD_SetSeg(LCD_SEG_COL2, LCD_MODE_OFF);
-	LCD_calc_used_bitplanes(LCD_MODE_OFF);
 
     LCD_Update();
 }
@@ -800,7 +757,7 @@ void LCD_SetSeg(uint8_t seg, uint8_t mode)
 static void LCD_calc_used_bitplanes(uint8_t mode) {
     uint8_t i;
 	if ((LCD_used_bitplanes==1) && 
-		((mode==LCD_MODE_OFF)||(mode==LCD_MODE_OFF))) {
+		((mode==LCD_MODE_ON)||(mode==LCD_MODE_OFF))) {
 		return; // just optimalization, nothing to do
 	} 
 	if ((mode==LCD_MODE_BLINK_1)||(mode==LCD_MODE_BLINK_2)) {
@@ -818,7 +775,6 @@ static void LCD_calc_used_bitplanes(uint8_t mode) {
 		}
 	}
 	LCD_used_bitplanes=1;
-		
 }
 
 
