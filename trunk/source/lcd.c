@@ -731,25 +731,43 @@ void LCD_SetSeg(uint8_t seg, uint8_t mode)
 {
     uint8_t r;
     uint8_t b;
-    uint8_t bp;
 
     // Register = segment DIV 8
     r = seg / 8;
     // Bitposition = segment mod 8
-    b = seg % 8;
+    b = 1<<(seg % 8);
 
     // Set bits in each bitplane
-    for (bp=0; bp<LCD_BITPLANES;  bp++){
-        if (mode & (1<<bp)){
+	#if LCD_BITPLANES == 2
+        if (mode & 1){
             // Set Bit in Bitplane if ON (0b11) or Blinkmode 1 (0b01)
-            LCD_Data[bp][r] |= (1<<b);
+            LCD_Data[0][r] |= b;
         } else {
             // Clear Bit in Bitplane if OFF (0b00) or Blinkmode 2 (0b10)
-            LCD_Data[bp][r] &= ~(1<<b);
+            LCD_Data[0][r] &= ~b;
+        } 
+        if (mode & 2){
+            // Set Bit in Bitplane if ON (0b11) or Blinkmode 2 (0b10)
+            LCD_Data[1][r] |= b;
+        } else {
+            // Clear Bit in Bitplane if OFF (0b00) or Blinkmode 1 (0b01)
+            LCD_Data[1][r] &= ~b;
+        } 
+    #else
+      {
+        uint8_t bp;
+        for (bp=0; bp<LCD_BITPLANES;  bp++){
+            if (mode & (1<<bp)){
+                // Set Bit in Bitplane if ON (0b11) or Blinkmode 1 (0b01)
+                LCD_Data[bp][r] |= b;
+            } else {
+                // Clear Bit in Bitplane if OFF (0b00) or Blinkmode 2 (0b10)
+                LCD_Data[bp][r] &= ~b;
+            }
         }
-    }
+      }
+    #endif
 	LCD_calc_used_bitplanes(mode);
-
 }
 
 /*!
