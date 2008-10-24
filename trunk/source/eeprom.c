@@ -161,7 +161,7 @@ void eeprom_config_save(uint8_t idx) {
 
 uint16_t eeprom_timers_read_raw(uint16_t offset) {
     uint16_t eeaddr = (uint16_t)ee_timers+offset;
-	return EEPROM_read(eeaddr+1)<<8 + EEPROM_read(eeaddr); //litle endian
+	return (EEPROM_read(eeaddr+1)<<8) + EEPROM_read(eeaddr); //litle endian
 }
 
 
@@ -176,7 +176,7 @@ void eeprom_timers_write_raw(uint16_t offset, uint16_t value) {
     if (offset>=sizeof(ee_timers)) return; // EEPROM protection
     eeaddr = (uint16_t)ee_timers+offset;
     EEPROM_write(eeaddr, value&0xff); //litle endian
-    EEPROM_write(eeaddr+1 , value>>8); //litle endian
+    EEPROM_write(eeaddr+1 , (value>>8)); //litle endian
 }
 
 

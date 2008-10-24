@@ -494,8 +494,9 @@ void LCD_PrintTemp(uint8_t temp, uint8_t mode)
         // Error -E rr
         LCD_PrintStringID(LCD_STRING_Err,mode); 
     } else {
-        LCD_PrintDec3(temp*5, 1, mode);        
-        if (temp < 100/5) {
+        LCD_PrintDec(temp>>1, 2, mode);
+        LCD_PrintChar(((temp&1)?5:0), 1, mode);        
+        if (temp < (100/5)) {
             LCD_PrintChar(LCD_CHAR_NULL, 3, mode);
         }        
         LCD_PrintChar(LCD_CHAR_C, 0, mode);
