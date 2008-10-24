@@ -69,8 +69,6 @@ extern uint8_t RTC_MM;   //!< \brief Date: Month
 extern uint8_t RTC_YY;   //!< \brief Date: Year (0-255) -> 2000 - 2255
 extern uint8_t RTC_DOW;  //!< Date: Day of Week
 extern uint32_t RTC_Ticks; //!< Ticks since last RTC.Init
-extern uint16_t RTC_Dow_Timer[7+1][RTC_TIMERS_PER_DOW];  //!< DOW Timer entrys 7 days + 1 program for whole week
-
 
 void RTC_Init(void);                 // init Timer, activate 500ms IRQ
 #define RTC_GetHour() ((int8_t) RTC_hh)                 // get hour

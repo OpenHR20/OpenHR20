@@ -71,6 +71,8 @@ extern config_t config;
 #define temperature_table(i) (((uint8_t *) &config.temperature0)[i])
 #define CONFIG_RAW_SIZE (sizeof(config_t))
 
+extern uint16_t EEPROM ee_timers[8][RTC_TIMERS_PER_DOW];
+
 // Boot Timeslots -> move to CONFIG.H
 // 10 Minutes after BOOT_hh:00
 #define BOOT_ON1       (7*60+0x2000) //!<  7:00
@@ -162,8 +164,13 @@ uint8_t config_read(uint8_t cfg_address, uint8_t cfg_type);
 uint8_t EEPROM_read(uint16_t address);
 void eeprom_config_init(void);
 void eeprom_config_save(uint8_t idx);
-void eeprom_timers_init(void);
-void eeprom_timers_save(rtc_dow_t dow, uint8_t slot);
+
+uint16_t eeprom_timers_read_raw(uint16_t offset);
+#define eeprom_timers_read(dow,slot) (eeprom_timers_read_raw((dow*RTC_TIMERS_PER_DOW+slot)*sizeof(ee_timers[0][0])))
+void eeprom_timers_write_raw(uint16_t offset, uint16_t value);
+#define eeprom_timers_write(dow,slot,value) (eeprom_timers_write_raw((dow*RTC_TIMERS_PER_DOW+slot)*sizeof(ee_timers[0][0]),value))
+
+
 
 #define CONFIG_VALUE 0
 #define CONFIG_DEFAULT 1

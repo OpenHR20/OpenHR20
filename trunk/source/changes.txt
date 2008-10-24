@@ -3,3 +3,4 @@ version 1.00BETA will be released soon
     - E2 message
     - E3 message
     - batt low indicator
+    - read/write ee_timers directly from EEPROM / save 128 bytes in RAM

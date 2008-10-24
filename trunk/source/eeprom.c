@@ -154,38 +154,29 @@ void eeprom_config_save(uint8_t idx) {
 
 /*!
  *******************************************************************************
- *  Init timers storage
+ *  read timer from storage
  *
  *  \note
  ******************************************************************************/
 
-void eeprom_timers_init(void) {
-	
-	uint16_t i;
-	uint8_t *timers_ptr = (uint8_t *) RTC_Dow_Timer;
-	for (i=0;i<sizeof(RTC_Dow_Timer);i++) {
-		*timers_ptr =  EEPROM_read(((uint16_t)&ee_timers)+i);
-		timers_ptr++;
-	}
+uint16_t eeprom_timers_read_raw(uint16_t offset) {
+    uint16_t eeaddr = (uint16_t)ee_timers+offset;
+	return EEPROM_read(eeaddr+1)<<8 + EEPROM_read(eeaddr); //litle endian
 }
 
 
 /*!
  *******************************************************************************
- *  Update timers storage for dow and slot
+ *  Update timer storage for dow and slot
  *
  *  \note
  ******************************************************************************/
-void eeprom_timers_save(rtc_dow_t dow, uint8_t slot) {
-	uint16_t i;
-	uint8_t *timers_ptr = (uint8_t *) &RTC_Dow_Timer[dow][slot];
-    uint16_t eeaddr = (uint16_t) &ee_timers[dow][slot];
-	for (i=0;i<sizeof(RTC_Dow_Timer[0][0]);i++) {
-		if (*timers_ptr !=  EEPROM_read(eeaddr+i)) {
-		  EEPROM_write(eeaddr+i ,*timers_ptr);
-        }
-		timers_ptr++;
-	}
+void eeprom_timers_write_raw(uint16_t offset, uint16_t value) {
+    uint16_t eeaddr;
+    if (offset>=sizeof(ee_timers)) return; // EEPROM protection
+    eeaddr = (uint16_t)ee_timers+offset;
+    EEPROM_write(eeaddr, value&0xff); //litle endian
+    EEPROM_write(eeaddr+1 , value>>8); //litle endian
 }
 
 

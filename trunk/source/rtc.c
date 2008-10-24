@@ -60,7 +60,6 @@ uint8_t RTC_DOW;  //!< Date: Day of Week
 
 uint8_t RTC_DS;     //!< Daylightsaving Flag
 uint32_t RTC_Ticks; //!< Ticks since last RTC.Init
-uint16_t RTC_Dow_Timer[7+1][RTC_TIMERS_PER_DOW];  //!< DOW Timer entrys 7 days + 1 program for whole week; data format \ref ee_timers
 
 // prototypes
 void    RTC_AddOneDay(void);        // add one day to actual date
@@ -118,8 +117,6 @@ void RTC_Init(void)
     RTC_YY = BOOT_YY;
     // day of week
     RTC_SetDayOfWeek();
-    
-    eeprom_timers_init(); // read RTC_Dow_Timer from EEPROM
     
     //! \note OCR2A register and interrupt is used in \ref keyboard.c
 }
@@ -213,8 +210,7 @@ bool RTC_DowTimerSet(rtc_dow_t dow, uint8_t slot, uint16_t time, timermode_t tim
     if (timermode>temperature3) return false;
     if (time>=60*25) time=0xfff;
     // to table format see to \ref ee_timers
-    RTC_Dow_Timer[dow][slot] = time | ((uint16_t)timermode<<12);
-    eeprom_timers_save(dow, slot);
+    eeprom_timers_write(dow,slot,time | ((uint16_t)timermode<<12));
     return true;
 }
 
@@ -237,8 +233,9 @@ bool RTC_DowTimerSet(rtc_dow_t dow, uint8_t slot, uint16_t time, timermode_t tim
 uint16_t RTC_DowTimerGet(rtc_dow_t dow, uint8_t slot, timermode_t *timermode)
 {
     // to table format see to \ref ee_timers
-    *timermode = (timermode_t) (RTC_Dow_Timer[dow][slot] >> 12);
-    return RTC_Dow_Timer[dow][slot] & 0xfff;
+    uint16_t raw=eeprom_timers_read(dow,slot);
+    *timermode = (timermode_t) (raw >> 12);
+    return raw & 0xfff;
 }
 
 /*!
@@ -263,7 +260,7 @@ static int8_t RTC_DowTimerGetIndex(uint8_t dow,uint16_t time_minutes, bool exact
     // each timer until time_minutes
     for (i=1; i<RTC_TIMERS_PER_DOW; i++){
         // check if timer > maxtime and timer < actual time
-        uint16_t table_time = (RTC_Dow_Timer[dow][i]) & 0x0fff;
+        uint16_t table_time = eeprom_timers_read(dow,i) & 0x0fff;
         if ((table_time > maxtime) && 
             (((table_time < time_minutes) && !exact) || (table_time == time_minutes))) {
             maxtime = table_time;
@@ -298,12 +295,11 @@ uint8_t RTC_ActualTimerTemperature(bool exact) {
             if (index>=0) {
                 break;
             }
-            
         }
     }
     
     if (index<0) return 0; //not found
-    else return temperature_table((RTC_Dow_Timer[dow][index] & 0x3000) >> 12);
+    else return temperature_table((eeprom_timers_read(dow,index) & 0x3000) >> 12);
 }
 
 /*!
