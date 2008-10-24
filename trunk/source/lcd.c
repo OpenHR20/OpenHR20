@@ -272,24 +272,30 @@ void LCD_Init(void)
  *  \param mode
  *       -      0: clears all digits
  *       -  other: set all digits
+ *  \param mode  \ref LCD_MODE_ON, \ref LCD_MODE_OFF
  ******************************************************************************/
 void LCD_AllSegments(uint8_t mode)
 {
-    uint8_t bp;
     uint8_t i;
-    uint8_t val;
+    uint8_t val = (mode==LCD_MODE_ON)?0xff:0x00;
 
-    // Set bits in each bitplane
-    for (bp=0; bp<LCD_BITPLANES;  bp++){
-        if (mode & (1<<bp)){
-            val = 0xff;    // Set Bitplane
-        } else {
-            val = 0x00;    // Clear Bitplane
-        }
+	#if LCD_BITPLANES == 2
+    // Set bits in each bitplane / optimized for LCD_BITPLANES == 2
         for (i=0; i<LCD_REGISTER_COUNT; i++){
-                LCD_Data[bp][i] = val;
+                LCD_Data[0][i] = val;
+                LCD_Data[1][i] = val;
         }
-    }
+    #else 
+        {
+            uint8_t bp;
+            // Set bits in each bitplane
+            for (bp=0; bp<LCD_BITPLANES;  bp++){
+                for (i=0; i<LCD_REGISTER_COUNT; i++){
+                        LCD_Data[bp][i] = val;
+                }
+            }
+        }
+    #endif
 	LCD_used_bitplanes=1;
     LCD_Update();
 }
