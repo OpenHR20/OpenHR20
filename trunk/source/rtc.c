@@ -299,7 +299,7 @@ uint8_t RTC_ActualTimerTemperature(bool exact) {
     }
     
     if (index<0) return 0; //not found
-    else return temperature_table((eeprom_timers_read(dow,index) & 0x3000) >> 12);
+    else return temperature_table[(eeprom_timers_read(dow,index) & 0x3000) >> 12];
 }
 
 /*!

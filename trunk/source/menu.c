@@ -56,6 +56,8 @@ uint8_t menu_auto_update_timeout = 2;
 typedef enum {
     // startup
     menu_startup, menu_version,
+    // preprogramed temperatures
+    menu_preset_temp0, menu_preset_temp1, menu_preset_temp2, menu_preset_temp3, 
     // home screens
     menu_home, menu_home2, menu_home3, menu_home4,
     // lock message
@@ -67,6 +69,8 @@ typedef enum {
 
     // datetime setting
     menu_set_timmer_dow, menu_set_timmer,
+    
+    
     
     menu_empty
 } menu_t;
@@ -111,12 +115,26 @@ static bool events_common(void) {
             menu_state = menu_service1;
             kb_events = 0;
             service_idx = 0;
+            eeprom_config_init(); //return to saved values
+            ret=true;
+        } else if ( kb_events & KB_EVENT_AUTO_LONG ) {
+    		menu_state=menu_set_year;
+            eeprom_config_init(); //return to saved values
+            ret=true; 
+        } else if ( kb_events & KB_EVENT_PROG_LONG ) {
+			menu_state=menu_set_timmer_dow;
+            eeprom_config_init(); //return to saved values
+            ret=true; 
+        } else if ( kb_events & KB_EVENT_NONE_LONG ) {
+            menu_state=menu_home; // retun to main home screen
+            eeprom_config_init(); //return to saved values
+            ret=true;
+        } else if ( kb_events & KB_EVENT_C_LONG ) {
+            menu_state=menu_preset_temp0; 
+            eeprom_config_init(); //return to saved values
             ret=true;
         }
-		if ( kb_events & KB_EVENT_PROG_LONG ) {
-    			menu_state=menu_set_year;
-                ret=true; 
-        }    
+
 	}
     return ret;
 }
@@ -126,6 +144,7 @@ static bool events_common(void) {
  * local menu static variables
  ******************************************************************************/
 static uint8_t menu_set_dow;
+#define menu_set_temp menu_set_dow //reuse variable in another part of menu
 static uint16_t menu_set_time;
 static timermode_t menu_set_mode;
 static uint8_t menu_set_slot;
@@ -167,8 +186,6 @@ bool menu_controller(bool new_state) {
         if ( kb_events & KB_EVENT_PROG) {
             menu_state = menu_set_month;
             ret=true;
-        } else {
-            ret = events_common();
         }
         break;
     case menu_set_month:
@@ -176,8 +193,6 @@ bool menu_controller(bool new_state) {
         if ( kb_events & KB_EVENT_PROG ) {
             menu_state = menu_set_day;
             ret=true;
-        } else {
-            ret = events_common();
         }
         break;
     case menu_set_day:
@@ -185,8 +200,6 @@ bool menu_controller(bool new_state) {
         if ( kb_events & KB_EVENT_PROG ) {
             menu_state = menu_set_hour;
             ret=true;
-        } else {
-            ret = events_common();
         }
         break;
     case menu_set_hour:
@@ -194,8 +207,6 @@ bool menu_controller(bool new_state) {
         if ( kb_events & KB_EVENT_PROG ) {
             menu_state = menu_set_minute;
             ret=true;
-        } else {
-            ret = events_common();
         }
         break;
     case menu_set_minute:
@@ -206,21 +217,12 @@ bool menu_controller(bool new_state) {
         if ( kb_events & KB_EVENT_PROG ) {
             menu_state = menu_home;
             ret=true;
-        } else {
-            ret = events_common();
         }
         break;
     case menu_home:         // home screen
     case menu_home2:        // alternate version, real temperature
     case menu_home3:        // alternate version, valve pos
     case menu_home4:        // alternate version, time    
-        if (new_state) {
-            menu_auto_update_timeout=10;
-        }
-        if (menu_auto_update_timeout==0) {
-            menu_state=menu_home; // retun to main home screen
-            ret=true; 
-        }
         if (locked) {
             if ( kb_events & (
                     KB_EVENT_WHEEL_PLUS  | KB_EVENT_WHEEL_MINUS | KB_EVENT_PROG | KB_EVENT_C
@@ -231,7 +233,6 @@ bool menu_controller(bool new_state) {
                 }
         } else { // not locked
 			if ((wheel != 0) && (menu_state == menu_home)) {
-            	menu_auto_update_timeout = 10; //< \todo create symbol for constatnt
 				CTL_temp_change_inc(wheel);
 			}			 
             if ( kb_events & KB_EVENT_C ) {
@@ -247,10 +248,6 @@ bool menu_controller(bool new_state) {
             if ( kb_events & KB_EVENT_AUTO_REWOKE ) {
                 CTL_change_mode(CTL_CHANGE_MODE_REWOKE); // change mode
                 menu_state=menu_home;
-                ret=true; 
-            }
-            if ( kb_events & KB_EVENT_PROG ) {
-				menu_state=menu_set_timmer_dow;
                 ret=true; 
             }
             // TODO ....  
@@ -296,23 +293,43 @@ bool menu_controller(bool new_state) {
             ret=true; 
         }
         break;
+    case menu_preset_temp0:
+    case menu_preset_temp1:
+    case menu_preset_temp2:
+    case menu_preset_temp3:
+        if (new_state) menu_set_temp=temperature_table[menu_state-menu_preset_temp0];
+        if (wheel != 0) {
+            menu_set_temp+=wheel;
+            if (menu_set_temp > TEMP_MAX+1) menu_set_temp = TEMP_MAX+1;
+            if (menu_set_temp < TEMP_MIN-1) menu_set_temp = TEMP_MIN-1;
+        }
+        if ( kb_events & KB_EVENT_PROG ) {
+            temperature_table[menu_state-menu_preset_temp0]=menu_set_temp;
+            eeprom_config_save(menu_state+((temperature_table-config_raw)-menu_preset_temp0));
+            menu_state++; // menu_preset_temp3+1 == menu_home
+            CTL_update_temp_auto();
+            ret=true; 
+        }
+        if ( kb_events & KB_EVENT_AUTO ) { // exit without save
+            menu_state=menu_home;
+            ret=true; 
+        }
+		break;
+
     default:
     case menu_lock:        // "bloc" message
-        ret = events_common();
         if (! locked) { menu_state=menu_home; ret=true; } 
         if (new_state) menu_auto_update_timeout=LONG_PRESS_THLD+1;
         if (menu_auto_update_timeout==0) { menu_state=menu_home; ret=true; } 
         break;        
     case menu_service1:     // service menu        
     case menu_service2:        
-        if ((new_state)||(wheel != 0)) menu_auto_update_timeout=20;
-        if ((menu_auto_update_timeout==0) || (kb_events & KB_EVENT_AUTO)) { 
+        if (kb_events & KB_EVENT_AUTO) { 
             menu_state=menu_home; 
             ret=true;
             eeprom_config_init(); //return to saved values
         }
         if (kb_events & KB_EVENT_PROG) {
-            menu_auto_update_timeout=20;
             if (menu_state == menu_service2) {
                 eeprom_config_save(service_idx); // save current value
                 menu_state = menu_service1;
@@ -331,16 +348,15 @@ bool menu_controller(bool new_state) {
                     ((int16_t)(config_raw[service_idx])+(int16_t)wheel-min+max_min_1)%max_min_1+min);
             if (service_idx==0) { LCD_Init(); ret=true; }
         }
-        ret = ret ||  events_common();
         break;        
 	case menu_empty: // show temperature, blackhole
-        if (new_state || (menu_auto_update_timeout==0)) {
+        if (new_state) {
             menu_auto_update_timeout=1;
             // nothing todo, it is blackhole, just update value
         }
         //empty        
     }
-    ret = ret || events_common();
+    if (events_common()) ret=true;
     kb_events = 0; // clear unused keys
     return ret;
 } 
@@ -382,6 +398,18 @@ static void clr_show3(uint8_t seg1, uint8_t seg2, uint8_t seg3) {
     LCD_SetSeg(seg3, LCD_MODE_ON);
 }
 
+static void show_selected_temperature_type (uint8_t type, uint8_t mode) {
+    //  temperature0    SNOW         
+    //  temperature1         MOON    
+    //  temperature2         MOON SUN
+    //  temperature3              SUN
+    LCD_SetSeg(LCD_SEG_SNOW,((type==temperature0)
+        ?mode:LCD_MODE_OFF));
+    LCD_SetSeg(LCD_SEG_MOON,(((type==temperature1)||(type==temperature2))
+        ?mode:LCD_MODE_OFF));
+    LCD_SetSeg(LCD_SEG_SUN,((type>=temperature2)
+        ?mode:LCD_MODE_OFF));
+}
 
 /*!
  *******************************************************************************
@@ -469,18 +497,7 @@ void menu_view(bool update) {
         } else {
             LCD_PrintStringID(LCD_STRING_4xminus,LCD_MODE_BLINK_1);
         }
-        { //!< \todo move it into function
-            //  temperature0    SNOW         
-            //  temperature1         MOON    
-            //  temperature2         MOON SUN
-            //  temperature3              SUN
-            LCD_SetSeg(LCD_SEG_SNOW,((menu_set_mode==temperature0)
-                ?LCD_MODE_BLINK_1:LCD_MODE_OFF));
-            LCD_SetSeg(LCD_SEG_MOON,(((menu_set_mode==temperature1)||(menu_set_mode==temperature2))
-                ?LCD_MODE_BLINK_1:LCD_MODE_OFF));
-            LCD_SetSeg(LCD_SEG_SUN,((menu_set_mode>=temperature2)
-                ?LCD_MODE_BLINK_1:LCD_MODE_OFF));
-        }
+        show_selected_temperature_type(menu_set_mode,LCD_MODE_BLINK_1);
         break;
     case menu_lock:        // "bloc" message
         if (update) LCD_AllSegments(LCD_MODE_OFF); // all segments off
@@ -493,7 +510,14 @@ void menu_view(bool update) {
         LCD_PrintHex(service_idx, 2, ((menu_state == menu_service1) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));
         LCD_PrintHex(config_raw[service_idx], 0, ((menu_state == menu_service2) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));
        break;
-
+    case menu_preset_temp0:
+    case menu_preset_temp1:
+    case menu_preset_temp2:
+    case menu_preset_temp3:
+        if (update) clr_show1(LCD_SEG_COL1);           // decimal point
+        LCD_PrintTemp(menu_set_temp,LCD_MODE_BLINK_1);
+        show_selected_temperature_type(menu_state-menu_preset_temp0,LCD_MODE_ON);
+        break;
     default:
 	case menu_empty: // show temperature
         if (update) clr_show1(LCD_SEG_COL1);           // decimal point
