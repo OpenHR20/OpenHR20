@@ -41,3 +41,6 @@ void COM_init(void);
 void COM_print_debug(uint8_t logtype);
 
 void COM_commad_parse (void);
+
+void COM_debug_print_motor(int8_t dir, uint16_t m);
+

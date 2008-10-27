@@ -42,6 +42,7 @@
 #include "task.h"
 #include "keyboard.h"
 #include "controller.h"
+#include "debug.h"
 
 
 // global Vars for keypress and wheel status
@@ -52,7 +53,7 @@ static uint8_t long_quiet;
 static volatile uint8_t keys = 0;  // must be volatile, shared into interrupt
 uint16_t kb_events = 0;
 static volatile bool kb_timeout = true;
-static volatile bool allow_rewoke = false; 
+static bool allow_rewoke = false; 
 
 
 /*!
@@ -118,7 +119,6 @@ void task_keyboard(void) {
             TIMSK2 |= (1<<OCIE2A); // enable interupt again
         }
         state_front_prev = front;
-        
 
         state_front_prev = front;
 		long_press = 0; // long press detection RESET
@@ -184,19 +184,17 @@ void task_keyboard_long_press_detect(void) {
  ******************************************************************************/
 bool mont_contact_pooling(void){
     bool mont_contact;
-	cli();
-    DDRB = (0<<PB0)|(1<<PB4)|(1<<PB7)|(1<<PB6); // PB4, PB7 Motor out
-    PORTB |= (1<<PB0);
-	asm volatile ("nop");
-	asm volatile ("nop");
-	// crazy oder of instructions, bud we need any instructions
-	// between PORTB setting and reading PINB due to AVR design
-	mont_contact = ~PINB & KBI_MONT;
-	  // low active
-
-    PORTB &= ~(0<<PB0);
-    DDRB = (1<<PB0)|(1<<PB4)|(1<<PB7)|(1<<PB6); // PB4, PB7 Motor out
-	sei();
+    enable_mont_input();
+    nop(); nop();
+    // crazy oder of instructions, bud we need any instructions
+    // between PORTB setting and reading PINB due to AVR design
+    #if DEBUG_IGNORE_MONT_CONTACT==1
+        mont_contact=false;
+    #else
+        mont_contact = ~PINB & KBI_MONT;
+    #endif
+      // low active
+    disable_mont_input();
     if (mont_contact) { 
         CTL_error |=  CTL_ERR_MONTAGE;
     } else {
@@ -214,19 +212,17 @@ bool mont_contact_pooling(void){
  *  - read keyboard status
  ******************************************************************************/
 ISR(PCINT1_vect){
-    DDRB = (1<<PB0)|(1<<PB4)|(1<<PB7)|(1<<PB6); // PB4, PB7 Motor out
-    PORTB |= (1<<PB6);
-	task |= TASK_KB; 
-	asm volatile ("nop");
+    enable_rot2_input();
+    task |= TASK_KB;
+    asm volatile ("nop");
 
-	// crazy oder of instructions, bud we need any instructions
-	// between PORTB setting and reading PINB due to AVR design
-	keys = ~PINB
-	  & (KBI_C | KBI_PROG | KBI_AUTO | KBI_ROT1 | KBI_ROT2); 
-	  // low active
+    // crazy oder of instructions, bud we need any instructions
+    // between PORTB setting and reading PINB due to AVR design
+    keys = ~PINB
+      & (KBI_C | KBI_PROG | KBI_AUTO | KBI_ROT1 | KBI_ROT2); 
+      // low active
 
-    PORTB &= ~(0<<PB6);
-    DDRB = (1<<PB0)|(1<<PB4)|(1<<PB7)|(1<<PB6); // PB4, PB7 Motor out
+    disable_rot2_input();
 }
 
 /*!

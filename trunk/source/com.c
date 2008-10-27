@@ -47,6 +47,7 @@
 #include "watch.h"
 #include "eeprom.h"
 #include "controller.h"
+#include "debug.h"
 
 
 #define TX_BUFF_SIZE 128
@@ -449,3 +450,18 @@ void COM_commad_parse (void) {
 		COM_flush();
 	}
 }
+
+#if DEBUG_PRINT_MOTOR
+void COM_debug_print_motor(int8_t dir, uint16_t m) {
+    if (dir>0) {
+		COM_putchar('+');
+	} else if (dir<0) {
+		COM_putchar('-');
+	}
+    COM_putchar(' ');
+
+	print_hexXXXX(m);
+    COM_putchar('\n');
+    COM_flush();
+}
+#endif

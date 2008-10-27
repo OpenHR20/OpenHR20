@@ -66,22 +66,24 @@
 *****************************************************************************/
 //! motor direction
 typedef enum {                                      
-    stop, open, close
+    close=-1, stop=0, open=1 
 } motor_dir_t;
 
 /*****************************************************************************
 *   Prototypes
 *****************************************************************************/
-void MOTOR_Init(void);                        // Init motor control
+#define MOTOR_Init(void) (MOTOR_updateCalibration(true,0)) // Init motor control
 bool MOTOR_Goto(uint8_t);                     // Goto position in percent
 bool MOTOR_On(void);                          // is motor on
 void MOTOR_Calibrate(uint8_t percent);        // calibrate the motor
 bool MOTOR_IsCalibrated(void);                // is motor successful calibrated?
 void MOTOR_updateCalibration(bool unmounted, uint8_t percent);            // reset the calibration 
-void MOTOR_Control(motor_dir_t); // control H-bridge of motor
 void MOTOR_SetMountStatus(bool);     // set status if is mounted or not
 uint8_t MOTOR_GetPosPercent(void);  // get percental position of motor (0-100%)
-void MOTOR_update_pos(void);
-void MOTOR_timer(void);
+void MOTOR_timer_stop(void);
+void MOTOR_timer_pulse(void);
 
-extern motor_dir_t MOTOR_Dir;
+#define timer0_need_clock() (TCCR0A & ((1<<CS02)|(1<<CS01)|(1<<CS00)))
+
+extern volatile uint16_t motor_diag;
+

@@ -112,7 +112,7 @@ int main(void)
 		asm volatile ("cli");
 		if (! task) {
   			// nothing to do, go to sleep
-            if((MOTOR_Dir!=stop) || RS_need_clock()) {
+            if(timer0_need_clock() || RS_need_clock()) {
 			    SMCR = (0<<SM1)|(0<<SM0)|(1<<SE); // Idle mode
             } else {
     			if (sleep_with_ADC) {
@@ -161,21 +161,20 @@ int main(void)
 			continue; // on most case we have only 1 task, iprove time to sleep
 		}
 
-        // update motor possition
-		if (task & TASK_MOTOR_TIMER) {
-			task&=~TASK_MOTOR_TIMER;
-			// faster mont contact test if motor runs
-            MOTOR_updateCalibration(mont_contact_pooling(),50);  //test
-			MOTOR_timer();
-			// continue; // on most case we have only 1 task, iprove time to sleep
-		}
-        // update motor possition
-
-		if (task & TASK_UPDATE_MOTOR_POS) {
-			task&=~TASK_UPDATE_MOTOR_POS;
-			MOTOR_update_pos();
+        // motor stop
+        if (task & TASK_MOTOR_STOP) {
+            task&=~TASK_MOTOR_STOP;
+            MOTOR_timer_stop();
 			continue; // on most case we have only 1 task, iprove time to sleep
-		}
+        }
+
+        // update motor possition
+        if (task & TASK_MOTOR_PULSE) {
+            task&=~TASK_MOTOR_PULSE;
+            MOTOR_updateCalibration(mont_contact_pooling(),valve_wanted);
+            MOTOR_timer_pulse();
+			continue; // on most case we have only 1 task, iprove time to sleep
+        }
 
 		//! check keyboard and set keyboards events
 		if (task & TASK_KB) {
@@ -258,7 +257,7 @@ void init(void)
     //! activate PCINT0 + PCINT1
     EIMSK = (1<<PCIE1)|(1<<PCIE0);
 
-    //! Initialize the RTC, pass pointer to timer callback function
+    //! Initialize the RTC
     RTC_Init();
 
     //! Initialize the motor

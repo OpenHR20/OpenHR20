@@ -40,8 +40,8 @@
 #define TASK_RTC		      2
 #define TASK_ADC		      4
 #define TASK_LCD		      8
-#define TASK_UPDATE_MOTOR_POS 16
-#define TASK_MOTOR_TIMER 	  32
+#define TASK_MOTOR_PULSE      16
+#define TASK_MOTOR_STOP 	  32
 #define TASK_COM			  64
 //#define TASK_			128
 

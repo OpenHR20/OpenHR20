@@ -64,3 +64,9 @@ extern uint16_t kb_events;
 void task_keyboard(void);
 void task_keyboard_long_press_detect(void);
 bool mont_contact_pooling(void);
+
+#define enable_mont_input() ( DDRB &= ~(1<<PB0), PORTB |= (1<<PB0) )
+#define disable_mont_input() ( PORTB &= ~(1<<PB0), DDRB |= (1<<PB0) )
+
+#define enable_rot2_input() ( DDRB &= ~(1<<PB6), PORTB |= (1<<PB6) )
+#define disable_rot2_input() ( PORTB &= ~(1<<PB6), DDRB |= (1<<PB6) )
