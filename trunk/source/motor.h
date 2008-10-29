@@ -37,20 +37,22 @@
 *****************************************************************************/
 
 // How is the H-Bridge connected to the AVR?
-#define MOTOR_HR20_PB4     PB4     //!< if PWM output != OC0A you have a problem
-#define MOTOR_HR20_PB4_P   PORTB   //!< Port for PWM output
-#define MOTOR_HR20_PB7     PB7     //!< change this for other hardware e.g. HR40
-#define MOTOR_HR20_PB7_P   PORTB   //!< change this for other hardware e.g. HR40
-#define MOTOR_HR20_PG3     PG3     //!< change this for other hardware e.g. HR40
-#define MOTOR_HR20_PG3_P   PORTG   //!< change this for other hardware e.g. HR40
-#define MOTOR_HR20_PG4     PG4     //!< change this for other hardware e.g. HR40
-#define MOTOR_HR20_PG4_P   PORTG   //!< change this for other hardware e.g. HR40
-
 #define MOTOR_HR20_PE3     PE3     //!< HR20: pin to activate photo eye
 #define MOTOR_HR20_PE3_P   PORTE   //!< HR20: port to activate photo eye
 
-#define MOTOR_HR20_PE_IN   PE4     //!< HR20: input pin from photo eye
-#define MOTOR_HR20_PE_IN_P PINE    //!< HR20: input port from photo eye
+static inline void MOTOR_H_BRIDGE_open(void) {
+   PORTG  =  (1<<PG4);   // PG3 LOW, PG4 HIGH
+   PORTB |=  (1<<PB7);   // PB7 HIGH
+}
+static inline void MOTOR_H_BRIDGE_close(void) {
+   PORTG  =  (1<<PG3);   // PG3 HIGH, PG4 LOW
+   PORTB &= ~(1<<PB7);   // PB7 LOW
+}
+static inline void MOTOR_H_BRIDGE_stop(void) {
+   PORTG  =  0;          // PG3 LOW, PG4 LOW
+   PORTB &= ~(1<<PB7);   // PB7 LOW
+}
+
 
 //! How many photoeye impulses maximal form one endposition to the other. <BR>
 //! The value measured on a HR20 are 737 to 740 = so more than 1000 should

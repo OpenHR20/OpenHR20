@@ -231,10 +231,9 @@ void init(void)
     DIDR0 = 0xFF;
 
     //! Power reduction mode
-    PRR = (1<<PRTIM1)|(1<<PRSPI);  
+    power_down_ADC();
 
     //! digital I/O port direction
-    DDRB = (1<<PB4)|(1<<PB7); // PB4, PB7 Motor out
     DDRG = (1<<PG3)|(1<<PG4); // PG3, PG4 Motor out
     DDRE = (1<<PE3)|(1<<PE2)|(1<<PE1);  // PE3  activate lighteye
     PORTE = 0x03;

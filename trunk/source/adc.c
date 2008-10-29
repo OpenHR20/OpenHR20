@@ -205,11 +205,11 @@ int16_t ADC_Convert_To_Degree(uint16_t adc)
  ******************************************************************************/
 void start_task_ADC(void) {
 	state_ADC=1;
-    // set reference
-    ADMUX = (1<<REFS0); //AVCC with external capacitor at AREF pin
+	// power up ADC
+	power_up_ADC();
 
     // set ADC control and status register
-    ADCSRA = (1<<ADEN)|(1<<ADPS2)|(1<<ADPS0)|(1<<ADIE);         // prescaler=32
+    ADCSRA = (1<<ADEN)|(1<<ADPS2)|(1<<ADIE);         // prescaler=16
     
     // free running mode, (not needed, because auto trigger disabled)
     ADCSRB = 0;
@@ -225,6 +225,8 @@ void start_task_ADC(void) {
 uint8_t task_ADC(void) {
 	switch (++state_ADC) {
 	case 2: //step 2
+	    // set ADC control and status register
+    	ADCSRA = (1<<ADEN)|(1<<ADPS2)|(1<<ADPS0)|(1<<ADIE); // prescaler=32
 		// ADC conversion from 1 (battery is done)
 		// first conversion put to trash
 		// start new with same configuration;
@@ -246,6 +248,8 @@ uint8_t task_ADC(void) {
     	ADC_ACT_TEMP_P &= ~(1<<ADC_ACT_TEMP);
 	    // set ADC control and status register / disable ADC
 	    ADCSRA = (0<<ADEN)|(1<<ADPS2)|(1<<ADPS0)|(1<<ADIE); 
+		// power down ADC
+		power_down_ADC();
 		break;
 	}
 	return sleep_with_ADC;

@@ -212,9 +212,7 @@ static void MOTOR_Control(motor_dir_t direction) {
         TIMSK0 = 0;                                     // disable interrupt
         PCMSK0 &= ~(1<<PCINT4);                         // disable interrupt
         MOTOR_HR20_PE3_P &= ~(1<<MOTOR_HR20_PE3);       // deactivate photo eye
-        // set all pins of H-Bridge to LOW
-        MOTOR_HR20_PG3_P &= ~((1<<MOTOR_HR20_PG3)||(1<<MOTOR_HR20_PG4)); // PG3,PG4 LOW
-        MOTOR_HR20_PB7_P &= ~(1<<MOTOR_HR20_PB7);       // PB7 LOW
+		MOTOR_H_BRIDGE_stop();
         // stop pwm signal
         TCCR0A = (1<<WGM00) | (1<<WGM01); // 0b 0000 0011
     } else {                                            // motor on
@@ -229,21 +227,16 @@ static void MOTOR_Control(motor_dir_t direction) {
             eye_timer = EYE_TIMER_NOISE_PROTECTION;
             TIMSK0 = (1<<TOIE0); //enable interrupt from timer0 overflow
             PCMSK0 |= (1<<PCINT4);  // enable interrupt from eye
-            // open
             if ( direction == close) {
                 // set pins of H-Bridge
-                MOTOR_HR20_PG3_P |=  (1<<MOTOR_HR20_PG3);   // PG3 HIGH
-                MOTOR_HR20_PG4_P &= ~(1<<MOTOR_HR20_PG4);   // PG4 LOW
-                MOTOR_HR20_PB7_P &= ~(1<<MOTOR_HR20_PB7);   // PB7 LOW
+                MOTOR_H_BRIDGE_close();
                 // set PWM non inverting mode
 	            OCR0A = config.motor_speed_close; // set pwm value
                 TCCR0A = (1<<WGM00) | (1<<WGM01) | (1<<COM0A1) | (1<<CS00);
             // close
             } else {
                 // set pins of H-Bridge
-                MOTOR_HR20_PG3_P &= ~(1<<MOTOR_HR20_PG3);   // PG3 LOW
-                MOTOR_HR20_PG4_P |=  (1<<MOTOR_HR20_PG4);   // PG4 HIGH
-                MOTOR_HR20_PB7_P |=  (1<<MOTOR_HR20_PB7);   // PB7 HIGH
+				MOTOR_H_BRIDGE_open();
                 // set PWM inverting mode
 	            OCR0A = config.motor_speed_open;  // set pwm value
                 TCCR0A=(1<<WGM00)|(1<<WGM01)|(1<<COM0A1)|(1<<COM0A0)|(1<<CS00);
@@ -366,7 +359,7 @@ ISR (TIMER0_OVF_vect){
         motor_timer--;
     } else {
         // motor fast STOP
-        MOTOR_HR20_PG3_P &= ~((1<<MOTOR_HR20_PG3)||(1<<MOTOR_HR20_PG4)); // PG3,PG4 LOW
+        MOTOR_H_BRIDGE_stop();
         // complete STOP will be done later
         task|=TASK_MOTOR_STOP;
     }
