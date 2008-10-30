@@ -67,7 +67,7 @@ uint16_t serialNumber;	//!< Unique serial number \todo move to CONFIG.H
 
 // prototypes 
 int main(void);                            // main with main loop
-void init(void);                           // init the whole thing
+static inline void init(void);                           // init the whole thing
 void load_defauls(void);                   // load default values
                                            // (later from eeprom using config.c)
 void callback_settemp(uint8_t);            // called from RTC to set new reftemp
@@ -215,7 +215,7 @@ int main(void)
  *******************************************************************************
  * Initializate all modules
  ******************************************************************************/
-void init(void)
+static inline void init(void)
 {
     //! Calibrate the internal RC Oszillator
     //! \todo test calibrate_rco();
