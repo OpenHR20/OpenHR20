@@ -589,6 +589,26 @@ void LCD_SetHourBarSeg(uint8_t seg, uint8_t mode)
     LCD_SetSeg(segment, mode);
 }
 
+/*!
+ *******************************************************************************
+ *  Set all segments of the hour-bar (ON/OFF) like bitmap
+ *
+ *  \note  You have to call \ref LCD_Update() to trigger update on LCD if not
+ *         it is triggered automatic at change of bitframe
+ *
+ *  \param bitmap of hour bar segment 0-23 (bit0 is segment0 etc.)
+ *  \note blink is not supported
+ ******************************************************************************/
+void LCD_HourBarBitmap(uint32_t bitmap)
+{
+    uint8_t i;
+    for (i=0;i<24;i++) {
+        uint8_t segment = pgm_read_byte(&LCD_SegHourBarOffsetTablePrgMem[i]);
+        LCD_SetSeg(segment, (((uint8_t)bitmap & 1)? LCD_MODE_ON : LCD_MODE_OFF ));
+        bitmap = bitmap>>1;
+    }
+}
+
 
 /*!
  *******************************************************************************

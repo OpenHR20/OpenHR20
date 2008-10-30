@@ -5,7 +5,8 @@ Version 1.0 BETA
 
     - window open function
     - Valve protection (CyCL)
-    - hourbar line
+    - hourbar line at timer setting
+    - mode indication symbols update 
     - "watched" variables in LCD service menu
     - default setting restore
     - improve doxygen comments

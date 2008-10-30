@@ -77,9 +77,7 @@ void LCD_PrintStringID(uint8_t id, uint8_t mode); // Print LCD string ID
 
 void LCD_SetSeg(uint8_t, uint8_t);         // Set one Segment (0-69) 
 void LCD_SetHourBarSeg(uint8_t, uint8_t);  // Set HBS (0-23) (Hour-Bar-Segment)
-void LCD_SetHourBarVal(uint8_t, uint8_t);  // Set only one (val) HBS
-void LCD_SetHourBarBat(uint8_t, uint8_t);  // Set all HBS from 0 to val (0-23)
-
+void LCD_HourBarBitmap(uint32_t bitmap);   // Set HBS like bitmap
 void task_lcd_update(void);
 
 #define  LCD_Update()  ((LCDCRA |= (1<<LCDIE)),(LCD_force_update=1))

@@ -35,4 +35,10 @@ extern uint8_t menu_auto_update_timeout;
 bool menu_controller(bool new_state); 
 void menu_view(bool update);
 
+extern uint32_t hourbar_buff;
+
+static inline void menu_update_hourbar(uint8_t dow) {
+    hourbar_buff = RTC_DowTimerGetHourBar(dow);
+}
+
  

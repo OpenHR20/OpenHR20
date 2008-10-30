@@ -43,6 +43,7 @@
 #include "eeprom.h"
 #include "debug.h"
 #include "controller.h"
+#include "menu.h"
 
 static uint8_t service_idx;
 
@@ -77,7 +78,7 @@ typedef enum {
 
 menu_t menu_state;
 static bool locked = false; 
-
+uint32_t hourbar_buff;
 
 /*!
  *******************************************************************************
@@ -261,6 +262,8 @@ bool menu_controller(bool new_state) {
             menu_set_slot=0;
             config.timer_mode = (menu_set_dow>0);
             eeprom_config_save((uint16_t)(&config.timer_mode)-(uint16_t)(&config)); // save value to eeprom
+            	// update hourbar
+        	menu_update_hourbar((config.timer_mode==1)?RTC_DOW:0);
             ret=true; 
         }
         if ( kb_events & KB_EVENT_AUTO ) { // exit without save
@@ -427,7 +430,7 @@ void menu_view(bool update) {
             clr_show1(LCD_SEG_COL1);
             LCD_PrintHexW(VERSION_N,LCD_MODE_ON);
         } 
-        break;
+        break; 
     case menu_set_year:
         if (update) LCD_AllSegments(LCD_MODE_OFF); // all segments off
         LCD_PrintDecW(RTC_GetYearYYYY(),LCD_MODE_BLINK_1);
@@ -439,12 +442,12 @@ void menu_view(bool update) {
         LCD_PrintDec(RTC_GetDay(), 2, ((menu_state==menu_set_day)?LCD_MODE_BLINK_1:LCD_MODE_ON));
        break;
     case menu_set_hour:
-    case menu_set_minute:
+    case menu_set_minute: 
     case menu_home4: // time
         if (update) clr_show2(LCD_SEG_COL1,LCD_SEG_COL2);
         LCD_PrintDec(RTC_GetHour(), 2, ((menu_state == menu_set_hour) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));
         LCD_PrintDec(RTC_GetMinute(), 0, ((menu_state == menu_set_minute) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));
-       break;
+       break;                                                               
     case menu_home: // wanted temp, status / TODO
         if (update) clr_show1(LCD_SEG_BAR24);
         //! \todo update "hourbar" status from chache
@@ -452,7 +455,7 @@ void menu_view(bool update) {
         //! \note hourbar status calculation is complex we don't want calculate it every view, use chache
         LCD_SetSeg(LCD_SEG_AUTO, (CTL_test_auto()?LCD_MODE_ON:LCD_MODE_OFF));
         LCD_SetSeg(LCD_SEG_MANU, (CTL_mode_auto?LCD_MODE_OFF:LCD_MODE_ON));
-        LCD_SetHourBarSeg(1, LCD_MODE_OFF); //just test TODO
+        LCD_HourBarBitmap(hourbar_buff);
         if (CTL_error==0) {
             LCD_PrintTemp(CTL_temp_wanted,LCD_MODE_ON);
         } else {
@@ -483,7 +486,7 @@ void menu_view(bool update) {
                 LCD_PrintStringID(LCD_STRING_minusCminus,LCD_MODE_ON);
             }
         }
-        break;
+        break;                                                             
     case menu_set_timmer_dow:
         if (update) clr_show1(LCD_SEG_PROG); // all segments off
         LCD_PrintDayOfWeek(menu_set_dow, LCD_MODE_BLINK_1);
@@ -498,7 +501,7 @@ void menu_view(bool update) {
             LCD_PrintStringID(LCD_STRING_4xminus,LCD_MODE_BLINK_1);
         }
         show_selected_temperature_type(menu_set_mode,LCD_MODE_BLINK_1);
-        break;
+        break;                                                             
     case menu_lock:        // "bloc" message
         if (update) LCD_AllSegments(LCD_MODE_OFF); // all segments off
         LCD_PrintStringID(LCD_STRING_bloc,LCD_MODE_ON);
@@ -517,7 +520,7 @@ void menu_view(bool update) {
         if (update) clr_show1(LCD_SEG_COL1);           // decimal point
         LCD_PrintTemp(menu_set_temp,LCD_MODE_BLINK_1);
         show_selected_temperature_type(menu_state-menu_preset_temp0,LCD_MODE_ON);
-        break;
+        break;                                                             
     default:
 	case menu_empty: // show temperature
         if (update) clr_show1(LCD_SEG_COL1);           // decimal point

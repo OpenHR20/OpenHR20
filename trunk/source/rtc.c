@@ -46,6 +46,7 @@
 #include "rtc.h"
 #include "task.h"
 #include "eeprom.h"
+#include "menu.h"
 
 // Vars
 
@@ -258,7 +259,7 @@ static int8_t RTC_DowTimerGetIndex(uint8_t dow,uint16_t time_minutes, bool exact
     maxtime=0;
     index = -1;
     // each timer until time_minutes
-    for (i=1; i<RTC_TIMERS_PER_DOW; i++){
+    for (i=0; i<RTC_TIMERS_PER_DOW; i++){
         // check if timer > maxtime and timer < actual time
         uint16_t table_time = eeprom_timers_read(dow,i) & 0x0fff;
         if ((table_time > maxtime) && 
@@ -268,6 +269,38 @@ static int8_t RTC_DowTimerGetIndex(uint8_t dow,uint16_t time_minutes, bool exact
         }
     }
     return index;
+}
+/*!
+ *******************************************************************************
+ *
+ *  get bour bar bitmap for DOW
+ *
+ *  \returns bitmap
+ *  
+ *  \note battery expensive function, use buffer for result  
+ *
+ ******************************************************************************/
+int32_t RTC_DowTimerGetHourBar(uint8_t dow) {
+    int16_t time=24*60;
+    uint8_t bar_pos=23;
+    uint32_t bitmap=0;
+    
+    while(time>0) {
+        int8_t idx=RTC_DowTimerGetIndex(dow, time, false);
+        uint16_t table_time = ((idx >= 0) ? eeprom_timers_read(dow,idx) : 0);
+        uint8_t bit = ((table_time & 0x3000) >= 0x2000);
+        time = (table_time&0xfff) -1;
+        {
+            bitmap |= bit;
+            //while (((int16_t)(23-bar_pos))*60 > time) {            
+            while (bar_pos > (int8_t)(time/60)) {            
+	            bitmap |= bit;
+                bitmap = (bitmap<<1);
+                bar_pos--; 
+            }
+        }
+    }
+    return bitmap;
 }
 
 /*!
@@ -378,6 +411,8 @@ void RTC_AddOneDay(void)
     RTC_DOW++;
     RTC_DOW %= 7;
 	}
+	// update hourbar
+	menu_update_hourbar((config.timer_mode==1)?RTC_DOW:0);
 }
 
 
@@ -460,6 +495,8 @@ void RTC_SetDayOfWeek(void)
     tmp_dow = RTC_YY + ((RTC_YY-1) / 4) - ((RTC_YY-1) / 100) + day_of_year;
     // set DOW
     RTC_DOW = (uint8_t) ((tmp_dow + 5) % 7) +1;
+    
+   	menu_update_hourbar((config.timer_mode==1)?RTC_DOW:0);    
 }
 #if 0
 /*!

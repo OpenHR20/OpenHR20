@@ -97,6 +97,7 @@ void RTC_SetYear(int8_t);                     // Set year
 bool RTC_DowTimerSet(rtc_dow_t, uint8_t, uint16_t, timermode_t timermode); // set day of week timer
 uint16_t RTC_DowTimerGet(rtc_dow_t dow, uint8_t slot, timermode_t *timermode);
 uint8_t RTC_ActualTimerTemperature(bool exact);
+int32_t RTC_DowTimerGetHourBar(uint8_t dow);
 bool RTC_AddOneSecond(void);
 
 #if	HAS_CALIBRATE_RCO
