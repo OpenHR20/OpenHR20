@@ -58,13 +58,16 @@
 
 
 // vars
-static volatile int16_t MOTOR_PosAct;      //!< actual position
-static int16_t MOTOR_PosMax;      /*!< position if complete open (100%) <BR>
+static volatile int16_t MOTOR_PosAct=0;      //!< actual position
+int16_t MOTOR_PosMax=0;      /*!< position if complete open (100%) <BR>
                                           0 if not calibrated */
+
+//static int16_t MOTOR_ManuCalibration=0;
+
 static volatile int16_t MOTOR_PosStop;     //!< stop at this position
 static volatile motor_dir_t MOTOR_Dir;          //!< actual direction
 // bool MOTOR_Mounted;         //!< mountstatus true: if valve is mounted
-static int8_t MOTOR_calibration_step=-2; // not calibrated
+int8_t MOTOR_calibration_step=-2; // not calibrated
 volatile uint16_t motor_diag = 0;
 
 #define MOTOR_RUN_OVERLOAD (3*256)
@@ -80,38 +83,51 @@ static uint8_t MOTOR_wait_for_new_calibration = 5;
 // eye_timer is noise canceler for eye input / improve accuracy
 static volatile uint8_t eye_timer=0; 
 
-
 /*!
  *******************************************************************************
  *  Reset calibration data
  *
+ *  \param cal_type 0 = unmounted
+ *  \param cal_type 1 = 
+ *  \param cal_type 2 = switch to manual  
+ *  \param cal_type 3 = switch to auto  
  *  \note
  *  - must be called if the motor is unmounted
  ******************************************************************************/
-void MOTOR_updateCalibration(bool unmounted, uint8_t percent)
+void MOTOR_updateCalibration(uint8_t cal_type, uint8_t percent)
 {
-    if (unmounted) {
+    if (cal_type == 0) {
         MOTOR_Control(stop);       // stop motor
         MOTOR_PosAct=0;                  // not calibrated
         MOTOR_PosMax=0;                  // not calibrated
-        MOTOR_PosStop=0;                 // not calibrated
         MOTOR_calibration_step=-2;     // not calibrated
         MOTOR_wait_for_new_calibration = 5;
     } else {
         if (MOTOR_wait_for_new_calibration != 0) {
             MOTOR_wait_for_new_calibration--;
         } else {
-            if (MOTOR_calibration_step==-2) {
-                MOTOR_PosAct=0;                  // not calibrated
-                MOTOR_PosMax=0;                  // not calibrated
-                if (percent > 50) {
+            if ((MOTOR_calibration_step==1) || (MOTOR_calibration_step==2)) {
+                MOTOR_calibration_step+=2;
+                if ((MOTOR_ManuCalibration==-1) && (percent > 50)) { 
                     MOTOR_PosStop= -MOTOR_MAX_IMPULSES;
                     MOTOR_Control(close);
                 } else {
                     MOTOR_PosStop= +MOTOR_MAX_IMPULSES;
                     MOTOR_Control(open);
                 }
-                MOTOR_calibration_step=1;
+            }
+        }
+        if (MOTOR_calibration_step==-2) {
+            if (cal_type == 3) {
+                MOTOR_ManuCalibration=-1;               // not calibrated
+                eeprom_config_save((uint16_t)(&config.MOTOR_ManuCalibration_L)-(uint16_t)(&config));
+                eeprom_config_save((uint16_t)(&config.MOTOR_ManuCalibration_H)-(uint16_t)(&config));
+            }  else if (cal_type == 2) { 
+                MOTOR_ManuCalibration=0;               // not calibrated
+            }
+            MOTOR_calibration_step=1;
+            if (MOTOR_ManuCalibration>=0) {
+                MOTOR_calibration_step++;
             }
         }
     }
@@ -279,25 +295,36 @@ void MOTOR_timer_stop(void) {
         if (d == open) { // stopped on end
             {
                 int16_t a = MOTOR_PosAct; // volatile variable optimization
-                MOTOR_PosMax = a; // recalibrate it on the end
-                if (MOTOR_calibration_step == 1) {
+                if (MOTOR_ManuCalibration<=0) {
+                    MOTOR_PosMax = a; // recalibrate it on the end
+                    if ((MOTOR_ManuCalibration==0) && (MOTOR_PosMax>=MOTOR_MIN_IMPULSES)) {
+                        MOTOR_ManuCalibration = a;
+                        eeprom_config_save((uint16_t)(&config.MOTOR_ManuCalibration_L)-(uint16_t)(&config));
+                        eeprom_config_save((uint16_t)(&config.MOTOR_ManuCalibration_H)-(uint16_t)(&config));
+                    }                        
+                } else { // manual calibration done
+                    MOTOR_PosMax = ( MOTOR_PosAct = MOTOR_ManuCalibration );
+                }
+                if (MOTOR_calibration_step == 3) {
                     MOTOR_Control(close);
                     MOTOR_PosStop= a-MOTOR_MAX_IMPULSES;
-                    MOTOR_calibration_step = 2;
-                } else if (MOTOR_calibration_step == 2) {
+                    MOTOR_calibration_step = 4;
+                } else if (MOTOR_calibration_step == 4) {
                     MOTOR_calibration_step = 0;     // calibration DONE
                 }
             }
         } else if (d == close) { // stopped on end
             {
                 int16_t a = MOTOR_PosAct; // volatile variable optimization
-                MOTOR_PosMax -= a; // recalibrate it on the end
+                if (MOTOR_ManuCalibration<0) {
+                    MOTOR_PosMax -= a; // recalibrate it on the end
+                }
                 MOTOR_PosAct = 0;
-                if (MOTOR_calibration_step == 1) {
+                if (MOTOR_calibration_step == 3) {
                     MOTOR_PosStop= a+MOTOR_MAX_IMPULSES;
                     MOTOR_Control(open);
-                    MOTOR_calibration_step = 2;
-                } else if (MOTOR_calibration_step == 2) {
+                    MOTOR_calibration_step = 4;
+                } else if (MOTOR_calibration_step == 4) {
                     MOTOR_calibration_step = 0;     // calibration DONE
                 }
             }

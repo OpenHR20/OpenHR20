@@ -8,3 +8,4 @@ version 1.00BETA will be released soon
     - measure motor speed
     - improve power management (switch off unused parts)
     - hourbar line
+    - add manual valve configuration

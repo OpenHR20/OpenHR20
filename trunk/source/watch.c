@@ -45,6 +45,7 @@
 #define B16 0x8000
 #define B_MASK 0x8000
 
+int16_t MOTOR_PosMax;
 
 
 static uint16_t watch_map[] PROGMEM = {
@@ -55,7 +56,8 @@ static uint16_t watch_map[] PROGMEM = {
 	/* 04 */ ((uint16_t) &CTL_temp_wanted) + B8,
 	/* 05 */ ((uint16_t) &CTL_temp_wanted_last) +B8,
 	/* 06 */ ((uint16_t) &CTL_temp_auto) +B8,
-	/* 07 */ ((uint16_t) &motor_diag) + B16
+	/* 07 */ ((uint16_t) &motor_diag) + B16,
+	/* 08 */ ((uint16_t) &MOTOR_PosMax) + B16,
 };
 
 

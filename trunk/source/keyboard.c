@@ -189,18 +189,21 @@ bool mont_contact_pooling(void){
     // crazy oder of instructions, bud we need any instructions
     // between PORTB setting and reading PINB due to AVR design
     #if DEBUG_IGNORE_MONT_CONTACT==1
-        mont_contact=false;
+        mont_contact= 1;
     #else
-        mont_contact = ~PINB & KBI_MONT;
+        mont_contact = ~PINB & (KBI_MONT | KBI_PROG | KBI_C);
     #endif
       // low active
     disable_mont_input();
-    if (mont_contact) { 
+    if (mont_contact & KBI_MONT) { 
         CTL_error |=  CTL_ERR_MONTAGE;
+        return 0;
     } else {
         CTL_error &= ~CTL_ERR_MONTAGE;
+        if (mont_contact & KBI_C) return 2;
+        if (mont_contact & KBI_PROG) return 3;
+        return 1;
     }
-    return mont_contact;
 }
 
 

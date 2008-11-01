@@ -116,23 +116,23 @@ static bool events_common(void) {
             menu_state = menu_service1;
             kb_events = 0;
             service_idx = 0;
-            eeprom_config_init(); //return to saved values
+//            eeprom_config_init(); //return to saved values
             ret=true;
         } else if ( kb_events & KB_EVENT_AUTO_LONG ) {
     		menu_state=menu_set_year;
-            eeprom_config_init(); //return to saved values
+//            eeprom_config_init(); //return to saved values
             ret=true; 
         } else if ( kb_events & KB_EVENT_PROG_LONG ) {
 			menu_state=menu_set_timmer_dow_start;
-            eeprom_config_init(); //return to saved values
+//            eeprom_config_init(); //return to saved values
             ret=true; 
         } else if ( kb_events & KB_EVENT_NONE_LONG ) {
             menu_state=menu_home; // retun to main home screen
-            eeprom_config_init(); //return to saved values
+//            eeprom_config_init(); //return to saved values
             ret=true;
         } else if ( kb_events & KB_EVENT_C_LONG ) {
             menu_state=menu_preset_temp0; 
-            eeprom_config_init(); //return to saved values
+//            eeprom_config_init(); //return to saved values
             ret=true;
         }
 
@@ -460,17 +460,22 @@ void menu_view(bool update) {
         LCD_SetSeg(LCD_SEG_AUTO, (CTL_test_auto()?LCD_MODE_ON:LCD_MODE_OFF));
         LCD_SetSeg(LCD_SEG_MANU, (CTL_mode_auto?LCD_MODE_OFF:LCD_MODE_ON));
         LCD_HourBarBitmap(hourbar_buff);
-        if (CTL_error==0) {
-            LCD_PrintTemp(CTL_temp_wanted,LCD_MODE_ON);
+        if (MOTOR_calibration_step>0) {
+            LCD_PrintStringID(LCD_STRING_Ad,LCD_MODE_ON);
+            LCD_PrintDec(MOTOR_calibration_step, 0, LCD_MODE_ON);
         } else {
-            if (CTL_error & CTL_ERR_BATT_LOW) {
-                LCD_PrintStringID(LCD_STRING_BAtt,LCD_MODE_BLINK_1);
-            } else if (CTL_error & CTL_ERR_MONTAGE) {
-                LCD_PrintStringID(LCD_STRING_E2,LCD_MODE_ON);
-            } else if (CTL_error & CTL_ERR_MOTOR) {
-                LCD_PrintStringID(LCD_STRING_E3,LCD_MODE_ON);
-            } else if (CTL_error & CTL_ERR_BATT_WARNING) {
-                LCD_PrintStringID(LCD_STRING_BAtt,LCD_MODE_ON);
+            if (CTL_error==0) {
+                LCD_PrintTemp(CTL_temp_wanted,LCD_MODE_ON);
+            } else {
+                if (CTL_error & CTL_ERR_BATT_LOW) {
+                    LCD_PrintStringID(LCD_STRING_BAtt,LCD_MODE_BLINK_1);
+                } else if (CTL_error & CTL_ERR_MONTAGE) {
+                    LCD_PrintStringID(LCD_STRING_E2,LCD_MODE_ON);
+                } else if (CTL_error & CTL_ERR_MOTOR) {
+                    LCD_PrintStringID(LCD_STRING_E3,LCD_MODE_ON);
+                } else if (CTL_error & CTL_ERR_BATT_WARNING) {
+                    LCD_PrintStringID(LCD_STRING_BAtt,LCD_MODE_ON);
+                }
             }
         }
        break;

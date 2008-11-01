@@ -79,7 +79,7 @@ bool MOTOR_Goto(uint8_t);                     // Goto position in percent
 bool MOTOR_On(void);                          // is motor on
 void MOTOR_Calibrate(uint8_t percent);        // calibrate the motor
 bool MOTOR_IsCalibrated(void);                // is motor successful calibrated?
-void MOTOR_updateCalibration(bool unmounted, uint8_t percent);            // reset the calibration 
+void MOTOR_updateCalibration(uint8_t cal_type, uint8_t percent);            // reset the calibration 
 void MOTOR_SetMountStatus(bool);     // set status if is mounted or not
 uint8_t MOTOR_GetPosPercent(void);  // get percental position of motor (0-100%)
 void MOTOR_timer_stop(void);
@@ -88,4 +88,5 @@ void MOTOR_timer_pulse(void);
 #define timer0_need_clock() (TCCR0A & ((1<<CS02)|(1<<CS01)|(1<<CS00)))
 
 extern volatile uint16_t motor_diag;
+extern int8_t MOTOR_calibration_step;
 

@@ -51,8 +51,8 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
         /*! TODO: describe  motor_protection and motor_hysteresis better, picture wanted */
     /* 0d */ uint8_t motor_protection;  //!< defines area for regulation valve as valve range - 2*motor_protection (1* on bottom 1* on top)
     /* 0e */ uint8_t motor_hysteresis; //!< additional impulses for 0 or 100% relative to area for regulation
-	/* 0f */ uint8_t motor_reserved1;
-	/* 10 */ uint8_t motor_reserved2;
+	/* 0f */ uint8_t MOTOR_ManuCalibration_L;
+	/* 10 */ uint8_t MOTOR_ManuCalibration_H;
 	/* 11 */ uint8_t temp_cal_table0; //!< temperature calibration table
 	/* 12 */ uint8_t temp_cal_table1; //!< temperature calibration table
 	/* 13 */ uint8_t temp_cal_table2; //!< temperature calibration table
@@ -141,8 +141,8 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 0c */  {20,         20,        6,      120},   //!< motor_run_timeout (unit 61Hz timer ticks); !!signed value => max is 127!!    
   /* 0d */  {15,         15,        0,      120},   //!< motor_protection
   /* 0e */  {10,         10,        0,      120},   //!< additional impulses for 0 or 100%
-  /* 0f */  {1,           1,        0,        1},   //!< motor_reserved1
-  /* 10 */  {1,           1,        0,        1},   //!< motor_reserved2
+  /* 0f */  {255,       255,        0,      255},   //!< manual calibration L
+  /* 10 */  {255,       255,        0,      255},   //!< manual calibration H
   /* 11 */  {295-TEMP_CAL_OFFSET,295-TEMP_CAL_OFFSET, 0,        255},   //!< value for 35C => 295 temperature calibration table 
   /* 12 */  {340-295,340-295,      16,      255},   //!< value for 30C => 340 temperature calibration table
   /* 13 */  {397-340,397-340,      16,      255},   //!< value for 25C => 397 temperature calibration table
@@ -186,3 +186,5 @@ extern uint16_t timmers_patch_data;
 #define config_default(i) (config_read((i), CONFIG_DEFAULT))
 #define config_min(i) (config_read((i), CONFIG_MIN))
 #define config_max(i) (config_read((i), CONFIG_MAX))
+
+#define MOTOR_ManuCalibration (*((int16_t *)(&config.MOTOR_ManuCalibration_L)))
