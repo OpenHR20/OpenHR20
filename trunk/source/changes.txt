@@ -7,3 +7,4 @@ version 1.00BETA will be released soon
     - setting for program temperatures via LCD
     - measure motor speed
     - improve power management (switch off unused parts)
+    - hourbar line

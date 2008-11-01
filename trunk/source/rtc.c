@@ -234,7 +234,7 @@ bool RTC_DowTimerSet(rtc_dow_t dow, uint8_t slot, uint16_t time, timermode_t tim
 uint16_t RTC_DowTimerGet(rtc_dow_t dow, uint8_t slot, timermode_t *timermode)
 {
     // to table format see to \ref ee_timers
-    uint16_t raw=eeprom_timers_read(dow,slot);
+    uint16_t raw=eeprom_timers_read_raw(timers_get_raw_index(dow,slot));
     *timermode = (timermode_t) (raw >> 12);
     return raw & 0xfff;
 }
@@ -242,34 +242,46 @@ uint16_t RTC_DowTimerGet(rtc_dow_t dow, uint8_t slot, timermode_t *timermode)
 /*!
  *******************************************************************************
  *
- *  get actual timer index
+ *  get timer for dow and time
+ *  
+ *  \param exact=true time must be equal  
+ *  \param dow - day if week
+ *  \param time - time in minutes   
  *
- *  \returns timerslot index
- *
- *  \note
- *       what is the last occured timer index
- *       needed to calculate the actual valid timer index
+ *  \returns  index of timer
  *
  ******************************************************************************/
-static int8_t RTC_DowTimerGetIndex(uint8_t dow,uint16_t time_minutes, bool exact)
-{
+
+static uint8_t RTC_FindTimerRawIndex(uint8_t dow,uint16_t time_minutes) {
+    
+    uint8_t search_timers=(dow>0)?8:2;
+    int8_t raw_index=-1;
     uint8_t i;
-    int8_t index;
-    uint16_t maxtime;
-    maxtime=0;
-    index = -1;
-    // each timer until time_minutes
-    for (i=0; i<RTC_TIMERS_PER_DOW; i++){
-        // check if timer > maxtime and timer < actual time
-        uint16_t table_time = eeprom_timers_read(dow,i) & 0x0fff;
-        if ((table_time > maxtime) && 
-            (((table_time < time_minutes) && !exact) || (table_time == time_minutes))) {
-            maxtime = table_time;
-            index=i;
+    for (i=0;i<search_timers;i++) {
+        {
+            uint8_t idx_raw = timers_get_raw_index(dow,0);
+            uint8_t stop = idx_raw+RTC_TIMERS_PER_DOW;
+            uint16_t maxtime=0;   
+            // each timer until time_minutes
+            for (; idx_raw<stop; idx_raw++){
+                // check if timer > maxtime and timer <= actual time
+                uint16_t table_time = eeprom_timers_read_raw(idx_raw) & 0x0fff;
+                if (table_time>=24*60) continue;
+                if ((table_time >= maxtime) && (table_time <= time_minutes)) {
+                    maxtime = table_time;
+                    raw_index=idx_raw;
+                }
+            }
         }
+        if (raw_index>=0) {
+            break;
+        }
+        if (dow>0) dow=(dow+(7-2))%7+1;            
+        time_minutes=24*60;
     }
-    return index;
+    return raw_index;    
 }
+
 /*!
  *******************************************************************************
  *
@@ -282,25 +294,27 @@ static int8_t RTC_DowTimerGetIndex(uint8_t dow,uint16_t time_minutes, bool exact
  ******************************************************************************/
 int32_t RTC_DowTimerGetHourBar(uint8_t dow) {
     int16_t time=24*60;
-    uint8_t bar_pos=23;
+    int8_t bar_pos=23;
     uint32_t bitmap=0;
     
     while(time>0) {
-        int8_t idx=RTC_DowTimerGetIndex(dow, time, false);
-        uint16_t table_time = ((idx >= 0) ? eeprom_timers_read(dow,idx) : 0);
-        uint8_t bit = ((table_time & 0x3000) >= 0x2000);
-        time = (table_time&0xfff) -1;
+        int8_t raw_idx=RTC_FindTimerRawIndex(dow, time);
+        uint16_t table_time = ((raw_idx >= 0) ? eeprom_timers_read_raw(raw_idx) : 0);
+        bool bit = ((table_time & 0x3000) >= 0x2000);
+        if ((table_time&0xfff) < time) {
+            time = (table_time&0xfff)-1;
+        } else {
+            time = -1;
+        }
         {
-            bitmap |= bit;
-            //while (((int16_t)(23-bar_pos))*60 > time) {            
-            while (bar_pos > (int8_t)(time/60)) {            
-	            bitmap |= bit;
-                bitmap = (bitmap<<1);
+            while (((int16_t)(bar_pos))*60 > time) {            
+	            if (bit) bitmap |= 1;
+                if (bar_pos>0) bitmap = (bitmap<<1);
                 bar_pos--; 
             }
         }
     }
-    return bitmap;
+    return bitmap;  
 }
 
 /*!
@@ -317,22 +331,14 @@ int32_t RTC_DowTimerGetHourBar(uint8_t dow) {
 uint8_t RTC_ActualTimerTemperature(bool exact) {
     uint16_t minutes=RTC_hh*60 + RTC_mm;
     int8_t dow=((config.timer_mode==1)?RTC_DOW:0);
-    int8_t index=RTC_DowTimerGetIndex(dow,minutes,exact);
-    
-    if ((index<0) && ! exact) {
-        uint8_t i;
-        uint8_t search_timers=(config.timer_mode==1)?7:1;
-        for (i=0;i<search_timers;i--) {
-            if (config.timer_mode==1) dow=(dow+7-2)%7+1;            
-            index=RTC_DowTimerGetIndex(dow,24*60,exact);
-            if (index>=0) {
-                break;
-            }
-        }
+    int8_t raw_index=RTC_FindTimerRawIndex(dow,minutes);
+    uint16_t data = eeprom_timers_read_raw(raw_index);
+    if (raw_index<0) return 0; //not found
+    if (exact) {
+        if ((data&0xfff) != minutes) return 0;
+        if ((raw_index/RTC_TIMERS_PER_DOW) != dow) return 0;
     }
-    
-    if (index<0) return 0; //not found
-    else return temperature_table[(eeprom_timers_read(dow,index) & 0x3000) >> 12];
+    return temperature_table[(data >> 12) & 3];
 }
 
 /*!

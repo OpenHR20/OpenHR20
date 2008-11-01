@@ -402,7 +402,8 @@ void COM_commad_parse (void) {
 				CTL_update_temp_auto();
 			}
             print_idx(c);
-			print_hexXXXX(eeprom_timers_read((com_hex[0]>>4),(com_hex[0]&0xf)));
+			print_hexXXXX(eeprom_timers_read_raw(
+                timers_get_raw_index((com_hex[0]>>4),(com_hex[0]&0xf))));
 			break;
 		case 'Y':
 			if (COM_hex_parse(3*2)!='\0') { break; }

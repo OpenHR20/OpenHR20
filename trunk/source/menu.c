@@ -69,7 +69,7 @@ typedef enum {
     menu_set_year, menu_set_month, menu_set_day, menu_set_hour, menu_set_minute,
 
     // datetime setting
-    menu_set_timmer_dow, menu_set_timmer,
+    menu_set_timmer_dow_start, menu_set_timmer_dow, menu_set_timmer,
     
     
     
@@ -123,7 +123,7 @@ static bool events_common(void) {
             eeprom_config_init(); //return to saved values
             ret=true; 
         } else if ( kb_events & KB_EVENT_PROG_LONG ) {
-			menu_state=menu_set_timmer_dow;
+			menu_state=menu_set_timmer_dow_start;
             eeprom_config_init(); //return to saved values
             ret=true; 
         } else if ( kb_events & KB_EVENT_NONE_LONG ) {
@@ -254,8 +254,11 @@ bool menu_controller(bool new_state) {
             // TODO ....  
         } 
         break;
-    case menu_set_timmer_dow:
+    case menu_set_timmer_dow_start:
         if (new_state) menu_set_dow=((config.timer_mode==1)?RTC_GetDayOfWeek():0);
+        menu_state = menu_set_timmer_dow;
+        // do not use break here
+    case menu_set_timmer_dow:
 		if (wheel != 0) menu_set_dow=(menu_set_dow+wheel+8)%8;
         if ( kb_events & KB_EVENT_PROG ) {
             menu_state=menu_set_timmer;
@@ -285,10 +288,11 @@ bool menu_controller(bool new_state) {
         if ( kb_events & KB_EVENT_PROG ) {
             RTC_DowTimerSet(menu_set_dow, menu_set_slot, menu_set_time, menu_set_mode);
             if (++menu_set_slot>=RTC_TIMERS_PER_DOW) {
-                if (menu_set_dow!=0) menu_set_dow=menu_set_timmer_dow%7+1; 
+                if (menu_set_dow!=0) menu_set_dow=menu_set_dow%7+1; 
                 menu_state=menu_set_timmer_dow;
             }
             CTL_update_temp_auto();
+        	menu_update_hourbar((config.timer_mode==1)?RTC_DOW:0);
             ret=true; 
         }
         if ( kb_events & KB_EVENT_AUTO ) { // exit without save
@@ -493,7 +497,13 @@ void menu_view(bool update) {
         break;
     case menu_set_timmer:
         //! \todo calculate "hourbar" status, actual position in mode LCD_MODE_BLINK_1
+        
         if (update) clr_show3(LCD_SEG_COL1,LCD_SEG_COL2,LCD_SEG_PROG);
+        timmers_patch_offset=timers_get_raw_index(menu_set_dow, menu_set_slot);
+        timmers_patch_data = menu_set_time +  ((uint16_t)menu_set_mode<<12);
+        LCD_HourBarBitmap(RTC_DowTimerGetHourBar(menu_set_dow));
+        timmers_patch_offset=0xff;
+        LCD_SetHourBarSeg(menu_set_time/60, LCD_MODE_BLINK_1);
         if (menu_set_time < 24*60) {
             LCD_PrintDec(menu_set_time/60, 2, LCD_MODE_BLINK_1);
             LCD_PrintDec(menu_set_time%60, 0, LCD_MODE_BLINK_1);        

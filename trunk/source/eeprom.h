@@ -166,10 +166,12 @@ void eeprom_config_init(void);
 void eeprom_config_save(uint8_t idx);
 
 uint16_t eeprom_timers_read_raw(uint16_t offset);
-#define eeprom_timers_read(dow,slot) (eeprom_timers_read_raw((dow*RTC_TIMERS_PER_DOW+slot)*sizeof(ee_timers[0][0])))
+#define timers_get_raw_index(dow,slot) (dow*RTC_TIMERS_PER_DOW+slot)
 void eeprom_timers_write_raw(uint16_t offset, uint16_t value);
-#define eeprom_timers_write(dow,slot,value) (eeprom_timers_write_raw((dow*RTC_TIMERS_PER_DOW+slot)*sizeof(ee_timers[0][0]),value))
+#define eeprom_timers_write(dow,slot,value) (eeprom_timers_write_raw((dow*RTC_TIMERS_PER_DOW+slot),value))
 
+extern uint8_t  timmers_patch_offset;
+extern uint16_t timmers_patch_data;
 
 
 #define CONFIG_VALUE 0
