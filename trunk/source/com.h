@@ -38,7 +38,7 @@ void COM_rx_char_isr(char c);
 
 void COM_init(void);
 
-void COM_print_debug(uint8_t logtype);
+void COM_print_debug(int8_t valve);
 
 void COM_commad_parse (void);
 

@@ -262,7 +262,7 @@ static inline void init(void)
     //! Initialize the motor
     MOTOR_Init();
 
-    eeprom_config_init();
+    eeprom_config_init((~PINB & (KBI_PROG | KBI_C | KBI_AUTO))==(KBI_PROG | KBI_C | KBI_AUTO));
 
     //1 Initialize the LCD
     LCD_Init();

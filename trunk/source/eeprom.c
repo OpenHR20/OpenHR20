@@ -118,16 +118,21 @@ static void EEPROM_write(uint16_t address, uint8_t data) {
  *  \note
  ******************************************************************************/
 
-void eeprom_config_init(void) {
+void eeprom_config_init(bool restore_default) {
 	
 	uint16_t i;
 	uint8_t *config_ptr = config_raw;
 	for (i=0;i<CONFIG_RAW_SIZE;i++) {
-		*config_ptr =  config_value(i);
-		if ((*config_ptr < config_min(i)) //min
-		 || (*config_ptr > config_max(i))) { //max
-			*config_ptr = config_default(i); // default value
-		}
+	    if (restore_default) {
+   		   *config_ptr = config_default(i); // default value
+   	    } else {
+   		   *config_ptr =  config_value(i);
+    		if ((*config_ptr < config_min(i)) //min
+    		 || (*config_ptr > config_max(i))) { //max
+    			*config_ptr = config_default(i); // default value
+    		}
+        }
+		eeprom_config_save(config_ptr); // update if default value is restored
 		config_ptr++;
 	}
 }

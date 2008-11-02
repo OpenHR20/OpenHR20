@@ -249,7 +249,7 @@ void COM_init(void) {
  *
  *  \note
  ******************************************************************************/
-void COM_print_debug(uint8_t logtype) {
+void COM_print_debug(int8_t valve) {
 	print_s_p(PSTR("D: "));
     print_hexXX(RTC_GetDayOfWeek()+0xd0);
 	COM_putchar(' ');
@@ -265,7 +265,7 @@ void COM_print_debug(uint8_t logtype) {
 	COM_putchar(':');
 	print_decXX(RTC_GetSecond());
 	print_s_p(PSTR(" V: "));
-	print_decXX(valve_wanted); // or MOTOR_GetPosPercent()
+	print_decXX( (valve>=0) ? valve : valve_wanted);
 	print_s_p(PSTR(" I: "));
 	print_decXXXX(temp_average);
 	print_s_p(PSTR(" S: "));
@@ -280,7 +280,7 @@ void COM_print_debug(uint8_t logtype) {
 		print_s_p(PSTR(" E:"));
         print_hexXX(CTL_error);
     }
-	if (logtype!=0) {
+	if (valve<0) {
 		print_s_p(PSTR(" X"));
 	}
 	COM_putchar('\n');
@@ -368,7 +368,7 @@ void COM_commad_parse (void) {
 			c='\0';
 			break;
 		case 'D':
-			if (COM_getchar()=='\n') COM_print_debug(1);
+			if (COM_getchar()=='\n') COM_print_debug(-1);
 			c='\0';
 			break;
 		case 'T':
@@ -408,7 +408,7 @@ void COM_commad_parse (void) {
 		case 'Y':
 			if (COM_hex_parse(3*2)!='\0') { break; }
 			RTC_SetDate(com_hex[2],com_hex[1],com_hex[0]);
-			COM_print_debug(1);
+			COM_print_debug(-1);
 			c='\0';
 			break;
 		case 'H':
@@ -416,7 +416,7 @@ void COM_commad_parse (void) {
 			RTC_SetHour(com_hex[0]);
 			RTC_SetMinute(com_hex[1]);
 			RTC_SetSecond(com_hex[2]);
-			COM_print_debug(1);
+			COM_print_debug(-1);
 			c='\0';
 			break;
 		case 'B':
@@ -432,14 +432,14 @@ void COM_commad_parse (void) {
         case 'M':
             if (COM_hex_parse(1*2)!='\0') { break; }
             CTL_change_mode(com_hex[0]==1);
-            COM_print_debug(1);
+            COM_print_debug(-1);
             break;
         case 'A':
             if (COM_hex_parse(1*2)!='\0') { break; }
             if (com_hex[0]<TEMP_MIN-1) { break; }
             if (com_hex[0]>TEMP_MAX+1) { break; }
             CTL_set_temp(com_hex[0]);
-            COM_print_debug(1);
+            COM_print_debug(-1);
             break;
 		//case '\n':
 		//case '\0':

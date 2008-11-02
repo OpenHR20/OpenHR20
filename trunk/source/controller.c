@@ -95,7 +95,7 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
             }
         } 
         PID_force_update = -1;
-        COM_print_debug(0);
+        COM_print_debug(valve);
     }
     // batt error detection
     if (bat_average < 20*(uint16_t)config.bat_warning_thld) {

@@ -334,7 +334,7 @@ bool menu_controller(bool new_state) {
         if (kb_events & KB_EVENT_AUTO) { 
             menu_state=menu_home; 
             ret=true;
-            eeprom_config_init(); //return to saved values
+            eeprom_config_init(false); //return to saved values
         }
         if (kb_events & KB_EVENT_PROG) {
             if (menu_state == menu_service2) {

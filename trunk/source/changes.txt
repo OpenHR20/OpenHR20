@@ -9,3 +9,5 @@ version 1.00BETA will be released soon
     - improve power management (switch off unused parts)
     - hourbar line
     - add manual valve configuration
+    - update PID tunning
+    - default setting restore

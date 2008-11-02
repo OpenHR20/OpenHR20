@@ -131,9 +131,9 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 02 */  {34,	    34,  TEMP_MIN,TEMP_MAX},    //!< temperature 1  - energy save (unit is 0.5stC)
   /* 03 */  {42,	    42,  TEMP_MIN,TEMP_MAX},    //!< temperature 2  - comfort (unit is 0.5stC)
   /* 04 */  {48,	    48,  TEMP_MIN,TEMP_MAX},    //!< temperature 3  - supercomfort (unit is 0.5stC)
-  /* 05 */  {64,	    64,			0,		255},	//!< P_Factor;
+  /* 05 */  {140,	   140,			0,		255},	//!< P_Factor;
   /* 06 */  {12,	    12,			0,		255},	//!< I_Factor;
-  /* 07 */  {12,	    12,			0,		255},	//!< D_Factor;
+  /* 07 */  {32,	    32,			0,		255},	//!< D_Factor;
   /* 08 */  {128,	    128,		1,		255},	//!< scalling_factor != 0
   /* 09 */  {240/5,     240/5,      20/5,   255},   //!< PID_interval*5 = interval in seconds;  min=20sec, max=21.25 minutes
   /* 0a */  {180,	    180,        178,	234},	//!< open motor_speed PWM setting
@@ -162,7 +162,7 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
 
 uint8_t config_read(uint8_t cfg_address, uint8_t cfg_type);
 uint8_t EEPROM_read(uint16_t address);
-void eeprom_config_init(void);
+void eeprom_config_init(bool restore_default);
 void eeprom_config_save(uint8_t idx);
 
 uint16_t eeprom_timers_read_raw(uint16_t offset);
