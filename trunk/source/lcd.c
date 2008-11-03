@@ -890,7 +890,20 @@ void task_lcd_update(void) {
  *  \note copy LCD_Data to LCDREG
  *
  ******************************************************************************/
+#if ! TASK_IS_SFR
+// not optimized
 ISR(LCD_vect)
 {
     task |= TASK_LCD;   // increment second and check Dow_Timer
 }
+#else
+// optimized
+ISR_NAKED ISR (LCD_vect) {
+    asm volatile(
+        // prologue and epilogue is not needed, this code  not touch flags in SREG
+        "	sbi %0,%1" "\t\n"
+        "	reti" "\t\n"
+        ::"I" (_SFR_IO_ADDR(task)) , "I" (TASK_LCD_BIT)
+    );
+}
+#endif 

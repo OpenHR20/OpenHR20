@@ -265,8 +265,29 @@ uint8_t task_ADC(void) {
  *
  ******************************************************************************/
 
+#if ! TASK_IS_SFR
+// not optimized
 ISR (ADC_vect){
 	task|=TASK_ADC;
 	sleep_with_ADC=0;
 }
-
+#else
+// optimized
+ISR_NAKED ISR (ADC_vect) {
+    /* note: __zero_reg__ is not used, It can be reused on some other user assembler code */ 
+    asm volatile(
+        "__my_zero_reg__ = 16" /* non standard, but with push and pop we can use it */ "\t\n"    
+        /* prologue: frame size=0 */
+        "	push __my_zero_reg__" "\t\n"
+        "	ldi __my_zero_reg__,0" /* this is longer than clr but not touch flags in SREG */ "\t\n"
+        /* prologue end (size=3) */ 
+        "	sbi %0,%1" "\t\n"
+        "	sts sleep_with_ADC,__my_zero_reg__" "\t\n"
+        /* epilogue: frame size=0 */
+        "	pop __my_zero_reg__" "\t\n"
+        "	reti" "\t\n"
+        /* epilogue end (size=2) */
+        ::"I" (_SFR_IO_ADDR(task)) , "I" (TASK_ADC_BIT)
+    );
+}
+#endif 
