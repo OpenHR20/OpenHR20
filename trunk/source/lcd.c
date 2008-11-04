@@ -604,12 +604,38 @@ void LCD_SetHourBarSeg(uint8_t seg, uint8_t mode)
  ******************************************************************************/
 void LCD_HourBarBitmap(uint32_t bitmap)
 {
+#if 0
     uint8_t i;
     for (i=0;i<24;i++) {
         uint8_t segment = pgm_read_byte(&LCD_SegHourBarOffsetTablePrgMem[i]);
         LCD_SetSeg(segment, (((uint8_t)bitmap & 1)? LCD_MODE_ON : LCD_MODE_OFF ));
         bitmap = bitmap>>1;
     }
+#else
+    asm volatile (
+    "    movw r14,r22                                     " "\n"
+    "    mov  r16,r24                                     " "\n"
+    "    ldi r28,lo8(LCD_SegHourBarOffsetTablePrgMem)     " "\n"       
+    "    ldi r29,hi8(LCD_SegHourBarOffsetTablePrgMem)     " "\n"
+    "L2:                                                  " "\n"
+    "    movw r30,r28                                     " "\n"
+    "	 lpm r24, Z                                       " "\n"
+    "	 clr r22                                          " "\n"
+    "	 lsr r16                                          " "\n"
+    "	 ror r15                                          " "\n"
+    "	 ror r14                                          " "\n"
+    "    brcc L3                                          " "\n"
+    "    ldi r22,lo8(%0)                                  " "\n"
+    "L3:                                                  " "\n"
+    "	call LCD_SetSeg                                   " "\n"
+    "	adiw r28,1                                        " "\n"
+    "	cpi r28,lo8(LCD_SegHourBarOffsetTablePrgMem+24)   " "\n"
+    "	brne L2                                           " "\n"
+    :
+    : "I" (LCD_MODE_ON)
+    : "r14", "r15", "r16", "r28", "r29", "r30", "r31"
+    );
+#endif
 }
 
 
