@@ -44,6 +44,7 @@
 #include "debug.h"
 #include "controller.h"
 #include "menu.h"
+#include "watch.h"
 
 static uint8_t service_idx;
 
@@ -64,7 +65,7 @@ typedef enum {
     // lock message
     menu_lock,
     // service menu
-    menu_service1, menu_service2,
+    menu_service1, menu_service2, menu_service_watch,
     // datetime setting
     menu_set_year, menu_set_month, menu_set_day, menu_set_hour, menu_set_minute,
 
@@ -149,6 +150,7 @@ static uint8_t menu_set_dow;
 static uint16_t menu_set_time;
 static timermode_t menu_set_mode;
 static uint8_t menu_set_slot;
+static uint8_t service_watch_n = 0;
 
 /*!
  *******************************************************************************
@@ -336,6 +338,11 @@ bool menu_controller(bool new_state) {
             ret=true;
             eeprom_config_init(false); //return to saved values
         }
+        if (kb_events & KB_EVENT_C) { 
+            menu_state=menu_service_watch; 
+            ret=true;
+            eeprom_config_init(false); //return to saved values
+        }
         if (kb_events & KB_EVENT_PROG) {
             if (menu_state == menu_service2) {
                 eeprom_config_save(service_idx); // save current value
@@ -356,6 +363,19 @@ bool menu_controller(bool new_state) {
             if (service_idx==0) { LCD_Init(); ret=true; }
         }
         break;        
+	case menu_service_watch:
+        if (kb_events & KB_EVENT_AUTO) { 
+            menu_state=menu_home; 
+            ret=true;
+        }
+        if (kb_events & KB_EVENT_C) { 
+            menu_state=menu_service1; 
+            ret=true;
+        }
+        service_watch_n=(service_watch_n+wheel+WATCH_N)%WATCH_N;
+        if (wheel != 0) ret=true;
+        break;
+	    
 	case menu_empty: // show temperature, blackhole
         if (new_state) {
             menu_auto_update_timeout=1;
@@ -528,6 +548,11 @@ void menu_view(bool update) {
         LCD_PrintHex(service_idx, 2, ((menu_state == menu_service1) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));
         LCD_PrintHex(config_raw[service_idx], 0, ((menu_state == menu_service2) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));
        break;
+    case menu_service_watch:
+        if (update) LCD_AllSegments(LCD_MODE_ON);
+        LCD_PrintHexW(watch(service_watch_n),LCD_MODE_ON);
+        LCD_SetHourBarSeg(service_watch_n, LCD_MODE_BLINK_1);
+        break;
     case menu_preset_temp0:
     case menu_preset_temp1:
     case menu_preset_temp2:

@@ -132,7 +132,7 @@ void eeprom_config_init(bool restore_default) {
     			*config_ptr = config_default(i); // default value
     		}
         }
-		eeprom_config_save(config_ptr); // update if default value is restored
+		eeprom_config_save(i); // update if default value is restored
 		config_ptr++;
 	}
 }

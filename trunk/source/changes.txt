@@ -11,3 +11,5 @@ version 1.00BETA will be released soon
     - add manual valve configuration
     - update PID tunning
     - default setting restore
+    - "watched" variables in LCD service menu
+
