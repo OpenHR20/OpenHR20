@@ -83,6 +83,10 @@ In this file we define only configuration parameters, for example what kind of c
 #define BOOT_hh        12  //!< Boot-Up time: hour
 #define BOOT_mm        00  //!< Boot-Up time: minutes
 
+/* compiler compatibility */
+#ifndef ISR_NAKED
+#   define ISR_NAKED      __attribute__((naked))
+#endif
 
 
 
