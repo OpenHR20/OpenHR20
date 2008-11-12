@@ -388,7 +388,12 @@ ISR (TIMER0_OVF_vect){
         // motor fast STOP
         MOTOR_H_BRIDGE_stop();
         // complete STOP will be done later
-        task|=TASK_MOTOR_STOP;
+		if (eye_timer==0xff)
+			motor_diag = 0xffff;
+		else 
+			motor_diag = 0xfffe;
+		TCCR0A = (1<<WGM00) | (1<<WGM01); // 0b 0000 0011
+        task|=(TASK_MOTOR_STOP|TASK_MOTOR_PULSE);
     }
     {
         uint8_t e = eye_timer; // optimization for volatile variable 

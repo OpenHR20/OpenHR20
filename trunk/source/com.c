@@ -460,8 +460,8 @@ void COM_debug_print_motor(int8_t dir, uint16_t m) {
 		COM_putchar('-');
 	}
     COM_putchar(' ');
-
 	print_hexXXXX(m);
+
     COM_putchar('\n');
     COM_flush();
 }

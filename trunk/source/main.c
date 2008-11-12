@@ -259,10 +259,11 @@ static inline void init(void)
     //! Initialize the RTC
     RTC_Init();
 
+    eeprom_config_init((~PINB & (KBI_PROG | KBI_C | KBI_AUTO))==(KBI_PROG | KBI_C | KBI_AUTO));
+
     //! Initialize the motor
     MOTOR_Init();
 
-    eeprom_config_init((~PINB & (KBI_PROG | KBI_C | KBI_AUTO))==(KBI_PROG | KBI_C | KBI_AUTO));
 
     //1 Initialize the LCD
     LCD_Init();
