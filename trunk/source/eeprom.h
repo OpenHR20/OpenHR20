@@ -47,22 +47,23 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
     /* 09 */ uint8_t PID_interval; //!< PID_interval*5 = interval in seconds	
     /* 0a */ uint8_t motor_speed_open;   //!< PWM for motor open 
     /* 0b */ uint8_t motor_speed_close;  //!< PWM for motor close
-    /* 0c */  int8_t motor_run_timeout; //!< motor_run_timeout (unit 61Hz timer ticks)
         /*! TODO: describe  motor_protection and motor_hysteresis better, picture wanted */
-    /* 0d */ uint8_t motor_protection;  //!< defines area for regulation valve as valve range - 2*motor_protection (1* on bottom 1* on top)
-    /* 0e */ uint8_t motor_hysteresis; //!< additional impulses for 0 or 100% relative to area for regulation
-	/* 0f */ uint8_t MOTOR_ManuCalibration_L;
-	/* 10 */ uint8_t MOTOR_ManuCalibration_H;
-	/* 11 */ uint8_t temp_cal_table0; //!< temperature calibration table
-	/* 12 */ uint8_t temp_cal_table1; //!< temperature calibration table
-	/* 13 */ uint8_t temp_cal_table2; //!< temperature calibration table
-	/* 14 */ uint8_t temp_cal_table3; //!< temperature calibration table
-	/* 15 */ uint8_t temp_cal_table4; //!< temperature calibration table
-	/* 16 */ uint8_t temp_cal_table5; //!< temperature calibration table
-	/* 17 */ uint8_t temp_cal_table6; //!< temperature calibration table
-	/* 18 */ uint8_t timer_mode; //!< =0 only one program, =1 programs for weekdays
-	/* 19 */ uint8_t bat_warning_thld; //!< treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
-	/* 1a */ uint8_t bat_low_thld; //!< treshold for battery low [unit 0.02V]=[unit 0.01V per cell]
+    /* 0c */ uint8_t motor_protection;  //!< defines area for regulation valve as valve range - 2*motor_protection (1* on bottom 1* on top)
+    /* 0d */ uint8_t motor_hysteresis; //!< additional impulses for 0 or 100% relative to area for regulation
+    /* 0e */ uint8_t motor_end_detect; //!< stop timer threshold in % to previous average 
+    /* 0f */ uint8_t motor_eye_noise_protect; //!< motor eye noise protection in % of previous average 
+	/* 10 */ uint8_t MOTOR_ManuCalibration_L;
+	/* 11 */ uint8_t MOTOR_ManuCalibration_H;
+	/* 12 */ uint8_t temp_cal_table0; //!< temperature calibration table
+	/* 13 */ uint8_t temp_cal_table1; //!< temperature calibration table
+	/* 14 */ uint8_t temp_cal_table2; //!< temperature calibration table
+	/* 15 */ uint8_t temp_cal_table3; //!< temperature calibration table
+	/* 16 */ uint8_t temp_cal_table4; //!< temperature calibration table
+	/* 17 */ uint8_t temp_cal_table5; //!< temperature calibration table
+	/* 18 */ uint8_t temp_cal_table6; //!< temperature calibration table
+	/* 19 */ uint8_t timer_mode; //!< =0 only one program, =1 programs for weekdays
+	/* 1a */ uint8_t bat_warning_thld; //!< treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
+	/* 1b */ uint8_t bat_low_thld; //!< treshold for battery low [unit 0.02V]=[unit 0.01V per cell]
 } config_t;
 
 extern config_t config;
@@ -138,21 +139,22 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 09 */  {240/5,     240/5,      20/5,   255},   //!< PID_interval*5 = interval in seconds;  min=20sec, max=21.25 minutes
   /* 0a */  {180,	    180,        178,	234},	//!< open motor_speed PWM setting
   /* 0b */  {200,	    200,        178,	234},	//!< close motor_speed PWM setting
-  /* 0c */  {20,         20,        6,      120},   //!< motor_run_timeout (unit 61Hz timer ticks); !!signed value => max is 127!!    
-  /* 0d */  {15,         15,        0,      120},   //!< motor_protection
-  /* 0e */  {10,         10,        0,      120},   //!< additional impulses for 0 or 100%
-  /* 0f */  {255,       255,        0,      255},   //!< manual calibration L
-  /* 10 */  {255,       255,        0,      255},   //!< manual calibration H
-  /* 11 */  {295-TEMP_CAL_OFFSET,295-TEMP_CAL_OFFSET, 0,        255},   //!< value for 35C => 295 temperature calibration table 
-  /* 12 */  {340-295,340-295,      16,      255},   //!< value for 30C => 340 temperature calibration table
-  /* 13 */  {397-340,397-340,      16,      255},   //!< value for 25C => 397 temperature calibration table
-  /* 14 */  {472-397,472-397,      16,      255},   //!< value for 20C => 472 temperature calibration table
-  /* 15 */  {549-472,549-472,      16,      255},   //!< value for 15C => 549 temperature calibration table
-  /* 16 */  {614-549,614-549,      16,      255},   //!< value for 10C => 614 temperature calibration table
-  /* 17 */  {675-614,675-614,      16,      255},   //!< value for 05C => 675 temperature calibration table
-  /* 18 */  {0,           0,        0,        1},   //!< timer_mode; =0 only one program, =1 programs for weekdays 
-  /* 19 */  {120,       120,       80,      160},   //!< bat_warning_thld; treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
-  /* 1a */  {100,       100,       80,      160},   //!< bat_low_thld; treshold for battery low [unit 0.02V]=[unit 0.01V per cell]
+  /* 0c */  {15,         15,        0,      120},   //!< motor_protection
+  /* 0d */  {10,         10,        0,      120},   //!< additional impulses for 0 or 100%
+  /* 0e */  {150,       150,      110,      250},   //!< motor_end_detect; stop timer threshold in % to previous average 
+  /* 0f */  {40,         40,       10,       90},   //!< motor_eye_noise_protect; motor eye noise protection in % of previous average 
+  /* 10 */  {255,       255,        0,      255},   //!< manual calibration L
+  /* 11 */  {255,       255,        0,      255},   //!< manual calibration H
+  /* 12 */  {295-TEMP_CAL_OFFSET,295-TEMP_CAL_OFFSET, 0,        255},   //!< value for 35C => 295 temperature calibration table 
+  /* 13 */  {340-295,340-295,      16,      255},   //!< value for 30C => 340 temperature calibration table
+  /* 14 */  {397-340,397-340,      16,      255},   //!< value for 25C => 397 temperature calibration table
+  /* 15 */  {472-397,472-397,      16,      255},   //!< value for 20C => 472 temperature calibration table
+  /* 16 */  {549-472,549-472,      16,      255},   //!< value for 15C => 549 temperature calibration table
+  /* 17 */  {614-549,614-549,      16,      255},   //!< value for 10C => 614 temperature calibration table
+  /* 18 */  {675-614,675-614,      16,      255},   //!< value for 05C => 675 temperature calibration table
+  /* 19 */  {0,           0,        0,        1},   //!< timer_mode; =0 only one program, =1 programs for weekdays 
+  /* 1a */  {120,       120,       80,      160},   //!< bat_warning_thld; treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
+  /* 1b */  {100,       100,       80,      160},   //!< bat_low_thld; treshold for battery low [unit 0.02V]=[unit 0.01V per cell]
 
 };
 

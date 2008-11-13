@@ -72,6 +72,9 @@ volatile uint16_t motor_diag = 0;
 
 #define MOTOR_RUN_OVERLOAD (3*256)
 static volatile uint16_t motor_max_time_for_impulse;
+static volatile uint16_t motor_eye_noise_protection;
+static uint32_t motor_diag_sum;
+static uint16_t motor_diag_count;
 
 static volatile uint16_t motor_timer = 0;
 
@@ -81,7 +84,7 @@ static void MOTOR_Control(motor_dir_t); // control H-bridge of motor
 static uint8_t MOTOR_wait_for_new_calibration = 5;
 
 // eye_timer is noise canceler for eye input / improve accuracy
-static volatile uint8_t eye_timer=0; 
+static volatile uint16_t eye_timer=0; 
 
 /*!
  *******************************************************************************
@@ -231,16 +234,18 @@ static void MOTOR_Control(motor_dir_t direction) {
 		MOTOR_H_BRIDGE_stop();
         // stop pwm signal
         TCCR0A = (1<<WGM00) | (1<<WGM01); // 0b 0000 0011
+	    MOTOR_Dir = stop;
     } else {                                            // motor on
         if (MOTOR_Dir != direction){
+            motor_diag_sum=0;
+            motor_diag_count=0;
+            motor_max_time_for_impulse = DEFAULT_motor_max_time_for_impulse; 
+            motor_eye_noise_protection = DEFAULT_motor_eye_noise_protection;
+		    MOTOR_Dir = direction;
             // photo eye
-            MOTOR_HR20_PE3_P |= (1<<MOTOR_HR20_PE3);    // activate photo eye / can generate false IRQ
-            {
-                uint16_t t = config.motor_run_timeout<<8;
-                motor_max_time_for_impulse = t;
-                motor_timer = t;
-            }
-            eye_timer = EYE_TIMER_NOISE_PROTECTION;
+            MOTOR_HR20_PE3_P |= (1<<MOTOR_HR20_PE3);    // activate photo eye
+            motor_timer = motor_max_time_for_impulse;
+            eye_timer = motor_eye_noise_protection;
             TIMSK0 = (1<<TOIE0); //enable interrupt from timer0 overflow
             PCMSK0 |= (1<<PCINT4);  // enable interrupt from eye
             if ( direction == close) {
@@ -259,8 +264,6 @@ static void MOTOR_Control(motor_dir_t direction) {
             }
 		}
     }
-    // set new speed and direction
-    MOTOR_Dir = direction;
 }
 
 /*!
@@ -271,7 +274,28 @@ static void MOTOR_Control(motor_dir_t direction) {
  *
  ******************************************************************************/
 void MOTOR_timer_pulse(void) {
-    // TODO motor_max_time_for_impulse = ..... 
+    if (motor_diag <= MOTOR_MAX_VALID_TIMER) {
+        if (motor_diag_count > 0) { //ignote first
+			motor_diag_sum += motor_diag;
+		}
+		motor_diag_count++;
+        if (motor_diag_count > MOTOR_UPDATE_IMPULSES_THLD) {
+            uint32_t tmp = motor_diag_sum / (motor_diag_count-1);
+            {
+                uint16_t b = tmp * config.motor_end_detect /100;
+                cli();
+                motor_max_time_for_impulse = b;
+                sei();
+            }
+            {
+                uint16_t b = tmp * config.motor_eye_noise_protect /100;
+                cli();
+                motor_eye_noise_protection = b;
+                sei();
+            }
+        }
+    } 
+
     #if DEBUG_PRINT_MOTOR
         COM_debug_print_motor(MOTOR_Dir, motor_diag);
     #endif
@@ -287,7 +311,7 @@ void MOTOR_timer_pulse(void) {
 void MOTOR_timer_stop(void) {
 	motor_dir_t d = MOTOR_Dir;
     MOTOR_Control(stop);
-    if (eye_timer == 0xff) { 
+    if (eye_timer == 0xffff) { 
             if (MOTOR_calibration_step != 0) {
                 MOTOR_calibration_step = -1;     // calibration error
             }
@@ -365,10 +389,10 @@ ISR (PCINT0_vect){
         task|=TASK_MOTOR_PULSE;
         if (MOTOR_PosAct ==  MOTOR_PosStop) {
             // motor will be stopped after MOTOR_RUN_OVERLOAD time
-            eye_timer = 0xff; // kick off eye
+            eye_timer = 0xffff; // kick off eye
             motor_timer = MOTOR_RUN_OVERLOAD; // STOP timeout
         } else {
-            eye_timer = EYE_TIMER_NOISE_PROTECTION; // in timer0 overflow ticks
+            eye_timer = motor_eye_noise_protection; // in timer0 overflow ticks
             motor_timer = motor_max_time_for_impulse;
         }
     }
@@ -388,15 +412,11 @@ ISR (TIMER0_OVF_vect){
         // motor fast STOP
         MOTOR_H_BRIDGE_stop();
         // complete STOP will be done later
-		if (eye_timer==0xff)
-			motor_diag = 0xffff;
-		else 
-			motor_diag = 0xfffe;
 		TCCR0A = (1<<WGM00) | (1<<WGM01); // 0b 0000 0011
-        task|=(TASK_MOTOR_STOP|TASK_MOTOR_PULSE);
+        task|=(TASK_MOTOR_STOP);
     }
     {
-        uint8_t e = eye_timer; // optimization for volatile variable 
-        if ((e>0) && (e<0xff)) eye_timer=e-1;
+        uint16_t e = eye_timer; // optimization for volatile variable 
+        if ((e>0) && (e<0xffff)) eye_timer=e-1;
     }
 }

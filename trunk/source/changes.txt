@@ -12,4 +12,6 @@ version 1.00BETA will be released soon
     - update PID tunning
     - default setting restore
     - "watched" variables in LCD service menu
+    - improve motor control (based on speed)
+
 

@@ -59,9 +59,10 @@ static inline void MOTOR_H_BRIDGE_stop(void) {
 //! never occure if it is mounted
 #define	MOTOR_MAX_IMPULSES 1000
 #define	MOTOR_MIN_IMPULSES 100
-
-#define EYE_TIMER_NOISE_PROTECTION 5 
-
+#define MOTOR_MAX_VALID_TIMER 20000
+#define MOTOR_UPDATE_IMPULSES_THLD 20
+#define DEFAULT_motor_max_time_for_impulse 3072
+#define DEFAULT_motor_eye_noise_protection 120
 
 /*****************************************************************************
 *   Typedefs
