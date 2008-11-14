@@ -46,7 +46,7 @@
 #include "menu.h"
 #include "watch.h"
 
-static uint8_t service_idx;
+static int8_t service_idx=-1;
 
 /*!
  *******************************************************************************
@@ -61,7 +61,7 @@ typedef enum {
     // preprogramed temperatures
     menu_preset_temp0, menu_preset_temp1, menu_preset_temp2, menu_preset_temp3, 
     // home screens
-    menu_home, menu_home2, menu_home3, menu_home4,
+    menu_home_no_alter, menu_home, menu_home2, menu_home3, menu_home4,
     // lock message
     menu_lock,
     // service menu
@@ -117,23 +117,18 @@ static bool events_common(void) {
             menu_state = menu_service1;
             kb_events = 0;
             service_idx = 0;
-//            eeprom_config_init(); //return to saved values
             ret=true;
         } else if ( kb_events & KB_EVENT_AUTO_LONG ) {
     		menu_state=menu_set_year;
-//            eeprom_config_init(); //return to saved values
             ret=true; 
         } else if ( kb_events & KB_EVENT_PROG_LONG ) {
 			menu_state=menu_set_timmer_dow_start;
-//            eeprom_config_init(); //return to saved values
             ret=true; 
         } else if ( kb_events & KB_EVENT_NONE_LONG ) {
             menu_state=menu_home; // retun to main home screen
-//            eeprom_config_init(); //return to saved values
             ret=true;
         } else if ( kb_events & KB_EVENT_C_LONG ) {
             menu_state=menu_preset_temp0; 
-//            eeprom_config_init(); //return to saved values
             ret=true;
         }
 
@@ -222,6 +217,7 @@ bool menu_controller(bool new_state) {
             ret=true;
         }
         break;
+    case menu_home_no_alter: // same as home screen, but without alternate contend
     case menu_home:         // home screen
     case menu_home2:        // alternate version, real temperature
     case menu_home3:        // alternate version, valve pos
@@ -235,8 +231,10 @@ bool menu_controller(bool new_state) {
                 ret=true;
                 }
         } else { // not locked
-			if ((wheel != 0) && (menu_state == menu_home)) {
+			if ((wheel != 0) &&   ((menu_state == menu_home) 
+							    || (menu_state == menu_home_no_alter))) {
 				CTL_temp_change_inc(wheel);
+				menu_state = menu_home_no_alter;
 			}			 
             if ( kb_events & KB_EVENT_C ) {
                 menu_state++;       // go to next alternate home screen
@@ -245,12 +243,12 @@ bool menu_controller(bool new_state) {
             } 
             if ( kb_events & KB_EVENT_AUTO ) {
                 CTL_change_mode(CTL_CHANGE_MODE); // change mode
-                menu_state=menu_home;
+                menu_state=menu_home_no_alter;
                 ret=true; 
             }
             if ( kb_events & KB_EVENT_AUTO_REWOKE ) {
                 CTL_change_mode(CTL_CHANGE_MODE_REWOKE); // change mode
-                menu_state=menu_home;
+                menu_state=menu_home_no_alter;
                 ret=true; 
             }
             // TODO ....  
@@ -336,12 +334,10 @@ bool menu_controller(bool new_state) {
         if (kb_events & KB_EVENT_AUTO) { 
             menu_state=menu_home; 
             ret=true;
-            eeprom_config_init(false); //return to saved values
         }
         if (kb_events & KB_EVENT_C) { 
             menu_state=menu_service_watch; 
             ret=true;
-            eeprom_config_init(false); //return to saved values
         }
         if (kb_events & KB_EVENT_PROG) {
             if (menu_state == menu_service2) {
@@ -384,6 +380,11 @@ bool menu_controller(bool new_state) {
         //empty        
     }
     if (events_common()) ret=true;
+    if (ret && (service_idx>=0) && (service_idx<CONFIG_RAW_SIZE)) {
+        // back to default value
+        config_raw[service_idx] = config_value(service_idx);
+        service_idx = -1;
+    }
     kb_events = 0; // clear unused keys
     return ret;
 } 
@@ -472,21 +473,16 @@ void menu_view(bool update) {
         LCD_PrintDec(RTC_GetHour(), 2, ((menu_state == menu_set_hour) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));
         LCD_PrintDec(RTC_GetMinute(), 0, ((menu_state == menu_set_minute) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));
        break;                                                               
-    case menu_home: // wanted temp, status / TODO
-        if (update) clr_show1(LCD_SEG_BAR24);
-        //! \todo update "hourbar" status from chache
-        //! \todo update "hourbar" chache after timer change or day change
-        //! \note hourbar status calculation is complex we don't want calculate it every view, use chache
-        LCD_SetSeg(LCD_SEG_AUTO, (CTL_test_auto()?LCD_MODE_ON:LCD_MODE_OFF));
-        LCD_SetSeg(LCD_SEG_MANU, (CTL_mode_auto?LCD_MODE_OFF:LCD_MODE_ON));
-        LCD_HourBarBitmap(hourbar_buff);
+    case menu_home: // wanted temp / error code / adaptation status
         if (MOTOR_calibration_step>0) {
-            LCD_PrintStringID(LCD_STRING_Ad,LCD_MODE_ON);
-            LCD_PrintDec(MOTOR_calibration_step, 0, LCD_MODE_ON);
+            clr_show1(LCD_SEG_BAR24);
+            LCD_PrintChar(LCD_CHAR_A,3,LCD_MODE_ON);
+            if (MOTOR_ManuCalibration==-1) LCD_PrintChar(LCD_CHAR_d,2,LCD_MODE_ON);
+            LCD_PrintChar(MOTOR_calibration_step%10, 0, LCD_MODE_ON);
+            goto MENU_COMMON_STATUS; // optimization
         } else {
-            if (CTL_error==0) {
-                LCD_PrintTemp(CTL_temp_wanted,LCD_MODE_ON);
-            } else {
+            if (update) clr_show1(LCD_SEG_BAR24);
+            if (CTL_error!=0) {
                 if (CTL_error & CTL_ERR_BATT_LOW) {
                     LCD_PrintStringID(LCD_STRING_BAtt,LCD_MODE_BLINK_1);
                 } else if (CTL_error & CTL_ERR_MONTAGE) {
@@ -496,8 +492,23 @@ void menu_view(bool update) {
                 } else if (CTL_error & CTL_ERR_BATT_WARNING) {
                     LCD_PrintStringID(LCD_STRING_BAtt,LCD_MODE_ON);
                 }
+                goto MENU_COMMON_STATUS; // optimization
+            } else {
+                if (CTL_mode_window) {
+                    LCD_PrintStringID(LCD_STRING_OPEn,LCD_MODE_ON);
+                    goto MENU_COMMON_STATUS; // optimization
+                }
             }
-        }
+        } 
+        // do not use break at this position / optimization
+    case menu_home_no_alter: // wanted temp
+        if (update) clr_show1(LCD_SEG_BAR24);
+        LCD_PrintTemp(CTL_temp_wanted,LCD_MODE_ON);
+        //! \note hourbar status calculation is complex we don't want calculate it every view, use chache
+        MENU_COMMON_STATUS:
+        LCD_SetSeg(LCD_SEG_AUTO, (CTL_test_auto()?LCD_MODE_ON:LCD_MODE_OFF));
+        LCD_SetSeg(LCD_SEG_MANU, (CTL_mode_auto?LCD_MODE_OFF:LCD_MODE_ON));
+        LCD_HourBarBitmap(hourbar_buff);
        break;
     case menu_home2: // real temperature
         if (update) clr_show1(LCD_SEG_COL1);           // decimal point
@@ -568,3 +579,9 @@ void menu_view(bool update) {
         break;
     }
 }
+
+/*!
+ * \note Switch used in this file can generate false warning on some AvrGCC versions
+ *       we can ignore it
+ *       details:  http://osdir.com/ml/hardware.avr.libc.devel/2006-11/msg00005.html
+ */

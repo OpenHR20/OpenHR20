@@ -75,13 +75,10 @@ typedef enum {
 /*****************************************************************************
 *   Prototypes
 *****************************************************************************/
-#define MOTOR_Init(void) (MOTOR_updateCalibration(1,0)) // Init motor control
+#define MOTOR_Init(void) (MOTOR_updateCalibration(1)) // Init motor control
 bool MOTOR_Goto(uint8_t);                     // Goto position in percent
-bool MOTOR_On(void);                          // is motor on
-void MOTOR_Calibrate(uint8_t percent);        // calibrate the motor
 bool MOTOR_IsCalibrated(void);                // is motor successful calibrated?
-void MOTOR_updateCalibration(uint8_t cal_type, uint8_t percent);            // reset the calibration 
-void MOTOR_SetMountStatus(bool);     // set status if is mounted or not
+void MOTOR_updateCalibration(uint8_t cal_type);            // reset the calibration 
 uint8_t MOTOR_GetPosPercent(void);  // get percental position of motor (0-100%)
 void MOTOR_timer_stop(void);
 void MOTOR_timer_pulse(void);

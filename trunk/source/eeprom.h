@@ -64,6 +64,7 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
 	/* 19 */ uint8_t timer_mode; //!< =0 only one program, =1 programs for weekdays
 	/* 1a */ uint8_t bat_warning_thld; //!< treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
 	/* 1b */ uint8_t bat_low_thld; //!< treshold for battery low [unit 0.02V]=[unit 0.01V per cell]
+	/* 1c */ uint8_t window_thld; //!< reshold for window open/close detection unit is 0.1C
 } config_t;
 
 extern config_t config;
@@ -155,6 +156,7 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 19 */  {0,           0,        0,        1},   //!< timer_mode; =0 only one program, =1 programs for weekdays 
   /* 1a */  {120,       120,       80,      160},   //!< bat_warning_thld; treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
   /* 1b */  {100,       100,       80,      160},   //!< bat_low_thld; treshold for battery low [unit 0.02V]=[unit 0.01V per cell]
+  /* 1c */  {15,         15,        2,       40},   //!< uint8_t window_thld; reshold for window open/close detection unit is 0.1C
 
 };
 
@@ -181,10 +183,7 @@ extern uint16_t timmers_patch_data;
 #define CONFIG_MIN 2
 #define CONFIG_MAX 3
 
-#ifdef __EEPROM_C__
-	//only for internal usage
 #define config_value(i) (config_read((i), CONFIG_VALUE))
-#endif
 #define config_default(i) (config_read((i), CONFIG_DEFAULT))
 #define config_min(i) (config_read((i), CONFIG_MIN))
 #define config_max(i) (config_read((i), CONFIG_MAX))

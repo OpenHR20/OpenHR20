@@ -48,6 +48,8 @@ uint8_t CTL_temp_wanted=0;   // actual desired temperatur
 uint8_t CTL_temp_wanted_last=0xff;   // desired temperatur value used for last PID control
 uint8_t CTL_temp_auto=0;   // actual desired temperatur by timer
 bool CTL_mode_auto=true;   // actual desired temperatur by timer
+bool CTL_mode_window = false; // open window
+uint16_t CTL_open_window_timeout;
 
 static uint16_t PID_update_timeout=16;   // timer to next PID controler action/first is 16 sec after statup 
 int8_t PID_force_update=16;      // signed value, val<0 means disable force updates \todo rename
@@ -57,9 +59,10 @@ uint8_t CTL_error=0;
 /*!
  *******************************************************************************
  *  Controller update
- *
+ *  \note call it once per second
  *  \param minute_ch is true when minute is changed
  *  \returns valve position
+ *   
  ******************************************************************************/
 uint8_t CTL_update(bool minute_ch, uint8_t valve) {
     if ( minute_ch || (CTL_temp_auto==0) ) {
@@ -75,23 +78,46 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
             }
         }
     }
+    /* window open detection */
+    if (!CTL_mode_window) {
+        if ((-temp_difference/10) > config.window_thld) {
+            CTL_mode_window = true;
+            CTL_open_window_timeout = CTL_OPEN_WINDOW_TIMEOUT;
+            PID_force_update=0;
+        }
+    } else { 
+        /* window close detection */
+        if (CTL_open_window_timeout > 0) {
+            CTL_open_window_timeout--; 
+            if (( temp_difference/10) > config.window_thld) {
+                CTL_mode_window = false;
+                PID_force_update=0;
+            }
+        }
+    }
+
     if (PID_update_timeout>0) PID_update_timeout--;
     if (PID_force_update>0) PID_force_update--;
     if ((PID_update_timeout == 0)||(PID_force_update==0)) {
+        uint8_t temp;
+        if ((CTL_temp_wanted<TEMP_MIN) || CTL_mode_window) {
+            temp = TEMP_MIN;  // frost protection to TEMP_MIN
+        } else {
+            temp = CTL_temp_wanted;
+        }
         //update now
-        if (CTL_temp_wanted!=CTL_temp_wanted_last) {
-            CTL_temp_wanted_last=CTL_temp_wanted;
+        if (temp!=CTL_temp_wanted_last) {
+            CTL_temp_wanted_last=temp;
             pid_Init(temp_average); // restart PID controler
-            PID_update_timeout = 0; //update now
+            goto UPDATE_NOW; // optimization
         }
         if (PID_update_timeout == 0) {
+            UPDATE_NOW:
             PID_update_timeout = (config.PID_interval * 5); // new PID pooling
-            if (CTL_temp_wanted<TEMP_MIN) {
-                valve = pid_Controller(500,temp_average); // frost protection to 5C
-            } else if (CTL_temp_wanted>TEMP_MAX) {
+            if (temp>TEMP_MAX) {
                 valve = 100;
             } else {
-                valve = pid_Controller(calc_temp(CTL_temp_wanted),temp_average);
+                valve = pid_Controller(calc_temp(temp),temp_average);
             }
         } 
         PID_force_update = -1;
@@ -125,6 +151,7 @@ void CTL_temp_change_inc (int8_t ch) {
 	} else if (CTL_temp_wanted>TEMP_MAX+1) {
 		CTL_temp_wanted= TEMP_MAX+1; 
 	}    
+	CTL_mode_window = false;
     PID_force_update = 10; 
 }
 
@@ -156,5 +183,6 @@ void CTL_change_mode(int8_t m) {
     } else {
         CTL_mode_auto=m;
     }
+    CTL_mode_window = false;
     PID_force_update = 10; 
 }

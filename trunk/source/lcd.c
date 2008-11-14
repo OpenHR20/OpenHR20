@@ -134,11 +134,9 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
       { 0,15,15,32},    //!<  "OFF "    LCD_STRING_OFF
       { 0,29,32,32},    //!<  "On  "    LCD_STRING_On
       { 0,18,14,29},    //!<  "OPEn"    LCD_STRING_OPEn
-      {12,39,12,35},    //!<  "CyCL"    LCD_STRING_CyCL
       {11,10,38,38},    //!<  "BAtt"    LCD_STRING_BAtt
       {32,14, 2,32},    //!<  " E2 "    LCD_STRING_E2
       {32,14, 3,32},    //!<  " E3 "    LCD_STRING_E3
-      {10,13,32,32},    //!<  "Ad  "    LCD_STRING_Ad
   };
 #elif LANG==LANG_de
   // Look-up chars table for LCD strings (german)
@@ -159,11 +157,9 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
       { 0,15,15,32},    //!<  "OFF "    LCD_STRING_OFF
       { 0,29,32,32},    //!<  "On  "    LCD_STRING_On
       { 0,18,14,29},    //!<  "OPEn"    LCD_STRING_OPEn
-      {12,39,12,35},    //!<  "CyCL"    LCD_STRING_CyCL
       {11,10,38,38},    //!<  "BAtt"    LCD_STRING_BAtt
       {32,14, 2,32},    //!<  " E2 "    LCD_STRING_E2
       {32,14, 3,32},    //!<  " E3 "    LCD_STRING_E3
-      {10,13,32,32},    //!<  "Ad  "    LCD_STRING_Ad
   };
 #elif LANG==LANG_cs
   // Look-up chars table for LCD strings (czech)
@@ -184,11 +180,9 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
       { 0,15,15,32},    //!<  "OFF "    LCD_STRING_OFF
       { 0,29,32,32},    //!<  "On  "    LCD_STRING_On
       { 0,18,14,29},    //!<  "OPEn"    LCD_STRING_OPEn
-      {12,39,12,35},    //!<  "CyCL"    LCD_STRING_CyCL
       {11,10,38,38},    //!<  "BAtt"    LCD_STRING_BAtt
       {32,14, 2,32},    //!<  " E2 "    LCD_STRING_E2
       {32,14, 3,32},    //!<  " E3 "    LCD_STRING_E3
-      {10,13,32,32},    //!<  "Ad  "    LCD_STRING_Ad
   };
 #endif
 
@@ -918,9 +912,8 @@ void task_lcd_update(void) {
  ******************************************************************************/
 #if ! TASK_IS_SFR
 // not optimized
-ISR(LCD_vect)
-{
-    task |= TASK_LCD;   // increment second and check Dow_Timer
+ISR(LCD_vect) {
+    task |= TASK_LCD;
 }
 #else
 // optimized

@@ -13,5 +13,11 @@ version 1.00BETA will be released soon
     - default setting restore
     - "watched" variables in LCD service menu
     - improve motor control (based on speed)
+    - show type of calibration (manu/auto) on calibration process
+    - fix menu reaction at error or calibration state to wheel event
+    - window open function
+    - calibration sequence is every time open->close->go_to_position 
+      (it is not symetric and this sequence have better precision)
+    - Valve protection (CyCL)
 
 

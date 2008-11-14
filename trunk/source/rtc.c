@@ -548,11 +548,23 @@ bool RTC_SetDate(int8_t dd, int8_t mm, int8_t yy)
  *  - increment tick counter
  *
  ******************************************************************************/
-ISR(TIMER2_OVF_vect)
-{
+#if ! TASK_IS_SFR
+// not optimized
+ISR(TIMER2_OVF_vect) {
     task |= TASK_RTC;   // increment second and check Dow_Timer
-
 }
+#else
+// optimized
+ISR_NAKED ISR (TIMER2_OVF_vect) {
+    asm volatile(
+        // prologue and epilogue is not needed, this code  not touch flags in SREG
+        "	sbi %0,%1" "\t\n"
+        "	reti" "\t\n"
+        ::"I" (_SFR_IO_ADDR(task)) , "I" (TASK_RTC_BIT)
+    );
+}
+#endif 
+
 
 #if HAS_CALIBRATE_RCO
 /*!

@@ -237,8 +237,34 @@ ISR(PCINT1_vect){
  *  \note - disable this interrupt 
  *
  ******************************************************************************/
-ISR(TIMER2_COMP_vect)
-{
+#if 0
+// not optimized
+ISR(TIMER2_COMP_vect) {
     kb_timeout=1;   // for noise cancelation
     TIMSK2 &= ~(1<<OCIE2A);
 }
+#else
+// optimized
+ISR_NAKED ISR (TIMER2_COMP_vect) {
+    asm volatile(
+        "__my_tmp_reg__ = 16" "\n"
+        /* prologue */
+        "	push __my_tmp_reg__" "\n"
+        "   in __my_tmp_reg__,__SREG__" "\n"
+        "	push __my_tmp_reg__" "\n"
+        /* prologue end  */ 
+        "	ldi __my_tmp_reg__,1"  "\n"
+        "	sts kb_timeout,__my_tmp_reg__" "\n"
+        "	lds __my_tmp_reg__, %0" "\n"
+        "   andi __my_tmp_reg__,~ (1 << %1)" "\n"
+        "	sts %0,__my_tmp_reg__" "\n"
+        /* epilogue */
+        "	pop __my_tmp_reg__" "\n"
+        "   out __SREG__,__my_tmp_reg__" "\n"
+        "	pop __my_tmp_reg__" "\n"
+        "	reti" "\n"
+        /* epilogue end */
+        ::"M" (&TIMSK2) , "I" (OCIE2A)
+    );
+}
+#endif 

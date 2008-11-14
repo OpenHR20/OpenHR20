@@ -171,7 +171,7 @@ int main(void)
         // update motor possition
         if (task & TASK_MOTOR_PULSE) {
             task&=~TASK_MOTOR_PULSE;
-            MOTOR_updateCalibration(mont_contact_pooling(),valve_wanted);
+            MOTOR_updateCalibration(mont_contact_pooling());
             MOTOR_timer_pulse();
 			continue; // on most case we have only 1 task, iprove time to sleep
         }
@@ -184,8 +184,16 @@ int main(void)
 
         if (task & TASK_RTC) {
             task&=~TASK_RTC;
-            valve_wanted = CTL_update(RTC_AddOneSecond(),valve_wanted);
-            MOTOR_updateCalibration(mont_contact_pooling(),valve_wanted);
+            {
+                bool minute = RTC_AddOneSecond();
+                valve_wanted = CTL_update(minute,valve_wanted);
+                if (minute && (RTC_GetHour()==10) && (RTC_GetMinute()==0)) {
+                    // TODO: improve this code!
+                    // valve protection / CyCL
+                    MOTOR_updateCalibration(0);
+                }
+            }
+            MOTOR_updateCalibration(mont_contact_pooling());
             MOTOR_Goto(valve_wanted);
             task_keyboard_long_press_detect();
             start_task_ADC();

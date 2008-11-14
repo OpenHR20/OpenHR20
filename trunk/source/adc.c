@@ -74,7 +74,7 @@ static uint8_t ring_pos=0;
 static uint8_t ring_used=1; 
 static int32_t ring_sum [2] = {0,0};
 int16_t ring_average [2] = {0,0};
-int16_t ring_difference [2] = {INT16_MAX,INT16_MAX}; //INT16_MAX is error value;
+int16_t ring_difference [2] = {0,0};
 
 static void shift_ring(void) {
 	ring_pos = (ring_pos+1) % BUFFER_LEN;
@@ -267,7 +267,7 @@ uint8_t task_ADC(void) {
 
 #if ! TASK_IS_SFR
 // not optimized
-ISR (ADC_vect){
+ISR (ADC_vect) {
 	task|=TASK_ADC;
 	sleep_with_ADC=0;
 }
@@ -277,16 +277,16 @@ ISR_NAKED ISR (ADC_vect) {
     /* note: __zero_reg__ is not used, It can be reused on some other user assembler code */ 
     asm volatile(
         "__my_zero_reg__ = 16" /* non standard, but with push and pop we can use it */ "\t\n"    
-        /* prologue: frame size=0 */
+        /* prologue */
         "	push __my_zero_reg__" "\t\n"
         "	ldi __my_zero_reg__,0" /* this is longer than clr but not touch flags in SREG */ "\t\n"
-        /* prologue end (size=3) */ 
+        /* prologue end  */ 
         "	sbi %0,%1" "\t\n"
         "	sts sleep_with_ADC,__my_zero_reg__" "\t\n"
-        /* epilogue: frame size=0 */
+        /* epilogue */
         "	pop __my_zero_reg__" "\t\n"
         "	reti" "\t\n"
-        /* epilogue end (size=2) */
+        /* epilogue end */
         ::"I" (_SFR_IO_ADDR(task)) , "I" (TASK_ADC_BIT)
     );
 }

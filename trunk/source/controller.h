@@ -37,6 +37,7 @@ extern uint8_t CTL_temp_auto;
 extern uint8_t CTL_mode_auto;
 extern int8_t PID_force_update;      // signed value, val<0 means disable force updates
 extern uint8_t CTL_error;
+extern bool CTL_mode_window;
 
 #define CTL_update_temp_auto() (CTL_temp_auto=0)
 #define CTL_test_auto() (CTL_mode_auto && (CTL_temp_auto==CTL_temp_wanted))
@@ -48,6 +49,8 @@ void CTL_temp_change_inc (int8_t ch);
 #define CTL_CHANGE_MODE        -1
 #define CTL_CHANGE_MODE_REWOKE -2
 void CTL_change_mode(int8_t dif);
+
+#define CTL_OPEN_WINDOW_TIMEOUT (30*60) //30 minutes
 
 // ERRORS
 #define CTL_ERR_BATT_LOW                (1<<7)

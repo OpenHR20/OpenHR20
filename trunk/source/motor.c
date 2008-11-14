@@ -70,7 +70,6 @@ static volatile motor_dir_t MOTOR_Dir;          //!< actual direction
 int8_t MOTOR_calibration_step=-2; // not calibrated
 volatile uint16_t motor_diag = 0;
 
-#define MOTOR_RUN_OVERLOAD (3*256)
 static volatile uint16_t motor_max_time_for_impulse;
 static volatile uint16_t motor_eye_noise_protection;
 static uint32_t motor_diag_sum;
@@ -97,7 +96,7 @@ static volatile uint16_t eye_timer=0;
  *  \note
  *  - must be called if the motor is unmounted
  ******************************************************************************/
-void MOTOR_updateCalibration(uint8_t cal_type, uint8_t percent)
+void MOTOR_updateCalibration(uint8_t cal_type)
 {
     if (cal_type == 0) {
         MOTOR_Control(stop);       // stop motor
@@ -105,33 +104,26 @@ void MOTOR_updateCalibration(uint8_t cal_type, uint8_t percent)
         MOTOR_PosMax=0;                  // not calibrated
         MOTOR_calibration_step=-2;     // not calibrated
         MOTOR_wait_for_new_calibration = 5;
+        CTL_error &= ~CTL_ERR_MOTOR;
     } else {
         if (MOTOR_wait_for_new_calibration != 0) {
             MOTOR_wait_for_new_calibration--;
         } else {
-            if ((MOTOR_calibration_step==1) || (MOTOR_calibration_step==2)) {
-                MOTOR_calibration_step+=2;
-                if ((MOTOR_ManuCalibration==-1) && (percent > 50)) { 
-                    MOTOR_PosStop= -MOTOR_MAX_IMPULSES;
-                    MOTOR_Control(close);
-                } else {
-                    MOTOR_PosStop= +MOTOR_MAX_IMPULSES;
-                    MOTOR_Control(open);
-                }
+            if (MOTOR_calibration_step==1) {
+                MOTOR_calibration_step++;
+                MOTOR_PosStop= +MOTOR_MAX_IMPULSES;
+                MOTOR_Control(open);
             }
         }
         if (MOTOR_calibration_step==-2) {
             if (cal_type == 3) {
-                MOTOR_ManuCalibration=-1;               // not calibrated
+                MOTOR_ManuCalibration=-1;               // automatic calibration
                 eeprom_config_save((uint16_t)(&config.MOTOR_ManuCalibration_L)-(uint16_t)(&config));
                 eeprom_config_save((uint16_t)(&config.MOTOR_ManuCalibration_H)-(uint16_t)(&config));
             }  else if (cal_type == 2) { 
                 MOTOR_ManuCalibration=0;               // not calibrated
             }
             MOTOR_calibration_step=1;
-            if (MOTOR_ManuCalibration>=0) {
-                MOTOR_calibration_step++;
-            }
         }
     }
 }
@@ -311,9 +303,12 @@ void MOTOR_timer_pulse(void) {
 void MOTOR_timer_stop(void) {
 	motor_dir_t d = MOTOR_Dir;
     MOTOR_Control(stop);
-    if (eye_timer == 0xffff) { 
-            if (MOTOR_calibration_step != 0) {
+    if (eye_timer == 0xffff) {
+			if ((MOTOR_calibration_step == 3) && (MOTOR_ManuCalibration>0)) {
+				MOTOR_calibration_step = 0;
+			} else if (MOTOR_calibration_step != 0) {
                 MOTOR_calibration_step = -1;     // calibration error
+		        CTL_error |=  CTL_ERR_MOTOR;
             }
 	} else {
         if (d == open) { // stopped on end
@@ -329,37 +324,37 @@ void MOTOR_timer_stop(void) {
                 } else { // manual calibration done
                     MOTOR_PosMax = ( MOTOR_PosAct = MOTOR_ManuCalibration );
                 }
-                if (MOTOR_calibration_step == 3) {
+                if (MOTOR_calibration_step == 2) {
                     MOTOR_Control(close);
-                    MOTOR_PosStop= a-MOTOR_MAX_IMPULSES;
-                    MOTOR_calibration_step = 4;
-                } else if (MOTOR_calibration_step == 4) {
-                    MOTOR_calibration_step = 0;     // calibration DONE
-                }
+                    if (MOTOR_ManuCalibration<=0) { 
+                        MOTOR_PosStop= a-MOTOR_MAX_IMPULSES;
+                    } else { 
+                        MOTOR_PosStop= 0;
+                    }
+                    MOTOR_calibration_step = 3;
+                } 
             }
         } else if (d == close) { // stopped on end
             {
-                int16_t a = MOTOR_PosAct; // volatile variable optimization
-                if (MOTOR_ManuCalibration<0) {
-                    MOTOR_PosMax -= a; // recalibrate it on the end
+                if (MOTOR_ManuCalibration<0) { // only for automatic calibration
+                    MOTOR_PosMax -= MOTOR_PosAct; // recalibrate it on the end
+                } else {
+                    if (MOTOR_PosAct>MOTOR_MIN_IMPULSES) {
+                        CTL_error |=  CTL_ERR_MOTOR;
+                    }
+                    // \todo  
                 }
                 MOTOR_PosAct = 0;
-                if (MOTOR_calibration_step == 3) {
-                    MOTOR_PosStop= a+MOTOR_MAX_IMPULSES;
-                    MOTOR_Control(open);
-                    MOTOR_calibration_step = 4;
-                } else if (MOTOR_calibration_step == 4) {
+                if (MOTOR_calibration_step == 3 ) {
                     MOTOR_calibration_step = 0;     // calibration DONE
                 }
             }
         }
     }
     if ((MOTOR_calibration_step == 0) &&
-        ((MOTOR_PosAct>MOTOR_MAX_IMPULSES+1) || (MOTOR_PosMax<MOTOR_MIN_IMPULSES))) {
+        (MOTOR_PosMax<MOTOR_MIN_IMPULSES)) {
         CTL_error |=  CTL_ERR_MOTOR;
-    } else {
-        CTL_error &= ~CTL_ERR_MOTOR;
-    }
+    } 
 }
 
 // interrupts: 
@@ -390,7 +385,7 @@ ISR (PCINT0_vect){
         if (MOTOR_PosAct ==  MOTOR_PosStop) {
             // motor will be stopped after MOTOR_RUN_OVERLOAD time
             eye_timer = 0xffff; // kick off eye
-            motor_timer = MOTOR_RUN_OVERLOAD; // STOP timeout
+            motor_timer = motor_eye_noise_protection; // STOP timeout
         } else {
             eye_timer = motor_eye_noise_protection; // in timer0 overflow ticks
             motor_timer = motor_max_time_for_impulse;
