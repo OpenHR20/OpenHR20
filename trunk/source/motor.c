@@ -69,11 +69,12 @@ static volatile motor_dir_t MOTOR_Dir;          //!< actual direction
 // bool MOTOR_Mounted;         //!< mountstatus true: if valve is mounted
 int8_t MOTOR_calibration_step=-2; // not calibrated
 volatile uint16_t motor_diag = 0;
+static volatile uint16_t motor_diag_cnt = 0;
 
 static volatile uint16_t motor_max_time_for_impulse;
 static volatile uint16_t motor_eye_noise_protection;
 static uint32_t motor_diag_sum;
-static uint16_t motor_diag_count;
+static int16_t motor_diag_count;
 
 static volatile uint16_t motor_timer = 0;
 
@@ -230,7 +231,8 @@ static void MOTOR_Control(motor_dir_t direction) {
     } else {                                            // motor on
         if (MOTOR_Dir != direction){
             motor_diag_sum=0;
-            motor_diag_count=0;
+            motor_diag_count=-5;
+            motor_diag_cnt=0;
             motor_max_time_for_impulse = DEFAULT_motor_max_time_for_impulse; 
             motor_eye_noise_protection = DEFAULT_motor_eye_noise_protection;
 		    MOTOR_Dir = direction;
@@ -267,12 +269,12 @@ static void MOTOR_Control(motor_dir_t direction) {
  ******************************************************************************/
 void MOTOR_timer_pulse(void) {
     if (motor_diag <= MOTOR_MAX_VALID_TIMER) {
-        if (motor_diag_count > 0) { //ignote first
+        if (motor_diag_count >= 0) { //ignote 
 			motor_diag_sum += motor_diag;
 		}
 		motor_diag_count++;
         if (motor_diag_count > MOTOR_UPDATE_IMPULSES_THLD) {
-            uint32_t tmp = motor_diag_sum / (motor_diag_count-1);
+            uint32_t tmp = motor_diag_sum / motor_diag_count;
             {
                 uint16_t b = tmp * config.motor_end_detect /100;
                 cli();
@@ -355,6 +357,9 @@ void MOTOR_timer_stop(void) {
         (MOTOR_PosMax<MOTOR_MIN_IMPULSES)) {
         CTL_error |=  CTL_ERR_MOTOR;
     } 
+    #if DEBUG_PRINT_MOTOR
+        COM_debug_print_motor(stop, motor_diag);
+    #endif
 }
 
 // interrupts: 
@@ -380,7 +385,8 @@ ISR (PCINT0_vect){
     // count only on HIGH impulses
     if ((((pine & ~pine_last & (1<<PE4)) != 0)) && (eye_timer==0)) {
         MOTOR_PosAct+=MOTOR_Dir;
-        motor_diag = motor_max_time_for_impulse-motor_timer;
+        motor_diag = motor_diag_cnt;
+        motor_diag_cnt=0;
         task|=TASK_MOTOR_PULSE;
         if (MOTOR_PosAct ==  MOTOR_PosStop) {
             // motor will be stopped after MOTOR_RUN_OVERLOAD time
@@ -401,6 +407,7 @@ ISR (PCINT0_vect){
  * \note Timer0 is active only if motor runing
  ******************************************************************************/
 ISR (TIMER0_OVF_vect){
+    motor_diag_cnt++;
     if ( motor_timer > 0) {
         motor_timer--;
     } else {

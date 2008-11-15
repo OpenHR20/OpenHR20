@@ -3,6 +3,7 @@ TODO list
 
 Version 0.99  (= 1.0 BETA)
 
+    - improve window open detection, temporary disabled
     - optimizations 
     - improve watch.c (add more significant values)
     - cleanup code in motor.c (current code have long history and it need review)  

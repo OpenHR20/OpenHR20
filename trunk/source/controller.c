@@ -78,6 +78,8 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
             }
         }
     }
+    #if 0
+    // detection temporary disabled, can be false positive
     /* window open detection */
     if (!CTL_mode_window) {
         if ((-temp_difference/10) > config.window_thld) {
@@ -94,7 +96,8 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
                 PID_force_update=0;
             }
         }
-    }
+    }  
+    #endif
 
     if (PID_update_timeout>0) PID_update_timeout--;
     if (PID_force_update>0) PID_force_update--;
