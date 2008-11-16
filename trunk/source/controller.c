@@ -140,7 +140,7 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
                 if ((new_valve==0) || (new_valve==100)) {
                     valve = new_valve;
                 } else {
-                    int8_t x = CTL_last_dir*(int8_t)(valve-new_valve);
+                    int8_t x = CTL_last_dir*((int8_t)valve-(int8_t)new_valve);
                     if ((x>20) || (x<=0))  {
                         valve = new_valve;
                     }
