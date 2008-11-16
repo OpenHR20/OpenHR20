@@ -131,7 +131,8 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
             if (temp>TEMP_MAX) {
                 valve = 100;
             } else {
-                valve = pid_Controller(calc_temp(temp),temp_average);
+                valve = pid_Controller(calc_temp(temp),temp_average+
+                    ((uint16_t)valve*config.human_temperature_feeling/100));
             }
         } 
         PID_force_update = -1;

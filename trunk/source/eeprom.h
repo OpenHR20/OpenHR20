@@ -65,6 +65,7 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
 	/* 1a */ uint8_t bat_warning_thld; //!< treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
 	/* 1b */ uint8_t bat_low_thld; //!< treshold for battery low [unit 0.02V]=[unit 0.01V per cell]
 	/* 1c */ uint8_t window_thld; //!< reshold for window open/close detection unit is 0.1C
+	/* 1d */ uint8_t human_temperature_feeling; //!< add valve postion to temperature, humans feel heating different than thermometer, unit 0.01C/% of valve position / \todo describe it better  
 } config_t;
 
 extern config_t config;
@@ -134,9 +135,9 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 03 */  {42,	    42,  TEMP_MIN,TEMP_MAX},    //!< temperature 2  - comfort (unit is 0.5stC)
   /* 04 */  {48,	    48,  TEMP_MIN,TEMP_MAX},    //!< temperature 3  - supercomfort (unit is 0.5stC)
   /* 05 */  {140,	   140,			0,		255},	//!< P_Factor;
-  /* 06 */  {12,	    12,			0,		255},	//!< I_Factor;
-  /* 07 */  {12,	    12,			0,		255},	//!< D_Factor;
-  /* 08 */  {128,	    128,		1,		255},	//!< scalling_factor != 0
+  /* 06 */  {6,	         6,			0,		255},	//!< I_Factor;
+  /* 07 */  {20,	    20,			0,		255},	//!< D_Factor;
+  /* 08 */  {200,	    200,		1,		255},	//!< scalling_factor != 0
   /* 09 */  {240/5,     240/5,      20/5,   255},   //!< PID_interval*5 = interval in seconds;  min=20sec, max=21.25 minutes
   /* 0a */  {180,	    180,        178,	234},	//!< open motor_speed PWM setting
   /* 0b */  {200,	    200,        178,	234},	//!< close motor_speed PWM setting
@@ -157,6 +158,7 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 1a */  {120,       120,       80,      160},   //!< bat_warning_thld; treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
   /* 1b */  {100,       100,       80,      160},   //!< bat_low_thld; treshold for battery low [unit 0.02V]=[unit 0.01V per cell]
   /* 1c */  {15,         15,        2,       40},   //!< uint8_t window_thld; reshold for window open/close detection unit is 0.1C
+  /* 1d */  {100,       100,        0,      255},   //!< human_temperature_feeling
 
 };
 

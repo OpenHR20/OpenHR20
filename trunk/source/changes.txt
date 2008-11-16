@@ -1,5 +1,9 @@
 version 1.00BETA will be released soon
 
+SVN revision 76
+    - experimental approximation of human temperature feeling
+    - experimental change of PID constants
+
 SVN revision 75
     - improve window open detection
     - bug fix for day of week
