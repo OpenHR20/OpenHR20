@@ -83,21 +83,12 @@ void pid_Init( int16_t processValue)
  *  \param setPoint  Desired value.
  *  \param processValue  Measured value.
  */
-int8_t pid_Controller(int16_t setPoint, int16_t processValue)
+int8_t pid_Controller(int16_t setPoint, int16_t processValue, int16_t human_feeling_correction)
 {
   int16_t error, p_term, d_term;
   int32_t i_term, ret;
 
-  error = setPoint - processValue;
-
-  // Calculate Pterm and limit error overflow
-  if (error > maxError){
-    p_term = MAX_INT;
-  } else if (error < -maxError){
-    p_term = -MAX_INT;
-  } else{
-    p_term = P_Factor * error;
-  }
+  error = setPoint - processValue; 
 
   // Calculate Iterm and limit integral runaway
   sumError += error;
@@ -108,6 +99,16 @@ int8_t pid_Controller(int16_t setPoint, int16_t processValue)
   }
   i_term = I_Factor * sumError;
 
+  // Calculate Pterm and limit error overflow
+  error -= human_feeling_correction;
+  if (error > maxError){
+    p_term = MAX_INT;
+  } else if (error < -maxError){
+    p_term = -MAX_INT;
+  } else{
+    p_term = P_Factor * error;
+  }
+
   // Calculate Dterm
   d_term = D_Factor * (lastProcessValue - processValue);
   lastProcessValue = processValue;
@@ -115,9 +116,9 @@ int8_t pid_Controller(int16_t setPoint, int16_t processValue)
   ret = (p_term + i_term + d_term) / scalling_factor;
 
   if(ret > 100 /* MAX_INT */){
-    ret = 100; //MAX_INT;
+    return 100; //MAX_INT;
   } else if(ret < 0 /*-MAX_INT*/){
-    ret = 0; //-MAX_INT;
+    return 0; //-MAX_INT;
   }
   return((int8_t)ret);
 }

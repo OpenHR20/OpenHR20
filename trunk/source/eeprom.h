@@ -134,10 +134,10 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 02 */  {34,	    34,  TEMP_MIN,TEMP_MAX},    //!< temperature 1  - energy save (unit is 0.5stC)
   /* 03 */  {42,	    42,  TEMP_MIN,TEMP_MAX},    //!< temperature 2  - comfort (unit is 0.5stC)
   /* 04 */  {48,	    48,  TEMP_MIN,TEMP_MAX},    //!< temperature 3  - supercomfort (unit is 0.5stC)
-  /* 05 */  {140,	   140,			0,		255},	//!< P_Factor;
+  /* 05 */  {100,	   100,			0,		255},	//!< P_Factor;
   /* 06 */  {6,	         6,			0,		255},	//!< I_Factor;
   /* 07 */  {0,	         0,			0,		255},	//!< D_Factor;
-  /* 08 */  {200,	    200,		1,		255},	//!< scalling_factor != 0
+  /* 08 */  {100,	    100,		1,		255},	//!< scalling_factor != 0
   /* 09 */  {240/5,     240/5,      20/5,   255},   //!< PID_interval*5 = interval in seconds;  min=20sec, max=21.25 minutes
   /* 0a */  {180,	    180,        178,	234},	//!< open motor_speed PWM setting
   /* 0b */  {200,	    200,        178,	234},	//!< close motor_speed PWM setting

@@ -1,5 +1,8 @@
 version 1.00BETA will be released soon
 
+SVN revision 81
+    - improve experimental approximation of human temperature feeling
+
 SVN revision 79
     - experimental valve action filter
 

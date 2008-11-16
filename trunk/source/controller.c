@@ -135,8 +135,8 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
             } else {
                 uint8_t new_valve;
                 uint8_t old_valve = valve;
-                new_valve = pid_Controller(calc_temp(temp),temp_average+
-                    ((uint16_t)valve*config.human_temperature_feeling/100));
+                new_valve = pid_Controller(calc_temp(temp),temp_average,
+                    (uint16_t)valve*config.human_temperature_feeling/100);
                 if ((new_valve==0) || (new_valve==100)) {
                     valve = new_valve;
                 } else {
