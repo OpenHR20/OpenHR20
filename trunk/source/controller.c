@@ -48,7 +48,7 @@ uint8_t CTL_temp_wanted=0;   // actual desired temperatur
 uint8_t CTL_temp_wanted_last=0xff;   // desired temperatur value used for last PID control
 uint8_t CTL_temp_auto=0;   // actual desired temperatur by timer
 bool CTL_mode_auto=true;   // actual desired temperatur by timer
-bool CTL_mode_window = false; // open window
+uint8_t CTL_mode_window = 0; // open window
 uint16_t CTL_open_window_timeout;
 
 static uint16_t PID_update_timeout=16;   // timer to next PID controler action/first is 16 sec after statup 
@@ -78,26 +78,37 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
             }
         }
     }
-    #if 0
-    // detection temporary disabled, can be false positive
-    /* window open detection */
-    if (!CTL_mode_window) {
+    
+    /* window open detection 
+     * use difference of current temperature and 1 minute old tempereature
+     * for status change condition must be true twice / noise protection
+     */ 
+    if (CTL_mode_window<2) {
+        /* window open detection */
         if ((-temp_difference/10) > config.window_thld) {
-            CTL_mode_window = true;
-            CTL_open_window_timeout = CTL_OPEN_WINDOW_TIMEOUT;
-            PID_force_update=0;
-        }
+            CTL_mode_window++;
+            if (mode_window()) { 
+                PID_force_update=0;
+                CTL_open_window_timeout = CTL_OPEN_WINDOW_TIMEOUT;
+            }
+        } else {
+            CTL_mode_window = 0;
+        }        
     } else { 
         /* window close detection */
         if (CTL_open_window_timeout > 0) {
             CTL_open_window_timeout--; 
             if (( temp_difference/10) > config.window_thld) {
-                CTL_mode_window = false;
-                PID_force_update=0;
+                CTL_mode_window++;
+                if (CTL_mode_window >= 4) {
+                    PID_force_update = 0;
+                    CTL_mode_window = 0;    
+                }
+            } else {
+                CTL_mode_window = 2;
             }
         }
     }  
-    #endif
 
     if (PID_update_timeout>0) PID_update_timeout--;
     if (PID_force_update>0) PID_force_update--;

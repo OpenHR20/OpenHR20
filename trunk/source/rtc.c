@@ -413,10 +413,9 @@ void RTC_AddOneDay(void)
 		}
 		// Clear Daylight saving Flag
         RTC_DS=0;
-    // next day of week
-    RTC_DOW++;
-    RTC_DOW %= 7;
 	}
+    // next day of week
+    RTC_DOW = (RTC_DOW %7)+1; // Monday = 1 Sat=7
 	// update hourbar
 	menu_update_hourbar((config.timer_mode==1)?RTC_DOW:0);
 }

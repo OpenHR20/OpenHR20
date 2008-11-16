@@ -187,7 +187,8 @@ int main(void)
             {
                 bool minute = RTC_AddOneSecond();
                 valve_wanted = CTL_update(minute,valve_wanted);
-                if (minute && (RTC_GetHour()==10) && (RTC_GetMinute()==0)) {
+                if (minute && (RTC_GetDayOfWeek()==6) && (RTC_GetHour()==10) && (RTC_GetMinute()==0)) {
+                    // every sunday 10:00AM
                     // TODO: improve this code!
                     // valve protection / CyCL
                     MOTOR_updateCalibration(0);

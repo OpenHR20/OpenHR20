@@ -494,7 +494,7 @@ void menu_view(bool update) {
                 }
                 goto MENU_COMMON_STATUS; // optimization
             } else {
-                if (CTL_mode_window) {
+                if (mode_window()) {
                     LCD_PrintStringID(LCD_STRING_OPEn,LCD_MODE_ON);
                     goto MENU_COMMON_STATUS; // optimization
                 }

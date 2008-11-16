@@ -279,9 +279,12 @@ void COM_print_debug(int8_t valve) {
     if (CTL_error!=0) {
 		print_s_p(PSTR(" E:"));
         print_hexXX(CTL_error);
-    }
+    }                   
 	if (valve<0) {
 		print_s_p(PSTR(" X"));
+	}
+	if (mode_window()) {
+		print_s_p(PSTR(" W"));
 	}
 	COM_putchar('\n');
 	COM_flush();
