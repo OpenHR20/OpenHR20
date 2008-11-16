@@ -1,5 +1,8 @@
 version 1.00BETA will be released soon
 
+SVN revision 79
+    - experimental valve action filter
+
 SVN revision 76
     - experimental approximation of human temperature feeling
     - experimental change of PID constants

@@ -56,6 +56,8 @@ int8_t PID_force_update=16;      // signed value, val<0 means disable force upda
 
 uint8_t CTL_error=0;
 
+static volatile int8_t CTL_last_dir=0;
+
 /*!
  *******************************************************************************
  *  Controller update
@@ -131,8 +133,20 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
             if (temp>TEMP_MAX) {
                 valve = 100;
             } else {
-                valve = pid_Controller(calc_temp(temp),temp_average+
+                uint8_t new_valve;
+                uint8_t old_valve = valve;
+                new_valve = pid_Controller(calc_temp(temp),temp_average+
                     ((uint16_t)valve*config.human_temperature_feeling/100));
+                if ((new_valve==0) || (new_valve==100)) {
+                    valve = new_valve;
+                } else {
+                    int8_t x = CTL_last_dir*(int8_t)(valve-new_valve);
+                    if ((x>20) || (x<=0))  {
+                        valve = new_valve;
+                    }
+                }
+                if (new_valve > old_valve) CTL_last_dir =  1; 
+                if (new_valve < old_valve) CTL_last_dir = -1; 
             }
         } 
         PID_force_update = -1;

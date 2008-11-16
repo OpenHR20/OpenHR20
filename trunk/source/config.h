@@ -89,7 +89,7 @@ In this file we define only configuration parameters, for example what kind of c
 
 
 /* revision remarks
- ******
+ *******
  */ 
 
 #endif /* CONFIG_H */
