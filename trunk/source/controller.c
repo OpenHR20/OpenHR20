@@ -66,7 +66,7 @@ static volatile int8_t CTL_last_dir=0;
  *  \returns valve position
  *   
  ******************************************************************************/
-uint8_t CTL_update(bool minute_ch, uint8_t valve) {
+int8_t CTL_update(bool minute_ch, int8_t valve) {
     if ( minute_ch || (CTL_temp_auto==0) ) {
         // minutes changed or we need return to timers
         uint8_t t=RTC_ActualTimerTemperature(!(CTL_temp_auto==0));
@@ -133,15 +133,17 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
             if (temp>TEMP_MAX) {
                 valve = 100;
             } else {
-                uint8_t new_valve;
-                uint8_t old_valve = valve;
+                int8_t new_valve;
+                int8_t old_valve = valve;
                 new_valve = pid_Controller(calc_temp(temp),temp_average,
                     (uint16_t)valve*config.human_temperature_feeling/100);
                 if ((new_valve==0) || (new_valve==100)) {
                     valve = new_valve;
                 } else {
-                    int8_t x = CTL_last_dir*((int8_t)valve-(int8_t)new_valve);
-                    if ((x>20) || (x<=0))  {
+                    int8_t x = 0;
+                    if (CTL_last_dir>0) x = (valve-new_valve);
+                    if (CTL_last_dir<0) x = (new_valve-valve);
+                    if ((x<=0) || (x>20))  {
                         valve = new_valve;
                     }
                 }

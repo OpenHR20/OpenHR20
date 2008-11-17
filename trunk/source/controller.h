@@ -44,7 +44,7 @@ extern bool CTL_mode_window;
 #define CTL_test_auto() (CTL_mode_auto && (CTL_temp_auto==CTL_temp_wanted))
 #define CTL_set_temp(t) (PID_force_update = 10, CTL_temp_wanted=t)
 
-uint8_t CTL_update(bool minute_ch, uint8_t valve);
+int8_t CTL_update(bool minute_ch, int8_t valve);
 void CTL_temp_change_inc (int8_t ch);
 
 #define CTL_CHANGE_MODE        -1
