@@ -231,17 +231,19 @@ static void MOTOR_Control(motor_dir_t direction) {
     } else {                                            // motor on
         if (MOTOR_Dir != direction){
             motor_diag_sum=0;
-            motor_diag_count=-5;
+            motor_diag_count = -MOTOR_IGNORE_IMPULSES;
             motor_diag_cnt=0;
             motor_max_time_for_impulse = DEFAULT_motor_max_time_for_impulse; 
             motor_eye_noise_protection = DEFAULT_motor_eye_noise_protection;
 		    MOTOR_Dir = direction;
             // photo eye
             MOTOR_HR20_PE3_P |= (1<<MOTOR_HR20_PE3);    // activate photo eye
-            motor_timer = motor_max_time_for_impulse;
+            motor_timer = (motor_max_time_for_impulse<<2); // *4 (for motor start-up)
             eye_timer = motor_eye_noise_protection;
+            TIFR0 = (1<<TOV0);
+            TCNT0 = 0;
             TIMSK0 = (1<<TOIE0); //enable interrupt from timer0 overflow
-            PCMSK0 |= (1<<PCINT4);  // enable interrupt from eye
+            // PCMSK0 |= (1<<PCINT4);  // enable interrupt from eye
             if ( direction == close) {
                 // set pins of H-Bridge
                 MOTOR_H_BRIDGE_close();
@@ -303,16 +305,17 @@ void MOTOR_timer_pulse(void) {
  *
  ******************************************************************************/
 void MOTOR_timer_stop(void) {
+    #warning \todo  MOTOR_timer_stop need clean up
 	motor_dir_t d = MOTOR_Dir;
     MOTOR_Control(stop);
-    if (eye_timer == 0xffff) {
+    if (eye_timer == 0xffff) { // normal stop on wanted position 
 			if ((MOTOR_calibration_step == 3) && (MOTOR_ManuCalibration>0)) {
 				MOTOR_calibration_step = 0;
 			} else if (MOTOR_calibration_step != 0) {
                 MOTOR_calibration_step = -1;     // calibration error
 		        CTL_error |=  CTL_ERR_MOTOR;
             }
-	} else {
+	} else { // stop after motor eye timeout
         if (d == open) { // stopped on end
             {
                 int16_t a = MOTOR_PosAct; // volatile variable optimization
@@ -344,7 +347,6 @@ void MOTOR_timer_stop(void) {
                     if (MOTOR_PosAct>MOTOR_MIN_IMPULSES) {
                         CTL_error |=  CTL_ERR_MOTOR;
                     }
-                    // \todo  
                 }
                 MOTOR_PosAct = 0;
                 if (MOTOR_calibration_step == 3 ) {
@@ -383,14 +385,15 @@ ISR (PCINT0_vect){
 	#endif
     // motor eye
     // count only on HIGH impulses
-    if ((((pine & ~pine_last & (1<<PE4)) != 0)) && (eye_timer==0)) {
+    if ((PCMSK0 & (1<<PCINT4)) && ((pine & ~pine_last & (1<<PE4)) != 0)) {
         MOTOR_PosAct+=MOTOR_Dir;
         motor_diag = motor_diag_cnt;
         motor_diag_cnt=0;
         task|=TASK_MOTOR_PULSE;
-        if (MOTOR_PosAct ==  MOTOR_PosStop) {
+        PCMSK0 &= ~(1<<PCINT4); // disable eye interrupt
+        if (MOTOR_PosAct == MOTOR_PosStop) {
             // motor will be stopped after MOTOR_RUN_OVERLOAD time
-            eye_timer = 0xffff; // kick off eye
+            eye_timer = 0xffff;
             motor_timer = motor_eye_noise_protection; // STOP timeout
         } else {
             eye_timer = motor_eye_noise_protection; // in timer0 overflow ticks
@@ -410,15 +413,23 @@ ISR (TIMER0_OVF_vect){
     motor_diag_cnt++;
     if ( motor_timer > 0) {
         motor_timer--;
+        {
+            uint16_t e = eye_timer; // optimization for volatile variable 
+            if (e>0)  {
+                if (e != 0xffff) eye_timer=e-1;      
+            } else {
+                pine_last = 0;
+                PCMSK0 |= (1<<PCINT4); // enable eye interrupt
+            }
+        }
     } else {
+        motor_diag = motor_diag_cnt;
         // motor fast STOP
         MOTOR_H_BRIDGE_stop();
         // complete STOP will be done later
 		TCCR0A = (1<<WGM00) | (1<<WGM01); // 0b 0000 0011
         task|=(TASK_MOTOR_STOP);
-    }
-    {
-        uint16_t e = eye_timer; // optimization for volatile variable 
-        if ((e>0) && (e<0xffff)) eye_timer=e-1;
+        PCMSK0 &= ~(1<<PCINT4); // disable eye interrupt
+
     }
 }
