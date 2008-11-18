@@ -55,6 +55,7 @@ static uint16_t PID_update_timeout=16;   // timer to next PID controler action/f
 int8_t PID_force_update=16;      // signed value, val<0 means disable force updates \todo rename
 
 uint8_t CTL_error=0;
+int16_t CTL_heating_feel_approx=0;
 
 static volatile int8_t CTL_last_dir=0;
 
@@ -130,25 +131,27 @@ int8_t CTL_update(bool minute_ch, int8_t valve) {
         if (PID_update_timeout == 0) {
             UPDATE_NOW:
             PID_update_timeout = (config.PID_interval * 5); // new PID pooling
+            CTL_heating_feel_approx +=valve-50;  // integration of valve value
+            if (CTL_heating_feel_approx > 5*50) CTL_heating_feel_approx = 5*50;
+            if (CTL_heating_feel_approx < 0) CTL_heating_feel_approx = 0;
             if (temp>TEMP_MAX) {
                 valve = 100;
             } else {
                 int8_t new_valve;
                 int8_t old_valve = valve;
                 new_valve = pid_Controller(calc_temp(temp),temp_average,
-                    (uint16_t)valve*config.human_temperature_feeling/100);
+                    /* CTL_heating_feel_approx >0 and <=250 we can do it without overload */
+                    ((uint16_t)CTL_heating_feel_approx)*config.human_temperature_feeling/(5*50));
                 if ((new_valve==0) || (new_valve==100)) {
                     valve = new_valve;
                 } else {
-                    int8_t x = 0;
-                    if (CTL_last_dir>0) x = (valve-new_valve);
-                    if (CTL_last_dir<0) x = (new_valve-valve);
+                    int8_t x = CTL_last_dir * (valve-new_valve);
                     if ((x<=0) || (x>20))  {
                         valve = new_valve;
                     }
                 }
-                if (new_valve > old_valve) CTL_last_dir =  1; 
-                if (new_valve < old_valve) CTL_last_dir = -1; 
+                if (valve > old_valve) CTL_last_dir =  1; 
+                if (valve < old_valve) CTL_last_dir = -1; 
             }
         } 
         PID_force_update = -1;

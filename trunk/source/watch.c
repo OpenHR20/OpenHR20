@@ -59,6 +59,7 @@ static uint16_t watch_map[WATCH_N] PROGMEM = {
 	/* 06 */ ((uint16_t) &CTL_temp_auto) +B8,
 	/* 07 */ ((uint16_t) &motor_diag) + B16,
 	/* 08 */ ((uint16_t) &MOTOR_PosMax) + B16,
+	/* 09 */ ((uint16_t) &CTL_heating_feel_approx) + B16,
 };
 
 

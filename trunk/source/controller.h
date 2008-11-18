@@ -35,6 +35,7 @@ extern uint8_t CTL_temp_wanted; //!< wanted temperature
 extern uint8_t CTL_temp_wanted_last;   // desired temperatur value used for last PID control
 extern uint8_t CTL_temp_auto;
 extern uint8_t CTL_mode_auto;
+extern int16_t CTL_heating_feel_approx;
 extern int8_t PID_force_update;      // signed value, val<0 means disable force updates
 extern uint8_t CTL_error;
 extern bool CTL_mode_window;
