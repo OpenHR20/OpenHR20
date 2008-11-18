@@ -139,16 +139,16 @@ int8_t CTL_update(bool minute_ch, int8_t valve) {
             } else {
                 int8_t new_valve;
                 int8_t old_valve = valve;
-                new_valve = pid_Controller(calc_temp(temp),temp_average,
+                new_valve = 50+pid_Controller(calc_temp(temp),temp_average,
                     /* CTL_heating_feel_approx >0 and <=250 we can do it without overload */
                     ((uint16_t)CTL_heating_feel_approx)*config.human_temperature_feeling/(5*50));
                 if ((new_valve==0) || (new_valve==100)) {
                     valve = new_valve;
                 } else {
-                    int8_t x = CTL_last_dir * (valve-new_valve);
-                    if ((x<=0) || (x>20))  {
+                    // int8_t x = CTL_last_dir * (valve-new_valve);
+                    //if ((x<=0) || (x>20))  {
                         valve = new_valve;
-                    }
+                    //}
                 }
                 if (valve > old_valve) CTL_last_dir =  1; 
                 if (valve < old_valve) CTL_last_dir = -1; 

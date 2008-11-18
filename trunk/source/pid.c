@@ -115,10 +115,10 @@ int8_t pid_Controller(int16_t setPoint, int16_t processValue, int16_t human_feel
 
   ret = (p_term + i_term + d_term) / scalling_factor;
 
-  if(ret > 100 /* MAX_INT */){
-    return 100; //MAX_INT;
-  } else if(ret < 0 /*-MAX_INT*/){
-    return 0; //-MAX_INT;
+  if(ret > 50){
+    return 50;
+  } else if(ret < -50){
+    return -50; 
   }
   return((int8_t)ret);
 }
