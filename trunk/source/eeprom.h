@@ -157,7 +157,7 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 19 */  {0,           0,        0,        1},   //!< timer_mode; =0 only one program, =1 programs for weekdays 
   /* 1a */  {120,       120,       80,      160},   //!< bat_warning_thld; treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
   /* 1b */  {100,       100,       80,      160},   //!< bat_low_thld; treshold for battery low [unit 0.02V]=[unit 0.01V per cell]
-  /* 1c */  {15,         15,        2,       40},   //!< uint8_t window_thld; reshold for window open/close detection unit is 0.1C
+  /* 1c */  {50,         50,       20,      255},   //!< uint8_t window_thld; reshold for window open/close detection unit is 0.01C
   /* 1d */  {0,           0,        0,      255},   //!< human_temperature_feeling
 
 };

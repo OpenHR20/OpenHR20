@@ -70,11 +70,8 @@ typedef enum {
     menu_set_year, menu_set_month, menu_set_day, menu_set_hour, menu_set_minute,
 
     // datetime setting
-    menu_set_timmer_dow_start, menu_set_timmer_dow, menu_set_timmer,
+    menu_set_timmer_dow_start, menu_set_timmer_dow, menu_set_timmer
     
-    
-    
-    menu_empty
 } menu_t;
 
 menu_t menu_state;
@@ -183,6 +180,7 @@ bool menu_controller(bool new_state) {
         if (wheel != 0) RTC_SetYear(RTC_GetYearYY()+wheel);
         if ( kb_events & KB_EVENT_PROG) {
             menu_state = menu_set_month;
+            CTL_update_temp_auto();
             ret=true;
         }
         break;
@@ -190,6 +188,7 @@ bool menu_controller(bool new_state) {
         if (wheel != 0) RTC_SetMonth(RTC_GetMonth()+wheel);
         if ( kb_events & KB_EVENT_PROG ) {
             menu_state = menu_set_day;
+            CTL_update_temp_auto();
             ret=true;
         }
         break;
@@ -197,6 +196,7 @@ bool menu_controller(bool new_state) {
         if (wheel != 0) RTC_SetDay(RTC_GetDay()+wheel);
         if ( kb_events & KB_EVENT_PROG ) {
             menu_state = menu_set_hour;
+            CTL_update_temp_auto();
             ret=true;
         }
         break;
@@ -204,6 +204,7 @@ bool menu_controller(bool new_state) {
         if (wheel != 0) RTC_SetHour(RTC_GetHour()+wheel);
         if ( kb_events & KB_EVENT_PROG ) {
             menu_state = menu_set_minute;
+            CTL_update_temp_auto();
             ret=true;
         }
         break;
@@ -214,6 +215,7 @@ bool menu_controller(bool new_state) {
         }
         if ( kb_events & KB_EVENT_PROG ) {
             menu_state = menu_home;
+            CTL_update_temp_auto();
             ret=true;
         }
         break;
@@ -371,13 +373,6 @@ bool menu_controller(bool new_state) {
         service_watch_n=(service_watch_n+wheel+WATCH_N)%WATCH_N;
         if (wheel != 0) ret=true;
         break;
-	    
-	case menu_empty: // show temperature, blackhole
-        if (new_state) {
-            menu_auto_update_timeout=1;
-            // nothing todo, it is blackhole, just update value
-        }
-        //empty        
     }
     if (events_common()) ret=true;
     if (ret && (service_idx>=0) && (service_idx<CONFIG_RAW_SIZE)) {
@@ -571,13 +566,9 @@ void menu_view(bool update) {
         if (update) clr_show1(LCD_SEG_COL1);           // decimal point
         LCD_PrintTemp(menu_set_temp,LCD_MODE_BLINK_1);
         show_selected_temperature_type(menu_state-menu_preset_temp0,LCD_MODE_ON);
-        break;                                                             
     default:
-	case menu_empty: // show temperature
-        if (update) clr_show1(LCD_SEG_COL1);           // decimal point
-        LCD_PrintTempInt(temp_average,LCD_MODE_ON);
-        break;
-    }
+        break;                   
+    }                                          
 }
 
 /*!

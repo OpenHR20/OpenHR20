@@ -32,6 +32,7 @@
  */
  
 #include <stdint.h>
+#include <stdlib.h>
 #include "main.h"
 #include "rtc.h"
 #include "eeprom.h"
@@ -76,19 +77,29 @@ void pid_Init( int16_t processValue)
 }
 
 
-/*! \brief PID control algorithm.
+/*! \brief non-linear  PID control algorithm.
  *
  *  Calculates output from setpoint, process value and PID status.
  *
  *  \param setPoint  Desired value.
  *  \param processValue  Measured value.
  */
-int8_t pid_Controller(int16_t setPoint, int16_t processValue, int16_t human_feeling_correction)
+int8_t pid_Controller(int16_t setPoint, int16_t processValue)
 {
-  int16_t error, p_term, d_term;
-  int32_t i_term, ret;
+  int32_t error, d_term, pi_term, ret;
 
-  error = setPoint - processValue; 
+  error = setPoint - processValue;
+  error *= labs(error); // non linear characteristic 
+  error /= scalling_factor;
+
+  // Calculate Pterm and limit error overflow
+  if (error > maxError){
+    pi_term = MAX_INT;
+  } else if (error < -maxError){
+    pi_term = -MAX_INT;
+  } else{
+    pi_term = (P_Factor * error);
+  }
 
   // Calculate Iterm and limit integral runaway
   sumError += error;
@@ -97,23 +108,17 @@ int8_t pid_Controller(int16_t setPoint, int16_t processValue, int16_t human_feel
   } else if(sumError < -maxSumError){
     sumError = -maxSumError;
   }
-  i_term = I_Factor * sumError;
-
-  // Calculate Pterm and limit error overflow
-  error -= human_feeling_correction;
-  if (error > maxError){
-    p_term = MAX_INT;
-  } else if (error < -maxError){
-    p_term = -MAX_INT;
-  } else{
-    p_term = P_Factor * error;
-  }
+  pi_term += I_Factor * sumError;
 
   // Calculate Dterm
-  d_term = D_Factor * (lastProcessValue - processValue);
+  
+  d_term = lastProcessValue - processValue;
+  d_term *= labs(d_term); // non linear characteristic 
+  d_term /= scalling_factor;
+  d_term *= D_Factor;
   lastProcessValue = processValue;
 
-  ret = (p_term + i_term + d_term) / scalling_factor;
+  ret = (pi_term + d_term) / scalling_factor;
 
   if(ret > 50){
     return 50;
