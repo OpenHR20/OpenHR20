@@ -1,5 +1,8 @@
 version 1.00BETA will be released soon
 
+SVN revision 88
+    - improve code for maximum "I" part at "PID" controller
+
 SVN revision 86
     - non-linear PID controler
 

@@ -3,7 +3,6 @@ TODO list
 
 Version 0.99  (= 1.0 BETA)
 
-    - improve code for maximum "I" part at "PID" controller
     - find tunning settings for PID controller
     - reduce motor position changes / save battery
     - optimizations 

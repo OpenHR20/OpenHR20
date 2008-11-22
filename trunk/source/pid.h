@@ -24,6 +24,7 @@
  */
 
 extern int32_t sumError;
+extern int16_t maxSumError;
 
 /*!
  * \file       pid.h

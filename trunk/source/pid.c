@@ -60,7 +60,7 @@ int32_t sumError;
 //! Maximum allowed error, avoid overflow
 static int16_t maxError;
 //! Maximum allowed sumerror, avoid overflow
-static int32_t maxSumError;
+int16_t maxSumError;
 
 
 void pid_Init( int16_t processValue)
@@ -73,7 +73,12 @@ void pid_Init( int16_t processValue)
   maxError = MAX_INT / (P_Factor + 1);
   // not recomended to use => maxSumError = MAX_I_TERM / (I_Factor + 1);
   // used limitation => P*maxError == I*maxSumError;
-  maxSumError = ((int32_t)maxError*(int32_t)P_Factor)/(int32_t)I_Factor;
+  // maxSumError = ((int32_t)maxError*(int32_t)P_Factor)/(int32_t)I_Factor;
+  if (I_Factor == 0) {
+    maxSumError = MAX_INT;
+  } else {
+    maxSumError = ((int16_t)scalling_factor * (int16_t)config.max_I_effect) / (int16_t)I_Factor;
+  }
 }
 
 

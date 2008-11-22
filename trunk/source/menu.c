@@ -358,7 +358,7 @@ bool menu_controller(bool new_state) {
             int16_t max_min_1 = (int16_t)(config_max(service_idx))-min+1;
             config_raw[service_idx] = (uint8_t) (
                     ((int16_t)(config_raw[service_idx])+(int16_t)wheel-min+max_min_1)%max_min_1+min);
-            if (service_idx==0) { LCD_Init(); ret=true; }
+            if (service_idx==0) LCD_Init();
         }
         break;        
 	case menu_service_watch:
