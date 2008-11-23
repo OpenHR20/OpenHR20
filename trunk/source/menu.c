@@ -224,36 +224,37 @@ bool menu_controller(bool new_state) {
     case menu_home2:        // alternate version, real temperature
     case menu_home3:        // alternate version, valve pos
     case menu_home4:        // alternate version, time    
-        if (locked) {
-            if ( kb_events & (
-                    KB_EVENT_WHEEL_PLUS  | KB_EVENT_WHEEL_MINUS | KB_EVENT_PROG | KB_EVENT_C
-                    | KB_EVENT_AUTO | KB_EVENT_PROG_REWOKE | KB_EVENT_C_REWOKE | KB_EVENT_AUTO_REWOKE
-                    | KB_EVENT_PROG_LONG | KB_EVENT_C_LONG | KB_EVENT_AUTO_LONG )) {
-                menu_state=menu_lock;
-                ret=true;
+        if ( kb_events & KB_EVENT_C ) {
+            menu_state++;       // go to next alternate home screen
+            if (menu_state > menu_home4) menu_state=menu_home;
+            ret=true; 
+        } else {
+            if (locked) {
+                if ( kb_events & (
+                        KB_EVENT_WHEEL_PLUS  | KB_EVENT_WHEEL_MINUS | KB_EVENT_PROG
+                        | KB_EVENT_AUTO | KB_EVENT_PROG_REWOKE | KB_EVENT_C_REWOKE | KB_EVENT_AUTO_REWOKE
+                        | KB_EVENT_PROG_LONG | KB_EVENT_C_LONG | KB_EVENT_AUTO_LONG )) {
+                    menu_state=menu_lock;
+                    ret=true;
+                    }
+            } else { // not locked
+    			if ((wheel != 0) &&   ((menu_state == menu_home) 
+    							    || (menu_state == menu_home_no_alter))) {
+    				CTL_temp_change_inc(wheel);
+    				menu_state = menu_home_no_alter;
+    			} 			 
+                if ( kb_events & KB_EVENT_AUTO ) {
+                    CTL_change_mode(CTL_CHANGE_MODE); // change mode
+                    menu_state=menu_home_no_alter;
+                    ret=true; 
                 }
-        } else { // not locked
-			if ((wheel != 0) &&   ((menu_state == menu_home) 
-							    || (menu_state == menu_home_no_alter))) {
-				CTL_temp_change_inc(wheel);
-				menu_state = menu_home_no_alter;
-			}			 
-            if ( kb_events & KB_EVENT_C ) {
-                menu_state++;       // go to next alternate home screen
-                if (menu_state > menu_home4) menu_state=menu_home;
-                ret=true; 
-            } 
-            if ( kb_events & KB_EVENT_AUTO ) {
-                CTL_change_mode(CTL_CHANGE_MODE); // change mode
-                menu_state=menu_home_no_alter;
-                ret=true; 
+                if ( kb_events & KB_EVENT_AUTO_REWOKE ) {
+                    CTL_change_mode(CTL_CHANGE_MODE_REWOKE); // change mode
+                    menu_state=menu_home_no_alter;
+                    ret=true; 
+                }
+                // TODO ....  
             }
-            if ( kb_events & KB_EVENT_AUTO_REWOKE ) {
-                CTL_change_mode(CTL_CHANGE_MODE_REWOKE); // change mode
-                menu_state=menu_home_no_alter;
-                ret=true; 
-            }
-            // TODO ....  
         } 
         break;
     case menu_set_timmer_dow_start:

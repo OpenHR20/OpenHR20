@@ -1,10 +1,14 @@
 version 1.00BETA will be released soon
-
+SVN revision 90
+    - temperature verbose debug log for window detection
+    - cleanup in motor.c
+     
 SVN revision 88
     - improve code for maximum "I" part at "PID" controller
 
 SVN revision 86
     - non-linear PID controler
+    - reduce motor position changes / save battery
 
 SVN revision 81
     - improve experimental approximation of human temperature feeling

@@ -469,3 +469,13 @@ void COM_debug_print_motor(int8_t dir, uint16_t m) {
     COM_flush();
 }
 #endif
+
+#if DEBUG_PRINT_MEASURE
+void COM_debug_print_temperature(uint16_t t) {
+    print_s_p(PSTR("T: "));
+    print_decXXXX(t);
+    COM_putchar('\n');
+    COM_flush();
+}
+#endif
+

@@ -43,4 +43,5 @@ void COM_print_debug(int8_t valve);
 void COM_commad_parse (void);
 
 void COM_debug_print_motor(int8_t dir, uint16_t m);
+void COM_debug_print_temperature(uint16_t t);
 

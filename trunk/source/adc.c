@@ -43,11 +43,13 @@
 
 
 // HR20 Project includes
+#include "debug.h"
 #include "main.h"
 #include "adc.h"
 #include "task.h"
 #include "rtc.h"
 #include "eeprom.h"
+#include "com.h"
 
 // typedefs
 
@@ -170,7 +172,7 @@ bool ADC_Get_Bat_isOk(void)
  *
  *  \todo: store values for conversion in EEPROM 
  ******************************************************************************/
-int16_t ADC_Convert_To_Degree(uint16_t adc)
+static int16_t ADC_Convert_To_Degree(uint16_t adc)
 {
     int16_t dummy;
     uint8_t i;
@@ -241,8 +243,15 @@ uint8_t task_ADC(void) {
 		sleep_with_ADC=1;
 		break;
 	case 4: //step 4
-		update_ring(TEMP_RING_TYPE,ADC_Convert_To_Degree((uint16_t)ADCL | ((uint16_t)ADCH << 8)));
-		shift_ring();
+        {
+            int16_t t = ADC_Convert_To_Degree((uint16_t)ADCL | ((uint16_t)ADCH << 8));
+            update_ring(TEMP_RING_TYPE,t);
+            #if DEBUG_PRINT_MEASURE
+                COM_debug_print_temperature(t);
+            #endif
+            shift_ring();
+        }
+        // do not use break here
 	default:
 		// deactivate voltage divider
     	ADC_ACT_TEMP_P &= ~(1<<ADC_ACT_TEMP);
