@@ -107,14 +107,14 @@ void MOTOR_updateCalibration(uint8_t cal_type)
         MOTOR_wait_for_new_calibration = 5;
         CTL_error &= ~CTL_ERR_MOTOR;
     } else {
-        motor_max_time_for_impulse[0] = DEFAULT_motor_max_time_for_impulse; 
-        motor_max_time_for_impulse[1] = DEFAULT_motor_max_time_for_impulse; 
-        motor_eye_noise_protection[0] = DEFAULT_motor_eye_noise_protection;
-        motor_eye_noise_protection[1] = DEFAULT_motor_eye_noise_protection;
         if (MOTOR_wait_for_new_calibration != 0) {
             MOTOR_wait_for_new_calibration--;
         } else {
             if (MOTOR_calibration_step==1) {
+                motor_max_time_for_impulse[0] = DEFAULT_motor_max_time_for_impulse; 
+                motor_max_time_for_impulse[1] = DEFAULT_motor_max_time_for_impulse; 
+                motor_eye_noise_protection[0] = DEFAULT_motor_eye_noise_protection;
+                motor_eye_noise_protection[1] = DEFAULT_motor_eye_noise_protection;
                 MOTOR_calibration_step++;
                 MOTOR_PosStop= +MOTOR_MAX_IMPULSES;
                 MOTOR_Control(open);
