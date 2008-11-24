@@ -104,7 +104,7 @@ int8_t pid_Controller(int16_t setPoint, int16_t processValue)
   if (I_Factor == 0) {
     maxSumError = MAX_INT;
   } else {
-    maxSumError = (((int16_t)scalling_factor * 100)-labs(pi_term))/I_Factor;
+    maxSumError = (((int16_t)scalling_factor*(100/2))-labs(pi_term))/I_Factor;
     if (maxSumError <0) maxSumError=0;
   }
   sumError += error;
