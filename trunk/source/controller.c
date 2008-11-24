@@ -27,8 +27,8 @@
  * \file       controller.c
  * \brief      Controller for temperature
  * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>
- * \date       $Date:$
- * $Rev: 39 $
+ * \date       $Date$
+ * $Rev$
  */
 
 #include <stdint.h>
@@ -131,7 +131,8 @@ int8_t CTL_update(bool minute_ch, int8_t valve) {
             if (temp>TEMP_MAX) {
                 valve = 100;
             } else {
-                valve = 50+pid_Controller(calc_temp(temp),temp_average);
+                int16_t v = (50*2)+(int16_t)pid_Controller(calc_temp(temp),temp_average);
+                if (abs((int16_t)valve*2-v)>=3) valve = v/2;
             }
         } 
         PID_force_update = -1;

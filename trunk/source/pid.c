@@ -71,14 +71,6 @@ void pid_Init( int16_t processValue)
   lastProcessValue =  processValue;
   // Limits to avoid overflow
   maxError = MAX_INT / (P_Factor + 1);
-  // not recomended to use => maxSumError = MAX_I_TERM / (I_Factor + 1);
-  // used limitation => P*maxError == I*maxSumError;
-  // maxSumError = ((int32_t)maxError*(int32_t)P_Factor)/(int32_t)I_Factor;
-  if (I_Factor == 0) {
-    maxSumError = MAX_INT;
-  } else {
-    maxSumError = ((int16_t)scalling_factor * (int16_t)config.max_I_effect) / (int16_t)I_Factor;
-  }
 }
 
 
@@ -91,8 +83,10 @@ void pid_Init( int16_t processValue)
  */
 int8_t pid_Controller(int16_t setPoint, int16_t processValue)
 {
-  int32_t error, d_term, pi_term, ret;
-
+  int32_t error, pi_term, ret;
+#if CONFIG_ENABLE_D
+  int32_t d_term,
+#endif
   error = setPoint - processValue;
   error *= labs(error); // non linear characteristic 
   error /= scalling_factor;
@@ -107,6 +101,12 @@ int8_t pid_Controller(int16_t setPoint, int16_t processValue)
   }
 
   // Calculate Iterm and limit integral runaway
+  if (I_Factor == 0) {
+    maxSumError = MAX_INT;
+  } else {
+    maxSumError = (((int16_t)scalling_factor * 100)-labs(pi_term))/I_Factor;
+    if (maxSumError <0) maxSumError=0;
+  }
   sumError += error;
   if(sumError > maxSumError){
     sumError = maxSumError;
@@ -115,6 +115,7 @@ int8_t pid_Controller(int16_t setPoint, int16_t processValue)
   }
   pi_term += I_Factor * sumError;
 
+#if CONFIG_ENABLE_D
   // Calculate Dterm
   
   d_term = lastProcessValue - processValue;
@@ -123,12 +124,15 @@ int8_t pid_Controller(int16_t setPoint, int16_t processValue)
   d_term *= D_Factor;
   lastProcessValue = processValue;
 
-  ret = (pi_term + d_term) / scalling_factor;
+  ret = (pi_term + d_term) / (scalling_factor/2);
+#else
+  ret = (pi_term) / (scalling_factor/2);
+#endif
 
-  if(ret > 50){
-    return 50;
-  } else if(ret < -50){
-    return -50; 
+  if(ret > 100){
+    return 101;
+  } else if(ret < -100){
+    return -101; 
   }
   return((int8_t)ret);
 }

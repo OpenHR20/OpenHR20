@@ -1,4 +1,9 @@
 version 1.00BETA will be released soon
+SVN revision 92
+    - optional disable D in PID controller
+    - improve boundary for I in PID
+    - 0.5% hysteresis at valve
+
 SVN revision 90
     - temperature verbose debug log for window detection
     - cleanup in motor.c

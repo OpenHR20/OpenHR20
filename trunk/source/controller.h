@@ -28,7 +28,7 @@
  * \brief      Controller for temperature
  * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>
  * \date       $Date$
- * $Rev: 39 $
+ * $Rev$
  */
 
 extern uint8_t CTL_temp_wanted; //!< wanted temperature
