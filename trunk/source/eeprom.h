@@ -65,6 +65,7 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
 	/* 1a */ uint8_t bat_warning_thld; //!< treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
 	/* 1b */ uint8_t bat_low_thld; //!< treshold for battery low [unit 0.02V]=[unit 0.01V per cell]
 	/* 1c */ uint8_t window_thld; //!< reshold for window open/close detection unit is 0.1C
+	/* 1d */ uint8_t pid_hysteresis;
 } config_t;
 
 extern config_t config;
@@ -133,14 +134,14 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 02 */  {34,	    34,  TEMP_MIN,TEMP_MAX},    //!< temperature 1  - energy save (unit is 0.5stC)
   /* 03 */  {42,	    42,  TEMP_MIN,TEMP_MAX},    //!< temperature 2  - comfort (unit is 0.5stC)
   /* 04 */  {48,	    48,  TEMP_MIN,TEMP_MAX},    //!< temperature 3  - supercomfort (unit is 0.5stC)
-  /* 05 */  {50,	    50,			0,		255},	//!< P_Factor;
+  /* 05 */  {100,	   100,			0,		255},	//!< P_Factor;
   /* 06 */  {3,	         3,			0,		255},	//!< I_Factor;
 #if CONFIG_ENABLE_D
   /* 07 */  {0,          0,			0,		255},	//!< D_Factor;
 #else
   /* 07 */  {0,          0,			0,		0},	//!< D_Factor;
 #endif
-  /* 08 */  {100,	    100,		1,		255},	//!< scalling_factor / odd values is recomended
+  /* 08 */  {200,	    200,		1,		255},	//!< scalling_factor / odd values is recomended
   /* 09 */  {240/5,     240/5,      20/5,   255},   //!< PID_interval*5 = interval in seconds;  min=20sec, max=21.25 minutes
   /* 0a */  {180,	    180,        178,	234},	//!< open motor_speed PWM setting
   /* 0b */  {200,	    200,        178,	234},	//!< close motor_speed PWM setting
@@ -161,6 +162,7 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 1a */  {120,       120,       80,      160},   //!< bat_warning_thld; treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
   /* 1b */  {100,       100,       80,      160},   //!< bat_low_thld; treshold for battery low [unit 0.02V]=[unit 0.01V per cell]
   /* 1c */  {50,         50,       20,      255},   //!< uint8_t window_thld; reshold for window open/close detection unit is 0.01C
+  /* 1d */  {120,       120,       20,      255},   //!< uint8_t window_thld; reshold for window open/close detection unit is 0.01C
 
 };
 

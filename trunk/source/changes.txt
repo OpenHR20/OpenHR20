@@ -1,4 +1,8 @@
 version 1.00BETA will be released soon
+SVN revision 94
+    - improve PI controller
+    - bug fix for days in month
+    
 SVN revision 92
     - optional disable D in PID controller
     - improve boundary for I in PID

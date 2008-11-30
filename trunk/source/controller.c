@@ -131,8 +131,7 @@ int8_t CTL_update(bool minute_ch, int8_t valve) {
             if (temp>TEMP_MAX) {
                 valve = 100;
             } else {
-                int16_t v = (50*2)+(int16_t)pid_Controller(calc_temp(temp),temp_average);
-                if (abs((int16_t)valve*2-v)>=3) valve = v/2;
+                valve = 50+(int16_t)pid_Controller(calc_temp(temp),temp_average,valve-50);
             }
         } 
         PID_force_update = -1;

@@ -45,9 +45,11 @@
 
 
 //! Last process value, used to find derivative of process value.
+#if CONFIG_ENABLE_D
 static int16_t lastProcessValue;
+#endif
 //! Summation of errors, used for integrate calculations
-int32_t sumError;
+int32_t sumError=0;
 //! The Proportional tuning constant, multiplied with scalling_factor
 #define P_Factor (config.P_Factor)
 //! The Integral tuning constant, multiplied with scalling_factor
@@ -58,7 +60,7 @@ int32_t sumError;
 #define scalling_factor  (config.scalling_factor)
 
 //! Maximum allowed error, avoid overflow
-static int16_t maxError;
+static int16_t maxError=0;
 //! Maximum allowed sumerror, avoid overflow
 int16_t maxSumError;
 
@@ -66,11 +68,16 @@ int16_t maxSumError;
 void pid_Init( int16_t processValue)
 // Set up PID controller parameters
 {
-  // Start values for PID controller
-  sumError = 0;
+#if CONFIG_ENABLE_D
   lastProcessValue =  processValue;
+#endif
   // Limits to avoid overflow
   maxError = MAX_INT / (P_Factor + 1);
+  if (I_Factor == 0) {
+      maxSumError = MAX_INT;
+  } else {
+      maxSumError = ((int16_t)scalling_factor*50)/I_Factor;
+  }
 }
 
 
@@ -81,39 +88,38 @@ void pid_Init( int16_t processValue)
  *  \param setPoint  Desired value.
  *  \param processValue  Measured value.
  */
-int8_t pid_Controller(int16_t setPoint, int16_t processValue)
+int8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old_result)
 {
-  int32_t error, pi_term, ret;
+  int32_t error32, pi_term, ret;
+  int16_t error16;
 #if CONFIG_ENABLE_D
   int32_t d_term,
 #endif
-  error = setPoint - processValue;
-  error *= labs(error); // non linear characteristic 
-  error /= scalling_factor;
+  error16 = setPoint - processValue;
 
-  // Calculate Pterm and limit error overflow
-  if (error > maxError){
-    pi_term = MAX_INT;
-  } else if (error < -maxError){
-    pi_term = -MAX_INT;
-  } else{
-    pi_term = (P_Factor * error);
+  // Calculate Iterm and limit integral runaway  
+  if (abs(error16)<((int16_t)scalling_factor*50/P_Factor)) { 
+      // update sumError only for error < limit of P
+      sumError += error16;
   }
-
-  // Calculate Iterm and limit integral runaway
-  if (I_Factor == 0) {
-    maxSumError = MAX_INT;
-  } else {
-    maxSumError = (((int16_t)scalling_factor*(100/2))-labs(pi_term))/I_Factor;
-    if (maxSumError <0) maxSumError=0;
-  }
-  sumError += error;
   if(sumError > maxSumError){
     sumError = maxSumError;
   } else if(sumError < -maxSumError){
     sumError = -maxSumError;
   }
-  pi_term += I_Factor * sumError;
+  pi_term = I_Factor * sumError;
+
+  error32 = (int32_t)error16 * (int32_t)abs(error16); // non linear P characteristic 
+  error32 /= 100L; // P gain
+
+  // Calculate Pterm and limit error overflow
+  if (error32 > maxError){
+    pi_term += MAX_INT;
+  } else if (error32 < -maxError){
+    pi_term += -MAX_INT;
+  } else{
+    pi_term += (P_Factor * error32);
+  }
 
 #if CONFIG_ENABLE_D
   // Calculate Dterm
@@ -124,15 +130,19 @@ int8_t pid_Controller(int16_t setPoint, int16_t processValue)
   d_term *= D_Factor;
   lastProcessValue = processValue;
 
-  ret = (pi_term + d_term) / (scalling_factor/2);
+  ret = pi_term + d_term;
 #else
-  ret = (pi_term) / (scalling_factor/2);
+  ret = pi_term;
 #endif
 
-  if(ret > 100){
-    return 101;
-  } else if(ret < -100){
-    return -101; 
+  if (labs(ret-((int32_t)old_result*scalling_factor))<config.pid_hysteresis) return old_result;
+  
+  ret /= scalling_factor;
+
+  if(ret > 50){
+    return 50;
+  } else if(ret < -50){
+    return -50; 
   }
   return((int8_t)ret);
 }

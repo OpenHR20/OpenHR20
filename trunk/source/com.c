@@ -47,6 +47,7 @@
 #include "watch.h"
 #include "eeprom.h"
 #include "controller.h"
+#include "pid.h"
 #include "debug.h"
 
 
@@ -276,6 +277,10 @@ void COM_print_debug(int8_t valve) {
 	}
 	print_s_p(PSTR(" B: "));
 	print_decXXXX(bat_average);
+#if DEBUG_PRINT_I_SUM
+	print_s_p(PSTR(" Is: "));
+	print_hexXXXX(sumError);
+#endif
     if (CTL_error!=0) {
 		print_s_p(PSTR(" E:"));
         print_hexXX(CTL_error);

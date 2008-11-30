@@ -429,7 +429,7 @@ void RTC_AddOneDay(void)
  ******************************************************************************/
 uint8_t RTC_DaysOfMonth()
 {
-    uint8_t dom = pgm_read_byte(&RTC_DayOfMonthTablePrgMem[RTC_MM]);
+    uint8_t dom = pgm_read_byte(&RTC_DayOfMonthTablePrgMem[RTC_MM-1]);
     if ((RTC_MM == 2)&&(!RTC_NoLeapyear()))
         return 29; // leapyear feb=29
     return dom;

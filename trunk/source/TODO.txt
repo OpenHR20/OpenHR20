@@ -3,6 +3,8 @@ TODO list
 
 Version 0.99  (= 1.0 BETA)
 
+    - com: add command for manu/auto and temperature
+    - window open detection improve
     - find tunning settings for PID controller
     - optimizations 
     - improve watch.c (add more significant values)
