@@ -83,7 +83,7 @@ int8_t CTL_update(bool minute_ch, int8_t valve) {
      * use difference of current temperature and 1 minute old tempereature
      * for status change condition must be true twice / noise protection
      */ 
-    if (CTL_mode_window<2) {
+    if (CTL_mode_window<config.window_noise_filter) {
         /* window open detection */
         if (-temp_difference > config.window_thld) {
             CTL_mode_window++;
@@ -100,12 +100,12 @@ int8_t CTL_update(bool minute_ch, int8_t valve) {
             CTL_open_window_timeout--; 
             if ( temp_difference > config.window_thld) {
                 CTL_mode_window++;
-                if (CTL_mode_window >= 4) {
+                if (CTL_mode_window >= (config.window_noise_filter<<2)) {
                     PID_force_update = 0;
                     CTL_mode_window = 0;    
                 }
             } else {
-                CTL_mode_window = 2;
+                CTL_mode_window = config.window_noise_filter;
             }
         }
     }  
@@ -114,7 +114,7 @@ int8_t CTL_update(bool minute_ch, int8_t valve) {
     if (PID_force_update>0) PID_force_update--;
     if ((PID_update_timeout == 0)||(PID_force_update==0)) {
         uint8_t temp;
-        if ((CTL_temp_wanted<TEMP_MIN) || CTL_mode_window) {
+        if ((CTL_temp_wanted<TEMP_MIN) || mode_window()) {
             temp = TEMP_MIN;  // frost protection to TEMP_MIN
         } else {
             temp = CTL_temp_wanted;
@@ -165,7 +165,7 @@ void CTL_temp_change_inc (int8_t ch) {
 	} else if (CTL_temp_wanted>TEMP_MAX+1) {
 		CTL_temp_wanted= TEMP_MAX+1; 
 	}    
-	CTL_mode_window = false;
+	CTL_mode_window = 0;
     PID_force_update = 10; 
 }
 
@@ -197,6 +197,6 @@ void CTL_change_mode(int8_t m) {
     } else {
         CTL_mode_auto=m;
     }
-    CTL_mode_window = false;
+    CTL_mode_window = 0;
     PID_force_update = 10; 
 }

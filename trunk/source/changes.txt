@@ -1,4 +1,7 @@
 version 1.00BETA will be released soon
+SVN revision 95
+    - improve window open detect
+
 SVN revision 94
     - improve PI controller
     - bug fix for days in month

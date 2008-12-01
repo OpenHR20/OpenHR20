@@ -37,8 +37,8 @@ extern uint8_t CTL_temp_auto;
 extern uint8_t CTL_mode_auto;
 extern int8_t PID_force_update;      // signed value, val<0 means disable force updates
 extern uint8_t CTL_error;
-extern bool CTL_mode_window;
-#define mode_window() (CTL_mode_window >=2)
+extern uint8_t CTL_mode_window;
+#define mode_window() (CTL_mode_window >=config.window_noise_filter)
 
 #define CTL_update_temp_auto() (CTL_temp_auto=0)
 #define CTL_test_auto() (CTL_mode_auto && (CTL_temp_auto==CTL_temp_wanted))
