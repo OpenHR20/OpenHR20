@@ -1,6 +1,10 @@
 version 1.00BETA will be released soon
+
+SVN revision 96
+    - improve window close detect
+
 SVN revision 95
-    - improve window open detect
+    - improve window open/close detect
 
 SVN revision 94
     - improve PI controller

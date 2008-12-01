@@ -65,8 +65,9 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
 	/* 1a */ uint8_t timer_mode; //!< =0 only one program, =1 programs for weekdays
 	/* 1b */ uint8_t bat_warning_thld; //!< treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
 	/* 1c */ uint8_t bat_low_thld; //!< treshold for battery low [unit 0.02V]=[unit 0.01V per cell]
-	/* 1d */ uint8_t window_thld; //!< reshold for window open/close detection unit is 0.1C
-	/* 1e */ uint8_t window_noise_filter;
+	/* 1d */ uint8_t window_open_thld; //!< treshold for window open/close detection unit is 0.1C
+	/* 1e */ uint8_t window_open_noise_filter;
+	/* 1f */ uint8_t window_close_noise_filter;
 } config_t;
 
 extern config_t config;
@@ -163,8 +164,9 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 1a */  {0,           0,        0,        1},   //!< timer_mode; =0 only one program, =1 programs for weekdays 
   /* 1b */  {120,       120,       80,      160},   //!< bat_warning_thld; treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
   /* 1c */  {100,       100,       80,      160},   //!< bat_low_thld; treshold for battery low [unit 0.02V]=[unit 0.01V per cell]
-  /* 1d */  {13,         13,        7,      255},   //!< uint8_t window_thld; reshold for window open/close detection unit is 0.01C
-  /* 1e */  {5,           5,        2,       60},   //!< window_noise_filter
+  /* 1d */  {13,         13,        7,      255},   //!< uint8_t window_open_thld; reshold for window open/close detection unit is 0.01C
+  /* 1e */  {5,           5,        2,       60},   //!< window_open_noise_filter
+  /* 1f */  {15,         15,        2,      255},   //!< window_open_noise_filter
 
 };
 

@@ -83,9 +83,9 @@ int8_t CTL_update(bool minute_ch, int8_t valve) {
      * use difference of current temperature and 1 minute old tempereature
      * for status change condition must be true twice / noise protection
      */ 
-    if (CTL_mode_window<config.window_noise_filter) {
+    if (CTL_mode_window<config.window_open_noise_filter) {
         /* window open detection */
-        if (-temp_difference > config.window_thld) {
+        if (-temp_difference > config.window_open_thld) {
             CTL_mode_window++;
             if (mode_window()) { 
                 PID_force_update=0;
@@ -98,14 +98,16 @@ int8_t CTL_update(bool minute_ch, int8_t valve) {
         /* window close detection */
         if (CTL_open_window_timeout > 0) {
             CTL_open_window_timeout--; 
-            if ( temp_difference > config.window_thld) {
-                CTL_mode_window++;
-                if (CTL_mode_window >= (config.window_noise_filter<<2)) {
-                    PID_force_update = 0;
-                    CTL_mode_window = 0;    
+            if ( temp_difference >= 0 ) {
+                if (temp_difference>0) {
+                    CTL_mode_window++;
+                    if (CTL_mode_window >= (config.window_open_noise_filter+config.window_close_noise_filter)) {
+                        PID_force_update = 0;
+                        CTL_mode_window = 0;    
+                    }
                 }
             } else {
-                CTL_mode_window = config.window_noise_filter;
+                CTL_mode_window = config.window_open_noise_filter;
             }
         }
     }  
