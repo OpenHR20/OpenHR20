@@ -73,7 +73,6 @@ uint8_t EEPROM_read(uint16_t address) {
  *  config_read
  *	it is similar as EEPROM_read, but optimized for special usage
  ******************************************************************************/
-
 uint8_t config_read(uint8_t cfg_address, uint8_t cfg_type) {
 	/* Wait for completion of previous write */
 	while(EECR & (1<<EEWE))
@@ -82,7 +81,6 @@ uint8_t config_read(uint8_t cfg_address, uint8_t cfg_type) {
 	EECR |= (1<<EERE);
 	return EEDR;
 }
-
 
 /*!
  *******************************************************************************

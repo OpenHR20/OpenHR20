@@ -46,7 +46,7 @@
 #include "menu.h"
 #include "watch.h"
 
-static int8_t service_idx=-1;
+static uint8_t service_idx=CONFIG_RAW_SIZE;
 
 /*!
  *******************************************************************************
@@ -105,15 +105,13 @@ static int8_t wheel_proccess(void) {
 static bool events_common(void) {
     bool ret=false;
     if (kb_events & KB_EVENT_LOCK_LONG) {
-        menu_state = menu_lock;
+        menu_auto_update_timeout=LONG_PRESS_THLD+1;
         locked = ! locked;
-        kb_events = 0;
+        menu_state = (locked)?menu_lock:menu_home;
         ret=true;
     } else if (!locked) {    
         if (kb_events & KB_EVENT_ALL_LONG) { // service menu
             menu_state = menu_service1;
-            kb_events = 0;
-            service_idx = 0;
             ret=true;
         } else if ( kb_events & KB_EVENT_AUTO_LONG ) {
     		menu_state=menu_set_year;
@@ -234,6 +232,7 @@ bool menu_controller(bool new_state) {
                         KB_EVENT_WHEEL_PLUS  | KB_EVENT_WHEEL_MINUS | KB_EVENT_PROG
                         | KB_EVENT_AUTO | KB_EVENT_PROG_REWOKE | KB_EVENT_C_REWOKE | KB_EVENT_AUTO_REWOKE
                         | KB_EVENT_PROG_LONG | KB_EVENT_C_LONG | KB_EVENT_AUTO_LONG )) {
+                    menu_auto_update_timeout=LONG_PRESS_THLD+1;
                     menu_state=menu_lock;
                     ret=true;
                     }
@@ -242,13 +241,13 @@ bool menu_controller(bool new_state) {
     							    || (menu_state == menu_home_no_alter))) {
     				CTL_temp_change_inc(wheel);
     				menu_state = menu_home_no_alter;
+                    ret=true; 
     			} 			 
                 if ( kb_events & KB_EVENT_AUTO ) {
                     CTL_change_mode(CTL_CHANGE_MODE); // change mode
                     menu_state=menu_home_no_alter;
                     ret=true; 
-                }
-                if ( kb_events & KB_EVENT_AUTO_REWOKE ) {
+                } else if ( kb_events & KB_EVENT_AUTO_REWOKE ) {
                     CTL_change_mode(CTL_CHANGE_MODE_REWOKE); // change mode
                     menu_state=menu_home_no_alter;
                     ret=true; 
@@ -271,8 +270,7 @@ bool menu_controller(bool new_state) {
             	// update hourbar
         	menu_update_hourbar((config.timer_mode==1)?RTC_DOW:0);
             ret=true; 
-        }
-        if ( kb_events & KB_EVENT_AUTO ) { // exit without save
+        } else if ( kb_events & KB_EVENT_AUTO ) { // exit without save
             menu_state=menu_home;
             ret=true; 
         }
@@ -287,8 +285,7 @@ bool menu_controller(bool new_state) {
         }
         if ( kb_events & KB_EVENT_C ) {
             menu_set_mode=(menu_set_mode+5)%4;
-        }
-        if ( kb_events & KB_EVENT_PROG ) {
+        } else if ( kb_events & KB_EVENT_PROG ) {
             RTC_DowTimerSet(menu_set_dow, menu_set_slot, menu_set_time, menu_set_mode);
             if (++menu_set_slot>=RTC_TIMERS_PER_DOW) {
                 if (menu_set_dow!=0) menu_set_dow=menu_set_dow%7+1; 
@@ -297,8 +294,7 @@ bool menu_controller(bool new_state) {
             CTL_update_temp_auto();
         	menu_update_hourbar((config.timer_mode==1)?RTC_DOW:0);
             ret=true; 
-        }
-        if ( kb_events & KB_EVENT_AUTO ) { // exit without save
+        } else if ( kb_events & KB_EVENT_AUTO ) { // exit without save
             menu_state=menu_home;
             ret=true; 
         }
@@ -319,8 +315,7 @@ bool menu_controller(bool new_state) {
             menu_state++; // menu_preset_temp3+1 == menu_home
             CTL_update_temp_auto();
             ret=true; 
-        }
-        if ( kb_events & KB_EVENT_AUTO ) { // exit without save
+        } else if ( kb_events & KB_EVENT_AUTO ) { // exit without save
             menu_state=menu_home;
             ret=true; 
         }
@@ -328,8 +323,6 @@ bool menu_controller(bool new_state) {
 
     default:
     case menu_lock:        // "bloc" message
-        if (! locked) { menu_state=menu_home; ret=true; } 
-        if (new_state) menu_auto_update_timeout=LONG_PRESS_THLD+1;
         if (menu_auto_update_timeout==0) { menu_state=menu_home; ret=true; } 
         break;        
     case menu_service1:     // service menu        
@@ -337,49 +330,48 @@ bool menu_controller(bool new_state) {
         if (kb_events & KB_EVENT_AUTO) { 
             menu_state=menu_home; 
             ret=true;
-        }
-        if (kb_events & KB_EVENT_C) { 
+        } else if (kb_events & KB_EVENT_C) { 
             menu_state=menu_service_watch; 
             ret=true;
-        }
-        if (kb_events & KB_EVENT_PROG) {
+        } else if (kb_events & KB_EVENT_PROG) {
             if (menu_state == menu_service2) {
                 eeprom_config_save(service_idx); // save current value
                 menu_state = menu_service1;
             } else {
                 menu_state = menu_service2;
             }
-        }
-        if (menu_state == menu_service1) {
-            // change index
-            service_idx = (service_idx+wheel+CONFIG_RAW_SIZE)%CONFIG_RAW_SIZE;
         } else {
-            // change value in RAM, to save press PROG
-            int16_t min = (int16_t)config_min(service_idx);
-            int16_t max_min_1 = (int16_t)(config_max(service_idx))-min+1;
-            config_raw[service_idx] = (uint8_t) (
-                    ((int16_t)(config_raw[service_idx])+(int16_t)wheel-min+max_min_1)%max_min_1+min);
-            if (service_idx==0) LCD_Init();
+            if (menu_state == menu_service1) {
+                // change index
+                service_idx = (service_idx+wheel+CONFIG_RAW_SIZE)%CONFIG_RAW_SIZE;
+            } else {
+                // change value in RAM, to save press PROG
+                int16_t min = (int16_t)config_min(service_idx);
+                int16_t max_min_1 = (int16_t)(config_max(service_idx))-min+1;
+                config_raw[service_idx] = (uint8_t) (
+                        ((int16_t)(config_raw[service_idx])+(int16_t)wheel-min+max_min_1)%max_min_1+min);
+                if (service_idx==0) LCD_Init();
+            }
         }
         break;        
 	case menu_service_watch:
         if (kb_events & KB_EVENT_AUTO) { 
             menu_state=menu_home; 
             ret=true;
-        }
-        if (kb_events & KB_EVENT_C) { 
+        } else if (kb_events & KB_EVENT_C) { 
             menu_state=menu_service1; 
             ret=true;
+        } else {
+            service_watch_n=(service_watch_n+wheel+WATCH_N)%WATCH_N;
+            if (wheel != 0) ret=true;
         }
-        service_watch_n=(service_watch_n+wheel+WATCH_N)%WATCH_N;
-        if (wheel != 0) ret=true;
         break;
     }
     if (events_common()) ret=true;
-    if (ret && (service_idx>=0) && (service_idx<CONFIG_RAW_SIZE)) {
-        // back to default value
+    if (ret && (service_idx<CONFIG_RAW_SIZE)) {
+        // back config to default value
         config_raw[service_idx] = config_value(service_idx);
-        service_idx = -1;
+        service_idx = CONFIG_RAW_SIZE;
     }
     kb_events = 0; // clear unused keys
     return ret;
@@ -442,23 +434,19 @@ static void show_selected_temperature_type (uint8_t type, uint8_t mode) {
 void menu_view(bool update) {
   switch (menu_state) {
     case menu_startup:
-        if (update) {
-            LCD_AllSegments(LCD_MODE_ON);                   // all segments on
-        }
+        LCD_AllSegments(LCD_MODE_ON);                   // all segments on
         break;
     case menu_version:
-        if (update) {
-            clr_show1(LCD_SEG_COL1);
-            LCD_PrintHexW(VERSION_N,LCD_MODE_ON);
-        } 
+        clr_show1(LCD_SEG_COL1);
+        LCD_PrintHexW(VERSION_N,LCD_MODE_ON);
         break; 
     case menu_set_year:
-        if (update) LCD_AllSegments(LCD_MODE_OFF); // all segments off
+        LCD_AllSegments(LCD_MODE_OFF); // all segments off
         LCD_PrintDecW(RTC_GetYearYYYY(),LCD_MODE_BLINK_1);
        break;
     case menu_set_month:
     case menu_set_day:
-        if (update) clr_show1(LCD_SEG_COL1);           // decimal point
+        clr_show1(LCD_SEG_COL1);           // decimal point
         LCD_PrintDec(RTC_GetMonth(), 0, ((menu_state==menu_set_month)?LCD_MODE_BLINK_1:LCD_MODE_ON));
         LCD_PrintDec(RTC_GetDay(), 2, ((menu_state==menu_set_day)?LCD_MODE_BLINK_1:LCD_MODE_ON));
        break;
@@ -524,13 +512,13 @@ void menu_view(bool update) {
         }
         break;                                                             
     case menu_set_timmer_dow:
-        if (update) clr_show1(LCD_SEG_PROG); // all segments off
+        clr_show1(LCD_SEG_PROG); // all segments off
         LCD_PrintDayOfWeek(menu_set_dow, LCD_MODE_BLINK_1);
         break;
     case menu_set_timmer:
         //! \todo calculate "hourbar" status, actual position in mode LCD_MODE_BLINK_1
         
-        if (update) clr_show3(LCD_SEG_COL1,LCD_SEG_COL2,LCD_SEG_PROG);
+        clr_show3(LCD_SEG_COL1,LCD_SEG_COL2,LCD_SEG_PROG);
         timmers_patch_offset=timers_get_raw_index(menu_set_dow, menu_set_slot);
         timmers_patch_data = menu_set_time +  ((uint16_t)menu_set_mode<<12);
         LCD_HourBarBitmap(RTC_DowTimerGetHourBar(menu_set_dow));
@@ -545,13 +533,13 @@ void menu_view(bool update) {
         show_selected_temperature_type(menu_set_mode,LCD_MODE_BLINK_1);
         break;                                                             
     case menu_lock:        // "bloc" message
-        if (update) LCD_AllSegments(LCD_MODE_OFF); // all segments off
+        LCD_AllSegments(LCD_MODE_OFF); // all segments off
         LCD_PrintStringID(LCD_STRING_bloc,LCD_MODE_ON);
         break;
     case menu_service1: 
     case menu_service2:
         // service menu; left side index, right value
-        if (update) LCD_AllSegments(LCD_MODE_ON);
+        LCD_AllSegments(LCD_MODE_ON);
         LCD_PrintHex(service_idx, 2, ((menu_state == menu_service1) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));
         LCD_PrintHex(config_raw[service_idx], 0, ((menu_state == menu_service2) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));
        break;

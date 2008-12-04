@@ -35,17 +35,17 @@
 #define EEPROM __attribute__((section(".eeprom")))
 
 typedef struct { // each variables must be uint8_t or int8_t without exception
-	/* 00 */ uint8_t lcd_contrast;
+    /* 00 */ uint8_t lcd_contrast;
     /* 01 */ uint8_t temperature0;   //!< temperature 0  - frost protection (unit is 0.5stC)
     /* 02 */ uint8_t temperature1;   //!< temperature 1  - energy save (unit is 0.5stC)
     /* 03 */ uint8_t temperature2;   //!< temperature 2  - comfort (unit is 0.5stC)
     /* 04 */ uint8_t temperature3;   //!< temperature 3  - supercomfort (unit is 0.5stC)
-	/* 05 */ uint8_t P_Factor;  //!< Proportional tuning constant, multiplied with scalling_factor
-	/* 06 */ uint8_t I_Factor;  //!< Integral tuning constant, multiplied with scalling_factor
-	/* 07 */ uint8_t D_Factor;  //!< Derivative tuning constant, multiplied with scalling_factor
-	/* 08 */ uint8_t scalling_factor;
-	/* 09 */ uint8_t pid_hysteresis;  
-    /* 0a */ uint8_t PID_interval; //!< PID_interval*5 = interval in seconds	
+    /* 05 */ uint8_t P_Factor;  //!< Proportional tuning constant, multiplied with scalling_factor
+    /* 06 */ uint8_t I_Factor;  //!< Integral tuning constant, multiplied with scalling_factor
+    /* 07 */ uint8_t D_Factor;  //!< Derivative tuning constant, multiplied with scalling_factor
+    /* 08 */ uint8_t scalling_factor;
+    /* 09 */ uint8_t pid_hysteresis;  
+    /* 0a */ uint8_t PID_interval; //!< PID_interval*5 = interval in seconds    
     /* 0b */ uint8_t motor_speed_open;   //!< PWM for motor open 
     /* 0c */ uint8_t motor_speed_close;  //!< PWM for motor close
         /*! TODO: describe  motor_protection and motor_hysteresis better, picture wanted */
@@ -53,21 +53,21 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
     /* 0e */ uint8_t motor_hysteresis; //!< additional impulses for 0 or 100% relative to area for regulation
     /* 0f */ uint8_t motor_end_detect; //!< stop timer threshold in % to previous average 
     /* 10 */ uint8_t motor_eye_noise_protect; //!< motor eye noise protection in % of previous average 
-	/* 11 */ uint8_t MOTOR_ManuCalibration_L;
-	/* 12 */ uint8_t MOTOR_ManuCalibration_H;
-	/* 13 */ uint8_t temp_cal_table0; //!< temperature calibration table
-	/* 14 */ uint8_t temp_cal_table1; //!< temperature calibration table
-	/* 15 */ uint8_t temp_cal_table2; //!< temperature calibration table
-	/* 16 */ uint8_t temp_cal_table3; //!< temperature calibration table
-	/* 17 */ uint8_t temp_cal_table4; //!< temperature calibration table
-	/* 18 */ uint8_t temp_cal_table5; //!< temperature calibration table
-	/* 19 */ uint8_t temp_cal_table6; //!< temperature calibration table
-	/* 1a */ uint8_t timer_mode; //!< =0 only one program, =1 programs for weekdays
-	/* 1b */ uint8_t bat_warning_thld; //!< treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
-	/* 1c */ uint8_t bat_low_thld; //!< treshold for battery low [unit 0.02V]=[unit 0.01V per cell]
-	/* 1d */ uint8_t window_open_thld; //!< treshold for window open/close detection unit is 0.1C
-	/* 1e */ uint8_t window_open_noise_filter;
-	/* 1f */ uint8_t window_close_noise_filter;
+    /* 11 */ uint8_t MOTOR_ManuCalibration_L;
+    /* 12 */ uint8_t MOTOR_ManuCalibration_H;
+    /* 13 */ uint8_t temp_cal_table0; //!< temperature calibration table
+    /* 14 */ uint8_t temp_cal_table1; //!< temperature calibration table
+    /* 15 */ uint8_t temp_cal_table2; //!< temperature calibration table
+    /* 16 */ uint8_t temp_cal_table3; //!< temperature calibration table
+    /* 17 */ uint8_t temp_cal_table4; //!< temperature calibration table
+    /* 18 */ uint8_t temp_cal_table5; //!< temperature calibration table
+    /* 19 */ uint8_t temp_cal_table6; //!< temperature calibration table
+    /* 1a */ uint8_t timer_mode; //!< =0 only one program, =1 programs for weekdays
+    /* 1b */ uint8_t bat_warning_thld; //!< treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
+    /* 1c */ uint8_t bat_low_thld; //!< treshold for battery low [unit 0.02V]=[unit 0.01V per cell]
+    /* 1d */ uint8_t window_open_thld; //!< treshold for window open/close detection unit is 0.1C
+    /* 1e */ uint8_t window_open_noise_filter;
+    /* 1f */ uint8_t window_close_noise_filter;
 } config_t;
 
 extern config_t config;
@@ -105,14 +105,14 @@ uint16_t EEPROM ee_timers[8][RTC_TIMERS_PER_DOW] = { //128bytes
      *                            0x3000 - temperature 3  - supercomfort
      *          value & 0xc000  - reserved for future
      */                                 
-	{ BOOT_ON1, BOOT_OFF1, BOOT_ON2, BOOT_OFF2, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF},
-	{ BOOT_ON1, BOOT_OFF1, BOOT_ON2, BOOT_OFF2, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF},
-	{ BOOT_ON1, BOOT_OFF1, BOOT_ON2, BOOT_OFF2, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF},
-	{ BOOT_ON1, BOOT_OFF1, BOOT_ON2, BOOT_OFF2, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF},
-	{ BOOT_ON1, BOOT_OFF1, BOOT_ON2, BOOT_OFF2, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF},
-	{ BOOT_ON1, BOOT_OFF1, BOOT_ON2, BOOT_OFF2, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF},
-	{ BOOT_ON1, BOOT_OFF1, BOOT_ON2, BOOT_OFF2, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF},
-	{ BOOT_ON1, BOOT_OFF1, BOOT_ON2, BOOT_OFF2, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF}
+    { BOOT_ON1, BOOT_OFF1, BOOT_ON2, BOOT_OFF2, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF},
+    { BOOT_ON1, BOOT_OFF1, BOOT_ON2, BOOT_OFF2, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF},
+    { BOOT_ON1, BOOT_OFF1, BOOT_ON2, BOOT_OFF2, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF},
+    { BOOT_ON1, BOOT_OFF1, BOOT_ON2, BOOT_OFF2, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF},
+    { BOOT_ON1, BOOT_OFF1, BOOT_ON2, BOOT_OFF2, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF},
+    { BOOT_ON1, BOOT_OFF1, BOOT_ON2, BOOT_OFF2, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF},
+    { BOOT_ON1, BOOT_OFF1, BOOT_ON2, BOOT_OFF2, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF},
+    { BOOT_ON1, BOOT_OFF1, BOOT_ON2, BOOT_OFF2, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF}
 };
 
 uint8_t EEPROM ee_reserved2 [60] = {
@@ -130,24 +130,24 @@ uint8_t EEPROM ee_reserved2 [60] = {
 
 uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
 // order on this table depend to config_t
-// /*idx*/ {value,	default, 	min,	max},
-  /* 00 */  {14,	    14,         0,		15},	//!< lcd_contrast  (unit 0.5stC)
-  /* 01 */  {10,	    10,  TEMP_MIN,TEMP_MAX},	//!< temperature 0  - frost protection (unit is 0.5stC)
-  /* 02 */  {34,	    34,  TEMP_MIN,TEMP_MAX},    //!< temperature 1  - energy save (unit is 0.5stC)
-  /* 03 */  {42,	    42,  TEMP_MIN,TEMP_MAX},    //!< temperature 2  - comfort (unit is 0.5stC)
-  /* 04 */  {48,	    48,  TEMP_MIN,TEMP_MAX},    //!< temperature 3  - supercomfort (unit is 0.5stC)
-  /* 05 */  {100,	   100,			0,		255},	//!< P_Factor;
-  /* 06 */  {3,	         3,			0,		255},	//!< I_Factor;
+// /*idx*/ {value,  default,    min,    max},
+  /* 00 */  {14,        14,         0,      15},    //!< lcd_contrast  (unit 0.5stC)
+  /* 01 */  {10,        10,  TEMP_MIN,TEMP_MAX},    //!< temperature 0  - frost protection (unit is 0.5stC)
+  /* 02 */  {34,        34,  TEMP_MIN,TEMP_MAX},    //!< temperature 1  - energy save (unit is 0.5stC)
+  /* 03 */  {42,        42,  TEMP_MIN,TEMP_MAX},    //!< temperature 2  - comfort (unit is 0.5stC)
+  /* 04 */  {48,        48,  TEMP_MIN,TEMP_MAX},    //!< temperature 3  - supercomfort (unit is 0.5stC)
+  /* 05 */  {100,      100,         0,      255},   //!< P_Factor;
+  /* 06 */  {3,          3,         0,      255},   //!< I_Factor;
 #if CONFIG_ENABLE_D
-  /* 07 */  {0,          0,			0,		255},	//!< D_Factor;
+  /* 07 */  {0,          0,         0,      255},   //!< D_Factor;
 #else
-  /* 07 */  {0,          0,			0,		0},	//!< D_Factor;
+  /* 07 */  {0,          0,         0,      0}, //!< D_Factor;
 #endif
-  /* 08 */  {200,	    200,		1,		255},	//!< scalling_factor / odd values is recomended
+  /* 08 */  {200,       200,        1,      255},   //!< scalling_factor / odd values is recomended
   /* 09 */  {120,       120,       20,      255},   //!< pid_hysteresis
   /* 0a */  {240/5,     240/5,      20/5,   255},   //!< PID_interval*5 = interval in seconds;  min=20sec, max=21.25 minutes
-  /* 0b */  {180,	    180,        178,	234},	//!< open motor_speed PWM setting
-  /* 0c */  {200,	    200,        178,	234},	//!< close motor_speed PWM setting
+  /* 0b */  {180,       180,        178,    234},   //!< open motor_speed PWM setting
+  /* 0c */  {200,       200,        178,    234},   //!< close motor_speed PWM setting
   /* 0d */  {15,         15,        0,      120},   //!< motor_protection
   /* 0e */  {10,         10,        0,      120},   //!< additional impulses for 0 or 100%
   /* 0f */  {150,       150,      110,      250},   //!< motor_end_detect; stop timer threshold in % to previous average 
@@ -164,9 +164,9 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 1a */  {0,           0,        0,        1},   //!< timer_mode; =0 only one program, =1 programs for weekdays 
   /* 1b */  {120,       120,       80,      160},   //!< bat_warning_thld; treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
   /* 1c */  {100,       100,       80,      160},   //!< bat_low_thld; treshold for battery low [unit 0.02V]=[unit 0.01V per cell]
-  /* 1d */  {13,         13,        7,      255},   //!< uint8_t window_open_thld; reshold for window open/close detection unit is 0.01C
+  /* 1d */  {32,         32,        7,      255},   //!< uint8_t window_open_thld; reshold for window open/close detection unit is 0.01C
   /* 1e */  {5,           5,        2,       60},   //!< window_open_noise_filter
-  /* 1f */  {15,         15,        2,      255},   //!< window_open_noise_filter
+  /* 1f */  {15,         15,        2,      255},   //!< window_close_noise_filter
 
 };
 

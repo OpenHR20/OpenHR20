@@ -1,5 +1,10 @@
 version 1.00BETA will be released soon
 
+SVN revision 97
+    - optimizations
+    - change default value for window_open_thld
+    - menu bug fixes
+
 SVN revision 96
     - improve window close detect
 
