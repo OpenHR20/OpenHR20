@@ -58,13 +58,13 @@ In this file we define only configuration parameters, for example what kind of c
 
 // our Version
 #define REVHIGH  0  //! Revision number high
-#define REVLOW   84 //! Revision number low
-#define VERSION_N 0xF084 //! Version as HEX value F0.84 (F as free)  
+#define REVLOW   90 //! Revision number low
+#define VERSION_N 0xF090 //! Version as HEX value F0.90 (F as free)  
 
 #ifndef REVISION
  #define REVISION "$Rev$"
 #endif 
-#define VERSION_STRING  "V: OpenHR20 SW version 0.84 build " __DATE__ " " __TIME__ " " REVISION
+#define VERSION_STRING  "V: OpenHR20 SW version 0.90 build " __DATE__ " " __TIME__ " " REVISION
 
 // Parameters for the COMM-Port
 #define COM_BAUD_RATE 9600

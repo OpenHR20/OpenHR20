@@ -338,7 +338,7 @@ static char COM_hex_parse (uint8_t n) {
  *  \brief print X[xx]=
  *
  ******************************************************************************/
-void print_idx(char t) {
+static void print_idx(char t) {
     COM_putchar(t);
     COM_putchar('[');
     print_hexXX(com_hex[0]);
@@ -358,7 +358,7 @@ void print_idx(char t) {
  *  \note   V\n - print version information
  *  \note   D\n - print status line 
  *  \note   Taa\n - print watched wariable aa (return 2 or 4 hex numbers) see to \ref watch.c
- *  \note   Gaa\n - get configuration byte wit hex address aa see to \ref eeprom.h
+ *  \note   Gaa\n - get configuration byte wit hex address aa see to \ref eeprom.h 0xff address returns EEPROM layout version
  *  \note   Saadd\n - set configuration byte aa to value dd (hex)
  *  \note   Rab\n - get timer for day a slot b, return cddd=(timermode c time ddd) (hex)
  *  \note   Wabcddd\n - set timer  for day a slot b timermode c time ddd (hex)
@@ -400,7 +400,11 @@ void COM_commad_parse (void) {
   				}
 			}
             print_idx(c);
-			print_hexXX(config_raw[com_hex[0]]);
+			if (com_hex[0]==0xff) {
+			     print_hexXX(EE_LAYOUT);
+            } else {
+			     print_hexXX(config_raw[com_hex[0]]);
+			}
 			break;
 		case 'R':
 		case 'W':

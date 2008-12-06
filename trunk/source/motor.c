@@ -74,7 +74,7 @@ static volatile uint16_t motor_diag_cnt = 0;
 static volatile uint16_t motor_max_time_for_impulse[2];
 static volatile uint16_t motor_eye_noise_protection[2];
 static uint32_t motor_diag_sum;
-static int16_t motor_diag_count;
+uint16_t motor_diag_count;
 
 static volatile uint16_t motor_timer = 0;
 
@@ -205,6 +205,9 @@ bool MOTOR_Goto(uint8_t percent)
     }
 }
 
+static motor_dir_t MOTOR_LastDir=stop;
+static uint8_t motor_diag_ignore=MOTOR_IGNORE_IMPULSES;
+
 /*!
  *******************************************************************************
  * controll motor movement
@@ -234,9 +237,11 @@ static void MOTOR_Control(motor_dir_t direction) {
 	    MOTOR_Dir = stop;
     } else {                                            // motor on
         if (MOTOR_Dir != direction){
-            motor_diag_sum=0;
-            motor_diag_count = -MOTOR_IGNORE_IMPULSES;
-            motor_diag_cnt=0;
+            if (MOTOR_Dir != MOTOR_LastDir) {
+                motor_diag_sum=0; motor_diag_count = 0; motor_diag_cnt=0;
+                motor_diag_ignore = MOTOR_IGNORE_IMPULSES;
+                MOTOR_Dir = MOTOR_LastDir;
+            }
 		    MOTOR_Dir = direction;
             // photo eye
             MOTOR_HR20_PE3_P |= (1<<MOTOR_HR20_PE3);    // activate photo eye
@@ -274,25 +279,28 @@ static void MOTOR_Control(motor_dir_t direction) {
 void MOTOR_timer_pulse(void) {
     motor_dir_t d = MOTOR_Dir;
     if (motor_diag <= MOTOR_MAX_VALID_TIMER) {
-        if (motor_diag_count >= 0) { //ignote 
+        if (motor_diag_ignore == 0) {  
 			motor_diag_sum += motor_diag;
-		}
-		motor_diag_count++;
-        if ((motor_diag_count > MOTOR_UPDATE_IMPULSES_THLD) && (d!=stop)) {
-            uint32_t tmp = motor_diag_sum / motor_diag_count;
-            {
-                uint16_t b = tmp * config.motor_end_detect /100;
-                cli();
-                motor_max_time_for_impulse[(d==close)?0:1] = b;
-                sei();
+			motor_diag_count++;
+            if ((motor_diag_count > MOTOR_UPDATE_IMPULSES_THLD) && (d!=stop)) {
+        		
+                uint32_t tmp = motor_diag_sum / motor_diag_count;
+                {
+                    uint16_t b = tmp * config.motor_end_detect /100;
+                    cli();
+                    motor_max_time_for_impulse[(d==close)?0:1] = b;
+                    sei();
+                }
+                {
+                    uint16_t b = tmp * config.motor_eye_noise_protect /100;
+                    cli();
+                    motor_eye_noise_protection[(d==close)?0:1] = b;
+                    sei();
+                }
             }
-            {
-                uint16_t b = tmp * config.motor_eye_noise_protect /100;
-                cli();
-                motor_eye_noise_protection[(d==close)?0:1] = b;
-                sei();
-            }
-        }
+		} else {
+		   motor_diag_ignore--;
+        }		
     } 
 
     #if DEBUG_PRINT_MOTOR

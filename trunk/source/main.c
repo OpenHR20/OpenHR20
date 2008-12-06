@@ -94,11 +94,16 @@ int main(void)
 
     //! Enable interrupts
     sei();
+    
+    /* check EEPROM layout */
+    if (EEPROM_read((uint16_t)&ee_layout)!=EE_LAYOUT) {
+        LCD_PrintStringID(LCD_STRING_EEPr,LCD_MODE_ON);
+        task_lcd_update();
+        for(;;) {;}  //fatal error, stop startup
+    }
 
 	COM_init();
 
-    LCD_AllSegments(LCD_MODE_ON);                   // all segments on
-	LCD_Update();
 
 	// We should do the following once here to have valid data from the start
 
@@ -276,7 +281,7 @@ static inline void init(void)
 
     //1 Initialize the LCD
     LCD_Init();
-
+    
 	// init keyboard by one dummy call
     task_keyboard();
 }

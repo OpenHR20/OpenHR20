@@ -137,6 +137,7 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
       {11,10,38,38},    //!<  "BAtt"    LCD_STRING_BAtt
       {32,14, 2,32},    //!<  " E2 "    LCD_STRING_E2
       {32,14, 3,32},    //!<  " E3 "    LCD_STRING_E3
+      {14,14,18,28},    //!<  "EEPr"    LCD_STRING_EEPr
   };
 #elif LANG==LANG_de
   // Look-up chars table for LCD strings (german)
@@ -160,6 +161,7 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
       {11,10,38,38},    //!<  "BAtt"    LCD_STRING_BAtt
       {32,14, 2,32},    //!<  " E2 "    LCD_STRING_E2
       {32,14, 3,32},    //!<  " E3 "    LCD_STRING_E3
+      {14,14,18,28},    //!<  "EEPr"    LCD_STRING_EEPr
   };
 #elif LANG==LANG_cs
   // Look-up chars table for LCD strings (czech)
@@ -183,6 +185,7 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
       {11,10,38,38},    //!<  "BAtt"    LCD_STRING_BAtt
       {32,14, 2,32},    //!<  " E2 "    LCD_STRING_E2
       {32,14, 3,32},    //!<  " E3 "    LCD_STRING_E3
+      {14,14,18,28},    //!<  "EEPr"    LCD_STRING_EEPr
   };
 #endif
 

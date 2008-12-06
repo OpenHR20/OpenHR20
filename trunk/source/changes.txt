@@ -1,6 +1,10 @@
 version 1.00BETA will be released soon
 
-SVN revision 97
+SVN revision 100
+    - improve motor control
+    - check EEPROM layout on startup
+
+SVN revision 98
     - optimizations
 
 SVN revision 97

@@ -229,4 +229,5 @@ void task_lcd_update(void);
 #define LCD_STRING_BAtt        15
 #define LCD_STRING_E2          16
 #define LCD_STRING_E3          17
+#define LCD_STRING_EEPr        18
 

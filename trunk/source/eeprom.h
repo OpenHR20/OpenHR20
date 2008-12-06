@@ -77,6 +77,7 @@ extern config_t config;
 #define CONFIG_RAW_SIZE (sizeof(config_t))
 
 extern uint16_t EEPROM ee_timers[8][RTC_TIMERS_PER_DOW];
+extern uint8_t EEPROM ee_layout;
 
 // Boot Timeslots -> move to CONFIG.H
 // 10 Minutes after BOOT_hh:00
@@ -85,6 +86,7 @@ extern uint16_t EEPROM ee_timers[8][RTC_TIMERS_PER_DOW];
 #define BOOT_ON2      (16*60+0x2000) //!<  16:00
 #define BOOT_OFF2     (21*60+0x1000) //!<  21:00
 
+#define EE_LAYOUT (0x01) //!< EEPROM layout version 
 
 #ifdef __EEPROM_C__
 // this is definition, not just declaration
@@ -93,8 +95,12 @@ extern uint16_t EEPROM ee_timers[8][RTC_TIMERS_PER_DOW];
 // DO NOT change order of items !!
 // ALL values in EEPROM must have init values, without exception
 
-uint32_t EEPROM ee_reserved1 = 0x00000000;   //4bytes reserved / do not use EEPROM address 0
+uint8_t EEPROM ee_reserved1 = 0x00; // do not use EEPROM address 0
+uint8_t EEPROM ee_reserved2 = 0x00;
+uint8_t EEPROM ee_reserved3 = 0x00;
+uint8_t EEPROM ee_layout    = EE_LAYOUT; //!< EEPROM layout version 
 
+/* eeprom address 0x004 */
 uint16_t EEPROM ee_timers[8][RTC_TIMERS_PER_DOW] = { //128bytes 
     // TODO add default timers, now it is empty
     /*! ee_timers value means:
@@ -115,7 +121,7 @@ uint16_t EEPROM ee_timers[8][RTC_TIMERS_PER_DOW] = { //128bytes
     { BOOT_ON1, BOOT_OFF1, BOOT_ON2, BOOT_OFF2, 0x2FFF, 0x1FFF, 0x2FFF, 0x1FFF}
 };
 
-uint8_t EEPROM ee_reserved2 [60] = {
+uint8_t EEPROM ee_reserved2_60 [60] = {
     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
@@ -136,7 +142,7 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 02 */  {34,        34,  TEMP_MIN,TEMP_MAX},    //!< temperature 1  - energy save (unit is 0.5stC)
   /* 03 */  {42,        42,  TEMP_MIN,TEMP_MAX},    //!< temperature 2  - comfort (unit is 0.5stC)
   /* 04 */  {48,        48,  TEMP_MIN,TEMP_MAX},    //!< temperature 3  - supercomfort (unit is 0.5stC)
-  /* 05 */  {100,      100,         0,      255},   //!< P_Factor;
+  /* 05 */  {64,        64,         0,      255},   //!< P_Factor;
   /* 06 */  {3,          3,         0,      255},   //!< I_Factor;
 #if CONFIG_ENABLE_D
   /* 07 */  {0,          0,         0,      255},   //!< D_Factor;
@@ -150,7 +156,7 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 0c */  {200,       200,        178,    234},   //!< close motor_speed PWM setting
   /* 0d */  {15,         15,        0,      120},   //!< motor_protection
   /* 0e */  {10,         10,        0,      120},   //!< additional impulses for 0 or 100%
-  /* 0f */  {150,       150,      110,      250},   //!< motor_end_detect; stop timer threshold in % to previous average 
+  /* 0f */  {130,       130,      110,      250},   //!< motor_end_detect; stop timer threshold in % to previous average 
   /* 10 */  {40,         40,       10,       90},   //!< motor_eye_noise_protect; motor eye noise protection in % of previous average 
   /* 11 */  {255,       255,        0,      255},   //!< manual calibration L
   /* 12 */  {255,       255,        0,      255},   //!< manual calibration H
