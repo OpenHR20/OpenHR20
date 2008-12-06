@@ -276,23 +276,9 @@ void LCD_AllSegments(uint8_t mode)
     uint8_t i;
     uint8_t val = (mode==LCD_MODE_ON)?0xff:0x00;
 
-	#if LCD_BITPLANES == 2
-    // Set bits in each bitplane / optimized for LCD_BITPLANES == 2
-        for (i=0; i<LCD_REGISTER_COUNT; i++){
-                LCD_Data[0][i] = val;
-                LCD_Data[1][i] = val;
-        }
-    #else 
-        {
-            uint8_t bp;
-            // Set bits in each bitplane
-            for (bp=0; bp<LCD_BITPLANES;  bp++){
-                for (i=0; i<LCD_REGISTER_COUNT; i++){
-                        LCD_Data[bp][i] = val;
-                }
-            }
-        }
-    #endif
+    for (i=0; i<LCD_REGISTER_COUNT*LCD_BITPLANES; i++){
+            ((uint8_t *)LCD_Data)[i] = val;
+    }
 	LCD_used_bitplanes=1;
     LCD_Update();
 }
@@ -816,7 +802,7 @@ void LCD_SetSeg(uint8_t seg, uint8_t mode)
 
 /*!
  *******************************************************************************
- *  LCD Interrupt Routine
+ *  Calculate used bitplanes
  *
  *	\note used only for update LCD, in any other cases intterupt is dissabled
  *  \note copy LCD_Data to LCDREG
@@ -824,14 +810,14 @@ void LCD_SetSeg(uint8_t seg, uint8_t mode)
  ******************************************************************************/
 static void LCD_calc_used_bitplanes(uint8_t mode) {
     uint8_t i;
-	if ((LCD_used_bitplanes==1) && 
-		((mode==LCD_MODE_ON)||(mode==LCD_MODE_OFF))) {
-		return; // just optimalization, nothing to do
-	} 
 	if ((mode==LCD_MODE_BLINK_1)||(mode==LCD_MODE_BLINK_2)) {
 		LCD_used_bitplanes=2;
 		return; // just optimalization
-	}
+	} 
+	// mode must be LCD_MODE_ON or LCD_MODE_OFF
+	if (LCD_used_bitplanes==1) {
+		return; // just optimalization, nothing to do
+	} 
 
     for (i=0; i<LCD_REGISTER_COUNT; i++){
 		#if LCD_BITPLANES != 2

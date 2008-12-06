@@ -544,7 +544,7 @@ void menu_view(bool update) {
         LCD_PrintHex(config_raw[service_idx], 0, ((menu_state == menu_service2) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));
        break;
     case menu_service_watch:
-        if (update) LCD_AllSegments(LCD_MODE_ON);
+        LCD_AllSegments(LCD_MODE_ON);
         LCD_PrintHexW(watch(service_watch_n),LCD_MODE_ON);
         LCD_SetHourBarSeg(service_watch_n, LCD_MODE_BLINK_1);
         break;
@@ -552,7 +552,7 @@ void menu_view(bool update) {
     case menu_preset_temp1:
     case menu_preset_temp2:
     case menu_preset_temp3:
-        if (update) clr_show1(LCD_SEG_COL1);           // decimal point
+        clr_show1(LCD_SEG_COL1);           // decimal point
         LCD_PrintTemp(menu_set_temp,LCD_MODE_BLINK_1);
         show_selected_temperature_type(menu_state-menu_preset_temp0,LCD_MODE_ON);
     default:

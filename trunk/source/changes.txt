@@ -2,6 +2,9 @@ version 1.00BETA will be released soon
 
 SVN revision 97
     - optimizations
+
+SVN revision 97
+    - optimizations
     - change default value for window_open_thld
     - menu bug fixes
 

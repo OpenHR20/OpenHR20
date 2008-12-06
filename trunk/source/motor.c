@@ -58,7 +58,7 @@
 
 
 // vars
-static volatile int16_t MOTOR_PosAct=0;      //!< actual position
+volatile int16_t MOTOR_PosAct=0;      //!< actual position
 int16_t MOTOR_PosMax=0;      /*!< position if complete open (100%) <BR>
                                           0 if not calibrated */
 

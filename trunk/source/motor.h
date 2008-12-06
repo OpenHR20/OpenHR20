@@ -86,6 +86,7 @@ void MOTOR_timer_pulse(void);
 
 #define timer0_need_clock() (TCCR0A & ((1<<CS02)|(1<<CS01)|(1<<CS00)))
 
+extern volatile int16_t MOTOR_PosAct;
 extern volatile uint16_t motor_diag;
 extern int8_t MOTOR_calibration_step;
 
