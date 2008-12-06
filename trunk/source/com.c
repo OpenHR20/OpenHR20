@@ -265,7 +265,7 @@ void COM_print_debug(int8_t valve) {
 	print_decXX(RTC_GetMinute());
 	COM_putchar(':');
 	print_decXX(RTC_GetSecond());
-	COM_putchar('\n');
+	COM_putchar(' ');
 	COM_putchar((CTL_mode_auto)?'A':'M');
 	print_s_p(PSTR(" V: "));
 	print_decXX( (valve>=0) ? valve : valve_wanted);
