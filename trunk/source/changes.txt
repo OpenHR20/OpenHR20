@@ -1,5 +1,8 @@
 version 1.00BETA will be released soon
 
+SVN revision 103
+    - motor stop threshold for calibration / runtime can be different
+
 SVN revision 102
     - fix watch.c
 

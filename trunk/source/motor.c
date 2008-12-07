@@ -286,7 +286,10 @@ void MOTOR_timer_pulse(void) {
         		
                 uint32_t tmp = motor_diag_sum / motor_diag_count;
                 {
-                    uint16_t b = tmp * config.motor_end_detect /100;
+                    uint16_t b = tmp * 
+                        (((MOTOR_calibration_step == 0))?   
+                            config.motor_end_detect_run
+                            :config.motor_end_detect_cal) /100;
                     cli();
                     motor_max_time_for_impulse[(d==close)?0:1] = b;
                     sei();

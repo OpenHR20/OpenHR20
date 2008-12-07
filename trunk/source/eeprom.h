@@ -51,23 +51,24 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
         /*! TODO: describe  motor_protection and motor_hysteresis better, picture wanted */
     /* 0d */ uint8_t motor_protection;  //!< defines area for regulation valve as valve range - 2*motor_protection (1* on bottom 1* on top)
     /* 0e */ uint8_t motor_hysteresis; //!< additional impulses for 0 or 100% relative to area for regulation
-    /* 0f */ uint8_t motor_end_detect; //!< stop timer threshold in % to previous average 
-    /* 10 */ uint8_t motor_eye_noise_protect; //!< motor eye noise protection in % of previous average 
-    /* 11 */ uint8_t MOTOR_ManuCalibration_L;
-    /* 12 */ uint8_t MOTOR_ManuCalibration_H;
-    /* 13 */ uint8_t temp_cal_table0; //!< temperature calibration table
-    /* 14 */ uint8_t temp_cal_table1; //!< temperature calibration table
-    /* 15 */ uint8_t temp_cal_table2; //!< temperature calibration table
-    /* 16 */ uint8_t temp_cal_table3; //!< temperature calibration table
-    /* 17 */ uint8_t temp_cal_table4; //!< temperature calibration table
-    /* 18 */ uint8_t temp_cal_table5; //!< temperature calibration table
-    /* 19 */ uint8_t temp_cal_table6; //!< temperature calibration table
-    /* 1a */ uint8_t timer_mode; //!< =0 only one program, =1 programs for weekdays
-    /* 1b */ uint8_t bat_warning_thld; //!< treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
-    /* 1c */ uint8_t bat_low_thld; //!< treshold for battery low [unit 0.02V]=[unit 0.01V per cell]
-    /* 1d */ uint8_t window_open_thld; //!< treshold for window open/close detection unit is 0.1C
-    /* 1e */ uint8_t window_open_noise_filter;
-    /* 1f */ uint8_t window_close_noise_filter;
+    /* 0f */ uint8_t motor_end_detect_cal; //!< stop timer threshold in % to previous average 
+    /* 10 */ uint8_t motor_end_detect_run; //!< stop timer threshold in % to previous average 
+    /* 11 */ uint8_t motor_eye_noise_protect; //!< motor eye noise protection in % of previous average 
+    /* 12 */ uint8_t MOTOR_ManuCalibration_L;
+    /* 13 */ uint8_t MOTOR_ManuCalibration_H;
+    /* 14 */ uint8_t temp_cal_table0; //!< temperature calibration table
+    /* 15 */ uint8_t temp_cal_table1; //!< temperature calibration table
+    /* 16 */ uint8_t temp_cal_table2; //!< temperature calibration table
+    /* 17 */ uint8_t temp_cal_table3; //!< temperature calibration table
+    /* 18 */ uint8_t temp_cal_table4; //!< temperature calibration table
+    /* 19 */ uint8_t temp_cal_table5; //!< temperature calibration table
+    /* 1a */ uint8_t temp_cal_table6; //!< temperature calibration table
+    /* 1b */ uint8_t timer_mode; //!< =0 only one program, =1 programs for weekdays
+    /* 1c */ uint8_t bat_warning_thld; //!< treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
+    /* 1d */ uint8_t bat_low_thld; //!< treshold for battery low [unit 0.02V]=[unit 0.01V per cell]
+    /* 1e */ uint8_t window_open_thld; //!< treshold for window open/close detection unit is 0.1C
+    /* 1f */ uint8_t window_open_noise_filter;
+    /* 20 */ uint8_t window_close_noise_filter;
 } config_t;
 
 extern config_t config;
@@ -86,7 +87,7 @@ extern uint8_t EEPROM ee_layout;
 #define BOOT_ON2      (16*60+0x2000) //!<  16:00
 #define BOOT_OFF2     (21*60+0x1000) //!<  21:00
 
-#define EE_LAYOUT (0x01) //!< EEPROM layout version 
+#define EE_LAYOUT (0x02) //!< EEPROM layout version 
 
 #ifdef __EEPROM_C__
 // this is definition, not just declaration
@@ -156,23 +157,24 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 0c */  {200,       200,        178,    234},   //!< close motor_speed PWM setting
   /* 0d */  {15,         15,        0,      120},   //!< motor_protection
   /* 0e */  {10,         10,        0,      120},   //!< additional impulses for 0 or 100%
-  /* 0f */  {140,       140,      110,      250},   //!< motor_end_detect; stop timer threshold in % to previous average 
-  /* 10 */  {40,         40,       10,       90},   //!< motor_eye_noise_protect; motor eye noise protection in % of previous average 
-  /* 11 */  {255,       255,        0,      255},   //!< manual calibration L
-  /* 12 */  {255,       255,        0,      255},   //!< manual calibration H
-  /* 13 */  {295-TEMP_CAL_OFFSET,295-TEMP_CAL_OFFSET, 0,        255},   //!< value for 35C => 295 temperature calibration table 
-  /* 14 */  {340-295,340-295,      16,      255},   //!< value for 30C => 340 temperature calibration table
-  /* 15 */  {397-340,397-340,      16,      255},   //!< value for 25C => 397 temperature calibration table
-  /* 16 */  {472-397,472-397,      16,      255},   //!< value for 20C => 472 temperature calibration table
-  /* 17 */  {549-472,549-472,      16,      255},   //!< value for 15C => 549 temperature calibration table
-  /* 18 */  {614-549,614-549,      16,      255},   //!< value for 10C => 614 temperature calibration table
-  /* 19 */  {675-614,675-614,      16,      255},   //!< value for 05C => 675 temperature calibration table
-  /* 1a */  {0,           0,        0,        1},   //!< timer_mode; =0 only one program, =1 programs for weekdays 
-  /* 1b */  {120,       120,       80,      160},   //!< bat_warning_thld; treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
-  /* 1c */  {100,       100,       80,      160},   //!< bat_low_thld; treshold for battery low [unit 0.02V]=[unit 0.01V per cell]
-  /* 1d */  {32,         32,        7,      255},   //!< uint8_t window_open_thld; reshold for window open/close detection unit is 0.01C
-  /* 1e */  {5,           5,        2,       60},   //!< window_open_noise_filter
-  /* 1f */  {15,         15,        2,      255},   //!< window_close_noise_filter
+  /* 0f */  {130,       130,      110,      250},   //!< motor_end_detect_cal; stop timer threshold in % to previous average 
+  /* 10 */  {150,       150,      110,      250},   //!< motor_end_detect_run; stop timer threshold in % to previous average 
+  /* 11 */  {40,         40,       10,       90},   //!< motor_eye_noise_protect; motor eye noise protection in % of previous average 
+  /* 12 */  {255,       255,        0,      255},   //!< manual calibration L
+  /* 13 */  {255,       255,        0,      255},   //!< manual calibration H
+  /* 14 */  {295-TEMP_CAL_OFFSET,295-TEMP_CAL_OFFSET, 0,        255},   //!< value for 35C => 295 temperature calibration table 
+  /* 15 */  {340-295,340-295,      16,      255},   //!< value for 30C => 340 temperature calibration table
+  /* 16 */  {397-340,397-340,      16,      255},   //!< value for 25C => 397 temperature calibration table
+  /* 17 */  {472-397,472-397,      16,      255},   //!< value for 20C => 472 temperature calibration table
+  /* 18 */  {549-472,549-472,      16,      255},   //!< value for 15C => 549 temperature calibration table
+  /* 19 */  {614-549,614-549,      16,      255},   //!< value for 10C => 614 temperature calibration table
+  /* 1a */  {675-614,675-614,      16,      255},   //!< value for 05C => 675 temperature calibration table
+  /* 1b */  {0,           0,        0,        1},   //!< timer_mode; =0 only one program, =1 programs for weekdays 
+  /* 1c */  {120,       120,       80,      160},   //!< bat_warning_thld; treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
+  /* 1d */  {100,       100,       80,      160},   //!< bat_low_thld; treshold for battery low [unit 0.02V]=[unit 0.01V per cell]
+  /* 1e */  {32,         32,        7,      255},   //!< uint8_t window_open_thld; reshold for window open/close detection unit is 0.01C
+  /* 1f */  {5,           5,        2,       60},   //!< window_open_noise_filter
+  /* 20 */  {15,         15,        2,      255},   //!< window_close_noise_filter
 
 };
 
