@@ -71,7 +71,7 @@ int8_t MOTOR_calibration_step=-2; // not calibrated
 volatile uint16_t motor_diag = 0;
 static volatile uint16_t motor_diag_cnt = 0;
 
-static volatile uint16_t motor_max_time_for_impulse[2];
+volatile uint16_t motor_max_time_for_impulse[2];
 static volatile uint16_t motor_eye_noise_protection[2];
 static uint32_t motor_diag_sum;
 uint16_t motor_diag_count;

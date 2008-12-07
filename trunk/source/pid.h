@@ -22,9 +22,10 @@
  *              You should have received a copy of the GNU General Public License
  *              along with this program. If not, see http:*www.gnu.org/licenses
  */
+ 
+#include "config.h"
 
-extern int32_t sumError;
-extern int16_t maxSumError;
+extern int16_t sumError;
 
 /*!
  * \file       pid.h
@@ -34,7 +35,11 @@ extern int16_t maxSumError;
  * $Rev$
  */
 
-void pid_Init(int16_t processValue);
+#if CONFIG_ENABLE_D
+  void pid_Init(int16_t processValue);
+#else
+  #define pid_Init(processValue)
+#endif
 
 /*! \brief PID control algorithm.
  *

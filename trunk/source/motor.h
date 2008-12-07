@@ -90,3 +90,4 @@ extern volatile int16_t MOTOR_PosAct;
 extern volatile uint16_t motor_diag;
 extern int8_t MOTOR_calibration_step;
 extern uint16_t motor_diag_count;
+extern volatile uint16_t motor_max_time_for_impulse[2];

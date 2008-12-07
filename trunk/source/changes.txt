@@ -1,5 +1,10 @@
 version 1.00BETA will be released soon
 
+SVN revision 101
+    - optimizations
+    - overload check in pid.c
+    - change default setting for PID
+
 SVN revision 100
     - improve motor control
     - check EEPROM layout on startup

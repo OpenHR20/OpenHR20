@@ -142,7 +142,7 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 02 */  {34,        34,  TEMP_MIN,TEMP_MAX},    //!< temperature 1  - energy save (unit is 0.5stC)
   /* 03 */  {42,        42,  TEMP_MIN,TEMP_MAX},    //!< temperature 2  - comfort (unit is 0.5stC)
   /* 04 */  {48,        48,  TEMP_MIN,TEMP_MAX},    //!< temperature 3  - supercomfort (unit is 0.5stC)
-  /* 05 */  {64,        64,         0,      255},   //!< P_Factor;
+  /* 05 */  {50,        50,         0,      255},   //!< P_Factor;
   /* 06 */  {3,          3,         0,      255},   //!< I_Factor;
 #if CONFIG_ENABLE_D
   /* 07 */  {0,          0,         0,      255},   //!< D_Factor;
@@ -156,7 +156,7 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 0c */  {200,       200,        178,    234},   //!< close motor_speed PWM setting
   /* 0d */  {15,         15,        0,      120},   //!< motor_protection
   /* 0e */  {10,         10,        0,      120},   //!< additional impulses for 0 or 100%
-  /* 0f */  {130,       130,      110,      250},   //!< motor_end_detect; stop timer threshold in % to previous average 
+  /* 0f */  {140,       140,      110,      250},   //!< motor_end_detect; stop timer threshold in % to previous average 
   /* 10 */  {40,         40,       10,       90},   //!< motor_eye_noise_protect; motor eye noise protection in % of previous average 
   /* 11 */  {255,       255,        0,      255},   //!< manual calibration L
   /* 12 */  {255,       255,        0,      255},   //!< manual calibration H
