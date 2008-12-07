@@ -1,5 +1,8 @@
 version 1.00BETA will be released soon
 
+SVN revision 102
+    - fix watch.c
+
 SVN revision 101
     - optimizations
     - overload check in pid.c
