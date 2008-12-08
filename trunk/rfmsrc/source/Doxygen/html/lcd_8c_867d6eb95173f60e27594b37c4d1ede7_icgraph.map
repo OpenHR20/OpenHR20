@@ -1,6 +1,0 @@
-<area shape="rect" href="$lcd_8h.html#b214ed8e19094284c8da182bbdf8ce99" title="LCD_ClearNumbers" alt="" coords="171,6,307,32">
-<area shape="rect" href="$main_8c.html#840291bc02cba5474a4cb46a9b9566fe" title="main" alt="" coords="395,56,443,83">
-<area shape="rect" href="$lcd_8h.html#1d65eaee724633974bf0a1bad6f3ee05" title="LCD_PrintDayOfWeek" alt="" coords="164,107,313,134">
-<area shape="rect" href="$lcd_8h.html#33d523351c885dd1b327dbcbbc8de23f" title="LCD_PrintDec" alt="" coords="187,158,291,184">
-<area shape="rect" href="$lcd_8h.html#084cf78369aa763b97b7c890527522b6" title="LCD_PrintTemp" alt="" coords="363,183,475,210">
-<area shape="rect" href="$lcd_8h.html#9b790c1ecaca30cdffff9ed27983900d" title="LCD_PrintHex" alt="" coords="187,259,291,286">
