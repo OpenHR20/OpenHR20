@@ -35,13 +35,17 @@
 #define DEBUG_MODE 1
 #define DEBUG_SKIP_DATETIME_SETTING_AFTER_RESET 0
 
+
 #if DEBUG_MODE == 1
-    #define DEBUG_BEFORE_SLEEP() (PORTE &= ~(1<<PE2))
-    #define DEBUG_AFTER_SLEEP() (PORTE |= (1<<PE2))
+    // MF: disable when experimenting with RFM, i would like to use the PCINT2 interrupt for wakeup stuff
+    #define DEBUG_BEFORE_SLEEP() ; //(PORTE &= ~(1<<PE2))
+    #define DEBUG_AFTER_SLEEP()  ; //(PORTE |= (1<<PE2))
 #else
     #define DEBUG_BEFORE_SLEEP()
     #define DEBUG_AFTER_SLEEP()
 #endif
+
+
 
 #define KEEP_ALIVE_FOR_COMMUNICATION DEBUG_MODE
 

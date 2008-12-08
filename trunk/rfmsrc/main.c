@@ -57,6 +57,10 @@
 #include "rs232_485.h"
 #include "controller.h"
 
+#ifdef RFM
+	#include "rfm.h"
+#endif
+
 // global Vars
 volatile bool    m_automatic_mode;         // auto mode (false: manu mode)
 
@@ -198,6 +202,23 @@ int main(void)
                     // valve protection / CyCL
                     MOTOR_updateCalibration(0);
                 }
+
+#if (RFM==1)
+				/*
+					collission protection: every HR20 shall send when the second counter is equal to it's own address.
+					different HR20 clocks will diverge anyway, but this will make a collission not so much more likely.
+					(clocks may be set via radio anyway in later stage). but what we have to take care is, that
+					second reaches from 0-60 and devaddr from 0-254. so we mask out the uppermost 3 bits of devaddr (& 0x1F), 
+					so that the range of devaddr is 1-31. this makes collission a little more likely if you have so many HR20s,
+					but clock drift would help s here anyway ;)
+				*/
+				//if (config.RFM_enabled && (RTC_GetSecond() == (0x1f & config.RFM_devaddr)))
+				if ((config.RFM_config && RFM_CONFIG_BROADCASTSTATUS) && (RTC_GetSecond() % 4)) // for testing all 4 seconds ...
+				{
+					RFM_TESTPIN_TOG;
+				}
+#endif
+
             }
             MOTOR_updateCalibration(mont_contact_pooling());
             MOTOR_Goto(valve_wanted);
@@ -274,6 +295,11 @@ static inline void init(void)
     RTC_Init();
 
     eeprom_config_init((~PINB & (KBI_PROG | KBI_C | KBI_AUTO))==(KBI_PROG | KBI_C | KBI_AUTO));
+
+#if (RFM==1)
+	RFM_init();
+#endif
+
 
     //! Initialize the motor
     MOTOR_Init();

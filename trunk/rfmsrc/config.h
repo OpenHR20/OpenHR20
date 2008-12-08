@@ -59,7 +59,9 @@ In this file we define only configuration parameters, for example what kind of c
 // our Version
 #define REVHIGH  0  //! Revision number high
 #define REVLOW   92 //! Revision number low
-#define VERSION_N 0xF092 //! Version as HEX value F0.92 (F as free)  
+#define VERSION_N 0xA092 //! Version as HEX value F0.92 (F as free)  (A is for mArio's internal experiments)
+
+#define DEVICE_ADDRESS 0x01 //! Individual Device Adress for each HR20 for addressing in Networks (e.g. RFM Radio)
 
 #ifndef REVISION
  #define REVISION "$Rev$"
@@ -77,6 +79,15 @@ In this file we define only configuration parameters, for example what kind of c
 /* #define COM_DEF_ADR 1 */
 
 #define DEFAULT_TEMPERATURE 2000 
+
+#define RFM 1 //!< define RFM to 1 if you want to have support for the RFM Radio Moodule in the Code
+
+#ifdef RFM
+	#define RFM12 1 // just a synonym
+	#define RFM_DEVICE_ADDRESS 0x04
+#else
+	#undef RFM12
+#endif
 
 
 // Some default Values
@@ -103,6 +114,27 @@ In this file we define only configuration parameters, for example what kind of c
 /* revision remarks
  **************
  */ 
+
+
+// some handy macros
+
+#define	ELEMCNT(A)							(sizeof(A) / ELEMSIZE(A))
+#define	OFFSETOF(TYPE, ELEM)				((size_t)((char *)&((TYPE *) 0)->ELEM - (char*)((TYPE*)NULL)))
+#define CMP(X,Y)							(((X) == (Y)) ? 0 : (((X) < (Y)) ? -1 : +1))
+#define LITERAL_STRLEN(S)					(sizeof(S) - sizeof('\0'))
+#define ARRAY(TYPE, PTR, INDEX)				((TYPE*)(PTR))[INDEX]
+
+#define INDEX_TO_MASK(INDEX)				(1 << (INDEX))
+#define BV(INDEX)							INDEX_TO_MASK(INDEX)
+
+#define BIT_GET(VAR, INDEX)					((VAR) & INDEX_TO_MASK(INDEX))
+#define BIT_SET(VAR, INDEX)					(VAR) |= INDEX_TO_MASK(INDEX)
+#define BIT_TOG(VAR, INDEX)					(VAR) ^= INDEX_TO_MASK(INDEX)
+#define BIT_CLR(VAR, INDEX)					(VAR) &= ~INDEX_TO_MASK(INDEX)
+#define BIT_CLEAR(VAR, INDEX)				BIT_CLR(VAR, INDEX)
+
+#define DDR_OUT(DDR, BITPOS)				BIT_SET(DDR, BITPOS)
+#define DDR_IN(DDR, BITPOS)					BIT_CLR(DDR, BITPOS)
 
 #endif /* CONFIG_H */
 

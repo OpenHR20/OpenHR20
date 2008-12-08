@@ -65,10 +65,14 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
     /* 1a */ uint8_t temp_cal_table6; //!< temperature calibration table
     /* 1b */ uint8_t timer_mode; //!< =0 only one program, =1 programs for weekdays
     /* 1c */ uint8_t bat_warning_thld; //!< treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
-    /* 1d */ uint8_t bat_low_thld; //!< treshold for battery low [unit 0.02V]=[unit 0.01V per cell]
-    /* 1e */ uint8_t window_open_thld; //!< treshold for window open/close detection unit is 0.1C
+    /* 1d */ uint8_t bat_low_thld; //!< threshold for battery low [unit 0.02V]=[unit 0.01V per cell]
+    /* 1e */ uint8_t window_open_thld; //!< threshold for window open/close detection unit is 0.1C
     /* 1f */ uint8_t window_open_noise_filter;
     /* 20 */ uint8_t window_close_noise_filter;
+#if (RFM==1)
+	/* 21 */ uint8_t RFM_devaddr; //!< HR20's own device address in RFM radio networking.
+	/* 22 */ uint8_t RFM_config; //!< RFM's config flags. combine RFM_CONFIG_*** flags here
+#endif
 } config_t;
 
 extern config_t config;
@@ -175,7 +179,10 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 1e */  {32,         32,        7,      255},   //!< uint8_t window_open_thld; reshold for window open/close detection unit is 0.01C
   /* 1f */  {5,           5,        2,       60},   //!< window_open_noise_filter
   /* 20 */  {15,         15,        2,      255},   //!< window_close_noise_filter
-
+#if (RFM==1)
+  /* 21 */  {RFM_DEVICE_ADDRESS, RFM_DEVICE_ADDRESS, 1, 254}, //!< RFM_devaddr: HR20's own device address in RFM radio networking.
+  /* 22 */  {RFM_CONFIG_ENABLEALL,           RFM_CONFIG_ENABLEALL,        0,        RFM_CONFIG_ENABLEALL},   //!< RFM_config
+#endif
 };
 
 

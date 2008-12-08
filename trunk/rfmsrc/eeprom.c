@@ -36,6 +36,9 @@
 #include "main.h"
 #include "rtc.h"
 #include "adc.h"
+#if (RFM == 1)
+	#include "rfm.h"
+#endif
 #define __EEPROM_C__
 #include "eeprom.h"
 

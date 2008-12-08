@@ -62,7 +62,7 @@ FORMAT = ihex
 
 
 # Target file name (without extension).
-TARGET = hr20
+TARGET = hr20rfm
 
 
 # Object files directory
@@ -84,7 +84,8 @@ pid.c \
 rs232_485_hw.c \
 com.c \
 watch.c \
-controller.c
+controller.c \
+rfm.c
 
 
 # List C++ source files here. (C dependencies are automatically generated.)
