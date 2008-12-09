@@ -31,6 +31,8 @@
  * $Rev$
  */
 
+#pragma once
+
 extern uint8_t CTL_temp_wanted; //!< wanted temperature
 extern uint8_t CTL_temp_wanted_last;   // desired temperatur value used for last PID control
 extern uint8_t CTL_temp_auto;

@@ -31,6 +31,8 @@
  * $Rev$
  */
 
+#pragma once
+
 #ifndef RTC_H
 #define RTC_H
 

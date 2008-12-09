@@ -31,6 +31,8 @@
  * $Rev$
  */
 
+#pragma once
+
 extern uint16_t kb_events;
 
 #define KB_EVENT_WHEEL_PLUS		(1 << 0)

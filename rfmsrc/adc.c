@@ -32,7 +32,6 @@
  * $Rev$
  */
 
-
 // AVR LibC includes
 #include <stdint.h>
 #include <avr/io.h>

@@ -61,6 +61,10 @@
 	#include "rfm.h"
 #endif
 
+#ifdef SECURITY
+	#include "security.h"
+#endif
+
 // global Vars
 volatile bool    m_automatic_mode;         // auto mode (false: manu mode)
 

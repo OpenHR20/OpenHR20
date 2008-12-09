@@ -31,6 +31,8 @@
  * $Rev$
  */
 
+#pragma once
+
 #ifndef MAIN_H
 #define MAIN_H
 
@@ -58,9 +60,6 @@ extern uint8_t valve_wanted;
 
 // public prototypes
 void delay(uint16_t);                   // delay
-
-// typedefs
-typedef enum { false, true } bool;
 
 extern bool mode_auto;
 

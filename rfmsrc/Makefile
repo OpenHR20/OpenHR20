@@ -62,7 +62,7 @@ FORMAT = ihex
 
 
 # Target file name (without extension).
-TARGET = hr20rfm
+TARGET = hr20
 
 
 # Object files directory
@@ -85,7 +85,8 @@ rs232_485_hw.c \
 com.c \
 watch.c \
 controller.c \
-rfm.c
+rfm.c \
+security.c
 
 
 # List C++ source files here. (C dependencies are automatically generated.)
@@ -612,7 +613,7 @@ clean: begin clean_list end
 clean_list :
 	@echo
 	@echo $(MSG_CLEANING)
-#	$(REMOVE) $(TARGET).hex
+	$(REMOVE) $(TARGET).hex
 	$(REMOVE) $(TARGET).eep
 	$(REMOVE) $(TARGET).bin
 	$(REMOVE) $(TARGET).cof

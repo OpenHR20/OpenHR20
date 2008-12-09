@@ -31,6 +31,7 @@
  * $Rev$
  */
 
+#pragma once
 
 char COM_tx_char_isr(void);
 

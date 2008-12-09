@@ -31,6 +31,8 @@
  * $Rev$
  */
 
+#pragma once
+
 // #include <stdint.h>
 
 //extern volatile unsigned char task;

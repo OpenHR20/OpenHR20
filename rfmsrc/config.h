@@ -36,6 +36,8 @@
 In this file we define only configuration parameters, for example what kind of control port we have.
 */
 
+#pragma once
+
 #ifndef CONFIG_H
 #define CONFIG_H
 
@@ -59,14 +61,14 @@ In this file we define only configuration parameters, for example what kind of c
 // our Version
 #define REVHIGH  0  //! Revision number high
 #define REVLOW   92 //! Revision number low
-#define VERSION_N 0xA092 //! Version as HEX value F0.92 (F as free)  (A is for mArio's internal experiments)
+#define VERSION_N 0xE092 //! Version as HEX value F0.92 (E for Experimental)
 
 #define DEVICE_ADDRESS 0x01 //! Individual Device Adress for each HR20 for addressing in Networks (e.g. RFM Radio)
 
 #ifndef REVISION
  #define REVISION "$Rev$"
 #endif 
-#define VERSION_STRING  "V: OpenHR20 SW version 0.92 build " __DATE__ " " __TIME__ " " REVISION
+#define VERSION_STRING  "V: OpenHR20 (+rfm) SW version 0.92 build " __DATE__ " " __TIME__ " " REVISION
 
 // Parameters for the COMM-Port
 #define COM_BAUD_RATE 9600
@@ -80,13 +82,27 @@ In this file we define only configuration parameters, for example what kind of c
 
 #define DEFAULT_TEMPERATURE 2000 
 
-#define RFM 1 //!< define RFM to 1 if you want to have support for the RFM Radio Moodule in the Code
 
-#ifdef RFM
+#define RFM 1 //!< define RFM to 1 if you want to have support for the RFM Radio Moodule in the Code
+#define SECURITY 1 //!< define SECURITY to protect RFM's commnunication
+
+#if (RFM == 1)
 	#define RFM12 1 // just a synonym
 	#define RFM_DEVICE_ADDRESS 0x04
 #else
 	#undef RFM12
+	#undef SECURITY
+#endif
+
+#if (SECURITY == 1)
+	#define SECURITY_KEYSIZE	4
+	#define SECURITY_KEY_0		0x12
+	#define SECURITY_KEY_1		0x34
+	#define SECURITY_KEY_2		0x56
+	#define SECURITY_KEY_3		0x78
+
+	//#define SECURITY_OFB 1 //!< run symetric encryption in Output Feedback Mode (less code but 1 stolen cipher/plaintextpair will make all messages of that size readable!)
+	#define SECURITY_CFB 1 //!< run symetric encryption in Cipher Feedback Mode (more code but more secure than OFB)
 #endif
 
 
@@ -135,6 +151,24 @@ In this file we define only configuration parameters, for example what kind of c
 
 #define DDR_OUT(DDR, BITPOS)				BIT_SET(DDR, BITPOS)
 #define DDR_IN(DDR, BITPOS)					BIT_CLR(DDR, BITPOS)
+
+#define IN_RANGE(MIN, TEST, MAX)			(((MIN) <= (TEST)) && ((TEST) <= (MAX)))
+#define OUTOF_RANGE(MIN, TEST, MAX)			(((MIN) > (TEST)) || ((TEST) > (MAX)))
+#define TOLOWER(C)							((C) | 0x20)
+#define TOUPPER(C)							((C) & ~0x20)
+#define CHRTOINT(C)							((C) - (char)('0'))
+#define CHRXTOINT(C)						(IN_RANGE('0', (C), '9') ? ((C) - (char)('0')) : (TOLOWER(C) - 'a' + 0x0a) )
+
+#define HIBYTE(I16)							((I16) >> 8)
+#define LOBYTE(I16)							((I16) & 0xff)
+
+#define MAX(A, B)							(((A) > (B)) ? (A) : (B))
+#define MIN(A, B)							(((A) < (B)) ? (A) : (B))
+
+#define MKINT16(HI8, LO8)					(((HI8) << 8) | LO8)
+
+// typedefs
+typedef enum { false, true } bool;
 
 #endif /* CONFIG_H */
 

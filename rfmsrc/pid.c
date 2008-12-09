@@ -30,7 +30,7 @@
  * \date       $Date$
  * $Rev$
  */
- 
+
 #include <stdint.h>
 #include <stdlib.h>
 #include "main.h"

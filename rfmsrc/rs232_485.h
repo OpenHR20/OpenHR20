@@ -31,6 +31,8 @@
  * $Rev$
  */
 
+#pragma once
+
 #if (defined COM_RS232) || (defined COM_RS485)
 	
 	#ifdef _AVR_IOM169P_H_
