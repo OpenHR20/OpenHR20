@@ -31,6 +31,8 @@
  * $Rev$
  */
 
+#include "config.h"
+
 #pragma once
 
 // #include <stdint.h>
@@ -41,25 +43,25 @@
 #define  TASK_IS_SFR 1
 
 
-#define TASK_KB_BIT		      0
+#define TASK_KB_BIT	          0
 #define TASK_RTC_BIT	      1
 #define TASK_ADC_BIT          2
 #define TASK_LCD_BIT	      3
 #define TASK_MOTOR_PULSE_BIT  4
 #define TASK_MOTOR_STOP_BIT	  5
-#define TASK_COM_BIT          6	
-#define TASK_RFM_BIT          7		  
+#define TASK_COM_BIT          6  
+#if (RFM==1)
+  #define TASK_RFM_BIT          7  
+#endif 
 
-#define TASK_KB			      (1 << TASK_KB_BIT)
-#define TASK_RTC		      (1 << TASK_RTC_BIT)
-#define TASK_ADC		      (1 << TASK_ADC_BIT)
-#define TASK_LCD		      (1 << TASK_LCD_BIT)
-#define TASK_MOTOR_PULSE      (1 << TASK_MOTOR_PULSE_BIT)
-#define TASK_MOTOR_STOP 	  (1 << TASK_MOTOR_STOP_BIT)
-#define TASK_COM			  (1 << TASK_COM_BIT)
-#define TASK_RFM			  (1 << TASK_RFM_BIT)
-//#define TASK_			128
-
-
-
+#define TASK_KB			     (1 << TASK_KB_BIT)
+#define TASK_RTC		     (1 << TASK_RTC_BIT)
+#define TASK_ADC		     (1 << TASK_ADC_BIT)
+#define TASK_LCD		     (1 << TASK_LCD_BIT)
+#define TASK_MOTOR_PULSE     (1 << TASK_MOTOR_PULSE_BIT)
+#define TASK_MOTOR_STOP 	 (1 << TASK_MOTOR_STOP_BIT)
+#define TASK_COM			 (1 << TASK_COM_BIT)
+#if (RFM==1)
+  #define TASK_RFM		     (1 << TASK_RFM_BIT)
+#endif
 

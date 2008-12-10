@@ -189,6 +189,28 @@ int main(void)
 			continue; // on most case we have only 1 task, iprove time to sleep
         }
 
+		#if (RFM==1)
+		  // RFM12
+		  if (task & TASK_RFM) {
+			task&=~TASK_RFM;
+			if (rfmTransmitMode) {
+			  //WRITE to SPI one byte of packet and return back
+			} else {
+			  //READ one byte from SPI and store it into packet
+			}
+			// SCK is 0 from last transmition
+			// nSEL is 1 from last trasmition, otherwise  run DISABLE_RFM_nSEL(); //macro to nSEL=1
+			ENABLE_RFM_nSEL(); //macro to nSEL=0
+			// from this moment SDO indicate FFIT or RGIT
+			PCMSK0 |= 1<<PCINT5; //re-enable pin change interrupt
+			if ((PINE & (1<<PE5)) !=0) { // \todo use symbols not constants
+			  // insurance to protect interrupt lost
+			  PCMSK0 &= ~(1<<PCINT5); // disable RFM interrupt
+			  task |= TASK_RFM; // create task for main loop
+			}
+		  }
+		#endif
+
 		//! check keyboard and set keyboards events
 		if (task & TASK_KB) {
 			task&=~TASK_KB;

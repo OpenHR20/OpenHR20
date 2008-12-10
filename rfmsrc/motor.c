@@ -391,7 +391,14 @@ ISR (PCINT0_vect){
 		    PCMSK0 &= ~(1<<PCINT0); // deactivate interrupt
 		}
 	#endif
-    // motor eye
+	#if (RFM==1)
+	// RFM module interupt
+		if ((PCMSK0 & PINE & (1<<PE5)) !=0) { // \todo use symbols not constants
+		  PCMSK0 &= ~(1<<PCINT5); // disable RFM interrupt
+		  task |= TASK_RFM;
+		}
+    #endif
+	// motor eye
     // count only on HIGH impulses
     if ((PCMSK0 & (1<<PCINT4)) && ((pine & ~pine_last & (1<<PE4)) != 0)) {
         MOTOR_PosAct+=MOTOR_Dir;
