@@ -47,7 +47,8 @@
 #define TASK_LCD_BIT	      3
 #define TASK_MOTOR_PULSE_BIT  4
 #define TASK_MOTOR_STOP_BIT	  5
-#define TASK_COM_BIT          6		  
+#define TASK_COM_BIT          6	
+#define TASK_RFM_BIT          7		  
 
 #define TASK_KB			      (1 << TASK_KB_BIT)
 #define TASK_RTC		      (1 << TASK_RTC_BIT)
@@ -56,6 +57,7 @@
 #define TASK_MOTOR_PULSE      (1 << TASK_MOTOR_PULSE_BIT)
 #define TASK_MOTOR_STOP 	  (1 << TASK_MOTOR_STOP_BIT)
 #define TASK_COM			  (1 << TASK_COM_BIT)
+#define TASK_RFM			  (1 << TASK_RFM_BIT)
 //#define TASK_			128
 
 

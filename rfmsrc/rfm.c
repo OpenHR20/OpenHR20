@@ -6,6 +6,12 @@
 #if (RFM==1)
 
 
+
+uint8_t rfm_framebuf[RFM_FRAME_MAX];
+uint8_t rfm_framesize = 0;
+uint8_t rfm_framepos = 0;
+rfmmode_t rfm_mode = rfmmode_off;
+
 /*!
  *******************************************************************************
  *  RFM SPI access
@@ -63,6 +69,10 @@ void RFM_init(void)
   /////////////////////////////////////////////////////////////////////////////
   
   //RFM_TESTPIN_INIT;
+
+#if (DISABLE_JTAG == 1)
+	
+#endif
 
 
 

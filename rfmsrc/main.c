@@ -57,11 +57,12 @@
 #include "rs232_485.h"
 #include "controller.h"
 
-#ifdef RFM
+#if (RFM == 1)
 	#include "rfm.h"
+	#include <util/crc16.h>
 #endif
 
-#ifdef SECURITY
+#if (SECURITY == 1)
 	#include "security.h"
 #endif
 
@@ -87,7 +88,6 @@ uint8_t input_temp(uint8_t);
 #warning "avr-libc >= version 1.6.0 recommended"
 #warning "This code has not been tested with older versions."
 #endif
-
 
 /*!
  *******************************************************************************
@@ -195,6 +195,47 @@ int main(void)
 			task_keyboard();
 		}
 
+#if (RFM==1)
+		if (task & TASK_RFM) {
+			
+			switch (rfm_mode)
+			{
+				case rfmmode_txd:
+				{
+					if (rfm_framepos < rfm_framesize)
+					{
+						RFM_WRITE(rfm_framebuf[rfm_framepos]); // shift out the byte to be sent
+						RFM_SPI_SELECT; // wait untill the SDO line went low. this indicates that the module is ready for next command
+						rfm_framepos++;
+					}
+					
+					if (rfm_framepos == rfm_framesize)
+					{
+						task &= ~TASK_RFM;
+						rfm_framepos  = 0;
+						rfm_framesize = 0;
+						rfm_mode	  = rfmmode_off; // actually now its time to switch into listening for 1 second
+
+					    RFM_OFF();		// turn everything off
+					    RFM_WRITE(0);	// Clear TX-IRQ
+					}
+					break;
+				}
+				case rfmmode_rxd:
+				{
+					// ...
+					break;
+				}
+				default:
+				{
+					// ...
+					break;
+				}
+
+			}
+		}
+#endif
+
         if (task & TASK_RTC) {
             task&=~TASK_RTC;
             {
@@ -208,18 +249,45 @@ int main(void)
                 }
 
 #if (RFM==1)
-				/*
-					collission protection: every HR20 shall send when the second counter is equal to it's own address.
-					different HR20 clocks will diverge anyway, but this will make a collission not so much more likely.
-					(clocks may be set via radio anyway in later stage). but what we have to take care is, that
-					second reaches from 0-60 and devaddr from 0-254. so we mask out the uppermost 3 bits of devaddr (& 0x1F), 
-					so that the range of devaddr is 1-31. this makes collission a little more likely if you have so many HR20s,
-					but clock drift would help s here anyway ;)
-				*/
-				//if (config.RFM_enabled && (RTC_GetSecond() == (0x1f & config.RFM_devaddr)))
+				//if (config.RFM_enabled && (RTC_GetSecond() == (0x1f & config.RFM_devaddr))) // collission protection: every HR20 shall send when the second counter is equal to it's own address.
 				if ((config.RFM_config && RFM_CONFIG_BROADCASTSTATUS) && (RTC_GetSecond() % 4)) // for testing all 4 seconds ...
 				{
-					RFM_TESTPIN_TOG;
+					uint8_t statusbits = CTL_error; // statusbits are errorflags and windowopen and auto/manualmode
+					if (!CTL_mode_auto) statusbits |= CTL_ERR_NA_0; // auto is more likely than manual, so just set the flag in rarer case
+					if (mode_window())  statusbits |= CTL_ERR_NA_1; // if window-open-condition is detected, set this flag
+
+					rfm_framebuf[ 0] = 0xaa; // preamble
+					rfm_framebuf[ 1] = 0xaa; // preamble
+					rfm_framebuf[ 2] = 0x2d; // rfm fifo start pattern
+					rfm_framebuf[ 3] = 0xd4; // rfm fifo start pattern
+					rfm_framebuf[ 4] = 9;    // length (from length itself to crc)
+					rfm_framebuf[ 5] = (RFMPROTO_FLAGS_PACKETTYPE_BROADCAST | RFMPROTO_FLAGS_DEVICETYPE_OPENHR20); // flags
+					rfm_framebuf[ 6] = config.RFM_devaddr; // sender address
+					rfm_framebuf[ 7] = HIBYTE(temp_average); // current temp
+					rfm_framebuf[ 8] = LOBYTE(temp_average);
+					rfm_framebuf[ 9] = CTL_temp_wanted; // wanted temp
+					rfm_framebuf[10] = MOTOR_GetPosPercent(); // valve pos
+					rfm_framebuf[11] = statusbits; // future improvement: if istatusbits==0x00, then we dont send statusbits. saves some battery and radio time
+					
+					uint8_t i, crc=0x00;
+					for (i=4; i<12; i++)
+					{
+						_crc_ibutton_update(0x00, rfm_framebuf[i]);
+					}
+					
+					rfm_framebuf[12] = crc; // checksum
+					rfm_framebuf[13] = 0xaa; // postamble
+
+					rfm_framesize = 14; // total size what shall be transmitted. from preamble to postamble
+					rfm_framepos  = 0;
+					task |= TASK_RFM;
+					rfm_mode = rfmmode_txd;
+
+					RFM_TX_ON();
+					RFM_SPI_SELECT; // wait untill the SDO line went low. this indicates that the module is ready for next command
+
+
+
 				}
 #endif
 

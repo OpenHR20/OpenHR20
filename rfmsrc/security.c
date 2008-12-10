@@ -9,10 +9,6 @@
 
 #if (SECURITY==1)
 
-#if (SECURITY_OFB == SECURITY_CFB)
-	#error define either SECURITY_OFB or SECURITY_CFB!
-#endif
-
 #include <stdlib.h> 
 #include <avr/io.h>
 
@@ -27,6 +23,8 @@
  ******************************************************************************/
 static unsigned short security_get_seed()
 {
+	// TODO: this could be done smaller or even better by seeding with som least significant ADC bits
+
    unsigned short seed = 0;
    unsigned short *p = (unsigned short*) (RAMEND+1);
    extern unsigned short __heap_start;
@@ -83,7 +81,7 @@ static void xtea_encipher(uint32_t* v, uint32_t* k)
  *  \param k pointer to the key (16 byte)
  *
  ******************************************************************************/
-/* we dont need it with OFB or CFB for decryption:
+/* we dont need decryption when driving in CFB mode:
 static void xtea_decipher(uint32_t* v, uint32_t* k)
 {
     uint32_t v0=v[0], v1=v[1], i;
@@ -130,16 +128,17 @@ static void xtea_init(uint8_t* xtea_key, uint8_t* xtea_block)
 /*!
  *******************************************************************************
  *
- *  XTEA-encrypts a buffer in OFB or CFB mode. (define SECURITY_OFB or SECURITY_CFB)
+ *  XTEA-en- or decrypts a buffer in OFB or CFB mode. (define SECURITY_OFB or SECURITY_CFB)
  *
  *  \param msgbuf  pointer to the message which will be encrypted (in place).
  *  \param msgsize size of the message buffer 
+ *  \param encrypt if true, message will be encrypted, otherwise decrypted
  *
  *  \note
  *      - the key used for encryption is taken from config.security_key[]
  *
  ******************************************************************************/
-void security_encrypt(uint8_t* msgbuf, uint8_t msgsize)
+void security_crypt(uint8_t* msgbuf, uint8_t msgsize, bool encrypt)
 {
 	uint8_t xtea_block[XTEA_BLOCKSIZE];
 	uint8_t xtea_key[XTEA_KEYSIZE];
@@ -153,53 +152,11 @@ void security_encrypt(uint8_t* msgbuf, uint8_t msgsize)
 		uint8_t i;
 		for (i=0; i<XTEA_BLOCKSIZE; i++)
 		{
-			msgbuf[m] ^= xtea_block[i];
-#if (SECURITY_CFB == 1)
-			xtea_block[i] = msgbuf[m]; // next rount cipher input is the xored msgblock
-#endif
-#if (SECURITY_OFB == 1)
-			// nothing to do: next round cipher input is the currently encryped block
-#endif
-			m++;
-			if (m == msgsize)
-			{
-				return;
-			}
-		}
-	}
-}
-
-#if (SECURITY_CFB == 1)
-/*!
- *******************************************************************************
- *
- *  XTEA-decrypts a buffer in CFB mode. (define SECURITY_CFB)
- *
- *  \param msgbuf  pointer to the message which will be encrypted (in place).
- *  \param msgsize size of the message buffer 
- *
- *  \note
- *      - the key used for encryption is taken from config.security_key[]
- *
- ******************************************************************************/
-void security_decrypt(uint8_t* msgbuf, uint8_t msgsize)
-{
-	uint8_t xtea_block[XTEA_BLOCKSIZE];
-	uint8_t xtea_key[XTEA_KEYSIZE];
-	xtea_init(xtea_key, xtea_block);
-
-	uint8_t m=0;
-
-	while (m < msgsize)
-	{
-		xtea_encipher((uint32_t*)xtea_block, (uint32_t*)(xtea_key)); // yes, encipher is correct here!
-
-		uint8_t i;
-		for (i=0; i<XTEA_BLOCKSIZE; i++)
-		{
 			uint8_t msgbuf_m = msgbuf[m];
-			msgbuf[m] ^= xtea_block[i];
-			xtea_block[i] = msgbuf_m;
+			msgbuf[m]       ^= xtea_block[i];
+			xtea_block[i]    = encrypt ? 
+							   msgbuf[m] : // next rount cipher input is the xored msgblock
+							   msgbuf_m;   // next rount cipher input is the xored msgblock
 
 			m++;
 			if (m == msgsize)
@@ -209,7 +166,6 @@ void security_decrypt(uint8_t* msgbuf, uint8_t msgsize)
 		}
 	}
 }
-#endif
 
 static uint16_t local_chall; //!< the last generated challenge. we must store it for checking that later
 
@@ -238,6 +194,8 @@ uint16_t security_generate_challenge(void)
  ******************************************************************************/
 uint16_t security_generate_response(uint16_t remote_chall)
 {
+
+	/*
 	uint8_t xtea_block[XTEA_BLOCKSIZE];
 	uint8_t xtea_key[XTEA_KEYSIZE];
 
@@ -249,6 +207,7 @@ uint16_t security_generate_response(uint16_t remote_chall)
 	xtea_encipher((uint32_t*)xtea_block, (uint32_t*)(xtea_key));
 
 	return MKINT16(xtea_block[0], xtea_block[1]);
+	*/
 }
 
 /*!

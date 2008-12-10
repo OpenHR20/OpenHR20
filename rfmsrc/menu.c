@@ -510,7 +510,7 @@ void menu_view(bool update) {
                 LCD_PrintStringID(LCD_STRING_minusCminus,LCD_MODE_ON);
             }
         }
-        break;                                                             
+        break;
     case menu_set_timmer_dow:
         clr_show1(LCD_SEG_PROG); // all segments off
         LCD_PrintDayOfWeek(menu_set_dow, LCD_MODE_BLINK_1);

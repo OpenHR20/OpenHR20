@@ -84,11 +84,13 @@ In this file we define only configuration parameters, for example what kind of c
 
 
 #define RFM 1 //!< define RFM to 1 if you want to have support for the RFM Radio Moodule in the Code
-#define SECURITY 1 //!< define SECURITY to protect RFM's commnunication
+#define SECURITY 0 //!< define SECURITY to 1 to protect RFM's commnunication
 
 #if (RFM == 1)
 	#define RFM12 1 // just a synonym
 	#define RFM_DEVICE_ADDRESS 0x04
+
+	#define DISABLE_JTAG 1 //!< define DISABLE_JTAG if your RFM's connection uses any JTAG pins
 #else
 	#undef RFM12
 	#undef SECURITY
@@ -100,15 +102,12 @@ In this file we define only configuration parameters, for example what kind of c
 	#define SECURITY_KEY_1		0x34
 	#define SECURITY_KEY_2		0x56
 	#define SECURITY_KEY_3		0x78
-
-	//#define SECURITY_OFB 1 //!< run symetric encryption in Output Feedback Mode (less code but 1 stolen cipher/plaintextpair will make all messages of that size readable!)
-	#define SECURITY_CFB 1 //!< run symetric encryption in Cipher Feedback Mode (more code but more secure than OFB)
 #endif
 
 
 // Some default Values
 #define BOOT_DD         1  //!< Boot-Up date: day
-#define BOOT_MM        10  //!< Boot-Up date: month
+#define BOOT_MM        12  //!< Boot-Up date: month
 #define BOOT_YY         8  //!< Boot-Up date: year
 #define BOOT_hh        12  //!< Boot-Up time: hour
 #define BOOT_mm        00  //!< Boot-Up time: minutes

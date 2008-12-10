@@ -391,7 +391,8 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 
-#define RFM_WRITE(byte)  RFM_SPI_16(0xB800 | ((byte) & 0xFF))
+//#define RFM_WRITE(byte)  RFM_SPI_16(0xB800 | ((byte) & 0xFF))
+#define RFM_WRITE(byte)  RFM_SPI_16(0xB800 | (byte) )
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -468,5 +469,38 @@
 #include <stdint.h>
 void RFM_init (void);
 uint16_t rfm_spi16(uint16_t outval);
+void rfm_initframesend(uint8_t framesize);
+bool rfm_sendframebufbyte(void);
+
 
 ///////////////////////////////////////////////////////////////////////////////
+
+// RFM air protocol flags:
+
+#define RFMPROTO_FLAGS_BITASK_PACKETTYPE		0b11000000 //!< the uppermost 2 bits of the flags field encode the packettype
+#define RFMPROTO_FLAGS_PACKETTYPE_BROADCAST		0b00000000 //!< broadcast packettype (message from hr20, protocol; step 1)
+#define RFMPROTO_FLAGS_PACKETTYPE_COMMAND		0b01000000 //!< command packettype (message to hr20, protocol; step 2)
+#define RFMPROTO_FLAGS_PACKETTYPE_REPLY			0b10000000 //!< reply packettype (message from hr20, protocol; step 3)
+#define RFMPROTO_FLAGS_PACKETTYPE_SPECIAL		0b11000000 //!< currently unused packettype
+
+#define RFMPROTO_FLAGS_BITASK_DEVICETYPE		0b00011111 //!< the lowermost 5 bytes denote the device type. this way other sensors and actors may coexist
+#define RFMPROTO_FLAGS_DEVICETYPE_OPENHR20		0b00010100 //!< topen HR20 device type. 10100 is for decimal 20
+
+#define RFMPROTO_IS_PACKETTYPE_BROADCAST(FLAGS)	( RFMPROTO_FLAGS_PACKETTYPE_BROADCAST == ((FLAGS) & RFMPROTO_FLAGS_BITASK_PACKETTYPE) )
+#define RFMPROTO_IS_PACKETTYPE_COMMAND(FLAGS)	( RFMPROTO_FLAGS_PACKETTYPE_COMMAND   == ((FLAGS) & RFMPROTO_FLAGS_BITASK_PACKETTYPE) )
+#define RFMPROTO_IS_PACKETTYPE_REPLY(FLAGS)		( RFMPROTO_FLAGS_PACKETTYPE_REPLY     == ((FLAGS) & RFMPROTO_FLAGS_BITASK_PACKETTYPE) )
+#define RFMPROTO_IS_PACKETTYPE_SPECIAL(FLAGS)	( RFMPROTO_FLAGS_PACKETTYPE_SPECIAL   == ((FLAGS) & RFMPROTO_FLAGS_BITASK_PACKETTYPE) )
+#define RFMPROTO_IS_DEVICETYPE_OPENHR20(FLAGS)	( RFMPROTO_FLAGS_DEVICETYPE_OPENHR20  == ((FLAGS) & RFMPROTO_FLAGS_BITASK_DEVICETYPE) )
+
+///////////////////////////////////////////////////////////////////////////////
+
+// RFM send and receive buffer:
+
+#define RFM_FRAME_MAX 40
+
+typedef enum {rfmmode_off, rfmmode_txd, rfmmode_rxd} rfmmode_t;
+
+extern uint8_t rfm_framebuf[RFM_FRAME_MAX];
+extern uint8_t rfm_framesize;
+extern uint8_t rfm_framepos;
+extern rfmmode_t rfm_mode;

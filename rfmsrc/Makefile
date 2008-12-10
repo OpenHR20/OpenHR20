@@ -85,8 +85,8 @@ rs232_485_hw.c \
 com.c \
 watch.c \
 controller.c \
-rfm.c \
-security.c
+rfm.c
+#security.c
 
 
 # List C++ source files here. (C dependencies are automatically generated.)

@@ -58,9 +58,11 @@ void CTL_change_mode(int8_t dif);
 // ERRORS
 #define CTL_ERR_BATT_LOW                (1<<7)
 #define CTL_ERR_BATT_WARNING            (1<<6)
-#define CTL_ERR_NA_5                    (1<<5)    
-#define CTL_ERR_NA_4                    (1<<4)    
-#define CTL_ERR_MOTOR                   (1<<3)    
+#define CTL_ERR_NA_5                    (1<<5)
+#define CTL_ERR_NA_4                    (1<<4)
+#define CTL_ERR_MOTOR                   (1<<3)
 #define CTL_ERR_MONTAGE                 (1<<2)
-#define CTL_ERR_NA_1                    (1<<1)    
-#define CTL_ERR_NA_0                    (1<<0)    
+#define CTL_ERR_NA_1                    (1<<1)
+#define CTL_ERR_NA_0                    (1<<0)
+
+#define CTL_ERR_MASK_NA					(CTL_ERR_NA_0 | CTL_ERR_NA_1 | CTL_ERR_NA_4 | CTL_ERR_NA_5)

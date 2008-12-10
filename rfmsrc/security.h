@@ -44,14 +44,11 @@ uint16_t security_generate_challenge(void);
 uint16_t security_generate_response(uint16_t remote_chall);
 bool security_check_response(uint16_t remote_resp);
 
-#if (SECURITY_OFB == 1)
-	void security_encrypt(uint8_t* msgbuf, uint8_t msgsize);
-	#define security_decrypt(msgbuf, msgsize) 	security_decrypt(msgbuf, msgsize) // in OFB encryption and decryption is the same
-#endif
 
-#if (SECURITY_CFB == 1)
-	void security_encrypt(uint8_t* msgbuf, uint8_t msgsize);
-	void security_decrypt(uint8_t* msgbuf, uint8_t msgsize);
-#endif
+void security_crypt(uint8_t* msgbuf, uint8_t msgsize, bool encrypt);
+
+#define security_encrypt(msgbuf, msgsize)	security_crypt(msgbuf, msgsize, true)
+#define security_decrypt(msgbuf, msgsize)	security_crypt(msgbuf, msgsize, false)
+
 
 
