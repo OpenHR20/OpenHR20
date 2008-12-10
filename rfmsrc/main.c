@@ -272,7 +272,7 @@ int main(void)
 					uint8_t i, crc=0x00;
 					for (i=4; i<12; i++)
 					{
-						_crc_ibutton_update(0x00, rfm_framebuf[i]);
+						crc = _crc_ibutton_update(crc, rfm_framebuf[i]); // dont worry about the name, thats the only 8bit crc in avr libc
 					}
 					
 					rfm_framebuf[12] = crc; // checksum
