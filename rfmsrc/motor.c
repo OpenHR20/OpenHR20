@@ -393,10 +393,17 @@ ISR (PCINT0_vect){
 	#endif
 	#if (RFM==1)
 	// RFM module interupt
+		if (PCMSK0 & RFM_SDO_PIN & BV(RFM_SDO_BITPOS)) {
+		  BIT_CLR(PCMSK0, RFM_SDO_PCINT);// disable RFM interrupt
+		  task |= TASK_RFM; // inform the rfm task about the interrupt
+		}
+	/*
 		if ((PCMSK0 & PINE & (1<<PE5)) !=0) { // \todo use symbols not constants
 		  PCMSK0 &= ~(1<<PCINT5); // disable RFM interrupt
 		  task |= TASK_RFM;
 		}
+	*/
+
     #endif
 	// motor eye
     // count only on HIGH impulses

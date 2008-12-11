@@ -43,24 +43,27 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-// schematic: sck=pf1 sdi=pf0 sel=pa3 sdo=pe6 // irq=pe2=open, we use sdo instead
-
-#define RFM_SDI_DDR			DDRF
-#define RFM_SDI_PIN			PINF
-#define RFM_SDI_BITPOS		0
-
-#define RFM_SDO_DDR			DDRE
-#define RFM_SDO_PORT		PORTE
-#define RFM_SDO_BITPOS		6
+// schematics: 
+// jiris internal wiring:       rfm_sck=pf1     rfm_sdi=pf0     rfm_nsel=pa3     rfm_sdo=pe6        rfm_nirq=open
+// marios external jtag wiring: rfm_sck=pf4=tck rfm_sdi=pf7=tdi rfm_nsel=pf5=tms rfm_sdo=pe2=pcint2 rfm_nirq=open
 
 #define RFM_SCK_DDR			DDRF
 #define RFM_SCK_PORT		PORTF
-#define RFM_SCK_BITPOS		1
+#define RFM_SCK_BITPOS		4
 
-#define RFM_NSEL_DDR		DDRA
-#define RFM_NSEL_PORT		PORTA
-#define RFM_NSEL_BITPOS		3
+#define RFM_SDI_DDR			DDRF
+#define RFM_SDI_PORT		PORTF
+#define RFM_SDI_BITPOS		6
 
+#define RFM_NSEL_DDR		DDRF
+#define RFM_NSEL_PORT		PORTF
+#define RFM_NSEL_BITPOS		5
+
+#define RFM_SDO_DDR			DDRE
+#define RFM_SDO_PIN			PINE
+#define RFM_SDO_BITPOS		2
+
+#define RFM_SDO_PCINT		RFM_SDO_BITPOS // this requires that SDO is somewhere on Port E !!!
 /*
 #define RFM_NIRQ_DDR		DDRE
 #define RFM_NIRQ_PIN		PINE
@@ -72,10 +75,10 @@
 #define RFM_SPI_SELECT        		BIT_CLR(RFM_NSEL_PORT, RFM_NSEL_BITPOS)
 #define RFM_SPI_DESELECT      		BIT_SET(RFM_NSEL_PORT, RFM_NSEL_BITPOS)
 
-#define RFM_SPI_SDO_LOW      		BIT_CLR(RFM_SDO_PORT, RFM_SDO_BITPOS)
-#define RFM_SPI_SDO_HIGH     		BIT_SET(RFM_SDO_PORT, RFM_SDO_BITPOS)
+#define RFM_SPI_MOSI_LOW      		BIT_CLR(RFM_SDI_PORT, RFM_SDO_BITPOS)
+#define RFM_SPI_MOSI_HIGH     		BIT_SET(RFM_SDI_PORT, RFM_SDO_BITPOS)
 
-#define RFM_SPI_SDI_GET				BIT_GET(RFM_SDI_PIN, RFM_SDI_BITPOS)
+#define RFM_SPI_MISO_GET			BIT_GET(RFM_SDO_PIN, RFM_SDI_BITPOS)
 
 #define RFM_SPI_SCK_LOW       		BIT_CLR(RFM_SCK_PORT, RFM_SCK_BITPOS)
 #define RFM_SPI_SCK_HIGH      		BIT_SET(RFM_SCK_PORT, RFM_SCK_BITPOS)
@@ -469,8 +472,6 @@
 #include <stdint.h>
 void RFM_init (void);
 uint16_t rfm_spi16(uint16_t outval);
-void rfm_initframesend(uint8_t framesize);
-bool rfm_sendframebufbyte(void);
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -498,9 +499,9 @@ bool rfm_sendframebufbyte(void);
 
 #define RFM_FRAME_MAX 40
 
-typedef enum {rfmmode_off, rfmmode_txd, rfmmode_rxd} rfmmode_t;
+typedef enum {rfmmode_rxd=0, rfmmode_txd=1} rfmmode_t;
 
 extern uint8_t rfm_framebuf[RFM_FRAME_MAX];
 extern uint8_t rfm_framesize;
 extern uint8_t rfm_framepos;
-extern rfmmode_t rfm_mode;
+extern bool    rfm_txmode;
