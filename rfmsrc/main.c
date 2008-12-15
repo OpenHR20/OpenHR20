@@ -295,12 +295,12 @@ int main(void)
 					
 
 
-					BIT_TOG(PORTE, PE2);
+					//BIT_TOG(PORTF, PF5);
 					////PORTF ^= (1<<PF7)|(1<<PF6)|(1<<PF5)|(1<<PF4);
 
 
 
-					//RFM_SPI_16(0xAAAA); // first test ...
+					RFM_SPI_16(0xAAAA); // first test ...
 
 					//RFM_TX_ON();
 					//RFM_SPI_SELECT; // wait untill the SDO line went low. this indicates that the module is ready for next command
@@ -340,7 +340,7 @@ int main(void)
 static inline void init(void)
 {
 #if (DISABLE_JTAG == 1)
-	cli();
+	//cli();
 	BIT_SET(MCUCR, JTD); // Write one to the JTD bit in MCUCR
 	BIT_SET(MCUCR, JTD); // ... which must be done twice within exactly 4 cycles.
 #endif
@@ -366,36 +366,24 @@ static inline void init(void)
     //! digital I/O port direction
     DDRG = (1<<PG3)|(1<<PG4); // PG3, PG4 Motor out
 
-
- 
-
-#if ((RFM==1) && (DISABLE_JTAG == 1))
-	// external mounting of RFM: PE2 is used as RFM's SDO
-    //DDRE = (1<<PE3)|(1<<PE1);  // PE3  activate lighteye
-    DDRE = (1<<PE3)|(1<<PE2)|(1<<PE1);  // PE3  activate lighteye
-
-
-	DDRF |= (1<<PF7)|(1<<PF6)|(1<<PF5)|(1<<PF4);
-	/*
-	DDR_OUT(RFM_NSEL_DDR, RFM_NSEL_BITPOS);
-	DDR_OUT(RFM_SCK_DDR,  RFM_SCK_BITPOS);
-	DDR_OUT(RFM_SDI_DDR,  RFM_SDI_BITPOS);
-	//DDR_IN (RFM_SDO_DDR,  RFM_SDO_BITPOS);
-	*/
-
-#else
-    DDRE = (1<<PE3)|(1<<PE2)|(1<<PE1);  // PE3  activate lighteye
-#endif
-	
-	PORTE = 0x03;
-    DDRF = (1<<PF3);          // PF3  activate tempsensor
-    PORTF = 0xf3;
-
     //! enable pullup on all inputs (keys and m_wheel)
     //! ATTENTION: PB0 & PB6 is input, but we will select it only for read
     PORTB = (0<<PB0)|(1<<PB1)|(1<<PB2)|(1<<PB3)|(0<<PB6);
     DDRB = (1<<PB0)|(1<<PB4)|(1<<PB7)|(1<<PB6); // PB4, PB7 Motor out
 
+#if (RFM_WIRE_MARIOJTAG == 1)
+    DDRE  = (1<<PE3)|         (1<<PE2)|(1<<PE1); // ACTLIGHTEYE | RFMSDO | TXD
+	PORTE =                   (1<<PE1)|(1<<PE0); // TXD | RXD
+	DDRF  =          (1<<PF6)|(1<<PF5)|(1<<PF4)|(1<<PF3); // RFMSDI | RFMNSEL | RFMSCK | ACTTEMPSENS
+    PORTF = (1<<PF7)|(1<<PF6)|(1<<PF5)|(1<<PF4)|(1<<PF3); // JTAGTDI | RFMSDI | RFMNSEL | RFMSCK | ACTTEMPSENS;
+#endif
+
+#if (RFM_WIRE_JIRIINTERNAL == 1)
+    DDRE  = (1<<PE3)|(1<<PE2)|(1<<PE1);  // PE3  activate lighteye
+	PORTE = 0x03;
+    DDRF  = (1<<PF3);          // PF3  activate tempsensor
+    PORTF = 0xf3;
+#endif
 
     //! remark for PCMSK0:
     //!     PCINT0 for lighteye (motor monitor) is activated in motor.c using

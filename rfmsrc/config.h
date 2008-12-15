@@ -61,7 +61,7 @@ In this file we define only configuration parameters, for example what kind of c
 // our Version
 #define REVHIGH  0  //! Revision number high
 #define REVLOW   92 //! Revision number low
-#define VERSION_N 0xE092 //! Version as HEX value F0.92 (E for Experimental)
+#define VERSION_N 0xE001 //! Version as HEX value F0.92 (E for Experimental)
 
 #define DEVICE_ADDRESS 0x01 //! Individual Device Adress for each HR20 for addressing in Networks (e.g. RFM Radio)
 
@@ -84,16 +84,23 @@ In this file we define only configuration parameters, for example what kind of c
 
 
 #define RFM 1 //!< define RFM to 1 if you want to have support for the RFM Radio Moodule in the Code
+#define RFM_WIRE_MARIOJTAG 1 //!< define that if you want to wire your RFM to external JTAG pins
+#define RFM_WIRE_JIRIINTERNAL 0 //!< define that if you want to wire your RFM to free internal pins
 #define SECURITY 0 //!< define SECURITY to 1 to protect RFM's commnunication
 
 #if (RFM == 1)
 	#define RFM12 1 // just a synonym
 	#define RFM_DEVICE_ADDRESS 0x04
 
-	#define DISABLE_JTAG 1 //!< define DISABLE_JTAG if your RFM's connection uses any JTAG pins
+	#if (RFM_WIRE_MARIOJTAG == 1)
+		#define DISABLE_JTAG 1 //!< define DISABLE_JTAG if your RFM's connection uses any JTAG pins
+	#endif
 #else
 	#undef RFM12
 	#undef SECURITY
+	#undef RFM_WIRE_MARIOJTAG
+	#undef RFM_WIRE_JIRIINTERNAL
+	#undef DISABLE_JTAG
 #endif
 
 #if (SECURITY == 1)
