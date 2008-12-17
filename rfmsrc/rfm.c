@@ -3,6 +3,7 @@
 #include "config.h"
 #include "rfm.h"
 
+
 #if (RFM==1)
 
 
@@ -11,6 +12,34 @@ uint8_t rfm_framebuf[RFM_FRAME_MAX];
 uint8_t rfm_framesize = 0;
 uint8_t rfm_framepos = 0;
 bool rfm_txmode = false;
+
+
+
+/*!
+ *******************************************************************************
+ *  RFM telegram checksum
+ *  \note This is the same checksum like in SHT11 temperature sensor
+ *  \param crc Init State of the CRC shift register
+ *  \para data Data to be added to the CRC check
+ *  \returns New State of the CRC shift register
+ *   
+ ******************************************************************************/
+uint8_t rfm_crc_update(uint8_t crc, uint8_t data)
+{
+	uint8_t i;
+
+	for (i = 0x80; i !=0x00; i>>=1)
+	{
+		uint8_t b7 = (crc & 0x01) ^ ((data & i)?1:0);
+		crc >>= 1;
+		if (b7)
+		{
+			crc ^= 0x8C;
+		}
+	}
+	return(crc);    
+}
+
 
 /*!
  *******************************************************************************
@@ -27,6 +56,9 @@ uint16_t rfm_spi16(uint16_t outval)
   
   RFM_SPI_SELECT;
 
+  asm volatile ("nop");
+  asm volatile ("nop");
+
   for (i=0x8000;i!=0;i>>=1)
   {
     if (i & outval)
@@ -39,6 +71,9 @@ uint16_t rfm_spi16(uint16_t outval)
     }
 
     RFM_SPI_SCK_HIGH;
+	asm volatile ("nop");
+	asm volatile ("nop");
+
     {
       ret >>= 1;
       if (RFM_SPI_MISO_GET)
@@ -47,9 +82,14 @@ uint16_t rfm_spi16(uint16_t outval)
       }
     }
     RFM_SPI_SCK_LOW;
+	asm volatile ("nop");
+	asm volatile ("nop");
   }
   
   RFM_SPI_DESELECT;
+  asm volatile ("nop");
+  asm volatile ("nop");
+
   return(ret);
 }
 

@@ -45,7 +45,7 @@
 
 // schematics: 
 // jiris internal wiring:       rfm_sck=pf1     rfm_sdi=pf0     rfm_nsel=pa3     rfm_sdo=pe6        rfm_nirq=open
-// marios external jtag wiring: rfm_sck=pf4=tck rfm_sdi=pf7=tdi rfm_nsel=pf5=tms rfm_sdo=pe2=pcint2 rfm_nirq=open
+// marios external jtag wiring: rfm_sck=pf4=tck rfm_sdi=pf6=tdo rfm_nsel=pf5=tms rfm_sdo=pe2=pcint2 rfm_nirq=open
 
 
 #if (RFM_WIRE_MARIOJTAG == 1)
@@ -66,7 +66,7 @@
 	#define RFM_SDO_PIN			PINE
 	#define RFM_SDO_BITPOS		2
 
-	#define RFM_SDO_PCINT		RFM_SDO_BITPOS // PCINT2
+	#define RFM_SDO_PCINT		PCINT2
 
 	/*
 	#define RFM_NIRQ_DDR		DDRE
@@ -81,10 +81,10 @@
 #define RFM_SPI_SELECT        		BIT_CLR(RFM_NSEL_PORT, RFM_NSEL_BITPOS)
 #define RFM_SPI_DESELECT      		BIT_SET(RFM_NSEL_PORT, RFM_NSEL_BITPOS)
 
-#define RFM_SPI_MOSI_LOW      		BIT_CLR(RFM_SDI_PORT, RFM_SDO_BITPOS)
-#define RFM_SPI_MOSI_HIGH     		BIT_SET(RFM_SDI_PORT, RFM_SDO_BITPOS)
+#define RFM_SPI_MOSI_LOW      		BIT_CLR(RFM_SDI_PORT, RFM_SDI_BITPOS)
+#define RFM_SPI_MOSI_HIGH     		BIT_SET(RFM_SDI_PORT, RFM_SDI_BITPOS)
 
-#define RFM_SPI_MISO_GET			BIT_GET(RFM_SDO_PIN, RFM_SDI_BITPOS)
+#define RFM_SPI_MISO_GET			BIT_GET(RFM_SDO_PIN, RFM_SDO_BITPOS)
 
 #define RFM_SPI_SCK_LOW       		BIT_CLR(RFM_SCK_PORT, RFM_SCK_BITPOS)
 #define RFM_SPI_SCK_HIGH      		BIT_SET(RFM_SCK_PORT, RFM_SCK_BITPOS)
@@ -480,6 +480,14 @@ void RFM_init (void);
 uint16_t rfm_spi16(uint16_t outval);
 
 
+uint8_t rfm_crc_update(uint8_t crc, uint8_t data);
+
+//#include <util/crc16.h>
+//#define rfm_crc_update(CRC, DATA) _crc_ibutton_update(CRC, DATA) // dont worry about the name, thats the only 8bit crc in avr libc
+
+
+
+
 ///////////////////////////////////////////////////////////////////////////////
 
 // RFM air protocol flags:
@@ -503,7 +511,7 @@ uint16_t rfm_spi16(uint16_t outval);
 
 // RFM send and receive buffer:
 
-#define RFM_FRAME_MAX 40
+#define RFM_FRAME_MAX 0x30
 
 typedef enum {rfmmode_rxd=0, rfmmode_txd=1} rfmmode_t;
 

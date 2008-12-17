@@ -59,7 +59,6 @@
 
 #if (RFM == 1)
 	#include "rfm.h"
-	#include <util/crc16.h>
 #endif
 
 #if (SECURITY == 1)
@@ -109,6 +108,9 @@ int main(void)
     }
 
 	COM_init();
+
+
+	rfm_framebuf[ 5] = 0; // DEBUG !!!!!!!!!
 
 
 	// We should do the following once here to have valid data from the start
@@ -187,7 +189,7 @@ int main(void)
 			continue; // on most case we have only 1 task, iprove time to sleep
         }
 
-/*
+
 		#if (RFM==1)
 		  // RFM12
 		  if (task & TASK_RFM) {
@@ -233,7 +235,7 @@ int main(void)
 			}
 		}
 		#endif
-*/
+
 
 		//! check keyboard and set keyboards events
 		if (task & TASK_KB) {
@@ -258,7 +260,7 @@ int main(void)
 				//if (config.RFM_enabled && (RTC_GetSecond() == (0x1f & config.RFM_devaddr))) // collission protection: every HR20 shall send when the second counter is equal to it's own address.
 				if ((config.RFM_enable) && !(RTC_GetSecond() % 4) ) // for testing all 4 seconds ...
 				{
-					/*
+
 					uint8_t statusbits = CTL_error; // statusbits are errorflags and windowopen and auto/manualmode
 					if (!CTL_mode_auto) statusbits |= CTL_ERR_NA_0; // auto is more likely than manual, so just set the flag in rarer case
 					if (mode_window())  statusbits |= CTL_ERR_NA_1; // if window-open-condition is detected, set this flag
@@ -267,43 +269,63 @@ int main(void)
 					rfm_framebuf[ 1] = 0xaa; // preamble
 					rfm_framebuf[ 2] = 0x2d; // rfm fifo start pattern
 					rfm_framebuf[ 3] = 0xd4; // rfm fifo start pattern
-					rfm_framebuf[ 4] = 9;    // length (from length itself to crc)
+
+					rfm_framebuf[ 4] = 21;    // length (one byte after length itself to crc)
+					
+					/*
 					rfm_framebuf[ 5] = (RFMPROTO_FLAGS_PACKETTYPE_BROADCAST | RFMPROTO_FLAGS_DEVICETYPE_OPENHR20); // flags
 					rfm_framebuf[ 6] = config.RFM_devaddr; // sender address
 					rfm_framebuf[ 7] = HIBYTE(temp_average); // current temp
 					rfm_framebuf[ 8] = LOBYTE(temp_average);
 					rfm_framebuf[ 9] = CTL_temp_wanted; // wanted temp
 					rfm_framebuf[10] = MOTOR_GetPosPercent(); // valve pos
-					rfm_framebuf[11] = statusbits; // future improvement: if istatusbits==0x00, then we dont send statusbits. saves some battery and radio time
-					
+					rfm_framebuf[11] = 0xab; //statusbits; // future improvement: if istatusbits==0x00, then we dont send statusbits. saves some battery and radio time
+					*/
+
+					/*
+					rfm_framebuf[ 5]++; // flags
+					rfm_framebuf[ 6] = 2; // sender address
+					rfm_framebuf[ 7] = 3; // current temp
+					rfm_framebuf[ 8] = 4;
+					rfm_framebuf[ 9] = 5; // wanted temp
+					rfm_framebuf[10] = 6; // valve pos
+					rfm_framebuf[11] = 7; //statusbits; // future improvement: if istatusbits==0x00, then we dont send statusbits. saves some battery and radio time
+
 					uint8_t i, crc=0x00;
 					for (i=4; i<12; i++)
 					{
-						crc = _crc_ibutton_update(crc, rfm_framebuf[i]); // dont worry about the name, thats the only 8bit crc in avr libc
+						crc = rfm_framebuf[i] + crc; //rfm_crc_update(crc, rfm_framebuf[i]); 
 					}
 					
 					rfm_framebuf[12] = crc; // checksum
-					rfm_framebuf[13] = 0xaa; // postamble
 
-					rfm_framesize = 14; // total size what shall be transmitted. from preamble to postamble
+					rfm_framebuf[13] = 0xaa; // postamble
+					rfm_framebuf[14] = 0xaa; // postamble
+					*/
+
+
+					uint8_t i; //, crc=0x00;
+					for (i=0; i<20; i++)
+					{
+						rfm_framebuf[i+5] = i;
+					}
+
+					rfm_framebuf[5+20+1] = 0xaa; // postamble
+					rfm_framebuf[5+20+2] = 0xaa; // postamble
+					rfm_framebuf[5+20+3] = 0xaa; // postamble
+
+
+					rfm_framesize = 5+20+4; // total size what shall be transmitted. from preamble to postamble
 					rfm_framepos  = 0;
 					task |= TASK_RFM;
 					rfm_txmode = true;
 
 					task |= TASK_RFM; // create task for main loop
-					*/
-					
-
-
-					//BIT_TOG(PORTF, PF5);
-					////PORTF ^= (1<<PF7)|(1<<PF6)|(1<<PF5)|(1<<PF4);
 
 
 
-					RFM_SPI_16(0xAAAA); // first test ...
-
-					//RFM_TX_ON();
-					//RFM_SPI_SELECT; // wait untill the SDO line went low. this indicates that the module is ready for next command
+					RFM_TX_ON();
+					RFM_SPI_SELECT; // wait untill the SDO line went low. this indicates that the module is ready for next command
 				}
 #endif
             }
@@ -369,13 +391,15 @@ static inline void init(void)
     //! enable pullup on all inputs (keys and m_wheel)
     //! ATTENTION: PB0 & PB6 is input, but we will select it only for read
     PORTB = (0<<PB0)|(1<<PB1)|(1<<PB2)|(1<<PB3)|(0<<PB6);
-    DDRB = (1<<PB0)|(1<<PB4)|(1<<PB7)|(1<<PB6); // PB4, PB7 Motor out
+    DDRB  = (1<<PB0)|(1<<PB4)|(1<<PB7)|(1<<PB6); // PB4, PB7 Motor out
 
 #if (RFM_WIRE_MARIOJTAG == 1)
     DDRE  = (1<<PE3)|         (1<<PE2)|(1<<PE1); // ACTLIGHTEYE | RFMSDO | TXD
-	PORTE =                   (1<<PE1)|(1<<PE0); // TXD | RXD
+	PORTE =                   (1<<PE2)|(1<<PE1)|(1<<PE0); // RFMSDO(pullup) | TXD | RXD
+	//PORTE =                            (1<<PE1)|(1<<PE0); // TXD | RXD
 	DDRF  =          (1<<PF6)|(1<<PF5)|(1<<PF4)|(1<<PF3); // RFMSDI | RFMNSEL | RFMSCK | ACTTEMPSENS
-    PORTF = (1<<PF7)|(1<<PF6)|(1<<PF5)|(1<<PF4)|(1<<PF3); // JTAGTDI | RFMSDI | RFMNSEL | RFMSCK | ACTTEMPSENS;
+    PORTF = (1<<PF7)|         (1<<PF5); // JTAGTDI | RFMNSEL;
+
 #endif
 
 #if (RFM_WIRE_JIRIINTERNAL == 1)
@@ -408,7 +432,7 @@ static inline void init(void)
     LCD_Init();
 
 #if (RFM==1)
-	//RFM_init();
+	RFM_init();
 #endif
     
 	// init keyboard by one dummy call
