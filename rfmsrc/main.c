@@ -438,6 +438,7 @@ static inline void init(void)
 
 #if (RFM==1)
 	RFM_init();
+	RFM_OFF();
 #endif
     
 	// init keyboard by one dummy call

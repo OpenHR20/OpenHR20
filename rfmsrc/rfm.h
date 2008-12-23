@@ -44,7 +44,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 // schematics: 
-// jiris internal wiring:       rfm_sck=pf1     rfm_sdi=pf0     rfm_nsel=pa3     rfm_sdo=pe6        rfm_nirq=open
+// jiris internal wiring:       rfm_sck=pf1     rfm_sdi=pf0     rfm_nsel=pa3     rfm_sdo=pe6=pcint6    rfm_nirq=open
 // marios external jtag wiring: rfm_sck=pf4=tck rfm_sdi=pf6=tdo rfm_nsel=pf5=tms rfm_sdo=pe2=pcint2 rfm_nirq=open
 
 
