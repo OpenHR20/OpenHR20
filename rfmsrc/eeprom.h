@@ -110,7 +110,7 @@ extern uint8_t EEPROM ee_xtea_initvector[];
 #define BOOT_ON2      (16*60+0x2000) //!<  16:00
 #define BOOT_OFF2     (21*60+0x1000) //!<  21:00
 
-#define EE_LAYOUT (0x02) //!< EEPROM layout version 
+#define EE_LAYOUT (0xE1) //!< EEPROM layout version (Experimental 1) 
 
 #ifdef __EEPROM_C__
 // this is definition, not just declaration

@@ -396,13 +396,8 @@ ISR (PCINT0_vect){
 		if (PCMSK0 & RFM_SDO_PIN & BV(RFM_SDO_BITPOS)) {
 		  BIT_CLR(PCMSK0, RFM_SDO_PCINT);// disable RFM interrupt
 		  task |= TASK_RFM; // inform the rfm task about the interrupt
+		  // PORTE &= ~(1<<PE2);
 		}
-	/*
-		if ((PCMSK0 & PINE & (1<<PE5)) !=0) { // \todo use symbols not constants
-		  PCMSK0 &= ~(1<<PCINT5); // disable RFM interrupt
-		  task |= TASK_RFM;
-		}
-	*/
 
     #endif
 	// motor eye

@@ -151,49 +151,11 @@ int main(void)
 			asm volatile ("sei");
 		}
 
-        // update LCD task
-		if (task & TASK_LCD) {
-			task&=~TASK_LCD;
-			task_lcd_update();
-			continue; // on most case we have only 1 task, iprove time to sleep
-		}
-
-		if (task & TASK_ADC) {
-			task&=~TASK_ADC;
-			if (task_ADC()==0) {
-                // ADC is done
-                // TODO
-            }
-			continue; // on most case we have only 1 task, iprove time to sleep
-		}
-		
-        // communication
-		if (task & TASK_COM) {
-			task&=~TASK_COM;
-			COM_commad_parse();
-			continue; // on most case we have only 1 task, iprove time to sleep
-		}
-
-        // motor stop
-        if (task & TASK_MOTOR_STOP) {
-            task&=~TASK_MOTOR_STOP;
-            MOTOR_timer_stop();
-			continue; // on most case we have only 1 task, iprove time to sleep
-        }
-
-        // update motor possition
-        if (task & TASK_MOTOR_PULSE) {
-            task&=~TASK_MOTOR_PULSE;
-            MOTOR_updateCalibration(mont_contact_pooling());
-            MOTOR_timer_pulse();
-			continue; // on most case we have only 1 task, iprove time to sleep
-        }
-
-
 		#if (RFM==1)
 		  // RFM12
 		  if (task & TASK_RFM) {
 			task &= ~TASK_RFM;
+			// PORTE |= (1<<PE2);
 
 			if (rfm_txmode)
 			{
@@ -232,30 +194,22 @@ int main(void)
 				// insurance to protect interrupt lost
 				BIT_CLR(PCMSK0, RFM_SDO_PCINT);// disable RFM interrupt
 				task |= TASK_RFM; // create task for main loop
+				// PORTE &= ~(1<<PE2);
 			}
 		}
 		#endif
 
-
-		//! check keyboard and set keyboards events
-		if (task & TASK_KB) {
-			task&=~TASK_KB;
-			task_keyboard();
+        // update LCD task
+		if (task & TASK_LCD) {
+			task&=~TASK_LCD;
+			task_lcd_update();
+			continue; // on most case we have only 1 task, iprove time to sleep
 		}
 
-        if (task & TASK_RTC) {
-            task&=~TASK_RTC;
-            {
-                bool minute = RTC_AddOneSecond();
-                valve_wanted = CTL_update(minute,valve_wanted);
-                if (minute && (RTC_GetDayOfWeek()==6) && (RTC_GetHour()==10) && (RTC_GetMinute()==0)) {
-                    // every sunday 10:00AM
-                    // TODO: improve this code!
-                    // valve protection / CyCL
-                    MOTOR_updateCalibration(0);
-                }
-
-
+		if (task & TASK_ADC) {
+			task&=~TASK_ADC;
+			if (task_ADC()==0) {
+                // ADC is done
 #if (RFM==1)
 				//if (config.RFM_enabled && (RTC_GetSecond() == (0x1f & config.RFM_devaddr))) // collission protection: every HR20 shall send when the second counter is equal to it's own address.
 				if ((config.RFM_enable) && !(RTC_GetSecond() % 4) ) // for testing all 4 seconds ...
@@ -317,7 +271,6 @@ int main(void)
 
 					rfm_framesize = 5+20+4; // total size what shall be transmitted. from preamble to postamble
 					rfm_framepos  = 0;
-					task |= TASK_RFM;
 					rfm_txmode = true;
 
 					task |= TASK_RFM; // create task for main loop
@@ -328,6 +281,52 @@ int main(void)
 					RFM_SPI_SELECT; // wait untill the SDO line went low. this indicates that the module is ready for next command
 				}
 #endif
+            }
+			continue; // on most case we have only 1 task, iprove time to sleep
+		}
+		
+        // communication
+		if (task & TASK_COM) {
+			task&=~TASK_COM;
+			COM_commad_parse();
+			continue; // on most case we have only 1 task, iprove time to sleep
+		}
+
+        // motor stop
+        if (task & TASK_MOTOR_STOP) {
+            task&=~TASK_MOTOR_STOP;
+            MOTOR_timer_stop();
+			continue; // on most case we have only 1 task, iprove time to sleep
+        }
+
+        // update motor possition
+        if (task & TASK_MOTOR_PULSE) {
+            task&=~TASK_MOTOR_PULSE;
+            MOTOR_updateCalibration(mont_contact_pooling());
+            MOTOR_timer_pulse();
+			continue; // on most case we have only 1 task, iprove time to sleep
+        }
+
+
+		//! check keyboard and set keyboards events
+		if (task & TASK_KB) {
+			task&=~TASK_KB;
+			task_keyboard();
+		}
+
+        if (task & TASK_RTC) {
+            task&=~TASK_RTC;
+            {
+                bool minute = RTC_AddOneSecond();
+                valve_wanted = CTL_update(minute,valve_wanted);
+                if (minute && (RTC_GetDayOfWeek()==6) && (RTC_GetHour()==10) && (RTC_GetMinute()==0)) {
+                    // every sunday 10:00AM
+                    // TODO: improve this code!
+                    // valve protection / CyCL
+                    MOTOR_updateCalibration(0);
+                }
+
+
             }
             MOTOR_updateCalibration(mont_contact_pooling());
             MOTOR_Goto(valve_wanted);
@@ -394,18 +393,24 @@ static inline void init(void)
     DDRB  = (1<<PB0)|(1<<PB4)|(1<<PB7)|(1<<PB6); // PB4, PB7 Motor out
 
 #if (RFM_WIRE_MARIOJTAG == 1)
-    DDRE  = (1<<PE3)|         (1<<PE2)|(1<<PE1); // ACTLIGHTEYE | RFMSDO | TXD
+    DDRE  = (1<<PE3)|                  (1<<PE1); // ACTLIGHTEYE | TXD
 	PORTE =                   (1<<PE2)|(1<<PE1)|(1<<PE0); // RFMSDO(pullup) | TXD | RXD
 	//PORTE =                            (1<<PE1)|(1<<PE0); // TXD | RXD
 	DDRF  =          (1<<PF6)|(1<<PF5)|(1<<PF4)|(1<<PF3); // RFMSDI | RFMNSEL | RFMSCK | ACTTEMPSENS
     PORTF = (1<<PF7)|         (1<<PF5); // JTAGTDI | RFMNSEL;
 
-#endif
-
-#if (RFM_WIRE_JIRIINTERNAL == 1)
+#elif (RFM_WIRE_JD_INTERNAL == 1)
     DDRE  = (1<<PE3)|(1<<PE2)|(1<<PE1);  // PE3  activate lighteye
-	PORTE = 0x03;
-    DDRF  = (1<<PF3);          // PF3  activate tempsensor
+	PORTE = (1<<PE6)|(1<<PE1)|(1<<PE0);  // RFMSDO(pullup) | TXD | RXD(pullup)
+    DDRF  = (1<<PF0)|(1<<PF1)|(1<<PF3);  // RFMSDI | RFMSCK | PF3  activate tempsensor
+    PORTF = 0xf0;
+    PORTA = (1<<PA3); // RFMnSEL
+    DDRA = (1<<PA3); // RFMnSEL
+    
+#else
+    DDRE = (1<<PE3)|(1<<PE2)|(1<<PE1);  // PE3  activate lighteye
+    PORTE = 0x03;
+    DDRF = (1<<PF3);          // PF3  activate tempsensor
     PORTF = 0xf3;
 #endif
 

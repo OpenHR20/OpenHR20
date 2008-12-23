@@ -85,7 +85,7 @@ In this file we define only configuration parameters, for example what kind of c
 
 #define RFM 1 //!< define RFM to 1 if you want to have support for the RFM Radio Moodule in the Code
 #define RFM_WIRE_MARIOJTAG 1 //!< define that if you want to wire your RFM to external JTAG pins
-#define RFM_WIRE_JIRIINTERNAL 0 //!< define that if you want to wire your RFM to free internal pins
+#define RFM_WIRE_JD_INTERNAL 0 //!< define that if you want to wire your RFM to free internal pins
 #define SECURITY 0 //!< define SECURITY to 1 to protect RFM's commnunication
 
 #if (RFM == 1)
@@ -96,11 +96,11 @@ In this file we define only configuration parameters, for example what kind of c
 		#define DISABLE_JTAG 1 //!< define DISABLE_JTAG if your RFM's connection uses any JTAG pins
 	#endif
 #else
-	#undef RFM12
-	#undef SECURITY
-	#undef RFM_WIRE_MARIOJTAG
-	#undef RFM_WIRE_JIRIINTERNAL
-	#undef DISABLE_JTAG
+	#define RFM12                  0
+	#define SECURITY               0
+	#define RFM_WIRE_MARIOJTAG     0
+	#define RFM_WIRE_JD_INTERNAL   0
+	#define DISABLE_JTAG           0
 #endif
 
 #if (SECURITY == 1)

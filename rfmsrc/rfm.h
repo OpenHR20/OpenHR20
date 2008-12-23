@@ -73,6 +73,24 @@
 	#define RFM_NIRQ_PIN		PINE
 	#define RFM_NIRQ_BITPOS		2
 	*/
+#elif (RFM_WIRE_JD_INTERNAL == 1)
+	#define RFM_SCK_DDR			DDRF
+	#define RFM_SCK_PORT		PORTF
+	#define RFM_SCK_BITPOS		1
+
+	#define RFM_SDI_DDR			DDRF
+	#define RFM_SDI_PORT		PORTF
+	#define RFM_SDI_BITPOS		0
+
+	#define RFM_NSEL_DDR		DDRA
+	#define RFM_NSEL_PORT		PORTA
+	#define RFM_NSEL_BITPOS		3
+
+	#define RFM_SDO_DDR			DDRE
+	#define RFM_SDO_PIN			PINE
+	#define RFM_SDO_BITPOS		6
+
+	#define RFM_SDO_PCINT		PCINT6
 #endif
 
 
