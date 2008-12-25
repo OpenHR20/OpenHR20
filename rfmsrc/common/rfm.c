@@ -52,17 +52,14 @@ uint8_t rfm_crc_update(uint8_t crc, uint8_t data)
  ******************************************************************************/
 uint16_t rfm_spi16(uint16_t outval)
 {
-  uint16_t i;
-  uint16_t ret=0;
+  uint8_t i;
+  uint16_t ret; // =0; <- not needeed will be shifted out
   
   RFM_SPI_SELECT;
 
-  asm volatile ("nop");
-  asm volatile ("nop");
-
-  for (i=0x8000;i!=0;i>>=1)
+  for (i=16;i!=0;i--)
   {
-    if (i & outval)
+    if (0x8000 & outval)
     {
       RFM_SPI_MOSI_HIGH;
     }
@@ -70,26 +67,22 @@ uint16_t rfm_spi16(uint16_t outval)
     {
       RFM_SPI_MOSI_LOW;
     }
+	  outval <<= 1;
 
     RFM_SPI_SCK_HIGH;
-	asm volatile ("nop");
-	asm volatile ("nop");
 
     {
-      ret >>= 1;
+      ret <<= 1;
       if (RFM_SPI_MISO_GET)
       {
-	    ret |= i;
+	      ret |= 1;
       }
     }
     RFM_SPI_SCK_LOW;
-	asm volatile ("nop");
-	asm volatile ("nop");
   }
   
   RFM_SPI_DESELECT;
-  asm volatile ("nop");
-  asm volatile ("nop");
+
 
   return(ret);
 }
