@@ -40,7 +40,8 @@
 #include "rtc.h"
 #include "adc.h"
 #if (RFM == 1)
-	#include "rfm.h"
+	#include "rfm_config.h"
+	#include "../common/rfm.h"
 #endif
 
 

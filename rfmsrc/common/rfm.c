@@ -1,7 +1,8 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
-#include "rfm.h"
+#include "rfm_config.h"
+#include "../common/rfm.h"
 
 
 #if (RFM==1)

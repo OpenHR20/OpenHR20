@@ -86,7 +86,7 @@ com.c \
 watch.c \
 controller.c \
 rfm.c
-#security.c
+#../common/security.c
 
 
 # List C++ source files here. (C dependencies are automatically generated.)
