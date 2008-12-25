@@ -48,7 +48,6 @@ uint8_t rfm_crc_update(uint8_t crc, uint8_t data)
  *  \note does the SPI clockin clockout stuff
  *  \param outval the value that shall be clocked out to the RFM
  *  \returns the value that is clocked in from the RFM
- *  \note function CAN'T be used for read FIFO / it read 16 bit and ignore FFIT 
  *   
  ******************************************************************************/
 uint16_t rfm_spi16(uint16_t outval)
