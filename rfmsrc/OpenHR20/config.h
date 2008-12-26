@@ -146,13 +146,10 @@ In this file we define only configuration parameters, for example what kind of c
 #define LITERAL_STRLEN(S)					(sizeof(S) - sizeof('\0'))
 #define ARRAY(TYPE, PTR, INDEX)				((TYPE*)(PTR))[INDEX]
 
-#define INDEX_TO_MASK(INDEX)				(1 << (INDEX))
-#define BV(INDEX)							INDEX_TO_MASK(INDEX)
-
-#define BIT_GET(VAR, INDEX)					((VAR) & INDEX_TO_MASK(INDEX))
-#define BIT_SET(VAR, INDEX)					(VAR) |= INDEX_TO_MASK(INDEX)
-#define BIT_TOG(VAR, INDEX)					(VAR) ^= INDEX_TO_MASK(INDEX)
-#define BIT_CLR(VAR, INDEX)					(VAR) &= ~INDEX_TO_MASK(INDEX)
+#define BIT_GET(VAR, INDEX)					((VAR) & _BV(INDEX))
+#define BIT_SET(VAR, INDEX)					(VAR) |= _BV(INDEX)
+#define BIT_TOG(VAR, INDEX)					(VAR) ^= _BV(INDEX)
+#define BIT_CLR(VAR, INDEX)					(VAR) &= ~_BV(INDEX)
 #define BIT_CLEAR(VAR, INDEX)				BIT_CLR(VAR, INDEX)
 
 #define DDR_OUT(DDR, BITPOS)				BIT_SET(DDR, BITPOS)

@@ -393,7 +393,7 @@ ISR (PCINT0_vect){
 	#endif
 	#if (RFM==1)
 	// RFM module interupt
-		if (PCMSK0 & RFM_SDO_PIN & BV(RFM_SDO_BITPOS)) {
+		if (PCMSK0 & RFM_SDO_PIN & _BV(RFM_SDO_BITPOS)) {
 		  BIT_CLR(PCMSK0, RFM_SDO_PCINT);// disable RFM interrupt
 		  task |= TASK_RFM; // inform the rfm task about the interrupt
 		  // PORTE &= ~(1<<PE2);
