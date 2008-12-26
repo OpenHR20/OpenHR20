@@ -48,7 +48,7 @@
 #include "rtc.h"
 #include "eeprom.h"
 #include "task.h"
-#include "rs232_485.h"
+#include "../common/rs232_485.h"
 #include "controller.h"
 #include "com.h"
 #include "debug.h"

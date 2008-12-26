@@ -54,7 +54,7 @@
 #include "debug.h"
 #include "menu.h"
 #include "com.h"
-#include "rs232_485.h"
+#include "../common/rs232_485.h"
 #include "controller.h"
 
 #if (RFM == 1)
