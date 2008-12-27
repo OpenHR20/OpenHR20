@@ -1,3 +1,4 @@
+#error "not finished work, do not use this revision"
 //////////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -12,8 +13,7 @@
 uint8_t rfm_framebuf[RFM_FRAME_MAX];
 uint8_t rfm_framesize = 0;
 uint8_t rfm_framepos = 0;
-bool rfm_txmode = false;
-
+rfm_mode_t rfm_mode = rfmmode_stop;
 
 
 /*!

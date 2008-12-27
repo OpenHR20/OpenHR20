@@ -49,6 +49,7 @@
 #include "eeprom.h"
 #include "task.h"
 #include "../common/rs232_485.h"
+#include "../common/rfm.h"
 #include "controller.h"
 #include "com.h"
 #include "debug.h"
@@ -391,15 +392,6 @@ ISR (PCINT0_vect){
 		    PCMSK0 &= ~(1<<PCINT0); // deactivate interrupt
 		}
 	#endif
-	#if (RFM==1)
-	// RFM module interupt
-		if (PCMSK0 & RFM_SDO_PIN & _BV(RFM_SDO_BITPOS)) {
-		  BIT_CLR(PCMSK0, RFM_SDO_PCINT);// disable RFM interrupt
-		  task |= TASK_RFM; // inform the rfm task about the interrupt
-		  // PORTE &= ~(1<<PE2);
-		}
-
-    #endif
 	// motor eye
     // count only on HIGH impulses
     if ((PCMSK0 & (1<<PCINT4)) && ((pine & ~pine_last & (1<<PE4)) != 0)) {
@@ -418,6 +410,32 @@ ISR (PCINT0_vect){
         }
     }
 	pine_last=pine;
+	#if (RFM==1)
+	  if (PCMSK0 & _BV(RFM_SDO_PCINT)) {
+  	  // RFM module interupt
+  		while (RFM_SDO_PIN & _BV(RFM_SDO_BITPOS)) {
+  	    PCMSK0 &= _BV(RFM_SDO_PCINT); // disable RFM interrupt
+  		  sei(); // enable global interrupts
+  		  if (rfm_mode == rfmmode_tx) {
+  		    RFM_WRITE(rfm_framebuf[rfm_framepos++]);
+  		    if (rfm_framepos >= rfm_framesize) {
+            rfm_mode = rfmmode_tx_done;
+       		  task |= TASK_RFM; // inform the rfm task about end of transmition
+          } else {
+       			RFM_SPI_SELECT; // set nSEL low: from this moment SDO indicate FFIT or RGIT
+       			BIT_SET(PCMSK0, RFM_SDO_PCINT);// re-enable RFM interrupt
+       		}
+        } else if (rfm_mode == rfmmode_rx) {
+  		    rfm_framebuf[rfm_framepos++]=RFM_READ_FIFO();
+  		    if (rfm_framepos >= RFM_FRAME_MAX) rfm_mode = rfmmode_rx_owf;
+    		  task |= TASK_RFM; // inform the rfm task about next RX byte
+        }
+        cli(); // disable global interrupts
+        asm volatile("nop"); // we must have one instruction after cli() 
+        PCMSK0 &= _BV(RFM_SDO_PCINT); // enable RFM interrupt
+  		}
+  	}
+  #endif
 }
 
 /*! 

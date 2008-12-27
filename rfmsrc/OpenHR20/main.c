@@ -55,6 +55,7 @@
 #include "menu.h"
 #include "com.h"
 #include "../common/rs232_485.h"
+#include "../common/rfm.h"
 #include "controller.h"
 
 #if (RFM == 1)
@@ -158,7 +159,7 @@ int main(void)
 			task &= ~TASK_RFM;
 			// PORTE |= (1<<PE2);
 
-			if (rfm_txmode)
+			if (rfm_mode == rfmmode_tx_done)
 			{
 				// WRITE to SPI one byte of packet and return back:
 				// \todo @jiri: what means "return back"? think i know what u mean but clarify it please!
@@ -173,7 +174,7 @@ int main(void)
 				{
 					rfm_framepos  = 0;
 					rfm_framesize = 0;
-					rfm_txmode    = false;
+					rfm_mode    = rfmmode_stop;
 				    RFM_OFF();		// turn everything off
 				    RFM_WRITE(0);	// Clear TX-IRQ
 
@@ -272,7 +273,7 @@ int main(void)
 
 					rfm_framesize = 5+20+4; // total size what shall be transmitted. from preamble to postamble
 					rfm_framepos  = 0;
-					rfm_txmode = true;
+					rfm_mode    = rfmmode_stop;
 
 					task |= TASK_RFM; // create task for main loop
 
@@ -445,75 +446,3 @@ static inline void init(void)
 	// init keyboard by one dummy call
     task_keyboard();
 }
-
-
-
-
-
-
-/*
-		#if (RFM==1)
-		// JIRIs Code
-		  // RFM12
-		  if (task & TASK_RFM) {
-			task&=~TASK_RFM;
-			if (rfmTransmitMode) {
-			  //WRITE to SPI one byte of packet and return back
-			} else {
-			  //READ one byte from SPI and store it into packet
-			}
-			// SCK is 0 from last transmition
-			// nSEL is 1 from last trasmition, otherwise  run DISABLE_RFM_nSEL(); //macro to nSEL=1
-			ENABLE_RFM_nSEL(); //macro to nSEL=0
-			// from this moment SDO indicate FFIT or RGIT
-			PCMSK0 |= 1<<PCINT5; //re-enable pin change interrupt
-			if ((PINE & (1<<PE5)) !=0) { // \todo use symbols not constants
-			  // insurance to protect interrupt lost
-			  PCMSK0 &= ~(1<<PCINT5); // disable RFM interrupt
-			  task |= TASK_RFM; // create task for main loop
-			}
-		  }
-		#endif
-
-#if (RFM==1)
-		if (task & TASK_RFM) {
-		// MARIOs Code
-			
-			switch (rfm_mode)
-			{
-				case rfmmode_txd:
-				{
-					if (rfm_framepos < rfm_framesize)
-					{
-						RFM_WRITE(rfm_framebuf[rfm_framepos]); // shift out the byte to be sent
-						RFM_SPI_SELECT; // wait untill the SDO line went low. this indicates that the module is ready for next command
-						rfm_framepos++;
-					}
-					
-					if (rfm_framepos == rfm_framesize)
-					{
-						task &= ~TASK_RFM;
-						rfm_framepos  = 0;
-						rfm_framesize = 0;
-						rfm_mode	  = rfmmode_off; // actually now its time to switch into listening for 1 second
-
-					    RFM_OFF();		// turn everything off
-					    RFM_WRITE(0);	// Clear TX-IRQ
-					}
-					break;
-				}
-				case rfmmode_rxd:
-				{
-					// ...
-					break;
-				}
-				default:
-				{
-					// ...
-					break;
-				}
-
-			}
-		}
-#endif
-*/

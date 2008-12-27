@@ -474,9 +474,14 @@ uint8_t rfm_crc_update(uint8_t crc, uint8_t data);
 
 #define RFM_FRAME_MAX 0x30
 
-typedef enum {rfmmode_rxd=0, rfmmode_txd=1} rfmmode_t;
+typedef enum {rfmmode_stop=0, 
+              rfmmode_tx=2,
+              rfmmode_tx_done=3,
+              rfmmode_rx=4,
+              rfmmode_rx_owf=5,
+              } rfm_mode_t;
 
 extern uint8_t rfm_framebuf[RFM_FRAME_MAX];
 extern uint8_t rfm_framesize;
 extern uint8_t rfm_framepos;
-extern bool    rfm_txmode;
+extern rfm_mode_t rfm_mode;
