@@ -161,42 +161,16 @@ int main(void)
 
 			if (rfm_mode == rfmmode_tx_done)
 			{
-				// WRITE to SPI one byte of packet and return back:
-				// \todo @jiri: what means "return back"? think i know what u mean but clarify it please!
-
-				if (rfm_framepos < rfm_framesize)
-				{
-					RFM_WRITE(rfm_framebuf[rfm_framepos]); // shift out the byte to be sent
-					rfm_framepos++;
-				}
-				
-				if (rfm_framepos == rfm_framesize)
-				{
-					rfm_framepos  = 0;
-					rfm_framesize = 0;
 					rfm_mode    = rfmmode_stop;
 				    RFM_OFF();		// turn everything off
 				    RFM_WRITE(0);	// Clear TX-IRQ
 
-					// actually now its time to switch into listening for 1 second
-
+					// actually now its time to switch into listening
 					continue;
-				}			
 			}
 			else // rfmmode_rxd
 			{
 				//READ one byte from SPI and store it into packet
-			}
-			
-			RFM_SPI_SELECT; // set nSEL low: from this moment SDO indicate FFIT or RGIT
-
-			BIT_SET(PCMSK0, RFM_SDO_PCINT); // re-enable pin change interrupt
-
-			if BIT_GET(RFM_SDO_PIN, RFM_SDO_BITPOS) {
-				// insurance to protect interrupt lost
-				BIT_CLR(PCMSK0, RFM_SDO_PCINT);// disable RFM interrupt
-				task |= TASK_RFM; // create task for main loop
-				// PORTE &= ~(1<<PE2);
 			}
 		}
 		#endif
@@ -218,7 +192,8 @@ int main(void)
 				{
 
 					uint8_t statusbits = CTL_error; // statusbits are errorflags and windowopen and auto/manualmode
-					if (!CTL_mode_auto) statusbits |= CTL_ERR_NA_0; // auto is more likely than manual, so just set the flag in rarer case
+					RFM_TX_ON_PRE();
+                    if (!CTL_mode_auto) statusbits |= CTL_ERR_NA_0; // auto is more likely than manual, so just set the flag in rarer case
 					if (mode_window())  statusbits |= CTL_ERR_NA_1; // if window-open-condition is detected, set this flag
 
 					rfm_framebuf[ 0] = 0xaa; // preamble
@@ -267,20 +242,23 @@ int main(void)
 					}
 
 					rfm_framebuf[5+20+1] = 0xaa; // postamble
-					rfm_framebuf[5+20+2] = 0xaa; // postamble
-					rfm_framebuf[5+20+3] = 0xaa; // postamble
+					rfm_framebuf[5+20+2] = 0xaa; // dummy byte
+					rfm_framebuf[5+20+3] = 0xaa; // dummy byte
 
 
 					rfm_framesize = 5+20+4; // total size what shall be transmitted. from preamble to postamble
 					rfm_framepos  = 0;
-					rfm_mode    = rfmmode_stop;
-
-					task |= TASK_RFM; // create task for main loop
-
-
-
+					rfm_mode    = rfmmode_tx;
 					RFM_TX_ON();
-					RFM_SPI_SELECT; // wait untill the SDO line went low. this indicates that the module is ready for next command
+    			    RFM_SPI_SELECT; // set nSEL low: from this moment SDO indicate FFIT or RGIT
+    			    PCMSK0 |= _BV(RFM_SDO_PCINT); // re-enable pin change interrupt
+        			//if BIT_GET(RFM_SDO_PIN, RFM_SDO_BITPOS) {
+        				// insurance to protect interrupt lost
+        				//BIT_CLR(PCMSK0, RFM_SDO_PCINT);// disable RFM interrupt
+        				//task |= TASK_RFM; // create task for main loop
+        				// PORTE &= ~(1<<PE2);
+        			//}
+					ISR(PCINT0_vect); // dummy call of interrupt start transmition
 				}
 #endif
             }
@@ -363,9 +341,12 @@ int main(void)
 static inline void init(void)
 {
 #if (DISABLE_JTAG == 1)
-	//cli();
-	BIT_SET(MCUCR, JTD); // Write one to the JTD bit in MCUCR
-	BIT_SET(MCUCR, JTD); // ... which must be done twice within exactly 4 cycles.
+	{
+	   //cli();
+	   uint8_t t = MCUCR | _BV(JTD);
+	   MCUCR=t;
+	   MCUCR=t;
+	}
 #endif
 
 

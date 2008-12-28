@@ -423,7 +423,7 @@ ISR (PCINT0_vect){
        		  task |= TASK_RFM; // inform the rfm task about end of transmition
           } else {
        			RFM_SPI_SELECT; // set nSEL low: from this moment SDO indicate FFIT or RGIT
-       			BIT_SET(PCMSK0, RFM_SDO_PCINT);// re-enable RFM interrupt
+       			PCMSK0|= _BV(RFM_SDO_PCINT);// re-enable RFM interrupt
        		}
         } else if (rfm_mode == rfmmode_rx) {
   		    rfm_framebuf[rfm_framepos++]=RFM_READ_FIFO();
@@ -462,7 +462,7 @@ ISR (TIMER0_OVF_vect){
         // motor fast STOP
         MOTOR_H_BRIDGE_stop();
         // complete STOP will be done later
-		TCCR0A = (1<<WGM00) | (1<<WGM01); // 0b 0000 0011
+		    TCCR0A = (1<<WGM00) | (1<<WGM01); // 0b 0000 0011
         task|=(TASK_MOTOR_STOP);
         PCMSK0 &= ~(1<<PCINT4); // disable eye interrupt
 

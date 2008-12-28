@@ -39,23 +39,17 @@
 
 #define RFM_SPI_16(OUTVAL)			rfm_spi16(OUTVAL) //<! a function that gets a uint16_t (clocked out value) and returns a uint16_t (clocked in value)
 
-#define RFM_SPI_SELECT        		BIT_CLR(RFM_NSEL_PORT, RFM_NSEL_BITPOS)
-#define RFM_SPI_DESELECT      		BIT_SET(RFM_NSEL_PORT, RFM_NSEL_BITPOS)
+#define RFM_SPI_SELECT        		(RFM_NSEL_PORT &= ~_BV(RFM_NSEL_BITPOS))
+#define RFM_SPI_DESELECT      		(RFM_NSEL_PORT |= _BV(RFM_NSEL_BITPOS))
 
-#define RFM_SPI_MOSI_LOW      		BIT_CLR(RFM_SDI_PORT, RFM_SDI_BITPOS)
-#define RFM_SPI_MOSI_HIGH     		BIT_SET(RFM_SDI_PORT, RFM_SDI_BITPOS)
+#define RFM_SPI_MOSI_LOW      		(RFM_SDI_PORT &= ~_BV(RFM_SDI_BITPOS))
+#define RFM_SPI_MOSI_HIGH     		(RFM_SDI_PORT |= _BV(RFM_SDI_BITPOS))
 
-#define RFM_SPI_MISO_GET			BIT_GET(RFM_SDO_PIN, RFM_SDO_BITPOS)
+#define RFM_SPI_MISO_GET			(RFM_SDO_PIN & _BV(RFM_SDO_BITPOS))
 
-#define RFM_SPI_SCK_LOW       		BIT_CLR(RFM_SCK_PORT, RFM_SCK_BITPOS)
-#define RFM_SPI_SCK_HIGH      		BIT_SET(RFM_SCK_PORT, RFM_SCK_BITPOS)
+#define RFM_SPI_SCK_LOW       		(RFM_SCK_PORT &= ~_BV(RFM_SCK_BITPOS))
+#define RFM_SPI_SCK_HIGH      		(RFM_SCK_PORT |= _BV(RFM_SCK_BITPOS))
 
-/*
-#define RFM_TESTPIN_INIT			BIT_SET(DDRE, PE2)
-#define RFM_TESTPIN_ON				BIT_SET(PORTE, PE2)
-#define RFM_TESTPIN_OFF				BIT_CLR(PORTE, PE2)
-#define RFM_TESTPIN_TOG				BIT_TOG(PORTE, PE2)
-*/
 #define RFM_TESTPIN_INIT			
 #define RFM_TESTPIN_ON				
 #define RFM_TESTPIN_OFF				
@@ -146,19 +140,28 @@
 
 #define RFM_POWER_MANAGEMENT     0x8200
 
-#define RFM_POWER_MANAGEMENT_ER  0x8280 // Enable receiver
-#define RFM_POWER_MANAGEMENT_EBB 0x8240 // Enable base band block
-#define RFM_POWER_MANAGEMENT_ET  0x8220 // Enable transmitter
-#define RFM_POWER_MANAGEMENT_ES  0x8210 // Enable synthesizer
-#define RFM_POWER_MANAGEMENT_EX  0x8208 // Enable crystal oscillator
-#define RFM_POWER_MANAGEMENT_EB  0x8204 // Enable low battery detector
-#define RFM_POWER_MANAGEMENT_EW  0x8202 // Enable wake-up timer
-#define RFM_POWER_MANAGEMENT_DC  0x8201 // Disable clock output of CLK pin
+#define RFM_POWER_MANAGEMENT_ER  0x80 // Enable receiver
+#define RFM_POWER_MANAGEMENT_EBB 0x40 // Enable base band block
+#define RFM_POWER_MANAGEMENT_ET  0x20 // Enable transmitter
+#define RFM_POWER_MANAGEMENT_ES  0x10 // Enable synthesizer
+#define RFM_POWER_MANAGEMENT_EX  0x08 // Enable crystal oscillator
+#define RFM_POWER_MANAGEMENT_EB  0x04 // Enable low battery detector
+#define RFM_POWER_MANAGEMENT_EW  0x02 // Enable wake-up timer
+#define RFM_POWER_MANAGEMENT_DC  0x01 // Disable clock output of CLK pin
 
-#define RFM_LBD_ON()       RFM_SPI_16(RFM_POWER_MANAGEMENT_EB)
-#define RFM_TX_ON()        RFM_SPI_16(RFM_POWER_MANAGEMENT_ET)
-#define RFM_RX_ON()        RFM_SPI_16(RFM_POWER_MANAGEMENT_ER)
-#define RFM_WKUP_ON()      RFM_SPI_16(RFM_POWER_MANAGEMENT_EW)
+#define RFM_TX_ON_PRE()    RFM_SPI_16( RFM_POWER_MANAGEMENT | \
+                           RFM_POWER_MANAGEMENT_ET | \
+                           RFM_POWER_MANAGEMENT_ES | \
+                           RFM_POWER_MANAGEMENT_EX )    
+#define RFM_TX_ON()        RFM_SPI_16( RFM_POWER_MANAGEMENT | \
+                           RFM_POWER_MANAGEMENT_ET | \
+                           RFM_POWER_MANAGEMENT_ES | \
+                           RFM_POWER_MANAGEMENT_EX )    
+#define RFM_RX_ON()        RFM_SPI_16(RFM_POWER_MANAGEMENT_ER| \
+                           RFM_POWER_MANAGEMENT_ER | \
+                           RFM_POWER_MANAGEMENT_EBB | \
+                           RFM_POWER_MANAGEMENT_ES | \
+                           RFM_POWER_MANAGEMENT_EX )
 #define RFM_OFF()          RFM_SPI_16(RFM_POWER_MANAGEMENT)
 
 ///////////////////////////////////////////////////////////////////////////////
