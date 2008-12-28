@@ -39,3 +39,4 @@ void COM_rx_char_isr(char c);
 
 void COM_init(void);
 
+void COM_dump_packet(uint8_t *d, uint8_t len);

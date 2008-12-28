@@ -109,15 +109,6 @@ In this file we define only configuration parameters, for example what kind of c
 #define LITERAL_STRLEN(S)					(sizeof(S) - sizeof('\0'))
 #define ARRAY(TYPE, PTR, INDEX)				((TYPE*)(PTR))[INDEX]
 
-#define BIT_GET(VAR, INDEX)					((VAR) & _BV(INDEX))
-#define BIT_SET(VAR, INDEX)					(VAR) |= _BV(INDEX)
-#define BIT_TOG(VAR, INDEX)					(VAR) ^= _BV(INDEX)
-#define BIT_CLR(VAR, INDEX)					(VAR) &= ~_BV(INDEX)
-#define BIT_CLEAR(VAR, INDEX)				BIT_CLR(VAR, INDEX)
-
-#define DDR_OUT(DDR, BITPOS)				BIT_SET(DDR, BITPOS)
-#define DDR_IN(DDR, BITPOS)					BIT_CLR(DDR, BITPOS)
-
 #define IN_RANGE(MIN, TEST, MAX)			(((MIN) <= (TEST)) && ((TEST) <= (MAX)))
 #define OUTOF_RANGE(MIN, TEST, MAX)			(((MIN) > (TEST)) || ((TEST) > (MAX)))
 #define TOLOWER(C)							((C) | 0x20)

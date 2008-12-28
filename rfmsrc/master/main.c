@@ -111,35 +111,34 @@ int main(void)
   			task &= ~TASK_RFM;
   			// PORTE |= (1<<PE2);
   
-  			if (rfm_mode == rfmmode_tx_done)
+			if (rfm_mode == rfmmode_tx_done)
+			{
+					rfm_mode    = rfmmode_stop;
+				    RFM_OFF();		// turn everything off
+				    RFM_WRITE(0);	// Clear TX-IRQ
+
+					// actually now its time to switch into listening
+					continue;
+			}
+  			else if (rfm_mode == rfmmode_rx)
   			{
-  				// WRITE to SPI one byte of packet and return back:
-  				// \todo @jiri: what means "return back"? think i know what u mean but clarify it please!
-  
-  					rfm_framepos  = 0;
-  					rfm_framesize = 0;
-  					rfm_mode    = rfmmode_stop;
-  				    RFM_OFF();		// turn everything off
-  				    RFM_WRITE(0);	// Clear TX-IRQ
-  
-  					// actually now its time to switch into listening for 1 second
-  
-  					continue;
-  			}
-  			else // rfmmode_rxd
-  			{
-  				//READ one byte from SPI and store it into packet
+  				if (rfm_framepos>=1) {
+                    if (rfm_framepos >= rfm_framebuf[0]) {
+                        COM_dump_packet(rfm_framebuf, rfm_framepos);
+                        
+                    }
+                }
   			}
   			
   
   			//BIT_SET(PCMSK0, RFM_SDO_PCINT); // re-enable pin change interrupt
   
-  			if BIT_GET(RFM_SDO_PIN, RFM_SDO_BITPOS) {
+  			//if BIT_GET(RFM_SDO_PIN, RFM_SDO_BITPOS) {
   				// insurance to protect interrupt lost
   				//BIT_CLR(PCMSK0, RFM_SDO_PCINT);// disable RFM interrupt
-  				task |= TASK_RFM; // create task for main loop
+  			//	task |= TASK_RFM; // create task for main loop
   				// PORTE &= ~(1<<PE2);
-  			}
+  			//}
       }
 		#endif
 

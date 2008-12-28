@@ -234,4 +234,17 @@ void COM_init(void) {
 	COM_flush();
 }
 
-
+/*!
+ *******************************************************************************
+ *  \brief dump data from *d length len
+ *
+ *  \note
+ ******************************************************************************/
+void COM_dump_packet(uint8_t *d, uint8_t len) {
+    print_s_p(PSTR("PKT:"));
+	while ((len--)>0) {
+        COM_putchar(' ');
+        print_hexXX(*(d++));
+    }
+    COM_putchar('\n');
+}
