@@ -92,3 +92,5 @@
 
 	#define RFM_SDO_PCINT		PCINT6
 #endif
+
+#define RFM_PERMANENT_CLK 0

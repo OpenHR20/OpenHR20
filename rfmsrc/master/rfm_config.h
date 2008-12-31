@@ -48,21 +48,21 @@
 // marios external jtag wiring: rfm_sck=pf4=tck rfm_sdi=pf6=tdo rfm_nsel=pf5=tms rfm_sdo=pe2=pcint2 rfm_nirq=open
 
 
-#define RFM_SCK_DDR			DDRA
-#define RFM_SCK_PORT		PORTA
-#define RFM_SCK_BITPOS		4
+#define RFM_SCK_DDR			DDRB
+#define RFM_SCK_PORT		PORTB
+#define RFM_SCK_BITPOS		7
 
-#define RFM_SDI_DDR			DDRA
-#define RFM_SDI_PORT		PORTA
-#define RFM_SDI_BITPOS		6
+#define RFM_SDI_DDR			DDRB
+#define RFM_SDI_PORT		PORTB
+#define RFM_SDI_BITPOS		5
 
-#define RFM_NSEL_DDR		DDRA
-#define RFM_NSEL_PORT		PORTA
-#define RFM_NSEL_BITPOS		5
+#define RFM_NSEL_DDR		DDRB
+#define RFM_NSEL_PORT		PORTB
+#define RFM_NSEL_BITPOS		4
 
-#define RFM_SDO_DDR			DDRA
-#define RFM_SDO_PIN			PINA
-#define RFM_SDO_BITPOS		2
+#define RFM_SDO_DDR			DDRB
+#define RFM_SDO_PIN			PINB
+#define RFM_SDO_BITPOS		6
 
 //#define RFM_SDO_PCINT		PCINT2
 
@@ -71,3 +71,5 @@
 #define RFM_NIRQ_PIN		PINE
 #define RFM_NIRQ_BITPOS		2
 */
+
+#define RFM_PERMANENT_CLK 1

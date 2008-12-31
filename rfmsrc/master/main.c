@@ -160,11 +160,6 @@ static inline void init(void)
 	BIT_SET(MCUCR, JTD); // ... which must be done twice within exactly 4 cycles.
 #endif
 
-
-
-    //! Calibrate the internal RC Oszillator
-    //! \todo test calibrate_rco();
-
     //! set Clock to 4 Mhz
     //CLKPR = (1<<CLKPCE);            // prescaler change enable
     //CLKPR = (1<<CLKPS0);            // prescaler = 2 (internal RC runs @ 8MHz)
@@ -172,22 +167,8 @@ static inline void init(void)
     //! Disable Analog Comparator (power save)
     ACSR = (1<<ACD);
 
-    //! Disable Digital input on PF0-7 (power save)
-    //DIDR0 = 0xFF;
-
-    //! digital I/O port direction
-    //DDRG = (1<<PG3)|(1<<PG4); // PG3, PG4 Motor out
-
-    //! enable pullup on all inputs (keys and m_wheel)
-    //! ATTENTION: PB0 & PB6 is input, but we will select it only for read
     PORTB = (0<<PB0)|(1<<PB1)|(1<<PB2)|(1<<PB3)|(0<<PB6);
-    DDRB  = (1<<PB0)|(1<<PB4)|(1<<PB7)|(1<<PB6); // PB4, PB7 Motor out
-
-   // DDRE  = (1<<PE3)|                  (1<<PE1); // ACTLIGHTEYE | TXD
-	//PORTE =                   (1<<PE2)|(1<<PE1)|(1<<PE0); // RFMSDO(pullup) | TXD | RXD
-	//PORTE =                            (1<<PE1)|(1<<PE0); // TXD | RXD
-	//DDRF  =          (1<<PF6)|(1<<PF5)|(1<<PF4)|(1<<PF3); // RFMSDI | RFMNSEL | RFMSCK | ACTTEMPSENS
-//    PORTF = (1<<PF7)|         (1<<PF5); // JTAGTDI | RFMNSEL;
+    DDRB  = (1<<PB4)|(1<<PB5)|(1<<PB7); 
 
 #if (RFM==1)
 	RFM_init();

@@ -162,8 +162,12 @@
                            RFM_POWER_MANAGEMENT_EBB | \
                            RFM_POWER_MANAGEMENT_ES | \
                            RFM_POWER_MANAGEMENT_EX )
-#define RFM_OFF()          RFM_SPI_16(RFM_POWER_MANAGEMENT)
-
+#if RFM_PERMANENT_CLK
+    #define RFM_OFF()      RFM_SPI_16(RFM_POWER_MANAGEMENT | \
+                           RFM_POWER_MANAGEMENT_EX )
+#else
+    #define RFM_OFF()      RFM_SPI_16(RFM_POWER_MANAGEMENT)
+#endif
 ///////////////////////////////////////////////////////////////////////////////
 //
 // 3. Frequency Setting Command
