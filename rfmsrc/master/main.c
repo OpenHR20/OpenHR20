@@ -132,6 +132,7 @@ int main(void)
                     if (rfm_framepos >= rfm_framebuf[0]) {
                         COM_dump_packet(rfm_framebuf, rfm_framepos);
                         rfm_framepos=0;
+						rfm_mode = rfmmode_rx;
                             RFM_INT_DIS(); // disable RFM interrupt
                         	RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
 	                        RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);

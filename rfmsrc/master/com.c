@@ -240,8 +240,11 @@ void COM_init(void) {
  *
  *  \note
  ******************************************************************************/
+static uint16_t seq=0;
 void COM_dump_packet(uint8_t *d, uint8_t len) {
-    print_s_p(PSTR("PKT:"));
+    print_s_p(PSTR("PKT"));
+    print_hexXXXX(seq++);
+    COM_putchar(':');
 	while ((len--)>0) {
         COM_putchar(' ');
         print_hexXX(*(d++));
