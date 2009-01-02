@@ -126,7 +126,7 @@ int main(void)
 					// actually now its time to switch into listening
 					continue;
 			}
-  			else if (rfm_mode == rfmmode_rx)
+  			else if ((rfm_mode == rfmmode_rx) || (rfm_mode == rfmmode_rx_owf))
   			{
   				if (rfm_framepos>=1) {
                     if (rfm_framepos >= rfm_framebuf[0]) {
