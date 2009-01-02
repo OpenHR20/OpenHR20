@@ -1,5 +1,40 @@
 #error "not finished work, do not use this revision"
-//////////////////////////////////////////////////////////////////////////////
+
+/*
+ *  Open HR20
+ *
+ *  target:     ATmega169 in Honnywell Rondostat HR20E / ATmega8
+ *
+ *  compiler:   WinAVR-20071221
+ *              avr-libc 1.6.0
+ *              GCC 4.2.2
+ *
+ *  copyright:  2008 Dario Carluccio (hr20-at-carluccio-dot-de)
+ *              2008 Jiri Dobry (jdobry-at-centrum-dot-cz) 
+ *              2008 Mario Fischer (MarioFischer-at-gmx-dot-net)
+ *              2007 Michael Smola (Michael-dot-Smola-at-gmx-dot-net)
+ *
+ *  license:    This program is free software; you can redistribute it and/or
+ *              modify it under the terms of the GNU Library General Public
+ *              License as published by the Free Software Foundation; either
+ *              version 2 of the License, or (at your option) any later version.
+ *
+ *              This program is distributed in the hope that it will be useful,
+ *              but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *              MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *              GNU General Public License for more details.
+ *
+ *              You should have received a copy of the GNU General Public License
+ *              along with this program. If not, see http:*www.gnu.org/licenses
+ */
+
+/*!
+ * \file       rfm.c
+ * \brief      functions to control the RFM12 Radio Transceiver Module
+ * \author     Mario Fischer <MarioFischer-at-gmx-dot-net>; Michael Smola <Michael-dot-Smola-at-gmx-dot-net>
+ * \date       $Date$
+ * $Rev$
+ */
 
 #include "config.h"
 #include "rfm_config.h"
@@ -82,7 +117,7 @@ uint16_t rfm_spi16(uint16_t outval)
   }
   
   RFM_SPI_DESELECT;
-
+  RFM_SPI_SELECT;
 
   return(ret);
 }
@@ -129,7 +164,7 @@ void RFM_init(void)
 		RFM_RX_CONTROL_VDI_FAST |
 		RFM_RX_CONTROL_BW(RFM_BAUD_RATE) |
 		RFM_RX_CONTROL_GAIN_0   |
-		RFM_RX_CONTROL_RSSI_61
+		RFM_RX_CONTROL_RSSI_85
 	 );
 
 	// 6. Data Filter Command

@@ -1,7 +1,7 @@
 /*
  *  Open HR20
  *
- *  target:     ATmega169 @ 4 MHz in Honnywell Rondostat HR20E
+ *  target:     ATmega16 @ 10 MHz in Honnywell Rondostat HR20E master
  *
  *  compiler:   WinAVR-20071221
  *              avr-libc 1.6.0
@@ -64,8 +64,6 @@
 #define RFM_SDO_PIN			PINB
 #define RFM_SDO_BITPOS		6
 
-//#define RFM_SDO_PCINT		PCINT2
-
 /*
 #define RFM_NIRQ_DDR		DDRE
 #define RFM_NIRQ_PIN		PINE
@@ -73,3 +71,6 @@
 */
 
 #define RFM_PERMANENT_CLK 1
+
+#define RFM_INT_EN() {GICR |= _BV(INT2); ISR (INT2_vect);}
+#define RFM_INT_DIS() (GICR &= ~_BV(INT2))

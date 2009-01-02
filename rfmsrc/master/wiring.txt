@@ -1,0 +1,25 @@
+
+master module connections
+TODO: create schematics
+
+RFM12       ATmega16
+SDO         pin 7 & pin 3
+SDI         pin 6
+SCK         pin 8
+nSEL        pin 5
+DATA        pin 1 or pullup
+CLK         pin 13  (Use external clock ATmega FUSE)
+VDD         pin 10 & pin 30 & pin 32
+GND         pin 11 & pin 31
+
+10pin header    ATmega16
+1               pin 9 (/Reset)
+2               NC
+3               pin 25 (TMS)
+4               pin 24 (TCK)
+5               pin 26 (TDO)
+6               pin 15 (TXD)
+7               pin 14 (RXD)
+8               pin 27 (TDI)
+9               pin 10 & pin 30 & pin 32 (VCC)
+10              pin 11 & pin 31 (GND)

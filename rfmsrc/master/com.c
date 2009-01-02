@@ -247,4 +247,5 @@ void COM_dump_packet(uint8_t *d, uint8_t len) {
         print_hexXX(*(d++));
     }
     COM_putchar('\n');
+	COM_flush();
 }

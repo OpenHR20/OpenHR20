@@ -111,7 +111,6 @@ int main(void)
 
 	COM_init();
 
-
 	rfm_framebuf[ 5] = 0; // DEBUG !!!!!!!!!
 
 
@@ -162,6 +161,7 @@ int main(void)
 			if (rfm_mode == rfmmode_tx_done)
 			{
 					rfm_mode    = rfmmode_stop;
+					RFM_INT_DIS();
 				    RFM_OFF();		// turn everything off
 				    RFM_WRITE(0);	// Clear TX-IRQ
 
@@ -170,7 +170,7 @@ int main(void)
 			}
 			else // rfmmode_rxd
 			{
-				//READ one byte from SPI and store it into packet
+			    // \todo
 			}
 		}
 		#endif
@@ -251,14 +251,7 @@ int main(void)
 					rfm_mode    = rfmmode_tx;
 					RFM_TX_ON();
     			    RFM_SPI_SELECT; // set nSEL low: from this moment SDO indicate FFIT or RGIT
-    			    PCMSK0 |= _BV(RFM_SDO_PCINT); // re-enable pin change interrupt
-        			//if BIT_GET(RFM_SDO_PIN, RFM_SDO_BITPOS) {
-        				// insurance to protect interrupt lost
-        				//BIT_CLR(PCMSK0, RFM_SDO_PCINT);// disable RFM interrupt
-        				//task |= TASK_RFM; // create task for main loop
-        				// PORTE &= ~(1<<PE2);
-        			//}
-					ISR(PCINT0_vect); // dummy call of interrupt start transmition
+                    RFM_INT_EN(); // enable RFM interrupt
 				}
 #endif
             }

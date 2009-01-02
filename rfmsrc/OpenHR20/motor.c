@@ -414,7 +414,7 @@ ISR (PCINT0_vect){
 	  if (PCMSK0 & _BV(RFM_SDO_PCINT)) {
   	  // RFM module interupt
   		while (RFM_SDO_PIN & _BV(RFM_SDO_BITPOS)) {
-  	    PCMSK0 &= _BV(RFM_SDO_PCINT); // disable RFM interrupt
+  	    PCMSK0 &= ~_BV(RFM_SDO_PCINT); // disable RFM interrupt
   		  sei(); // enable global interrupts
   		  if (rfm_mode == rfmmode_tx) {
   		    RFM_WRITE(rfm_framebuf[rfm_framepos++]);
@@ -422,17 +422,17 @@ ISR (PCINT0_vect){
             rfm_mode = rfmmode_tx_done;
        		  task |= TASK_RFM; // inform the rfm task about end of transmition
           } else {
-       			RFM_SPI_SELECT; // set nSEL low: from this moment SDO indicate FFIT or RGIT
-       			PCMSK0|= _BV(RFM_SDO_PCINT);// re-enable RFM interrupt
-       		}
+       		  RFM_SPI_SELECT; // set nSEL low: from this moment SDO indicate FFIT or RGIT
+       	  }
         } else if (rfm_mode == rfmmode_rx) {
   		    rfm_framebuf[rfm_framepos++]=RFM_READ_FIFO();
   		    if (rfm_framepos >= RFM_FRAME_MAX) rfm_mode = rfmmode_rx_owf;
-    		  task |= TASK_RFM; // inform the rfm task about next RX byte
+    		task |= TASK_RFM; // inform the rfm task about next RX byte
         }
         cli(); // disable global interrupts
         asm volatile("nop"); // we must have one instruction after cli() 
-        PCMSK0 &= _BV(RFM_SDO_PCINT); // enable RFM interrupt
+        PCMSK0 |= _BV(RFM_SDO_PCINT); // enable RFM interrupt
+        asm volatile("nop"); // we must have one instruction after
   		}
   	}
   #endif

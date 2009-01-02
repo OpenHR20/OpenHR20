@@ -1,7 +1,7 @@
 /*
  *  Open HR20 - RFM12 master
  *
- *  target:     ATmega169 @ 4 MHz in Honnywell Rondostat HR20E
+ *  target:     ATmega16 @ 10 MHz in Honnywell Rondostat HR20E master
  *
  *  compiler:    WinAVR-20071221
  *              avr-libc 1.6.0
@@ -73,12 +73,17 @@ int main(void)
 {
     //! initalization
     init();
+    RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
+    RFM_SPI_16(RFM_LOW_BATT_DETECT_D_10MHZ);
+    RFM_RX_ON();
+	rfm_mode = rfmmode_rx;
+	MCUCSR |= _BV(ISC2);
+
+   	COM_init();
 
     //! Enable interrupts
     sei();
-    
-  	COM_init();
-
+    RFM_INT_EN();
 
 	rfm_framebuf[ 5] = 0; // DEBUG !!!!!!!!!
 
@@ -114,6 +119,7 @@ int main(void)
 			if (rfm_mode == rfmmode_tx_done)
 			{
 					rfm_mode    = rfmmode_stop;
+					RFM_INT_DIS();
 				    RFM_OFF();		// turn everything off
 				    RFM_WRITE(0);	// Clear TX-IRQ
 
@@ -125,21 +131,15 @@ int main(void)
   				if (rfm_framepos>=1) {
                     if (rfm_framepos >= rfm_framebuf[0]) {
                         COM_dump_packet(rfm_framebuf, rfm_framepos);
-                        
+                        rfm_framepos=0;
+                            RFM_INT_DIS(); // disable RFM interrupt
+                        	RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
+	                        RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
+	                        RFM_INT_EN(); // enable RFM interrupt
                     }
                 }
   			}
-  			
-  
-  			//BIT_SET(PCMSK0, RFM_SDO_PCINT); // re-enable pin change interrupt
-  
-  			//if BIT_GET(RFM_SDO_PIN, RFM_SDO_BITPOS) {
-  				// insurance to protect interrupt lost
-  				//BIT_CLR(PCMSK0, RFM_SDO_PCINT);// disable RFM interrupt
-  			//	task |= TASK_RFM; // create task for main loop
-  				// PORTE &= ~(1<<PE2);
-  			//}
-      }
+        }
 		#endif
 
     } //End Main loop
@@ -155,24 +155,60 @@ int main(void)
 static inline void init(void)
 {
 #if (DISABLE_JTAG == 1)
-	//cli();
-	BIT_SET(MCUCR, JTD); // Write one to the JTD bit in MCUCR
-	BIT_SET(MCUCR, JTD); // ... which must be done twice within exactly 4 cycles.
+	{
+	   //cli();
+	   uint8_t t = MCUCR | _BV(JTD);
+	   MCUCR=t;
+	   MCUCR=t;
+	}
 #endif
-
-    //! set Clock to 4 Mhz
-    //CLKPR = (1<<CLKPCE);            // prescaler change enable
-    //CLKPR = (1<<CLKPS0);            // prescaler = 2 (internal RC runs @ 8MHz)
 
     //! Disable Analog Comparator (power save)
     ACSR = (1<<ACD);
 
     PORTB = (0<<PB0)|(1<<PB1)|(1<<PB2)|(1<<PB3)|(0<<PB6);
-    DDRB  = (1<<PB4)|(1<<PB5)|(1<<PB7); 
+    DDRB  = (1<<PB4)|(1<<PB5)|(1<<PB7);
+	
+	DDRD = _BV(PD1);
+	PORTD = 0xff;
+	PORTA = 0xff;
+	PORTB = 0xff; 
 
 #if (RFM==1)
 	RFM_init();
 	RFM_OFF();
 #endif
-    
 }
+
+/*!
+ *******************************************************************************
+ * Pinchange Interupt INT2
+ *  
+ * \note level interrupt is better, but I want to have same code for master as for HR20 (jdobry)
+ ******************************************************************************/
+#if (RFM==1)
+ISR (INT2_vect){
+  // RFM module interupt
+  while (RFM_SDO_PIN & _BV(RFM_SDO_BITPOS)) {
+    GICR &= ~_BV(INT2); // disable RFM interrupt
+    sei(); // enable global interrupts
+    if (rfm_mode == rfmmode_tx) {
+        RFM_WRITE(rfm_framebuf[rfm_framepos++]);
+        if (rfm_framepos >= rfm_framesize) {
+          rfm_mode = rfmmode_tx_done;
+    	  task |= TASK_RFM; // inform the rfm task about end of transmition
+	    } else {
+    		RFM_SPI_SELECT; // set nSEL low: from this moment SDO indicate FFIT or RGIT
+    	}
+    } else if (rfm_mode == rfmmode_rx) {
+        rfm_framebuf[rfm_framepos++]=RFM_READ_FIFO();
+        if (rfm_framepos >= RFM_FRAME_MAX) rfm_mode = rfmmode_rx_owf;
+    	task |= TASK_RFM; // inform the rfm task about next RX byte
+    }
+    cli(); // disable global interrupts
+    asm volatile("nop"); // we must have one instruction after cli() 
+    GICR |= _BV(INT2); // enable RFM interrupt
+    asm volatile("nop"); // we must have one instruction after
+  }
+}
+#endif

@@ -27,7 +27,7 @@
  */
 
 /*!
- * \file       rfm.c
+ * \file       rfm.h
  * \brief      functions to control the RFM12 Radio Transceiver Module
  * \author     Mario Fischer <MarioFischer-at-gmx-dot-net>; Michael Smola <Michael-dot-Smola-at-gmx-dot-net>
  * \date       $Date$
@@ -140,31 +140,31 @@
 
 #define RFM_POWER_MANAGEMENT     0x8200
 
-#define RFM_POWER_MANAGEMENT_ER  0x80 // Enable receiver
-#define RFM_POWER_MANAGEMENT_EBB 0x40 // Enable base band block
-#define RFM_POWER_MANAGEMENT_ET  0x20 // Enable transmitter
-#define RFM_POWER_MANAGEMENT_ES  0x10 // Enable synthesizer
-#define RFM_POWER_MANAGEMENT_EX  0x08 // Enable crystal oscillator
-#define RFM_POWER_MANAGEMENT_EB  0x04 // Enable low battery detector
-#define RFM_POWER_MANAGEMENT_EW  0x02 // Enable wake-up timer
-#define RFM_POWER_MANAGEMENT_DC  0x01 // Disable clock output of CLK pin
+#define RFM_POWER_MANAGEMENT_ER  0x8280 // Enable receiver
+#define RFM_POWER_MANAGEMENT_EBB 0x8240 // Enable base band block
+#define RFM_POWER_MANAGEMENT_ET  0x8220 // Enable transmitter
+#define RFM_POWER_MANAGEMENT_ES  0x8210 // Enable synthesizer
+#define RFM_POWER_MANAGEMENT_EX  0x8208 // Enable crystal oscillator
+#define RFM_POWER_MANAGEMENT_EB  0x8204 // Enable low battery detector
+#define RFM_POWER_MANAGEMENT_EW  0x8202 // Enable wake-up timer
+#define RFM_POWER_MANAGEMENT_DC  0x8201 // Disable clock output of CLK pin
 
-#define RFM_TX_ON_PRE()    RFM_SPI_16( RFM_POWER_MANAGEMENT | \
-                           RFM_POWER_MANAGEMENT_ET | \
-                           RFM_POWER_MANAGEMENT_ES | \
-                           RFM_POWER_MANAGEMENT_EX )    
-#define RFM_TX_ON()        RFM_SPI_16( RFM_POWER_MANAGEMENT | \
-                           RFM_POWER_MANAGEMENT_ET | \
-                           RFM_POWER_MANAGEMENT_ES | \
-                           RFM_POWER_MANAGEMENT_EX )    
-#define RFM_RX_ON()        RFM_SPI_16(RFM_POWER_MANAGEMENT_ER| \
-                           RFM_POWER_MANAGEMENT_ER | \
-                           RFM_POWER_MANAGEMENT_EBB | \
-                           RFM_POWER_MANAGEMENT_ES | \
-                           RFM_POWER_MANAGEMENT_EX )
+#define RFM_TX_ON_PRE()    RFM_SPI_16( \
+                                RFM_POWER_MANAGEMENT_ET | \
+                                RFM_POWER_MANAGEMENT_ES | \
+                                RFM_POWER_MANAGEMENT_EX )    
+#define RFM_TX_ON()        RFM_SPI_16( \
+                                RFM_POWER_MANAGEMENT_ET | \
+                                RFM_POWER_MANAGEMENT_ES | \
+                                RFM_POWER_MANAGEMENT_EX )    
+#define RFM_RX_ON()        RFM_SPI_16( \
+                                RFM_POWER_MANAGEMENT_ER | \
+                                RFM_POWER_MANAGEMENT_EBB | \
+                                RFM_POWER_MANAGEMENT_ES | \
+                                RFM_POWER_MANAGEMENT_EX )
 #if RFM_PERMANENT_CLK
-    #define RFM_OFF()      RFM_SPI_16(RFM_POWER_MANAGEMENT | \
-                           RFM_POWER_MANAGEMENT_EX )
+    #define RFM_OFF()      RFM_SPI_16( \
+                                RFM_POWER_MANAGEMENT_EX )
 #else
     #define RFM_OFF()      RFM_SPI_16(RFM_POWER_MANAGEMENT)
 #endif
@@ -234,8 +234,8 @@
 #define RFM_RX_CONTROL_RSSI_85   0x9003 // DRSSI threshold -85dbm
 #define RFM_RX_CONTROL_RSSI_79   0x9004 // DRSSI threshold -79dbm
 #define RFM_RX_CONTROL_RSSI_73   0x9005 // DRSSI threshold -73dbm
-#define RFM_RX_CONTROL_RSSI_67   0x9006 // DRSSI threshold -67dbm
-#define RFM_RX_CONTROL_RSSI_61   0x9007 // DRSSI threshold -61dbm
+//#define RFM_RX_CONTROL_RSSI_67   0x9006 // DRSSI threshold -67dbm // RF12B reserved
+//#define RFM_RX_CONTROL_RSSI_61   0x9007 // DRSSI threshold -61dbm // RF12B reserved
 
 #define RFM_RX_CONTROL_BW(baud)		(((baud)<8000) ? \
 									RFM_RX_CONTROL_BW_67 : \

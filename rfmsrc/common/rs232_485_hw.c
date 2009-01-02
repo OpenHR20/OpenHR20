@@ -1,7 +1,7 @@
 /*
  *  Open HR20
  *
- *  target:     ATmega169 @ 4 MHz in Honnywell Rondostat HR20E
+ *  target:     ATmega169 in Honnywell Rondostat HR20E / ATmega8
  *
  *  compiler:   WinAVR-20071221
  *              avr-libc 1.6.0
@@ -145,17 +145,23 @@ void RS_Init(uint16_t baud)
 {
 	
 	// Baudrate
-	//long ubrr_val = ((F_CPU)/(baud*16L)-1);
-	uint16_t ubrr_val = ((F_CPU)/(baud*16L)-1);
+	//long ubrr_val = ((F_CPU)/(baud*8L)-1);
+	uint16_t ubrr_val = ((F_CPU)/(baud*8L)-1);
  
 	#ifdef _AVR_IOM169P_H_
+		UCSR0C = _BV(U2X0);
 		UBRR0H = (unsigned char)(ubrr_val>>8);
 		UBRR0L = (unsigned char)(ubrr_val & 0xFF);
 		UCSR0C = (_BV(UCSZ00) | _BV(UCSZ01));     // Asynchron 8N1 
 	#elif defined(_AVR_IOM169_H_) || defined(_AVR_IOM16_H_)
+		UCSRA = _BV(U2X);
 		UBRRH = (unsigned char)(ubrr_val>>8);
 		UBRRL = (unsigned char)(ubrr_val & 0xFF);
-		UCSRC = (_BV(UCSZ0) | _BV(UCSZ1));     // Asynchron 8N1 
+		#if defined(_AVR_IOM16_H_)
+            UCSRC = (1<<URSEL) | (_BV(UCSZ0) | _BV(UCSZ1));     // Asynchron 8N1
+        #else 
+            UCSRC = (_BV(UCSZ0) | _BV(UCSZ1));     // Asynchron 8N1
+        #endif
 	#else
 		#error 'your CPU is not supported !'
 	#endif
