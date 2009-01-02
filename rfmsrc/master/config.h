@@ -83,8 +83,6 @@ In this file we define only configuration parameters, for example what kind of c
 #else
 	#define RFM12                  0
 	#define SECURITY               0
-	#define RFM_WIRE_MARIOJTAG     0
-	#define RFM_WIRE_JD_INTERNAL   0
 	#define DISABLE_JTAG           0
 #endif
 
