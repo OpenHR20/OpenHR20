@@ -33,7 +33,7 @@
 
 #pragma once
 
-extern uint8_t menu_auto_update_timeout;
+extern int8_t menu_auto_update_timeout;
 bool menu_controller(bool new_state); 
 void menu_view(bool update);
 
