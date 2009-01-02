@@ -197,8 +197,7 @@ ISR (INT2_vect){
         if (rfm_framepos >= rfm_framesize) {
           rfm_mode = rfmmode_tx_done;
     	  task |= TASK_RFM; // inform the rfm task about end of transmition
-	    } else {
-    		RFM_SPI_SELECT; // set nSEL low: from this moment SDO indicate FFIT or RGIT
+    	  return; // \note !!WARNING!!
     	}
     } else if (rfm_mode == rfmmode_rx) {
         rfm_framebuf[rfm_framepos++]=RFM_READ_FIFO();
@@ -210,5 +209,6 @@ ISR (INT2_vect){
     GICR |= _BV(INT2); // enable RFM interrupt
     asm volatile("nop"); // we must have one instruction after
   }
+  // do NOT add anything after RFM part
 }
 #endif

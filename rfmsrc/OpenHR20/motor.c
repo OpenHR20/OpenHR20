@@ -231,10 +231,10 @@ static void MOTOR_Control(motor_dir_t direction) {
         TIMSK0 = 0;                                     // disable interrupt
         PCMSK0 &= ~(1<<PCINT4);                         // disable interrupt
         MOTOR_HR20_PE3_P &= ~(1<<MOTOR_HR20_PE3);       // deactivate photo eye
-		MOTOR_H_BRIDGE_stop();
+        MOTOR_H_BRIDGE_stop();
         // stop pwm signal
         TCCR0A = (1<<WGM00) | (1<<WGM01); // 0b 0000 0011
-	    MOTOR_Dir = stop;
+        MOTOR_Dir = stop;
     } else {                                            // motor on
         if (MOTOR_Dir != direction){
             if (MOTOR_Dir != MOTOR_LastDir) {
@@ -242,7 +242,7 @@ static void MOTOR_Control(motor_dir_t direction) {
                 motor_diag_ignore = MOTOR_IGNORE_IMPULSES;
                 MOTOR_Dir = MOTOR_LastDir;
             }
-		    MOTOR_Dir = direction;
+            MOTOR_Dir = direction;
             // photo eye
             MOTOR_HR20_PE3_P |= (1<<MOTOR_HR20_PE3);    // activate photo eye
             motor_timer = (motor_max_time_for_impulse[(direction==close)?0:1]<<2); // *4 (for motor start-up)
@@ -255,17 +255,17 @@ static void MOTOR_Control(motor_dir_t direction) {
                 // set pins of H-Bridge
                 MOTOR_H_BRIDGE_close();
                 // set PWM non inverting mode
-	            OCR0A = config.motor_speed_close; // set pwm value
+                OCR0A = config.motor_speed_close; // set pwm value
                 TCCR0A = (1<<WGM00) | (1<<WGM01) | (1<<COM0A1) | (1<<CS00);
             // close
             } else {
                 // set pins of H-Bridge
-				MOTOR_H_BRIDGE_open();
+                MOTOR_H_BRIDGE_open();
                 // set PWM inverting mode
-	            OCR0A = config.motor_speed_open;  // set pwm value
+                OCR0A = config.motor_speed_open;  // set pwm value
                 TCCR0A=(1<<WGM00)|(1<<WGM01)|(1<<COM0A1)|(1<<COM0A0)|(1<<CS00);
             }
-		}
+        }
     }
 }
 
@@ -280,10 +280,10 @@ void MOTOR_timer_pulse(void) {
     motor_dir_t d = MOTOR_Dir;
     if (motor_diag <= MOTOR_MAX_VALID_TIMER) {
         if (motor_diag_ignore == 0) {  
-			motor_diag_sum += motor_diag;
-			motor_diag_count++;
+            motor_diag_sum += motor_diag;
+            motor_diag_count++;
             if ((motor_diag_count > MOTOR_UPDATE_IMPULSES_THLD) && (d!=stop)) {
-        		
+                
                 uint32_t tmp = motor_diag_sum / motor_diag_count;
                 {
                     uint16_t b = tmp * 
@@ -301,9 +301,9 @@ void MOTOR_timer_pulse(void) {
                     sei();
                 }
             }
-		} else {
-		   motor_diag_ignore--;
-        }		
+        } else {
+           motor_diag_ignore--;
+        }       
     } 
 
     #if DEBUG_PRINT_MOTOR
@@ -319,16 +319,16 @@ void MOTOR_timer_pulse(void) {
  *
  ******************************************************************************/
 void MOTOR_timer_stop(void) {
-	motor_dir_t d = MOTOR_Dir;
+    motor_dir_t d = MOTOR_Dir;
     MOTOR_Control(stop);
     if (eye_timer == 0xffff) { // normal stop on wanted position 
-			if ((MOTOR_calibration_step == 3) && (MOTOR_ManuCalibration>0)) {
-				MOTOR_calibration_step = 0;
-			} else if (MOTOR_calibration_step != 0) {
+            if ((MOTOR_calibration_step == 3) && (MOTOR_ManuCalibration>0)) {
+                MOTOR_calibration_step = 0;
+            } else if (MOTOR_calibration_step != 0) {
                 MOTOR_calibration_step = -1;     // calibration error
-		        CTL_error |=  CTL_ERR_MOTOR;
+                CTL_error |=  CTL_ERR_MOTOR;
             }
-	} else { // stop after motor eye timeout
+    } else { // stop after motor eye timeout
         if (d == open) { // stopped on end
             {
                 int16_t a = MOTOR_PosAct; // volatile variable optimization
@@ -385,14 +385,14 @@ static uint8_t pine_last=0;
  * \note create TASK_UPDATE_MOTOR_POS
  ******************************************************************************/
 ISR (PCINT0_vect){
-	uint8_t pine=PINE;
-	#if (defined COM_RS232) || (defined COM_RS485)
-		if ((pine & (1<<PE0)) == 0) {
-			RS_enable_rx(); // it is macro, not function
-		    PCMSK0 &= ~(1<<PCINT0); // deactivate interrupt
-		}
-	#endif
-	// motor eye
+    uint8_t pine=PINE;
+    #if (defined COM_RS232) || (defined COM_RS485)
+        if ((pine & (1<<PE0)) == 0) {
+            RS_enable_rx(); // it is macro, not function
+            PCMSK0 &= ~(1<<PCINT0); // deactivate interrupt
+        }
+    #endif
+    // motor eye
     // count only on HIGH impulses
     if ((PCMSK0 & (1<<PCINT4)) && ((pine & ~pine_last & (1<<PE4)) != 0)) {
         MOTOR_PosAct+=MOTOR_Dir;
@@ -409,33 +409,33 @@ ISR (PCINT0_vect){
             motor_timer = motor_max_time_for_impulse[(MOTOR_Dir==close)?0:1];
         }
     }
-	pine_last=pine;
-	#if (RFM==1)
-	  if (PCMSK0 & _BV(RFM_SDO_PCINT)) {
-  	  // RFM module interupt
-  		while (RFM_SDO_PIN & _BV(RFM_SDO_BITPOS)) {
-  	    PCMSK0 &= ~_BV(RFM_SDO_PCINT); // disable RFM interrupt
-  		  sei(); // enable global interrupts
-  		  if (rfm_mode == rfmmode_tx) {
-  		    RFM_WRITE(rfm_framebuf[rfm_framepos++]);
-  		    if (rfm_framepos >= rfm_framesize) {
-            rfm_mode = rfmmode_tx_done;
-       		  task |= TASK_RFM; // inform the rfm task about end of transmition
-          } else {
-       		  RFM_SPI_SELECT; // set nSEL low: from this moment SDO indicate FFIT or RGIT
-       	  }
-        } else if (rfm_mode == rfmmode_rx) {
-  		    rfm_framebuf[rfm_framepos++]=RFM_READ_FIFO();
-  		    if (rfm_framepos >= RFM_FRAME_MAX) rfm_mode = rfmmode_rx_owf;
-    		task |= TASK_RFM; // inform the rfm task about next RX byte
+    pine_last=pine;
+    #if (RFM==1)
+      if (PCMSK0 & _BV(RFM_SDO_PCINT)) {
+      // RFM module interupt
+        while (RFM_SDO_PIN & _BV(RFM_SDO_BITPOS)) {
+          PCMSK0 &= ~_BV(RFM_SDO_PCINT); // disable RFM interrupt
+          sei(); // enable global interrupts
+          if (rfm_mode == rfmmode_tx) {
+            RFM_WRITE(rfm_framebuf[rfm_framepos++]);
+            if (rfm_framepos >= rfm_framesize) {
+              rfm_mode = rfmmode_tx_done;
+              task |= TASK_RFM; // inform the rfm task about end of transmition
+              return; // \note !!WARNING!!
+            } 
+          } else if (rfm_mode == rfmmode_rx) {
+            rfm_framebuf[rfm_framepos++]=RFM_READ_FIFO();
+            if (rfm_framepos >= RFM_FRAME_MAX) rfm_mode = rfmmode_rx_owf;
+            task |= TASK_RFM; // inform the rfm task about next RX byte
+          }
+          cli(); // disable global interrupts
+          asm volatile("nop"); // we must have one instruction after cli() 
+          PCMSK0 |= _BV(RFM_SDO_PCINT); // enable RFM interrupt
+          asm volatile("nop"); // we must have one instruction after
         }
-        cli(); // disable global interrupts
-        asm volatile("nop"); // we must have one instruction after cli() 
-        PCMSK0 |= _BV(RFM_SDO_PCINT); // enable RFM interrupt
-        asm volatile("nop"); // we must have one instruction after
-  		}
-  	}
+    }
   #endif
+  // do NOT add anything after RFM part
 }
 
 /*! 
@@ -462,7 +462,7 @@ ISR (TIMER0_OVF_vect){
         // motor fast STOP
         MOTOR_H_BRIDGE_stop();
         // complete STOP will be done later
-		    TCCR0A = (1<<WGM00) | (1<<WGM01); // 0b 0000 0011
+            TCCR0A = (1<<WGM00) | (1<<WGM01); // 0b 0000 0011
         task|=(TASK_MOTOR_STOP);
         PCMSK0 &= ~(1<<PCINT4); // disable eye interrupt
 

@@ -1,4 +1,4 @@
-#error "not finished work, do not use this revision"
+//#error "not finished work, do not use this revision"
 
 /*
  *  Open HR20

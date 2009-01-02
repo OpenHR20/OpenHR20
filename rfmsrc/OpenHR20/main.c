@@ -163,7 +163,7 @@ int main(void)
 					rfm_mode    = rfmmode_stop;
 					RFM_INT_DIS();
 				    RFM_OFF();		// turn everything off
-				    RFM_WRITE(0);	// Clear TX-IRQ
+				    //RFM_WRITE(0);	// Clear TX-IRQ
 
 					// actually now its time to switch into listening
 					continue;
