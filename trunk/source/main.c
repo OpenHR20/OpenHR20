@@ -203,11 +203,12 @@ int main(void)
             MOTOR_Goto(valve_wanted);
             task_keyboard_long_press_detect();
             start_task_ADC();
-            if (menu_auto_update_timeout>0) {
+            if (menu_auto_update_timeout>=0) {
                 menu_auto_update_timeout--;
             }
             menu_view(false); // TODO: move it, it is wrong place
             LCD_Update(); // TODO: move it, it is wrong place
+            // do not use continue here (menu_auto_update_timeout==0)
         }
 
 		// menu state machine

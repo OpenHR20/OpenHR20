@@ -53,7 +53,7 @@ static uint8_t service_idx=CONFIG_RAW_SIZE;
  * \brief menu_auto_update_timeout is timer for autoupdates of menu
  * \note val<0 means no autoupdate 
  ******************************************************************************/
-uint8_t menu_auto_update_timeout = 2;
+int8_t menu_auto_update_timeout = 2;
 
 typedef enum {
     // startup
