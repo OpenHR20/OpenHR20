@@ -129,7 +129,9 @@ int main(void)
   			else if ((rfm_mode == rfmmode_rx) || (rfm_mode == rfmmode_rx_owf))
   			{
   				if (rfm_framepos>=1) {
-                    if ((rfm_framepos >= rfm_framebuf[0]) || (rfm_framepos >= RFM_FRAME_MAX)) {
+                    if ((rfm_framepos >= rfm_framebuf[0]) 
+                            || (rfm_framebuf[0] >= RFM_FRAME_MAX)  // reject noise
+                            || (rfm_framepos >= RFM_FRAME_MAX)) {
                         COM_dump_packet(rfm_framebuf, rfm_framepos);
                         rfm_framepos=0;
 						rfm_mode = rfmmode_rx;
