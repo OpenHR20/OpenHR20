@@ -149,7 +149,7 @@ void RS_Init(uint16_t baud)
 	uint16_t ubrr_val = ((F_CPU)/(baud*8L)-1);
  
 	#ifdef _AVR_IOM169P_H_
-		UCSR0C = _BV(U2X0);
+		UCSR0A = _BV(U2X0);
 		UBRR0H = (unsigned char)(ubrr_val>>8);
 		UBRR0L = (unsigned char)(ubrr_val & 0xFF);
 		UCSR0C = (_BV(UCSZ00) | _BV(UCSZ01));     // Asynchron 8N1 
