@@ -73,6 +73,9 @@ In this file we define only configuration parameters, for example what kind of c
 /* #define COM_DEF_ADR 1 */
 
 
+#define LED_on() (PORTD |= _BV(PD6))
+#define LED_off() (PORTD &= ~_BV(PD6))
+
 #define RFM 1 //!< define RFM to 1 if you want to have support for the RFM Radio Moodule in the Code
 #define SECURITY 0 //!< define SECURITY to 1 to protect RFM's commnunication
 

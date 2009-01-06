@@ -23,3 +23,6 @@ GND         pin 11 & pin 31
 8               pin 27 (TDI)
 9               pin 10 & pin 30 & pin 32 (VCC)
 10              pin 11 & pin 31 (GND)
+
+Diag LED
+20 (PD6) ----820Ohm------>|------ GND

@@ -129,6 +129,7 @@ int main(void)
   			else if ((rfm_mode == rfmmode_rx) || (rfm_mode == rfmmode_rx_owf))
   			{
   				if (rfm_framepos>=1) {
+					LED_on();
                     if ((rfm_framepos >= rfm_framebuf[0]) 
                             || (rfm_framebuf[0] >= RFM_FRAME_MAX)  // reject noise
                             || (rfm_framepos >= RFM_FRAME_MAX)) {
@@ -139,6 +140,7 @@ int main(void)
                         	RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
 	                        RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
 	                        RFM_INT_EN(); // enable RFM interrupt
+							LED_off();
                     }
                 }
   			}
@@ -172,7 +174,7 @@ static inline void init(void)
     PORTB = (0<<PB0)|(1<<PB1)|(1<<PB2)|(1<<PB3)|(0<<PB6);
     DDRB  = (1<<PB4)|(1<<PB5)|(1<<PB7);
 	
-	DDRD = _BV(PD1);
+	DDRD = _BV(PD1) | _BV(PD6);
 	PORTD = 0xff;
 	PORTA = 0xff;
 	PORTB = 0xff; 
