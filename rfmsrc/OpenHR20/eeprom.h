@@ -200,7 +200,7 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 1f */  {5,           5,        2,       60},   //!< window_open_noise_filter
   /* 20 */  {15,         15,        2,      255},   //!< window_close_noise_filter
 #if (RFM==1)
-  /* 21 */  {RFM_DEVICE_ADDRESS, RFM_DEVICE_ADDRESS, 1, 254}, //!< RFM_devaddr: HR20's own device address in RFM radio networking.
+  /* 21 */  {RFM_DEVICE_ADDRESS, RFM_DEVICE_ADDRESS, 1, 29}, //!< RFM_devaddr: HR20's own device address in RFM radio networking.
 	/* 22 */  {1,         1,        0,        1},   //!< RFM_enabled
 #endif
 

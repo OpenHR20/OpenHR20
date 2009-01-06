@@ -48,6 +48,7 @@
 #include "eeprom.h"
 #include "controller.h"
 #include "pid.h"
+#include "../common/rfm.h"
 #include "debug.h"
 
 
@@ -77,6 +78,14 @@ static void COM_putchar(char c) {
 	sei();
 }
 
+#if (RFM==1)
+static void super_COM_putchar(char c) {
+    COM_putchar(c);
+    rfm_putchar(c);
+}
+#else
+#define super_COM_putchar(c) 
+#endif
 /*!
  *******************************************************************************
  *  \brief support for interrupt for transmit bytes
@@ -194,6 +203,15 @@ static void print_hexXX(uint8_t i) {
 	}	
 }
 
+#if (RFM==1)
+static void super_print_hexXX(uint8_t i) {
+    print_hexXX(i);
+    rfm_putchar(i);
+}
+#else
+#define super_print_hexXX(i) print_hexXX(i)
+#endif
+
 /*!
  *******************************************************************************
  *  \brief helper function print 4 digit dec number
@@ -204,6 +222,17 @@ static void print_hexXXXX(uint16_t i) {
 	print_hexXX(i>>8);
 	print_hexXX(i&0xff);
 }
+
+#if (RFM==1)
+static void super_print_hexXXXX(uint16_t i) {
+	print_hexXX(i>>8);
+	rfm_putchar(i>>8);
+	print_hexXX(i&0xff);
+	rfm_putchar(i&0xff);
+}
+#else
+#define super_print_hexXXXX(i) print_hexXXXX(i)
+#endif
 
 
 /*!
@@ -251,7 +280,7 @@ void COM_init(void) {
  *  \note
  ******************************************************************************/
 void COM_print_debug(int8_t valve) {
-	print_s_p(PSTR("D: "));
+    print_s_p(PSTR("D: "));
     print_hexXX(RTC_GetDayOfWeek()+0xd0);
 	COM_putchar(' ');
 	print_decXX(RTC_GetDay());
@@ -295,6 +324,17 @@ void COM_print_debug(int8_t valve) {
 	}
 	COM_putchar('\n');
 	COM_flush();
+#if (RFM==1)
+    rfm_putchar('D');
+	rfm_putchar(temp_average >> 8); // current temp
+	rfm_putchar(temp_average & 0xff);
+	rfm_putchar(bat_average >> 8); // current temp
+	rfm_putchar(bat_average & 0xff);
+	rfm_putchar(CTL_temp_wanted); // wanted temp
+	rfm_putchar((valve>=0) ? valve : valve_wanted); // valve pos
+	rfm_start_tx();
+#endif
+    
 }
 
 /*! 
@@ -339,9 +379,9 @@ static char COM_hex_parse (uint8_t n) {
  *
  ******************************************************************************/
 static void print_idx(char t) {
-    COM_putchar(t);
+    super_COM_putchar(t);
     COM_putchar('[');
-    print_hexXX(com_hex[0]);
+    super_print_hexXX(com_hex[0]);
     COM_putchar(']');
     COM_putchar('=');
 }
@@ -385,7 +425,7 @@ void COM_commad_parse (void) {
 			{
 				if (COM_hex_parse(1*2)!='\0') { break; }
                 print_idx(c);
-  				print_hexXXXX(watch(com_hex[0]));
+  				super_print_hexXXXX(watch(com_hex[0]));
 			}
 			break;
 		case 'G':
@@ -401,9 +441,9 @@ void COM_commad_parse (void) {
 			}
             print_idx(c);
 			if (com_hex[0]==0xff) {
-			     print_hexXX(EE_LAYOUT);
+			     super_print_hexXX(EE_LAYOUT);
             } else {
-			     print_hexXX(config_raw[com_hex[0]]);
+			     super_print_hexXX(config_raw[com_hex[0]]);
 			}
 			break;
 		case 'R':
@@ -416,7 +456,7 @@ void COM_commad_parse (void) {
 				CTL_update_temp_auto();
 			}
             print_idx(c);
-			print_hexXXXX(eeprom_timers_read_raw(
+			super_print_hexXXXX(eeprom_timers_read_raw(
                 timers_get_raw_index((com_hex[0]>>4),(com_hex[0]&0xf))));
 			break;
 		case 'Y':
@@ -463,6 +503,7 @@ void COM_commad_parse (void) {
 		}
 		if (c!='\0') COM_putchar('\n');
 		COM_flush();
+		rfm_start_tx();
 	}
 }
 

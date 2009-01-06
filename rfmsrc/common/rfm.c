@@ -1,5 +1,3 @@
-//#error "not finished work, do not use this revision"
-
 /*
  *  Open HR20
  *
@@ -50,32 +48,15 @@ uint8_t rfm_framesize = 0;
 uint8_t rfm_framepos = 0;
 rfm_mode_t rfm_mode = rfmmode_stop;
 
-
 /*!
  *******************************************************************************
- *  RFM telegram checksum
- *  \note This is the same checksum like in SHT11 temperature sensor
- *  \param crc Init State of the CRC shift register
- *  \para data Data to be added to the CRC check
- *  \returns New State of the CRC shift register
- *   
+ *  RFM put one byte
  ******************************************************************************/
-uint8_t rfm_crc_update(uint8_t crc, uint8_t data)
-{
-	uint8_t i;
-
-	for (i = 0x80; i !=0x00; i>>=1)
-	{
-		uint8_t b7 = (crc & 0x01) ^ ((data & i)?1:0);
-		crc >>= 1;
-		if (b7)
-		{
-			crc ^= 0x8C;
-		}
-	}
-	return(crc);    
+void rfm_putchar(uint8_t b) {
+    if ((rfm_mode == rfmmode_stop) && (rfm_framepos < RFM_FRAME_MAX)) {
+        rfm_framebuf[rfm_framesize++] = b;
+    }
 }
-
 
 /*!
  *******************************************************************************

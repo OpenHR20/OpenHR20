@@ -447,13 +447,11 @@
 void RFM_init (void);
 uint16_t rfm_spi16(uint16_t outval);
 
-
-uint8_t rfm_crc_update(uint8_t crc, uint8_t data);
-
-//#include <util/crc16.h>
-//#define rfm_crc_update(CRC, DATA) _crc_ibutton_update(CRC, DATA) // dont worry about the name, thats the only 8bit crc in avr libc
-
-
+#if (RFM==1)
+void rfm_putchar(uint8_t ch);
+#else
+#define rfm_putchar(ch) 
+#endif
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -482,6 +480,7 @@ uint8_t rfm_crc_update(uint8_t crc, uint8_t data);
 #define RFM_FRAME_MAX 0x30
 
 typedef enum {rfmmode_stop=0, 
+              rfmmode_start_tx=1,
               rfmmode_tx=2,
               rfmmode_tx_done=3,
               rfmmode_rx=4,
@@ -492,3 +491,5 @@ extern uint8_t rfm_framebuf[RFM_FRAME_MAX];
 extern uint8_t rfm_framesize;
 extern uint8_t rfm_framepos;
 extern rfm_mode_t rfm_mode;
+
+#define rfm_start_tx() (rfm_mode=rfmmode_start_tx)

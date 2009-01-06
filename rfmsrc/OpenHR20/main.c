@@ -161,6 +161,7 @@ int main(void)
 			if (rfm_mode == rfmmode_tx_done)
 			{
 					rfm_mode    = rfmmode_stop;
+					rfm_framesize = 6;
 					RFM_INT_DIS();
 				    RFM_OFF();		// turn everything off
 				    //RFM_WRITE(0);	// Clear TX-IRQ
@@ -187,66 +188,25 @@ int main(void)
 			if (task_ADC()==0) {
                 // ADC is done
 #if (RFM==1)
-				//if (config.RFM_enabled && (RTC_GetSecond() == (0x1f & config.RFM_devaddr))) // collission protection: every HR20 shall send when the second counter is equal to it's own address.
+				//if (config.RFM_enable 
+                //    && (RTC_GetSecond() == config.RFM_devaddr) 
+                //    && (rfm_mode == rfmmode_start_tx)) // collission protection: every HR20 shall send when the second counter is equal to it's own address.
 				if ((config.RFM_enable) && !(RTC_GetSecond() % 4) ) // for testing all 4 seconds ...
 				{
 
-					uint8_t statusbits = CTL_error; // statusbits are errorflags and windowopen and auto/manualmode
 					RFM_TX_ON_PRE();
-                    if (!CTL_mode_auto) statusbits |= CTL_ERR_NA_0; // auto is more likely than manual, so just set the flag in rarer case
-					if (mode_window())  statusbits |= CTL_ERR_NA_1; // if window-open-condition is detected, set this flag
 
 					rfm_framebuf[ 0] = 0xaa; // preamble
 					rfm_framebuf[ 1] = 0xaa; // preamble
 					rfm_framebuf[ 2] = 0x2d; // rfm fifo start pattern
 					rfm_framebuf[ 3] = 0xd4; // rfm fifo start pattern
 
-					rfm_framebuf[ 4] = 21;    // length (one byte after length itself to crc)
-					
-					/*
-					rfm_framebuf[ 5] = (RFMPROTO_FLAGS_PACKETTYPE_BROADCAST | RFMPROTO_FLAGS_DEVICETYPE_OPENHR20); // flags
-					rfm_framebuf[ 6] = config.RFM_devaddr; // sender address
-					rfm_framebuf[ 7] = HIBYTE(temp_average); // current temp
-					rfm_framebuf[ 8] = LOBYTE(temp_average);
-					rfm_framebuf[ 9] = CTL_temp_wanted; // wanted temp
-					rfm_framebuf[10] = MOTOR_GetPosPercent(); // valve pos
-					rfm_framebuf[11] = 0xab; //statusbits; // future improvement: if istatusbits==0x00, then we dont send statusbits. saves some battery and radio time
-					*/
+					rfm_framebuf[ 4] = rfm_framesize-4;    // length
+					rfm_framebuf[ 5] = config.RFM_devaddr;
 
-					/*
-					rfm_framebuf[ 5]++; // flags
-					rfm_framebuf[ 6] = 2; // sender address
-					rfm_framebuf[ 7] = 3; // current temp
-					rfm_framebuf[ 8] = 4;
-					rfm_framebuf[ 9] = 5; // wanted temp
-					rfm_framebuf[10] = 6; // valve pos
-					rfm_framebuf[11] = 7; //statusbits; // future improvement: if istatusbits==0x00, then we dont send statusbits. saves some battery and radio time
+					rfm_framebuf[rfm_framesize++] = 0xaa; // dummy byte
+					rfm_framebuf[rfm_framesize++] = 0xaa; // dummy byte
 
-					uint8_t i, crc=0x00;
-					for (i=4; i<12; i++)
-					{
-						crc = rfm_framebuf[i] + crc; //rfm_crc_update(crc, rfm_framebuf[i]); 
-					}
-					
-					rfm_framebuf[12] = crc; // checksum
-
-					rfm_framebuf[13] = 0xaa; // postamble
-					rfm_framebuf[14] = 0xaa; // postamble
-					*/
-
-
-					uint8_t i; //, crc=0x00;
-					for (i=0; i<20; i++)
-					{
-						rfm_framebuf[i+5] = i;
-					}
-
-					rfm_framebuf[5+20+1] = 0xaa; // postamble
-					rfm_framebuf[5+20+2] = 0xaa; // dummy byte
-					rfm_framebuf[5+20+3] = 0xaa; // dummy byte
-
-
-					rfm_framesize = 5+20+4; // total size what shall be transmitted. from preamble to postamble
 					rfm_framepos  = 0;
 					rfm_mode    = rfmmode_tx;
 					RFM_TX_ON();
