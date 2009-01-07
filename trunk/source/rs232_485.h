@@ -8,6 +8,7 @@
  *              GCC 4.2.2
  *
  *  copyright:  2008 Jiri Dobry (jdobry-at-centrum-dot-cz)
+ *				2009 Thomas Vosshagen (mod. for THERMOTronic) (openhr20-at-vosshagen-dot-com)
  *
  *  license:    This program is free software; you can redistribute it and/or
  *              modify it under the terms of the GNU Library General Public
@@ -26,7 +27,7 @@
 /*!
  * \file       rs232_485.h
  * \brief      rs232 and rs485 header
- * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>
+ * \author     Jiri Dobry <jdobry-at-centrum-dot-cz> Thomas Vosshagen (mod. for THERMOTronic) <openhr20-at-vosshagen-dot-com>
  * \date       $Date$
  * $Rev$
  */
@@ -44,4 +45,6 @@
 	void RS_Init(uint16_t baud);
 #else 
 	#define RS_need_clock() (0)
+	#define RS_startSend() (0)
+	#define RS_Init(baud) (0)
 #endif

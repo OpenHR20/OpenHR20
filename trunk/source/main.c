@@ -9,6 +9,7 @@
  *
  *  copyright:  2008 Dario Carluccio (hr20-at-carluccio-dot-de)
  *				2008 Jiri Dobry (jdobry-at-centrum-dot-cz)
+ *				2009 Thomas Vosshagen (mod. for THERMOTronic) (openhr20-at-vosshagen-dot-com)
  *
  *  license:    This program is free software; you can redistribute it and/or
  *              modify it under the terms of the GNU Library General Public
@@ -27,7 +28,7 @@
 /*!
  * \file       main.c
  * \brief      the main file for Open HR20 project
- * \author     Dario Carluccio <hr20-at-carluccio-dot-de>; Jiri Dobry <jdobry-at-centrum-dot-cz>
+ * \author     Dario Carluccio <hr20-at-carluccio-dot-de>; Jiri Dobry <jdobry-at-centrum-dot-cz> Thomas Vosshagen (mod. for THERMOTronic) <openhr20-at-vosshagen-dot-com>
  * \date       $Date$
  * $Rev$
  */
@@ -250,23 +251,43 @@ static inline void init(void)
 
     //! digital I/O port direction
     DDRG = (1<<PG3)|(1<<PG4); // PG3, PG4 Motor out
+#ifdef THERMOTRONIC
+	DDRE|=(1<<PE3); //tvossi TODO:
+	PORTE|=(1<<PE3);
+#else
     DDRE = (1<<PE3)|(1<<PE2)|(1<<PE1);  // PE3  activate lighteye
     PORTE = 0x03;
+#endif
+#ifdef THERMOTRONIC
+    DDRF = (1<<PF2);//tvossi DDRF = (1<<PF3);          // PF3  activate tempsensor
+    PORTF = 0xf5;//tvossi PORTF = 0xf3;
+#else
     DDRF = (1<<PF3);          // PF3  activate tempsensor
     PORTF = 0xf3;
+#endif
 
     //! enable pullup on all inputs (keys and m_wheel)
     //! ATTENTION: PB0 & PB6 is input, but we will select it only for read
+#ifdef THERMOTRONIC
+	PORTB = (1<<PB0)|(1<<PB1)|(1<<PB2)|(0<<PB4)|(0<<PB5);
+#else
     PORTB = (0<<PB0)|(1<<PB1)|(1<<PB2)|(1<<PB3)|(0<<PB6);
     DDRB = (1<<PB0)|(1<<PB4)|(1<<PB7)|(1<<PB6); // PB4, PB7 Motor out
+#endif
 
 
     //! remark for PCMSK0:
     //!     PCINT0 for lighteye (motor monitor) is activated in motor.c using
     //!     mask register PCMSK0: PCMSK0=(1<<PCINT4) and PCMSK0&=~(1<<PCINT4)
 
+#ifdef THERMOTRONIC
+	PCMSK0=(1<<PCINT1); //tvossi added
+    //! PCMSK1 for keyactions
+    PCMSK1 = (1<<PCINT9)|(1<<PCINT10)|(1<<PCINT8)|(1<<PCINT12);//tvossi was PCMSK1 = (1<<PCINT9)|(1<<PCINT10)|(1<<PCINT11)|(1<<PCINT13);
+#else
     //! PCMSK1 for keyactions
     PCMSK1 = (1<<PCINT9)|(1<<PCINT10)|(1<<PCINT11)|(1<<PCINT13);
+#endif
 
     //! activate PCINT0 + PCINT1
     EIMSK = (1<<PCIE1)|(1<<PCIE0);

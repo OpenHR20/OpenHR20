@@ -8,6 +8,7 @@
  *              GCC 4.2.2
  *
  *  copyright:  2008 Jiri Dobry (jdobry-at-centrum-dot-cz)
+ *				2009 Thomas Vosshagen (mod. for THERMOTronic) (openhr20-at-vosshagen-dot-com)
  *
  *  license:    This program is free software; you can redistribute it and/or
  *              modify it under the terms of the GNU Library General Public
@@ -26,7 +27,7 @@
 /*!
  * \file       com.c
  * \brief      comunication
- * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>
+ * \author     Jiri Dobry <jdobry-at-centrum-dot-cz> Thomas Vosshagen (mod. for THERMOTronic) <openhr20-at-vosshagen-dot-com>
  * \date       $Date$
  * $Rev$
  */
@@ -141,7 +142,9 @@ static void COM_flush (void) {
 		#if (defined COM_RS232) || (defined COM_RS485)
 			RS_startSend();
 		#else 
-			#error "need todo"
+            #ifndef THERMOTRONIC //no RS232 nor RS485 - cannot compile with this error!
+			     #error "need todo"
+            #endif
 		#endif
 	}
 }

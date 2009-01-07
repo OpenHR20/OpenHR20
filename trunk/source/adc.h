@@ -8,6 +8,7 @@
  *              GCC 4.2.2
  *
  *  copyright:  2008 Dario Carluccio (hr20-at-carluccio-dot-de)
+ *				2009 Thomas Vosshagen (mod. for THERMOTronic) (openhr20-at-vosshagen-dot-com)
  *
  *  license:    This program is free software; you can redistribute it and/or
  *              modify it under the terms of the GNU Library General Public
@@ -26,7 +27,7 @@
 /*!
  * \file       adc.h
  * \brief      header file for adc.c, functions to control A/D Converter
- * \author     Dario Carluccio <hr20-at-carluccio-dot-de>
+ * \author     Dario Carluccio <hr20-at-carluccio-dot-de> Thomas Vosshagen (mod. for THERMOTronic) <openhr20-at-vosshagen-dot-com>
  * \date       $Date$
  * $Rev$
  */
@@ -37,9 +38,15 @@
 *****************************************************************************/
 
 // hardware configuration 
+#ifdef THERMOTRONIC
+#define ADC_TEMP_MUX       0x00    //!< ADC-Channel for Temp-Sensor (ADMUX)
+#define ADC_UB_MUX         0x1E    //!< ADC-Channel for Ub          (ADMUX)
+#define ADC_ACT_TEMP       PF2   //!< Bit to activate the TempSensor
+#else
 #define ADC_TEMP_MUX       0x02    //!< ADC-Channel for Temp-Sensor (ADMUX)
 #define ADC_UB_MUX         0x1E    //!< ADC-Channel for Ub          (ADMUX)
 #define ADC_ACT_TEMP       PF3     //!< Bit to activate the TempSensor
+#endif
 #define ADC_ACT_TEMP_P     PORTF   //!< Prot of ADC_ACT_TEMP
 
 #define TEMP_RING_TYPE 1
@@ -49,7 +56,11 @@
 #define temp_difference (ring_difference[TEMP_RING_TYPE])
 #define bat_difference (ring_difference[BAT_RING_TYPE])
 
+#ifdef THERMOTRONIC
+#define TEMP_CAL_OFFSET 380 // offset of calibration points [ADC units]
+#else
 #define TEMP_CAL_OFFSET 256 // offset of calibration points [ADC units]
+#endif
 #define TEMP_CAL_STEP 500 // step between 2 calibration points [1/100�C]
 #define TEMP_CAL_N 7 // // No. Values
 

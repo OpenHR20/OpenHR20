@@ -8,6 +8,7 @@
  *              GCC 4.2.2
  *
  *  copyright:  2008 Jiri Dobry (jdobry-at-centrum-dot-cz)
+ *				2009 Thomas Vosshagen (mod. for THERMOTronic) (openhr20-at-vosshagen-dot-com)
  *
  *  license:    This program is free software; you can redistribute it and/or
  *              modify it under the terms of the GNU Library General Public
@@ -26,7 +27,7 @@
 /*!
  * \file       keyboard.c
  * \brief      the keyboard scan for Open HR20 project
- * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>
+ * \author     Jiri Dobry <jdobry-at-centrum-dot-cz> Thomas Vosshagen (mod. for THERMOTronic) <openhr20-at-vosshagen-dot-com>
  * \date       $Date$
  * $Rev$
  */
@@ -183,6 +184,9 @@ void task_keyboard_long_press_detect(void) {
  *  - read keyboard status
  ******************************************************************************/
 bool mont_contact_pooling(void){
+#ifdef THERMOTRONIC
+	return 1; //no contact - exit!
+#else
     bool mont_contact;
     enable_mont_input();
     nop(); nop();
@@ -204,6 +208,7 @@ bool mont_contact_pooling(void){
         if (mont_contact & KBI_PROG) return 3;
         return 1;
     }
+#endif
 }
 
 

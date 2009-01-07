@@ -8,6 +8,7 @@
  *              GCC 4.2.2
  *
  *  copyright:  2008 Dario Carluccio (hr20-at-carluccio-dot-de)
+ *				2009 Thomas Vosshagen (mod. for THERMOTronic) (openhr20-at-vosshagen-dot-com)
  *
  *  license:    This program is free software; you can redistribute it and/or
  *              modify it under the terms of the GNU Library General Public
@@ -26,7 +27,7 @@
 /*!
  * \file       motor.h
  * \brief      header file for motor.c, functions to control the HR20 motor
- * \author     Dario Carluccio <hr20-at-carluccio-dot-de>
+ * \author     Dario Carluccio <hr20-at-carluccio-dot-de> Thomas Vosshagen (mod. for THERMOTronic) <openhr20-at-vosshagen-dot-com>
  * \date       $Date$
  * $Rev$
  */
@@ -42,23 +43,34 @@
 
 static inline void MOTOR_H_BRIDGE_open(void) {
    PORTG  =  (1<<PG4);   // PG3 LOW, PG4 HIGH
+#ifndef THERMOTRONIC   //not needed (no enable-Pin for motor) 
    PORTB |=  (1<<PB7);   // PB7 HIGH
+#endif
 }
 static inline void MOTOR_H_BRIDGE_close(void) {
    PORTG  =  (1<<PG3);   // PG3 HIGH, PG4 LOW
+#ifndef THERMOTRONIC   //not needed (no enable-Pin for motor) 
    PORTB &= ~(1<<PB7);   // PB7 LOW
+#endif
 }
 static inline void MOTOR_H_BRIDGE_stop(void) {
    PORTG  =  0;          // PG3 LOW, PG4 LOW
+#ifndef THERMOTRONIC   //not needed (no enable-Pin for motor) 
    PORTB &= ~(1<<PB7);   // PB7 LOW
+#endif
 }
 
 
 //! How many photoeye impulses maximal form one endposition to the other. <BR>
-//! The value measured on a HR20 are 737 to 740 = so more than 1000 should
+//! The value measured on a HR20 are 737 to 740 (385 - 390 for THERMOTRONIC)= so more than 1000 (500) should
 //! never occure if it is mounted
+#ifdef THERMOTRONIC
+#define	MOTOR_MAX_IMPULSES 500
+#define	MOTOR_MIN_IMPULSES 50
+#else
 #define	MOTOR_MAX_IMPULSES 1000
 #define	MOTOR_MIN_IMPULSES 100
+#endif
 #define MOTOR_MAX_VALID_TIMER 20000
 #define MOTOR_UPDATE_IMPULSES_THLD  40
 #define MOTOR_IGNORE_IMPULSES       2

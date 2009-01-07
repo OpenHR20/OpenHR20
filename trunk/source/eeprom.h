@@ -8,6 +8,7 @@
  *              GCC 4.2.2
  *
  *  copyright:  2008 Jiri Dobry (jdobry-at-centrum-dot-cz)
+ *				2009 Thomas Vosshagen (mod. for THERMOTronic) (openhr20-at-vosshagen-dot-com)
  *
  *  license:    This program is free software; you can redistribute it and/or
  *              modify it under the terms of the GNU Library General Public
@@ -26,7 +27,7 @@
 /*!
  * \file       eeprom.h
  * \brief      Keyboard driver header
- * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>
+ * \author     Jiri Dobry <jdobry-at-centrum-dot-cz> Thomas Vosshagen (mod. for THERMOTronic) <openhr20-at-vosshagen-dot-com>
  * \date       $Date$
  * $Rev$
  */
@@ -140,9 +141,9 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
 // /*idx*/ {value,  default,    min,    max},
   /* 00 */  {14,        14,         0,      15},    //!< lcd_contrast  (unit 0.5stC)
   /* 01 */  {10,        10,  TEMP_MIN,TEMP_MAX},    //!< temperature 0  - frost protection (unit is 0.5stC)
-  /* 02 */  {34,        34,  TEMP_MIN,TEMP_MAX},    //!< temperature 1  - energy save (unit is 0.5stC)
-  /* 03 */  {42,        42,  TEMP_MIN,TEMP_MAX},    //!< temperature 2  - comfort (unit is 0.5stC)
-  /* 04 */  {48,        48,  TEMP_MIN,TEMP_MAX},    //!< temperature 3  - supercomfort (unit is 0.5stC)
+  /* 02 */  {33,        33,  TEMP_MIN,TEMP_MAX},    //!< temperature 1  - energy save (unit is 0.5stC)
+  /* 03 */  {40,        40,  TEMP_MIN,TEMP_MAX},    //!< temperature 2  - comfort (unit is 0.5stC)
+  /* 04 */  {42,        42,  TEMP_MIN,TEMP_MAX},    //!< temperature 3  - supercomfort (unit is 0.5stC)
   /* 05 */  {50,        50,         0,      255},   //!< P_Factor;
   /* 06 */  {3,          3,         0,      255},   //!< I_Factor;
 #if CONFIG_ENABLE_D
@@ -162,6 +163,15 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 11 */  {40,         40,       10,       90},   //!< motor_eye_noise_protect; motor eye noise protection in % of previous average 
   /* 12 */  {255,       255,        0,      255},   //!< manual calibration L
   /* 13 */  {255,       255,        0,      255},   //!< manual calibration H
+#ifdef THERMOTRONIC
+  /* 14 */  {605-TEMP_CAL_OFFSET,605-TEMP_CAL_OFFSET, 0,        255},   //!< value for 35C => 605 temperature calibration table 
+  /* 15 */  {645-605,645-605,      16,      255},   //!< value for 30C => 645 temperature calibration table
+  /* 16 */  {685-645,685-645,      16,      255},   //!< value for 25C => 685 temperature calibration table
+  /* 17 */  {825-685,825-685,      16,      255},   //!< value for 20C => 825 temperature calibration table
+  /* 18 */  {865-825,865-825,      16,      255},   //!< value for 15C => 865 temperature calibration table
+  /* 19 */  {905-865,905-865,      16,      255},   //!< value for 10C => 905 temperature calibration table
+  /* 1a */  {945-905,945-905,      16,      255},   //!< value for 05C => 945 temperature calibration table
+#else
   /* 14 */  {295-TEMP_CAL_OFFSET,295-TEMP_CAL_OFFSET, 0,        255},   //!< value for 35C => 295 temperature calibration table 
   /* 15 */  {340-295,340-295,      16,      255},   //!< value for 30C => 340 temperature calibration table
   /* 16 */  {397-340,397-340,      16,      255},   //!< value for 25C => 397 temperature calibration table
@@ -169,6 +179,7 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 18 */  {549-472,549-472,      16,      255},   //!< value for 15C => 549 temperature calibration table
   /* 19 */  {614-549,614-549,      16,      255},   //!< value for 10C => 614 temperature calibration table
   /* 1a */  {675-614,675-614,      16,      255},   //!< value for 05C => 675 temperature calibration table
+#endif
   /* 1b */  {0,           0,        0,        1},   //!< timer_mode; =0 only one program, =1 programs for weekdays 
   /* 1c */  {120,       120,       80,      160},   //!< bat_warning_thld; treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
   /* 1d */  {100,       100,       80,      160},   //!< bat_low_thld; treshold for battery low [unit 0.02V]=[unit 0.01V per cell]

@@ -9,6 +9,7 @@
  *
  *  copyright:  2008 Dario Carluccio (hr20-at-carluccio-dot-de)
  *              2008 Jiri Dobry (jdobry-at-centrum-dot-cz) 
+ *				2009 Thomas Vosshagen (mod. for THERMOTronic) (openhr20-at-vosshagen-dot-com)
  *
  *  license:    This program is free software; you can redistribute it and/or
  *              modify it under the terms of the GNU Library General Public
@@ -27,7 +28,7 @@
 /*!
  * \file       motor.c
  * \brief      functions to control the HR20 motor
- * \author     Dario Carluccio <hr20-at-carluccio-dot-de>; Jiri Dobry <jdobry-at-centrum-dot-cz>
+ * \author     Dario Carluccio <hr20-at-carluccio-dot-de>; Jiri Dobry <jdobry-at-centrum-dot-cz> Thomas Vosshagen (mod. for THERMOTronic) <openhr20-at-vosshagen-dot-com>
  * \date       $Date$
  * $Rev$
  */
@@ -229,11 +230,19 @@ static void MOTOR_Control(motor_dir_t direction) {
     if (direction == stop){                             // motor off
         // photo eye
         TIMSK0 = 0;                                     // disable interrupt
+#ifdef THERMOTRONIC
+        PCMSK0 &= ~(1<<PCINT1);                         // disable interrupt
+        MOTOR_HR20_PE3_P |= (1<<MOTOR_HR20_PE3);       // deactivate photo eye
+		MOTOR_H_BRIDGE_stop();
+        // stop pwm signal
+        TCCR0A = 0;
+#else
         PCMSK0 &= ~(1<<PCINT4);                         // disable interrupt
         MOTOR_HR20_PE3_P &= ~(1<<MOTOR_HR20_PE3);       // deactivate photo eye
 		MOTOR_H_BRIDGE_stop();
         // stop pwm signal
         TCCR0A = (1<<WGM00) | (1<<WGM01); // 0b 0000 0011
+#endif
 	    MOTOR_Dir = stop;
     } else {                                            // motor on
         if (MOTOR_Dir != direction){
@@ -250,20 +259,28 @@ static void MOTOR_Control(motor_dir_t direction) {
             TIFR0 = (1<<TOV0);
             TCNT0 = 0;
             TIMSK0 = (1<<TOIE0); //enable interrupt from timer0 overflow
-            // PCMSK0 |= (1<<PCINT4);  // enable interrupt from eye
+            // PCMSK0 |= (1<<PCINT1);  // enable interrupt from eye
             if ( direction == close) {
                 // set pins of H-Bridge
                 MOTOR_H_BRIDGE_close();
+#ifdef THERMOTRONIC
+				TCCR0A = (1<<CS00); //start timer (no PWM)
+#else
                 // set PWM non inverting mode
 	            OCR0A = config.motor_speed_close; // set pwm value
                 TCCR0A = (1<<WGM00) | (1<<WGM01) | (1<<COM0A1) | (1<<CS00);
+#endif
             // close
             } else {
                 // set pins of H-Bridge
 				MOTOR_H_BRIDGE_open();
+#ifdef THERMOTRONIC
+				TCCR0A = (1<<CS00); //start timer (no PWM)
+#else
                 // set PWM inverting mode
 	            OCR0A = config.motor_speed_open;  // set pwm value
                 TCCR0A=(1<<WGM00)|(1<<WGM01)|(1<<COM0A1)|(1<<COM0A0)|(1<<CS00);
+#endif
             }
 		}
     }
@@ -394,12 +411,20 @@ ISR (PCINT0_vect){
 	#endif
     // motor eye
     // count only on HIGH impulses
+#ifdef THERMOTRONIC
+    if ((PCMSK0 & (1<<PCINT1)) && ((pine & ~pine_last & (1<<PE1)) != 0)) {
+#else
     if ((PCMSK0 & (1<<PCINT4)) && ((pine & ~pine_last & (1<<PE4)) != 0)) {
+#endif
         MOTOR_PosAct+=MOTOR_Dir;
         motor_diag = motor_diag_cnt;
         motor_diag_cnt=0;
         task|=TASK_MOTOR_PULSE;
+#ifdef THERMOTRONIC
+        PCMSK0 &= ~(1<<PCINT1); // disable eye interrupt
+#else
         PCMSK0 &= ~(1<<PCINT4); // disable eye interrupt
+#endif
         if (MOTOR_PosAct == MOTOR_PosStop) {
             // motor will be stopped after MOTOR_RUN_OVERLOAD time
             eye_timer = 0xffff;
@@ -428,7 +453,11 @@ ISR (TIMER0_OVF_vect){
                 if (e != 0xffff) eye_timer=e-1;      
             } else {
                 pine_last = 0;
+#ifdef THERMOTRONIC
+                PCMSK0 |= (1<<PCINT1); // enable eye interrupt
+#else
                 PCMSK0 |= (1<<PCINT4); // enable eye interrupt
+#endif
             }
         }
     } else {
@@ -436,9 +465,15 @@ ISR (TIMER0_OVF_vect){
         // motor fast STOP
         MOTOR_H_BRIDGE_stop();
         // complete STOP will be done later
+#ifdef THERMOTRONIC
+		TCCR0A = 0;//tvossi (1<<WGM00) | (1<<WGM01); // 0b 0000 0011
+        task|=(TASK_MOTOR_STOP);
+        PCMSK0 &= ~(1<<PCINT1); // disable eye interrupt
+#else
 		TCCR0A = (1<<WGM00) | (1<<WGM01); // 0b 0000 0011
         task|=(TASK_MOTOR_STOP);
         PCMSK0 &= ~(1<<PCINT4); // disable eye interrupt
+#endif
 
     }
 }

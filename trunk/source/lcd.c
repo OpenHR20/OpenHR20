@@ -9,6 +9,7 @@
  *
  *  copyright:  2008 Dario Carluccio (hr20-at-carluccio-dot-de)
  * 				2008 Jiri Dobry (jdobry-at-centrum-dot-cz)
+ *				2009 Thomas Vosshagen (mod. for THERMOTronic) (openhr20-at-vosshagen-dot-com)
  *
  *  license:    This program is free software; you can redistribute it and/or
  *              modify it under the terms of the GNU Library General Public
@@ -27,7 +28,7 @@
 /*!
  * \file       lcd.c
  * \brief      functions to control the HR20 LCD
- * \author     Dario Carluccio <hr20-at-carluccio-dot-de>, Jiri Dobry <jdobry-at-centrum-dot-cz>
+ * \author     Dario Carluccio <hr20-at-carluccio-dot-de>, Jiri Dobry <jdobry-at-centrum-dot-cz> Thomas Vosshagen (mod. for THERMOTronic) <openhr20-at-vosshagen-dot-com>
  * \date       $Date$
  * $Rev$
  */
@@ -194,8 +195,13 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
 // Look-up table to adress element F for one Position. ( 32 : 10 )
 uint8_t LCD_FieldOffsetTablePrgMem[] PROGMEM =
 {
+#ifdef THERMOTRONIC
+    39,    //!<  Field 0
+    35,    //!<  Field 1              
+#else
     40,    //!<  Field 0
     36,    //!<  Field 1              
+#endif
     31,    //!<  Field 2
     27     //!<  Field 3
 };
@@ -459,11 +465,11 @@ void LCD_PrintHexW(uint16_t value, uint8_t mode)
  *  \note  You have to call \ref LCD_Update() to trigger update on LCD if not
  *         it is triggered automatically at change of bitframe
  *
- *  \note  range for desired temperature 5,0°C - 30°C, OFF and ON 
+ *  \note  range for desired temperature 5,0C - 30C, OFF and ON 
  *
  *  \param temp<BR>
  *     - TEMP_MIN-1          : \c OFF <BR>
- *     - TEMP_MIN to TEMP_MAX : temperature = temp/2  [5,0°C - 30°C]
+ *     - TEMP_MIN to TEMP_MAX : temperature = temp/2  [5,0C - 30C]
  *     - TEMP_MAX+1          : \c ON  <BR>
  *     -    other: \c invalid <BR>
  *  \param mode  \ref LCD_MODE_ON, \ref LCD_MODE_OFF, \ref LCD_MODE_BLINK_1
@@ -500,8 +506,8 @@ void LCD_PrintTemp(uint8_t temp, uint8_t mode)
  *
  *
  *  \param temp temperature in 1/100 deg C<BR>
- *     min:  -999 => -9,9°C
- *     max:  9999 => 99,9°C
+ *     min:  -999 => -9,9C
+ *     max:  9999 => 99,9C
   *  \param mode  \ref LCD_MODE_ON, \ref LCD_MODE_OFF, \ref LCD_MODE_BLINK_1
  ******************************************************************************/
 void LCD_PrintTempInt(int16_t temp, uint8_t mode)
@@ -521,14 +527,14 @@ void LCD_PrintTempInt(int16_t temp, uint8_t mode)
         temp = -temp;    
     } 
 
-    // 1/100°C not printed
+    // 1/100C not printed
     LCD_PrintDec3(temp/10, 1, mode);
     
     if (neg){
         // negative Temp      
         LCD_PrintChar(LCD_CHAR_neg, 3, mode);
     } else if (temp < 1000){
-        // Temp < 10°C
+        // Temp < 10C
         LCD_PrintChar(LCD_CHAR_NULL, 3, mode);
     }                             
 

@@ -9,6 +9,7 @@
  *
  *  copyright:  2008 Juergen Sachs (juergen-sachs-at-gmx-dot-de)
  *				2008 Jiri Dobry (jdobry-at-centrum-dot-cz)
+ *				2009 Thomas Vosshagen (mod. for THERMOTronic) (openhr20-at-vosshagen-dot-com)
  *
  *  license:    This program is free software; you can redistribute it and/or
  *              modify it under the terms of the GNU Library General Public
@@ -27,7 +28,7 @@
 /*!
  * \file       config.h
  * \brief      This headerfile only contains information about the configuration of the HR20E and its functionality
- * \author     Juergen Sachs (juergen-sachs-at-gmx-dot-de) Jiri Dobry <jdobry-at-centrum-dot-cz>
+ * \author     Juergen Sachs (juergen-sachs-at-gmx-dot-de) Jiri Dobry <jdobry-at-centrum-dot-cz> Thomas Vosshagen (mod. for THERMOTronic) <openhr20-at-vosshagen-dot-com>
  * \date       $Date$
  * $Rev$
  */
@@ -46,7 +47,6 @@ In this file we define only configuration parameters, for example what kind of c
 #include <avr/pgmspace.h>
 #include <avr/sleep.h>
 #include <avr/version.h>
-
 
 #define LANG_uni 1
 #define LANG_de 2
@@ -68,6 +68,7 @@ In this file we define only configuration parameters, for example what kind of c
 
 // Parameters for the COMM-Port
 #define COM_BAUD_RATE 9600
+#ifndef THERMOTRONIC //No serialport implementet yet
 // Note we should only enable of of the following at one time
 /* we support RS232 */
 #define COM_RS232 1
@@ -75,14 +76,15 @@ In this file we define only configuration parameters, for example what kind of c
 /* #define COM_RS485  */
 /* Our default Adress, if not set or invalid */
 /* #define COM_DEF_ADR 1 */
+#endif
 
 #define DEFAULT_TEMPERATURE 2000 
 
 
 // Some default Values
 #define BOOT_DD         1  //!< Boot-Up date: day
-#define BOOT_MM        10  //!< Boot-Up date: month
-#define BOOT_YY         8  //!< Boot-Up date: year
+#define BOOT_MM         1  //!< Boot-Up date: month
+#define BOOT_YY         9  //!< Boot-Up date: year
 #define BOOT_hh        12  //!< Boot-Up time: hour
 #define BOOT_mm        00  //!< Boot-Up time: minutes
 

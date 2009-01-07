@@ -44,9 +44,18 @@
 # Changes:
 # 5.4.2008: Dario Carluccio
 #           command line parameters for "avr-size" on Linux and Windows.
+# 7.1.2009: Jiri Dobry
+#           modification for THERMOTRONIC
+
+# HW = THERMOTRONIC
+HW = HONEYWELL 
 
 # MCU name
-MCU = atmega169p
+ifeq ($(HW),THERMOTRONIC)
+    MCU = atmega169
+else
+    MCU = atmega169p
+endif    
 
 
 # Processor frequency.
@@ -81,11 +90,13 @@ eeprom.c \
 keyboard.c \
 menu.c \
 pid.c \
-rs232_485_hw.c \
 com.c \
 watch.c \
 controller.c
 
+ifneq ($(HW),THERMOTRONIC)
+    SRC += rs232_485_hw.c
+endif
 
 # List C++ source files here. (C dependencies are automatically generated.)
 CPPSRC = 
@@ -169,6 +180,10 @@ CFLAGS += -Wstrict-prototypes
 CFLAGS += -Wa,-adhlns=$(<:%.c=$(OBJDIR)/%.lst)
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 CFLAGS += $(CSTANDARD)
+
+ifeq ($(HW),THERMOTRONIC)
+    CFLAGS += -DTHERMOTRONIC=1
+endif
 
 
 #---------------- Compiler Options C++ ----------------
