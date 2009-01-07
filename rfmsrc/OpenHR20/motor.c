@@ -210,7 +210,7 @@ static uint8_t motor_diag_ignore=MOTOR_IGNORE_IMPULSES;
 
 /*!
  *******************************************************************************
- * controll motor movement
+ * control motor movement
  *
  * \param  direction motordirection
  *         - stop
@@ -442,7 +442,7 @@ ISR (PCINT0_vect){
  *******************************************************************************
  * Timer0 overflow interupt
  * runs at 15,625 kHz (variant 1953.125)
- * \note Timer0 is active only if motor runing
+ * \note Timer0 is only active if the motor is running
  ******************************************************************************/
 ISR (TIMER0_OVF_vect){
     motor_diag_cnt++;

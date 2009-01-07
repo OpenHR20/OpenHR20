@@ -290,12 +290,12 @@ void LCD_AllSegments(uint8_t mode)
  *******************************************************************************
  *  Print char in LCD field
  *
- *  \note  segments insinde one 7 segment array are adressed using adress of
- *         segment "F" \ref LCD_FieldOffsetTablePrgMem[] as base adress adding
+ *  \note  segments inside one 7 segment array are adressed using address of
+ *         segment "F" \ref LCD_FieldOffsetTablePrgMem[] as base address adding
  *         \ref LCD_SegOffsetTablePrgMem[] *
  *
  *  \note  You have to call \ref LCD_Update() to trigger update on LCD if not
- *         it is triggered automatic at change of bitframe
+ *         it is triggered automatically at change of bitframe
  *
  *  \param value char to print see \ref LCD_CharTablePrgMem[]
  *  \param pos   position in lcd 0=right to 3=left <tt> 32 : 10 </tt>
@@ -338,7 +338,7 @@ void LCD_PrintChar(uint8_t value, uint8_t pos, uint8_t mode)
  *  Print Hex value in LCD field
  *
  *  \note  You have to call \ref LCD_Update() to trigger update on LCD if not
- *         it is triggered automatic at change of bitframe
+ *         it is triggered automatically at change of bitframe
  *
  *  \param value value to be printed (0-0xff)
  *  \param pos   position in lcd 0:left, 1:right
@@ -365,7 +365,7 @@ void LCD_PrintHex(uint8_t value, uint8_t pos, uint8_t mode)
  *  Print decimal value in LCD field (only 2 digits)
  *
  *  \note You have to call \ref LCD_Update() to trigger update on LCD if not
- *        it is triggered automatic at change of bitframe
+ *        it is triggered automatically at change of bitframe
  *
  *  \param value value to be printed (0-99)
  *  \param pos   position in lcd 
@@ -390,7 +390,7 @@ void LCD_PrintDec(uint8_t value, uint8_t pos, uint8_t mode)
  *  Print decimal value in LCD field (3 digits)
  *
  *  \note You have to call \ref LCD_Update() to trigger update on LCD if not
- *        it is triggered automatic at change of bitframe
+ *        it is triggered automatically at change of bitframe
  *
  *  \param value value to be printed (0-255)
  *  \param pos   position in lcd
@@ -411,7 +411,7 @@ void LCD_PrintDec3(uint8_t value, uint8_t pos, uint8_t mode)
  *  Print decimal uint16 value in LCD field
  *
  *  \note You have to call \ref LCD_Update() to trigger update on LCD if not
- *        it is triggered automatic at change of bitframe
+ *        it is triggered automatically at change of bitframe
  *
  *  \param value value to be printed (0-9999)
  *  \param mode  \ref LCD_MODE_ON, \ref LCD_MODE_OFF, \ref LCD_MODE_BLINK_1
@@ -436,7 +436,7 @@ void LCD_PrintDecW(uint16_t value, uint8_t mode)
  *  Print hex uint16 value in LCD field
  *
  *  \note You have to call \ref LCD_Update() to trigger update on LCD if not
- *        it is triggered automatic at change of bitframe
+ *        it is triggered automatically at change of bitframe
  *
  *  \param value value to be printed (0-0xffff)
  *  \param mode  \ref LCD_MODE_ON, \ref LCD_MODE_OFF, \ref LCD_MODE_BLINK_1
@@ -457,7 +457,7 @@ void LCD_PrintHexW(uint16_t value, uint8_t mode)
  *  Print BYTE as temperature on LCD (desired temperature)
  *
  *  \note  You have to call \ref LCD_Update() to trigger update on LCD if not
- *         it is triggered automatic at change of bitframe
+ *         it is triggered automatically at change of bitframe
  *
  *  \note  range for desired temperature 5,0°C - 30°C, OFF and ON 
  *
@@ -496,7 +496,7 @@ void LCD_PrintTemp(uint8_t temp, uint8_t mode)
  *  Print INT as temperature on LCD (measured temperature)
  *
  *  \note  You have to call \ref LCD_Update() to trigger update on LCD if not
- *         it is triggered automatic at change of bitframe
+ *         it is triggered automatically at change of bitframe
  *
  *
  *  \param temp temperature in 1/100 deg C<BR>
@@ -561,7 +561,7 @@ void LCD_PrintStringID(uint8_t id, uint8_t mode) {
  *  Set segment of the hour-bar
  *
  *  \note  You have to call \ref LCD_Update() to trigger update on LCD if not
- *         it is triggered automatic at change of bitframe
+ *         it is triggered automatically at change of bitframe
  *
  *  \param seg No of the hour bar segment 0-23
  *  \param mode  \ref LCD_MODE_ON, \ref LCD_MODE_OFF, \ref LCD_MODE_BLINK_1
@@ -580,7 +580,7 @@ void LCD_SetHourBarSeg(uint8_t seg, uint8_t mode)
  *  Set all segments of the hour-bar (ON/OFF) like bitmap
  *
  *  \note  You have to call \ref LCD_Update() to trigger update on LCD if not
- *         it is triggered automatic at change of bitframe
+ *         it is triggered automatically at change of bitframe
  *
  *  \param bitmap of hour bar segment 0-23 (bit0 is segment0 etc.)
  *  \note blink is not supported
@@ -624,10 +624,10 @@ void LCD_HourBarBitmap(uint32_t bitmap)
 
 /*!
  *******************************************************************************
- *  Set all segment from left up to val and clear all other segments
+ *  Set all segments from left up to val and clear all other segments
  *
  *  \note  You have to call \ref LCD_Update() to trigger update on LCD if not
- *         it is triggered automatic at change of bitframe
+ *         it is triggered automatically at change of bitframe
  *
  *  \param seg No of the last hour bar segment to be set 0-23
  *  \param mode  \ref LCD_MODE_ON, \ref LCD_MODE_OFF, \ref LCD_MODE_BLINK_1
@@ -657,7 +657,7 @@ void LCD_SetHourBarBar(uint8_t val, uint8_t mode)
  *  Set only one segment and clear all others
  *
  *  \note You have to call \ref LCD_Update() to trigger update on LCD if not
- *         it is triggered automatic at change of bitframe
+ *         it is triggered automatically at change of bitframe
  *
  *  \param seg No of the hour bar segment to be set 0-23
  *  \param mode  \ref LCD_MODE_ON, \ref LCD_MODE_OFF, \ref LCD_MODE_BLINK_1
@@ -755,7 +755,7 @@ void LCD_ClearNumbers(void)
  *  Set segment of LCD
  *
  *  \note  You have to call \ref LCD_Update() to trigger update on LCD if not
- *         it is triggered automatic at change of bitframe
+ *         it is triggered automatically at change of bitframe
  *
  *  \param seg No of the segment to be set see \ref LCD_SEG_B0 ...
  *  \param mode  \ref LCD_MODE_ON, \ref LCD_MODE_OFF, \ref LCD_MODE_BLINK_1
@@ -807,7 +807,7 @@ void LCD_SetSeg(uint8_t seg, uint8_t mode)
  *******************************************************************************
  *  Calculate used bitplanes
  *
- *	\note used only for update LCD, in any other cases intterupt is dissabled
+ *	\note used only for update LCD, in any other cases intterupt is disabled
  *  \note copy LCD_Data to LCDREG
  *
  ******************************************************************************/
@@ -850,7 +850,7 @@ uint8_t LCD_force_update=0;        //!< \brief force update LCD
  *******************************************************************************
  *  LCD Interrupt Routine
  *
- *	\note used only for update LCD, in any other cases intterupt is dissabled
+ *	\note used only for update LCD, in any other cases intterupt is disabled
  *  \note copy LCD_Data to LCDREG
  *
  ******************************************************************************/
@@ -895,7 +895,7 @@ void task_lcd_update(void) {
  *******************************************************************************
  *  LCD Interrupt Routine
  *
- *	\note used only for update LCD, in any other cases intterupt is dissabled
+ *	\note used only for update LCD, in any other cases intterupt is disabled
  *  \note copy LCD_Data to LCDREG
  *
  ******************************************************************************/

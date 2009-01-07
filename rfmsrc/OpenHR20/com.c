@@ -392,7 +392,7 @@ static void print_idx(char t) {
  *******************************************************************************
  *  \brief parse command
  *
- *  \note command have FIXED format
+ *  \note commands have FIXED format
  *  \note command X.....\n    - X is upcase char as commad name, \n is termination char
  *  \note hex numbers use ONLY lowcase chars, upcase is reserved for commands
  *  \note   V\n - print version information

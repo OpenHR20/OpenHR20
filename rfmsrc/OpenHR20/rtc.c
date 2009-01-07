@@ -245,7 +245,7 @@ uint16_t RTC_DowTimerGet(rtc_dow_t dow, uint8_t slot, timermode_t *timermode)
  *  get timer for dow and time
  *  
  *  \param exact=true time must be equal  
- *  \param dow - day if week
+ *  \param dow - day of week
  *  \param time - time in minutes   
  *
  *  \returns  index of timer
@@ -285,7 +285,7 @@ static uint8_t RTC_FindTimerRawIndex(uint8_t dow,uint16_t time_minutes) {
 /*!
  *******************************************************************************
  *
- *  get bour bar bitmap for DOW
+ *  get hour bar bitmap for DOW
  *
  *  \returns bitmap
  *  

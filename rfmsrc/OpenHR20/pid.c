@@ -25,7 +25,7 @@
 
 /*!
  * \file       pid.c
- * \brief      optimized version of PID controler for free HR20E project
+ * \brief      optimized version of the PID controller for free HR20E project
  * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>, inspired from AVR221
  * \date       $Date$
  * $Rev$
@@ -54,7 +54,7 @@ int16_t sumError=0;
 #define I_Factor (config.I_Factor)
 //! The Derivative tuning constant, multiplied with scalling_factor
 #define D_Factor (config.D_Factor)
-//! The scalling_factor for PID constants
+//! The scalling_factor for PID constants \TODO scalling > scaling
 #define scalling_factor  (config.scalling_factor)
 
 #if CONFIG_ENABLE_D

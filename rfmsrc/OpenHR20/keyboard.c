@@ -25,7 +25,7 @@
 
 /*!
  * \file       keyboard.c
- * \brief      the main file for Open HR20 project
+ * \brief      the keyboard scan for Open HR20 project
  * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>
  * \date       $Date$
  * $Rev$
@@ -57,7 +57,7 @@ static bool allow_rewoke = false;
 
 /*!
  *******************************************************************************
- *  Recognize keypress and whell
+ *  Recognize keypress and wheel
  *
  *  \note
  ******************************************************************************/
@@ -110,7 +110,7 @@ void task_keyboard(void) {
 				allow_rewoke = false;
     		}
     	}
-		if (kb_timeout) { // keyboard noise cancelation
+		if (kb_timeout) { // keyboard noise cancellation
             kb_timeout = false;
             // while (ASSR & (1<<OCR2UB)) {;} //this is not needed; kb_timeout==true means that OCR2A must be free
             OCR2A = TCNT2 + KEYBOARD_NOISE_CANCELATION;
@@ -185,7 +185,7 @@ bool mont_contact_pooling(void){
     bool mont_contact;
     enable_mont_input();
     nop(); nop();
-    // crazy oder of instructions, bud we need any instructions
+    // crazy order of instructions, but we need any instructions
     // between PORTB setting and reading PINB due to AVR design
     #if DEBUG_IGNORE_MONT_CONTACT==1
         mont_contact= 1;
@@ -208,7 +208,7 @@ bool mont_contact_pooling(void){
 
 /*!
  *******************************************************************************
- * Interupt Routine
+ * Interrupt Routine
  *
  *  - create task for keyboard scan and wake up
  *  - read keyboard status

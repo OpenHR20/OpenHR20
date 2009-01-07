@@ -379,7 +379,7 @@ bool menu_controller(bool new_state) {
 
 /*!
  *******************************************************************************
- * view helpers funcion for clear display
+ * view helper funcions for clear display
  *******************************************************************************/
 /*
     // not used generic version, easy to read but longer code
