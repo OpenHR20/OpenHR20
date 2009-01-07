@@ -352,13 +352,13 @@ static void print_idx(char t) {
  *******************************************************************************
  *  \brief parse command
  *
- *  \note command have FIXED format
+ *  \note commands have FIXED format
  *  \note command X.....\n    - X is upcase char as commad name, \n is termination char
  *  \note hex numbers use ONLY lowcase chars, upcase is reserved for commands
  *  \note   V\n - print version information
  *  \note   D\n - print status line 
- *  \note   Taa\n - print watched wariable aa (return 2 or 4 hex numbers) see to \ref watch.c
- *  \note   Gaa\n - get configuration byte wit hex address aa see to \ref eeprom.h 0xff address returns EEPROM layout version
+ *  \note   Taa\n - print watched variable aa (return 2 or 4 hex numbers) see to \ref watch.c
+ *  \note   Gaa\n - get configuration byte with hex address aa see to \ref eeprom.h 0xff address returns EEPROM layout version
  *  \note   Saadd\n - set configuration byte aa to value dd (hex)
  *  \note   Rab\n - get timer for day a slot b, return cddd=(timermode c time ddd) (hex)
  *  \note   Wabcddd\n - set timer  for day a slot b timermode c time ddd (hex)

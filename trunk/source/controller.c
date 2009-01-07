@@ -45,10 +45,10 @@
 #include "controller.h"
 
 // global Vars for default values: temperatures and speed
-uint8_t CTL_temp_wanted=0;   // actual desired temperatur
-uint8_t CTL_temp_wanted_last=0xff;   // desired temperatur value used for last PID control
-uint8_t CTL_temp_auto=0;   // actual desired temperatur by timer
-bool CTL_mode_auto=true;   // actual desired temperatur by timer
+uint8_t CTL_temp_wanted=0;   // actual desired temperature
+uint8_t CTL_temp_wanted_last=0xff;   // desired temperature value used for last PID control
+uint8_t CTL_temp_auto=0;   // actual desired temperature by timer
+bool CTL_mode_auto=true;   // actual desired temperature by timer
 uint8_t CTL_mode_window = 0; // open window
 uint16_t CTL_open_window_timeout;
 

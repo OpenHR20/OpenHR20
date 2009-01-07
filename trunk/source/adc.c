@@ -62,7 +62,7 @@ volatile uint8_t sleep_with_ADC=0;
  *******************************************************************************
  * Ring buffer for last minute
  * 
- * make average for  last 15 second
+ * make average for last 15 seconds
  * used for calculate 1 minute difference
  ******************************************************************************/
 	
@@ -150,7 +150,7 @@ int16_t ADC_Get_Bat_Voltage(uint16_t adc)             // Get Batteriy Voltage in
 
 /*!
  *******************************************************************************
- *  Get Batteriy status
+ *  Get battery status
  *
  *  \returns false if battery is low
  *
@@ -166,9 +166,9 @@ bool ADC_Get_Bat_isOk(void)
 
 /*!
  *******************************************************************************
- *  convert ACD value to temperatur 
+ *  convert ACD value to temperature 
  *
- *  \returns temperatur in 1/100 degrees Celsius
+ *  \returns temperature in 1/100 degrees Celsius
  *
  *  \todo: store values for conversion in EEPROM 
  ******************************************************************************/
@@ -268,7 +268,7 @@ uint8_t task_ADC(void) {
 
 /*!
  *******************************************************************************
- * ADC Interupt
+ * ADC Interrupt
  *
  * \note not implemented at this time, to be more accurate use sleepmode and irq
  *
