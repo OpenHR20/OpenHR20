@@ -242,10 +242,14 @@ uint8_t task_ADC(void) {
 		sleep_with_ADC=1;
 		break;
 	case 4: //step 4
+	    sleep_with_ADC=1;
+	    break;
+	case 5: //step 5
         {
             int16_t t = ADC_Convert_To_Degree((uint16_t)ADCL | ((uint16_t)ADCH << 8));
             update_ring(TEMP_RING_TYPE,t);
             #if DEBUG_PRINT_MEASURE
+                //COM_debug_print_temperature((uint16_t)ADCL | ((uint16_t)ADCH << 8));
                 COM_debug_print_temperature(t);
             #endif
             shift_ring();
