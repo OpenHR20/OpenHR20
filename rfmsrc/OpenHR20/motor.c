@@ -253,17 +253,15 @@ static void MOTOR_Control(motor_dir_t direction) {
             TCNT0 = 0;
             TIMSK0 = (1<<TOIE0); //enable interrupt from timer0 overflow
             // PCMSK0 |= (1<<PCINT4);  // enable interrupt from eye
-        //    OCR0A = 0xc0;
+            OCR0A = 0xff;
             if ( direction == close) {
                 // set pins of H-Bridge
                 MOTOR_H_BRIDGE_close();
-	            OCR0A = 0xc0;
                 TCCR0A = (1<<WGM00) | (1<<WGM01) | (1<<COM0A1) | (1<<CS00);
             // close
             } else {
                 // set pins of H-Bridge
                 MOTOR_H_BRIDGE_open();
-    	        OCR0A = 0xc0;
                 TCCR0A=(1<<WGM00)|(1<<WGM01)|(1<<COM0A1)|(1<<COM0A0)|(1<<CS00);
             }
         }

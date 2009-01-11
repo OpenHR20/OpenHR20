@@ -529,7 +529,7 @@ void COM_debug_print_motor(int8_t dir, uint16_t m, uint8_t pwm) {
 #if DEBUG_PRINT_MEASURE
 void COM_debug_print_temperature(uint16_t t) {
     print_s_p(PSTR("T: "));
-    print_hexXXXX(t);
+    print_decXXXX(t);
     COM_putchar('\n');
     COM_flush();
 }
