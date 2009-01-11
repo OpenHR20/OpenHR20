@@ -503,12 +503,14 @@ void COM_commad_parse (void) {
 		}
 		if (c!='\0') COM_putchar('\n');
 		COM_flush();
-		rfm_start_tx();
+		#if (RFM==1)
+		  rfm_start_tx();
+		#endif
 	}
 }
 
 #if DEBUG_PRINT_MOTOR
-void COM_debug_print_motor(int8_t dir, uint16_t m) {
+void COM_debug_print_motor(int8_t dir, uint16_t m, uint8_t pwm) {
     if (dir>0) {
 		COM_putchar('+');
 	} else if (dir<0) {
@@ -516,6 +518,8 @@ void COM_debug_print_motor(int8_t dir, uint16_t m) {
 	}
     COM_putchar(' ');
 	print_hexXXXX(m);
+    COM_putchar(' ');
+	print_hexXX(pwm);
 
     COM_putchar('\n');
     COM_flush();
@@ -525,7 +529,7 @@ void COM_debug_print_motor(int8_t dir, uint16_t m) {
 #if DEBUG_PRINT_MEASURE
 void COM_debug_print_temperature(uint16_t t) {
     print_s_p(PSTR("T: "));
-    print_decXXXX(t);
+    print_hexXXXX(t);
     COM_putchar('\n');
     COM_flush();
 }
