@@ -1,0 +1,27 @@
+First version of hr20cmd for controlling a HR20E with openhr20 firmware
+(see http://openhr20.sourceforge.net/)
+
+Functions:
+	- get status
+	- set current date and time
+	- set wanted temperature
+	- set mode
+
+Requirements:
+	cmake
+	c-compiler
+
+How to compile:
+	just run
+		cmake . && make
+
+	run
+		./hr20cmd -h
+	for help
+
+Documentation:
+	run
+		doxygen
+
+Feel free to contact me 
+	bjoern at bjoern-b dot de
