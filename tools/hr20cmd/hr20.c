@@ -104,6 +104,26 @@ void hr20SetModeAuto()
 
 /*!
  ********************************************************************************
+ * hr20GetStatusLine
+ *
+ * gets the statusline from openhr20. still can't get a better solution than
+ * trying to read the line several times
+ *
+ * \param *line will return the statusline
+ *******************************************************************************/
+void hr20GetStatusLine(char *line)
+{
+	int i;
+	for(i=0; i < 5; i++)
+	{
+		serialCommand("D\r", line);
+		if(line[0] == 'D' )
+			break;
+	}
+}
+
+/*!
+ ********************************************************************************
  * hr20ParseStatusLine
  *
  * parses the status line you get with "D<CR>" and prints the results to stdout

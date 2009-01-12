@@ -155,7 +155,7 @@ int main(int argc, char* argv[])
 	if(!flags)
 	{
 		char response[255];
-		serialCommand("D\r", response);
+		hr20GetStatusLine(response);
 		hr20ParseStatusLine(response);
 	}
 
