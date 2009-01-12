@@ -60,8 +60,8 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
     /* 09 */ uint8_t pid_hysteresis;  
     /* 0a */ uint8_t PID_interval; //!< PID_interval*5 = interval in seconds    
     /* 0b */ uint8_t P_max;
-    /* 0c */ uint8_t motor_speed_min;   //!< min PWM for motor 
-    /* 0d */ uint8_t motor_speed_max;  //!< max PWM for motor
+    /* 0c */ uint8_t motor_pwm_min;   //!< min PWM for motor 
+    /* 0d */ uint8_t motor_pwm_max;  //!< max PWM for motor
         /*! TODO: describe  motor_protection and motor_hysteresis better, picture wanted */
     /* 0e */ uint8_t motor_protection;  //!< defines area for regulation valve as valve range - 2*motor_protection (1* on bottom 1* on top)
     /* 0f */ uint8_t motor_hysteresis; //!< additional impulses for 0 or 100% relative to area for regulation
@@ -182,13 +182,13 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 09 */  {120,       120,       20,      255},   //!< pid_hysteresis
   /* 0a */  {240/5,     240/5,      20/5,   255},   //!< PID_interval*5 = interval in seconds;  min=20sec, max=21.25 minutes
   /* 0b */  {25,         25,        1,       50},   //!< P_max
-  /* 0c */  {32,         32,        32,     255},   //!< min motor_speed PWM setting
-  /* 0d */  {250,       250,        180,    255},   //!< max motor_speed PWM setting
+  /* 0c */  {32,         32,        32,     255},   //!< min motor_pwm PWM setting
+  /* 0d */  {250,       250,        180,    255},   //!< max motor_pwm PWM setting
   /* 0e */  {30,         30,        0,      200},   //!< motor_protection
   /* 0f */  {10,         10,        0,      200},   //!< additional impulses for 0 or 100%
   /* 10 */  {130,       130,      110,      250},   //!< motor_end_detect_cal; stop timer threshold in % to previous average 
   /* 11 */  {150,       150,      110,      250},   //!< motor_end_detect_run; stop timer threshold in % to previous average 
-  /* 12 */  {192,       192,       10,      255},   //!< motor_speed
+  /* 12 */  {144,       144,       10,      255},   //!< motor_speed
   /* 13 */  {50,         50,       10,      200},   //!< motor_speed_ctl_gain
   /* 14 */  {10,         10,        1,       64},   //!< motor_pwm_max_step             
   /* 15 */  {40,         40,       10,       90},   //!< motor_eye_noise_protect; motor eye noise protection in % of previous average 
