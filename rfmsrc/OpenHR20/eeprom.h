@@ -188,7 +188,7 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 0f */  {10,         10,        0,      200},   //!< additional impulses for 0 or 100%
   /* 10 */  {130,       130,      110,      250},   //!< motor_end_detect_cal; stop timer threshold in % to previous average 
   /* 11 */  {150,       150,      110,      250},   //!< motor_end_detect_run; stop timer threshold in % to previous average 
-  /* 12 */  {144,       144,       10,      255},   //!< motor_speed
+  /* 12 */  {176,       176,       10,      255},   //!< motor_speed
   /* 13 */  {50,         50,       10,      200},   //!< motor_speed_ctl_gain
   /* 14 */  {10,         10,        1,       64},   //!< motor_pwm_max_step             
   /* 15 */  {40,         40,       10,       90},   //!< motor_eye_noise_protect; motor eye noise protection in % of previous average 

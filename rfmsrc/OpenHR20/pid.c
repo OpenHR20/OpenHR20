@@ -90,7 +90,7 @@ int8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old_result)
   }
 
   // Calculate Iterm and limit integral runaway  
-  if (abs(error16)<((int16_t)scalling_factor*50/P_Factor)) { 
+  if (abs(error16)<((int16_t)scalling_factor*config.P_max/P_Factor)) { 
       // update sumError only for error < limit of P
       sumError += error16;
   }
