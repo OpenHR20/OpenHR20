@@ -105,16 +105,23 @@ int8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old_result)
   } else if(sumError < -maxSumError){
     sumError = -maxSumError;
   }
-  pi_term = I_Factor * sumError;
-  // pi_term - > for overload limit: maximum is +- 255*12750 = 3251250
 
   error32 = (int32_t)error16 * (int32_t)abs(error16); // non linear P characteristic 
   error32 /= 100L; // P gain
   // error32 -> for overload limit: maximum is +-(4000*4000/200) = +-160000
 
   // Calculate Pterm
-  pi_term += (P_Factor * error32);
-  // pi_term - > for overload limit: maximum is +-(40800000+3251250) = +-44051250 
+  pi_term = (P_Factor * error32);
+  { 
+    uint16_t max_p_term = (uint16_t)scalling_factor * (uint16_t)(config.P_max);
+    if (pi_term > max_p_term) { pi_term = max_p_term; }
+    else if (pi_term < -(int32_t)max_p_term) { pi_term = -(int32_t)max_p_term; }
+  }
+  // pi_term - > for overload limit: maximum is +-(40800000+3251250) = +-44051250
+  
+  pi_term += I_Factor * sumError;
+  // pi_term - > for overload limit: maximum is +- 255*12750 = 3251250
+   
 
 #if CONFIG_ENABLE_D
   // Calculate Dterm

@@ -470,7 +470,7 @@ void COM_commad_parse (void) {
 }
 
 #if DEBUG_PRINT_MOTOR
-void COM_debug_print_motor(int8_t dir, uint16_t m) {
+void COM_debug_print_motor(int8_t dir, uint16_t m, uint8_t pwm) {
     if (dir>0) {
 		COM_putchar('+');
 	} else if (dir<0) {
@@ -478,6 +478,8 @@ void COM_debug_print_motor(int8_t dir, uint16_t m) {
 	}
     COM_putchar(' ');
 	print_hexXXXX(m);
+    COM_putchar(' ');
+	print_hexXX(pwm);
 
     COM_putchar('\n');
     COM_flush();

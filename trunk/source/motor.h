@@ -72,7 +72,6 @@ static inline void MOTOR_H_BRIDGE_stop(void) {
 #define	MOTOR_MIN_IMPULSES 100
 #endif
 #define MOTOR_MAX_VALID_TIMER 20000
-#define MOTOR_UPDATE_IMPULSES_THLD  40
 #define MOTOR_IGNORE_IMPULSES       2
 #define DEFAULT_motor_max_time_for_impulse 3072
 #define DEFAULT_motor_eye_noise_protection 120
@@ -102,4 +101,3 @@ extern volatile int16_t MOTOR_PosAct;
 extern volatile uint16_t motor_diag;
 extern int8_t MOTOR_calibration_step;
 extern uint16_t motor_diag_count;
-extern volatile uint16_t motor_max_time_for_impulse[2];

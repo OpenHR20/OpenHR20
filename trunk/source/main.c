@@ -1,4 +1,4 @@
-/*
+	/*
  *  Open HR20
  *
  *  target:     ATmega169 @ 4 MHz in Honnywell Rondostat HR20E
@@ -105,7 +105,6 @@ int main(void)
 
 	COM_init();
 
-
 	// We should do the following once here to have valid data from the start
 
 		
@@ -128,7 +127,7 @@ int main(void)
                 }
             }
 
-			if (sleep_with_ADC==1) {
+			if (sleep_with_ADC) {
 				sleep_with_ADC=0;
 				// start conversions
 		        ADCSRA |= (1<<ADSC);

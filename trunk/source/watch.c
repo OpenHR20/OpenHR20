@@ -61,8 +61,6 @@ static uint16_t watch_map[WATCH_N] PROGMEM = {
 	/* 08 */ ((uint16_t) &MOTOR_PosMax) + B16,
 	/* 09 */ ((uint16_t) &MOTOR_PosAct) + B16,
 	/* 0a */ ((uint16_t) &motor_diag_count) + B16,
-	/* 0b */ ((uint16_t) &motor_max_time_for_impulse[0]) + B16,
-	/* 0c */ ((uint16_t) &motor_max_time_for_impulse[1]) + B16,
 };
 
 uint16_t watch(uint8_t addr) {
