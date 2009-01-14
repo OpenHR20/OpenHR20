@@ -278,7 +278,7 @@ void MOTOR_timer_pulse(void) {
             motor_diag_sum += motor_diag;
             motor_diag_count++;
             {
-                int16_t chg = ((int16_t)((motor_diag+4)>>3)- (int16_t)config.motor_speed+4)
+                int16_t chg = ((int16_t)((motor_diag+4)>>3)- (int16_t)config.motor_speed)
                         *config.motor_speed_ctl_gain/100;
                 if (chg > config.motor_pwm_max_step) { chg=config.motor_pwm_max_step; }
                 else if (chg < -config.motor_pwm_max_step) chg=-config.motor_pwm_max_step;

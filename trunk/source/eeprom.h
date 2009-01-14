@@ -159,7 +159,7 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 08 */  {200,       200,        1,      255},   //!< scalling_factor / odd values is recomended
   /* 09 */  {120,       120,       20,      255},   //!< pid_hysteresis
   /* 0a */  {240/5,     240/5,      20/5,   255},   //!< PID_interval*5 = interval in seconds;  min=20sec, max=21.25 minutes
-  /* 0b */  {25,         25,        1,       50},   //!< P_max
+  /* 0b */  {100,        100,        1,      100},   //!< P_max (100 = most safe value not energy effective)
   /* 0c */  {32,         32,        32,     255},   //!< min motor_pwm PWM setting
   /* 0d */  {250,       250,        180,    255},   //!< max motor_pwm PWM setting
   /* 0e */  {30,         30,        0,      200},   //!< motor_protection

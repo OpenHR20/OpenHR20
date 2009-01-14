@@ -42,9 +42,7 @@
 #define MAX_INT         INT16_MAX
 
 //! Last process value, used to find derivative of process value.
-#if CONFIG_ENABLE_D
 static int16_t lastProcessValue;
-#endif
 
 //! Summation of errors, used for integrate calculations
 int16_t sumError=0;
@@ -90,9 +88,19 @@ int8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old_result)
   }
 
   // Calculate Iterm and limit integral runaway  
-  if (abs(error16)<((int16_t)scalling_factor*config.P_max/P_Factor)) { 
-      // update sumError only for error < limit of P
-      sumError += error16;
+  {
+    int16_t d = lastProcessValue - processValue;
+    if (((d>0)&&(error16>0)) || ((d<0)&&(error16<0))) {
+        // update sumError if turn is wrong only 
+        int16_t max = (int16_t)scalling_factor*config.P_max/P_Factor;
+        if (error16 > max) {  // maximum sumError change + limmiter
+          sumError += max;  
+        } else if (error16 < -max) { // maximum sumError change - limmiter
+          sumError -= max;  
+        } else {
+          sumError += error16;
+        }
+    }
   }
   if (I_Factor == 0) {
       maxSumError = 12750; // 255*50/1
@@ -125,15 +133,13 @@ int8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old_result)
 
 #if CONFIG_ENABLE_D
   // Calculate Dterm
-  
   d_term = lastProcessValue - processValue;
   d_term *= labs(d_term); // non linear characteristic 
   d_term /= scalling_factor;
   d_term *= D_Factor;
-  lastProcessValue = processValue;
-
   pi_term += d_term;
 #endif
+  lastProcessValue = processValue;
 
   if (labs(pi_term-((int32_t)old_result*scalling_factor))<config.pid_hysteresis) return old_result;
   
