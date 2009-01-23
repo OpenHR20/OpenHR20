@@ -29,8 +29,11 @@
 extern int hr20SetTemperature(int temperature);
 extern int hr20SetDateAndTime(void);
 extern void hr20ParseStatusLine(char *line);
-extern void hr20SetModeManu();
-extern void hr20SetModeAuto();
+extern void hr20SetModeManu(void);
+extern void hr20SetModeAuto(void);
+extern void hr20GetAllTimers(void);
+extern void hr20UnsetTimer(int day, int slot);
+extern void hr20SetTimer(char *timer_string);
 
 #endif
 

@@ -25,9 +25,142 @@
 
 #include <stdio.h>
 #include <time.h>
+#include <string.h>
+#include <inttypes.h>
 
 #include "serial.h"
 #include "hr20.h"
+/*!
+ ********************************************************************************
+ * hr20GetTimer
+ *
+ * get the content of a timer
+ *
+ * \param day day
+ * \param slot slot
+ * \param *value returns cddd where c is the mode (comfort,save,etc) and ddd the minutes since 00:00 in hex
+ *******************************************************************************/
+void hr20GetTimer(int day, int slot, char *value)
+{
+	char buffer[20];
+	char response[255];
+	char *result;
+
+	sprintf(buffer,"\rR%d%d\r",day,slot);
+	
+	while(1)
+	{
+		serialCommand(buffer, response);
+		if(response[0] == 'R' )
+			break;
+		usleep(1000);
+	}
+	
+	result = strtok(response,"=");
+	result = strtok(NULL,"=");
+	strcpy(value,result);
+}
+
+int hexCharToInt(char c)
+{
+	if(c <= 57)
+		return c - 48;
+	return c - 87;
+}
+
+/*!
+ ********************************************************************************
+ * hr20ParseTimer
+ *
+ * parse the timer string
+ *
+ * \param *timer timer string
+ *******************************************************************************/
+void hr20ParseTimer(char *timer)
+{
+	int minutes = 0;
+
+	printf("Mode:");
+	if(timer[0] == '0')
+		printf("frost protection  ");
+	else if(timer[0] == '1')
+		printf("energy save       ");
+	else if(timer[0] == '2')
+		printf("comfort           ");
+	else if(timer[0] == '3')
+		printf("supercomfort      ");
+
+	minutes = 256 * hexCharToInt(timer[1]);
+	minutes += 16 * hexCharToInt(timer[2]);
+	minutes +=      hexCharToInt(timer[3]);
+
+	printf("Time: %02d:%02d\n",minutes/60,minutes%60);
+}
+
+void hr20SetTimer(char *timer_string)
+{
+	int day, slot, mode, minutes;
+	char buffer[20];
+
+	if(strlen(timer_string) != 7)
+	{
+		printf("Wrong format in string!\n");
+		return;
+	}
+
+	day = timer_string[0]-48;
+	slot = timer_string[1]-48;
+	mode = timer_string[2]-48;
+
+	if(day < 0 || day > 7)
+	{
+		printf("Day must be between 0 and 7\n");
+		return;
+	}
+	if(mode < 0 || mode > 3)
+	{
+		printf("Mode must be between 0 and 3\n");
+		return;
+	}
+
+	minutes = 600 * (timer_string[3]-48) + 60 * (timer_string[4]-48) + 10 * (timer_string[5]-48) + (timer_string[6]-48);
+	
+	sprintf(buffer,"\rW%d%d%d%03x\r",day,slot,mode,minutes);
+
+	serialCommand(buffer,0);
+}
+
+void hr20UnsetTimer(int day, int slot)
+{
+	char buffer[20];
+
+	sprintf(buffer,"\rW%d%d0fff\r",day,slot);
+	serialCommand(buffer,0);
+}
+	
+
+void hr20GetAllTimers()
+{
+	int day,slot;
+	char result[5];
+
+	for(day=0;day<8;day++)
+	{
+		printf("Day   %d\n",day);
+		slot = 0;
+		while(1)
+		{
+			hr20GetTimer(day,slot,result);
+			if(result[1] == 'f')
+				break;
+			printf("Slot  %d   ",slot);
+			hr20ParseTimer(result);
+			slot++;
+		}
+		printf("\n");
+	}
+}
+
 
 /*!
  ********************************************************************************
@@ -47,7 +180,7 @@ int hr20SetTemperature(int temperature)
 	char buffer[255];
 	char response[255];
 
-	sprintf(buffer,"A%x\r", temperature/5);
+	sprintf(buffer,"\rA%x\r", temperature/5);
 
 	serialCommand(buffer,response);
 
@@ -72,10 +205,10 @@ int hr20SetDateAndTime()
 	time(&rawtime);
 	ptm = localtime(&rawtime);
 
-	sprintf(send_string,"Y%02x%02x%02x\r",ptm->tm_year-100, ptm->tm_mon+1, ptm->tm_mday);
+	sprintf(send_string,"\rY%02x%02x%02x\r",ptm->tm_year-100, ptm->tm_mon+1, ptm->tm_mday);
 	serialCommand(send_string, 0);
 	
-	sprintf(send_string,"H%02x%02x%02x\r",ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
+	sprintf(send_string,"\rH%02x%02x%02x\r",ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
 	serialCommand(send_string, 0);
 	return 1;
 }
@@ -88,7 +221,7 @@ int hr20SetDateAndTime()
  *******************************************************************************/
 void hr20SetModeManu()
 {
-	serialCommand("M00\r", 0);
+	serialCommand("\rM00\r", 0);
 }
 
 /*!
@@ -99,7 +232,7 @@ void hr20SetModeManu()
  *******************************************************************************/
 void hr20SetModeAuto()
 {
-	serialCommand("M01\r", 0);
+	serialCommand("\rM01\r", 0);
 }
 
 /*!
@@ -113,12 +246,12 @@ void hr20SetModeAuto()
  *******************************************************************************/
 void hr20GetStatusLine(char *line)
 {
-	int i;
-	for(i=0; i < 5; i++)
+	while(1)
 	{
 		serialCommand("D\r", line);
 		if(line[0] == 'D' )
 			break;
+		usleep(1000);
 	}
 }
 
