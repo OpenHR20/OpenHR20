@@ -73,7 +73,8 @@ OBJDIR = obj
 SRC = main.c \
 rs232_485_hw.c \
 com.c \
-rfm.c
+rfm.c \
+rtc.c
 #../common/security.c
 
 

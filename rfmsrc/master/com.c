@@ -40,6 +40,7 @@
 #include "config.h"
 #include "com.h"
 #include "../common/rs232_485.h"
+#include "../common/rtc.h"
 #include "task.h"
 
 
@@ -251,4 +252,22 @@ void COM_dump_packet(uint8_t *d, uint8_t len) {
     }
     COM_putchar('\n');
 	COM_flush();
+}
+
+void COM_print_datetime() {
+    print_hexXX(RTC_GetDayOfWeek()+0xd0);
+	COM_putchar(' ');
+	print_decXX(RTC_GetDay());
+	COM_putchar('.');
+	print_decXX(RTC_GetMonth());
+	COM_putchar('.');
+	print_decXX(RTC_GetYearYY());
+	COM_putchar(' ');
+	print_decXX(RTC_GetHour());
+	COM_putchar(':');
+	print_decXX(RTC_GetMinute());
+	COM_putchar(':');
+	print_decXX(RTC_GetSecond());
+	COM_putchar('\n');
+    COM_flush();
 }

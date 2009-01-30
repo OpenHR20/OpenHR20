@@ -39,6 +39,7 @@ In this file we define only configuration parameters, for example what kind of c
 #pragma once
 
 #define CONFIG_H  1
+#define MASTER_CONFIG_H  1
 
 // AVR LibC includes 
 #include <stdint.h>
@@ -128,3 +129,10 @@ In this file we define only configuration parameters, for example what kind of c
 
 // typedefs
 typedef enum { false, true } bool;
+
+// Some default Values
+#define BOOT_DD         1  //!< Boot-Up date: day
+#define BOOT_MM         1  //!< Boot-Up date: month
+#define BOOT_YY         9  //!< Boot-Up date: year
+#define BOOT_hh        12  //!< Boot-Up time: hour
+#define BOOT_mm        00  //!< Boot-Up time: minutes

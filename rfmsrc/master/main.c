@@ -44,6 +44,7 @@
 #include "config.h"
 #include "com.h"
 #include "task.h"
+#include "../common/rtc.h"
 
 #if (RFM == 1)
 	#include "rfm_config.h"
@@ -55,7 +56,7 @@
 #endif
 
 int main(void);                            // main with main loop
-static inline void init(void);                           // init the whole thing
+static inline void init(void);             // init the whole thing
 
 // Check AVR LibC Version >= 1.6.0
 #if __AVR_LIBC_VERSION__ < 10600UL
@@ -146,6 +147,17 @@ int main(void)
   			}
         }
 		#endif
+        if (task & TASK_RTC) {
+            task&=~TASK_RTC;
+            {
+                bool minute = RTC_AddOneSecond();
+                if (minute || RTC_GetSecond()==30) {
+                    //send Sync packet \todo
+                    COM_print_datetime();
+                }
+            }
+        }
+
 
     } //End Main loop
 	return 0;
@@ -178,6 +190,8 @@ static inline void init(void)
 	PORTD = 0xff;
 	PORTA = 0xff;
 	PORTB = 0xff; 
+	
+	RTC_Init();
 
 #if (RFM==1)
 	RFM_init();

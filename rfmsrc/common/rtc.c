@@ -42,25 +42,28 @@
 
 
 // HR20 Project includes
+#include "config.h"
 #include "main.h"
-#include "rtc.h"
+#include "../common/rtc.h"
 #include "task.h"
-#include "eeprom.h"
-#include "menu.h"
+#if !defined(MASTER_CONFIG_H)
+    #include "eeprom.h"
+    #include "menu.h"
+#endif
 
 // Vars
 
 
-uint8_t RTC_hh;   //!< \brief Time: Hours
-uint8_t RTC_mm;   //!< \brief Time: Minutes
-uint8_t RTC_ss;   //!< \brief Time: Seconds
-uint8_t RTC_DD;   //!< \brief Date: Day
-uint8_t RTC_MM;   //!< \brief Date: Month
-uint8_t RTC_YY;   //!< \brief Date: Year (0-255) -> 2000 - 2255
+uint8_t RTC_hh=BOOT_hh;   //!< \brief Time: Hours
+uint8_t RTC_mm=BOOT_mm;   //!< \brief Time: Minutes
+uint8_t RTC_ss=0;   //!< \brief Time: Seconds
+uint8_t RTC_DD=BOOT_DD;   //!< \brief Date: Day
+uint8_t RTC_MM=BOOT_MM;   //!< \brief Date: Month
+uint8_t RTC_YY=BOOT_YY;   //!< \brief Date: Year (0-255) -> 2000 - 2255
 uint8_t RTC_DOW;  //!< Date: Day of Week
 
 uint8_t RTC_DS;     //!< Daylightsaving Flag
-uint32_t RTC_Ticks; //!< Ticks since last RTC.Init
+uint32_t RTC_Ticks=0; //!< Ticks since last Reset
 
 // prototypes
 void    RTC_AddOneDay(void);        // add one day to actual date
@@ -94,28 +97,25 @@ uint8_t RTC_DayOfMonthTablePrgMem[] PROGMEM =
  ******************************************************************************/
 void RTC_Init(void)
 {
-    TIMSK2 &= ~(1<<TOIE2);              // disable OCIE2A and TOIE2
-    ASSR = (1<<AS2);                    // Timer2 asynchronous operation
-    TCNT2 = 0;                          // clear TCNT2A
-    TCCR2A |= (1<<CS22) | (1<<CS20);    // select precaler: 32.768 kHz / 128 =
-                                        // => 1 sec between each overflow
-	
-	// wait for TCN2UB and TCR2UB to be cleared
-    while((ASSR & 0x01) | (ASSR & 0x04));   
+    #if !defined(MASTER_CONFIG_H)
+        TIMSK2 &= ~(1<<TOIE2);              // disable OCIE2A and TOIE2
+        ASSR = (1<<AS2);                    // Timer2 asynchronous operation
+        TCNT2 = 0;                          // clear TCNT2A
+        TCCR2A |= (1<<CS22) | (1<<CS20);    // select precaler: 32.768 kHz / 128 =
+                                            // => 1 sec between each overflow
+    	
+    	// wait for TCN2UB and TCR2UB to be cleared
+        while((ASSR & 0x01) | (ASSR & 0x04));   
+    
+        TIFR2 = 0xFF;                       // clear interrupt-flags
+        TIMSK2 |= (1<<TOIE2);               // enable Timer2 overflow interrupt
+    #else
+    	OCR1A = 12500-1; // 1/100s interrupt
+    	TCCR1B= _BV(CS11) | _BV(WGM12); // clk/8 CTC mode
+    	TIFR  |= _BV(OCF1A);                       // clear interrupt-flags
+    	TIMSK |= _BV(OCIE1A);
+    #endif
 
-    TIFR2 = 0xFF;                       // clear interrupt-flags
-    TIMSK2 |= (1<<TOIE2);               // enable Timer2 overflow interrupt
-
-    // Restart Tick Timer
-    RTC_Ticks=0;
-    // initial time 00:00:00
-    RTC_hh = BOOT_hh;
-    RTC_mm = BOOT_mm;
-    RTC_ss = 0;
-    // initial date 1.01.2008
-    RTC_DD = BOOT_DD;
-    RTC_MM = BOOT_MM;
-    RTC_YY = BOOT_YY;
     // day of week
     RTC_SetDayOfWeek();
     
@@ -188,6 +188,7 @@ void RTC_SetSecond(int8_t second)
     RTC_ss = (second+60)%60;
 }
 
+#if !defined(MASTER_CONFIG_H)
 /*!
  *******************************************************************************
  *
@@ -340,6 +341,7 @@ uint8_t RTC_ActualTimerTemperature(bool exact) {
     }
     return temperature_table[(data >> 12) & 3];
 }
+#endif // !defined(MASTER_CONFIG_H)
 
 /*!
  *******************************************************************************
@@ -416,8 +418,10 @@ void RTC_AddOneDay(void)
 	}
     // next day of week
     RTC_DOW = (RTC_DOW %7)+1; // Monday = 1 Sat=7
-	// update hourbar
-	menu_update_hourbar((config.timer_mode==1)?RTC_DOW:0);
+	#if !defined(MASTER_CONFIG_H)
+        // update hourbar
+	   menu_update_hourbar((config.timer_mode==1)?RTC_DOW:0);
+	#endif
 }
 
 
@@ -501,7 +505,9 @@ void RTC_SetDayOfWeek(void)
     // set DOW
     RTC_DOW = (uint8_t) ((tmp_dow + 5) % 7) +1;
     
-   	menu_update_hourbar((config.timer_mode==1)?RTC_DOW:0);    
+    #if !defined(MASTER_CONFIG_H)
+   	    menu_update_hourbar((config.timer_mode==1)?RTC_DOW:0);
+    #endif    
 }
 #if 0
 /*!
@@ -537,35 +543,52 @@ bool RTC_SetDate(int8_t dd, int8_t mm, int8_t yy)
 #endif
 
 
-/*!
- *******************************************************************************
- *
- *  timer/counter2 overflow interrupt routine
- *
- *  \note
- *  - add one second to internal clock
- *  - increment tick counter
- *
- ******************************************************************************/
-#if ! TASK_IS_SFR
-// not optimized
-ISR(TIMER2_OVF_vect) {
-    task |= TASK_RTC;   // increment second and check Dow_Timer
-}
+#if !defined(MASTER_CONFIG_H)
+    /*!
+     *******************************************************************************
+     *
+     *  timer/counter2 overflow interrupt routine
+     *
+     *  \note
+     *  - add one second to internal clock
+     *
+     ******************************************************************************/
+    #if ! TASK_IS_SFR
+    // not optimized
+    ISR(TIMER2_OVF_vect) {
+        task |= TASK_RTC;   // increment second and check Dow_Timer
+    }
+    #else
+    // optimized
+    ISR_NAKED ISR (TIMER2_OVF_vect) {
+        asm volatile(
+            // prologue and epilogue is not needed, this code  not touch flags in SREG
+            "	sbi %0,%1" "\t\n"
+            "	reti" "\t\n"
+            ::"I" (_SFR_IO_ADDR(task)) , "I" (TASK_RTC_BIT)
+        );
+    }
+    #endif 
 #else
-// optimized
-ISR_NAKED ISR (TIMER2_OVF_vect) {
-    asm volatile(
-        // prologue and epilogue is not needed, this code  not touch flags in SREG
-        "	sbi %0,%1" "\t\n"
-        "	reti" "\t\n"
-        ::"I" (_SFR_IO_ADDR(task)) , "I" (TASK_RTC_BIT)
-    );
-}
-#endif 
+    /*!
+     *******************************************************************************
+     *
+     *  timer/counter1 overflow interrupt routine
+     *
+     *  \note
+     *  - add 1/100 second to internal clock
+     *
+     ******************************************************************************/
+    volatile uint8_t s_100=0;
+    ISR(TIMER1_COMPA_vect) {
+        if (s_100++ >= 100) {
+            s_100=0;
+            task |= TASK_RTC;   // increment second and check Dow_Timer
+        }
+    }
+#endif
 
-
-#if HAS_CALIBRATE_RCO
+#if HAS_CALIBRATE_RCO && !defined(MASTER_CONFIG_H)
 /*!
  *******************************************************************************
  *
