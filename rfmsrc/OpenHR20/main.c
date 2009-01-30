@@ -46,7 +46,7 @@
 #include "adc.h"
 #include "lcd.h"
 #include "motor.h"
-#include "rtc.h"
+#include "../common/rtc.h"
 #include "task.h"
 #include "keyboard.h"
 #include "eeprom.h"

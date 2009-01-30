@@ -41,7 +41,7 @@
 #include "com.h"
 #include "../common/rs232_485.h"
 #include "main.h"
-#include "rtc.h"
+#include "../common/rtc.h"
 #include "adc.h"
 #include "task.h"
 #include "watch.h"

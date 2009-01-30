@@ -37,7 +37,7 @@
 #include <avr/eeprom.h>
 #include "debug.h"
 #include "main.h"
-#include "rtc.h"
+#include "../common/rtc.h"
 #include "adc.h"
 #if (RFM == 1)
 	#include "rfm_config.h"

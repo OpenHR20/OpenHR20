@@ -38,7 +38,7 @@
 #include "config.h" 
 #include "main.h"
 #include "com.h"
-#include "rtc.h"
+#include "../common/rtc.h"
 #include "pid.h"
 #include "adc.h"
 #include "eeprom.h"

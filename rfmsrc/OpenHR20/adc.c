@@ -46,7 +46,7 @@
 #include "main.h"
 #include "adc.h"
 #include "task.h"
-#include "rtc.h"
+#include "../common/rtc.h"
 #include "eeprom.h"
 #include "com.h"
 

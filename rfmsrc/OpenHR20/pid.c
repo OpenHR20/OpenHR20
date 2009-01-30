@@ -34,7 +34,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "main.h"
-#include "rtc.h"
+#include "../common/rtc.h"
 #include "eeprom.h"
 #include "pid.h"
 
