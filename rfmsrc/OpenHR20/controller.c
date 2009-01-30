@@ -54,7 +54,7 @@ uint16_t CTL_open_window_timeout;
 static uint16_t PID_update_timeout=16;   // timer to next PID controler action/first is 16 sec after statup 
 int8_t PID_force_update=16;      // signed value, val<0 means disable force updates \todo rename
 
-static int8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old_result);
+static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old_result);
 
 uint8_t CTL_error=0;
 
@@ -135,7 +135,7 @@ int8_t CTL_update(bool minute_ch, int8_t valve) {
             if (temp>TEMP_MAX) {
                 valve = 100;
             } else {
-                valve = 50+(int16_t)pid_Controller(calc_temp(temp),temp_average,valve-50);
+                valve = (int16_t)pid_Controller(calc_temp(temp),temp_average,valve-50);
             }
         } 
         PID_force_update = -1;
@@ -238,7 +238,7 @@ void pid_Init( int16_t processValue)
  *  \param setPoint  Desired value.
  *  \param processValue  Measured value.
  */
-static int8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old_result)
+static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old_result)
 {
   int32_t error32, pi_term;
   int16_t error16, maxSumError;
@@ -311,12 +311,13 @@ static int8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old_
   if (labs(pi_term-((int32_t)old_result*scalling_factor))<config.pid_hysteresis) return old_result;
   
   pi_term /= scalling_factor;
+  pi_term += 50;
 
-  if(pi_term > 50){
-    return 50;
-  } else if(pi_term < -50){
-    return -50; 
+  if(pi_term > 100){
+    return 100;
+  } else if(pi_term < 0){
+    return 0; 
   }
-  return((int8_t)pi_term);
+  return((uint8_t)pi_term);
 }
 
