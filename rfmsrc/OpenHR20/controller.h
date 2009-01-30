@@ -66,3 +66,11 @@ void CTL_change_mode(int8_t dif);
 #define CTL_ERR_NA_0                    (1<<0)
 
 #define CTL_ERR_MASK_NA					(CTL_ERR_NA_0 | CTL_ERR_NA_1 | CTL_ERR_NA_4 | CTL_ERR_NA_5)
+
+extern int16_t sumError;
+
+#if CONFIG_ENABLE_D
+  void pid_Init(int16_t processValue);
+#else
+  #define pid_Init(processValue)
+#endif

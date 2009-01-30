@@ -50,7 +50,6 @@
 #include "task.h"
 #include "keyboard.h"
 #include "eeprom.h"
-#include "pid.h"
 #include "debug.h"
 #include "menu.h"
 #include "com.h"

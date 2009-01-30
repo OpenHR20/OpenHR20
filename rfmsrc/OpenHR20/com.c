@@ -47,7 +47,6 @@
 #include "watch.h"
 #include "eeprom.h"
 #include "controller.h"
-#include "pid.h"
 #include "../common/rfm.h"
 #include "debug.h"
 

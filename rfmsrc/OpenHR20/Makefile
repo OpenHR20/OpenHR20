@@ -80,7 +80,6 @@ motor.c \
 eeprom.c \
 keyboard.c \
 menu.c \
-pid.c \
 rs232_485_hw.c \
 com.c \
 watch.c \
