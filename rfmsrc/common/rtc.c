@@ -579,10 +579,10 @@ bool RTC_SetDate(int8_t dd, int8_t mm, int8_t yy)
      *  - add 1/100 second to internal clock
      *
      ******************************************************************************/
-    volatile uint8_t s_100=0;
+    volatile uint8_t RTC_s100=0;
     ISR(TIMER1_COMPA_vect) {
-        if (s_100++ >= 100) {
-            s_100=0;
+        if (++RTC_s100 >= 100) {
+            RTC_s100 = 0;
             task |= TASK_RTC;   // increment second and check Dow_Timer
         }
     }

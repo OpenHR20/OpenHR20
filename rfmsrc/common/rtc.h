@@ -66,11 +66,13 @@ typedef enum {
 extern uint8_t RTC_hh;   //!< \brief Time: Hours
 extern uint8_t RTC_mm;   //!< \brief Time: Minutes
 extern uint8_t RTC_ss;   //!< \brief Time: Seconds
+extern volatile uint8_t RTC_s100; //!< \brief Time: 1/100 Seconds
 extern uint8_t RTC_DD;   //!< \brief Date: Day
 extern uint8_t RTC_MM;   //!< \brief Date: Month
 extern uint8_t RTC_YY;   //!< \brief Date: Year (0-255) -> 2000 - 2255
 extern uint8_t RTC_DOW;  //!< Date: Day of Week
 extern uint32_t RTC_Ticks; //!< Ticks since last RTC.Init
+
 
 void RTC_Init(void);                 // init Timer, activate 500ms IRQ
 #define RTC_GetHour() ((int8_t) RTC_hh)                 // get hour

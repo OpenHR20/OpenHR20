@@ -243,7 +243,10 @@ void COM_init(void) {
  ******************************************************************************/
 static uint16_t seq=0;
 void COM_dump_packet(uint8_t *d, uint8_t len) {
-    print_s_p(PSTR("PKT"));
+	print_decXX(RTC_GetSecond());
+	COM_putchar('.');
+	print_decXX(RTC_s100);
+    print_s_p(PSTR(" PKT"));
     print_hexXXXX(seq++);
     COM_putchar(':');
 	while ((len--)>0) {
