@@ -205,22 +205,13 @@ void CTL_change_mode(int8_t m) {
     PID_force_update = 10; 
 }
 
-// Maximum value of variables
-#define MAX_INT         INT16_MAX
-
 //! Last process value, used to find derivative of process value.
 static int16_t lastProcessValue;
 
 //! Summation of errors, used for integrate calculations
 int16_t sumError=0;
-//! The Proportional tuning constant, multiplied with scalling_factor
-#define P_Factor (config.P_Factor)
-//! The Integral tuning constant, multiplied with scalling_factor
-#define I_Factor (config.I_Factor)
-//! The Derivative tuning constant, multiplied with scalling_factor
-#define D_Factor (config.D_Factor)
-//! The scalling_factor for PID constants \TODO scalling > scaling
-#define scalling_factor  (config.scalling_factor)
+//! The scalling_factor for PID constants
+#define scalling_factor  (256)
 
 #if CONFIG_ENABLE_D
 void pid_Init( int16_t processValue)
@@ -259,7 +250,7 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old
     int16_t d = lastProcessValue - processValue;
     if (((d>0)&&(error16>0)) || ((d<0)&&(error16<0))) {
         // update sumError if turn is wrong only 
-        int16_t max = (int16_t)scalling_factor*config.P_max/P_Factor;
+        int16_t max = (int16_t)scalling_factor*50/config.P_Factor;
         if (error16 > max) {  // maximum sumError change + limmiter
           sumError += max;  
         } else if (error16 < -max) { // maximum sumError change - limmiter
@@ -269,11 +260,11 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old
         }
     }
   }
-  if (I_Factor == 0) {
+  if (config.I_Factor == 0) {
       maxSumError = 12750; // 255*50/1
   } else {
       // for overload protection: maximum is 255*50/1 = 12750
-      maxSumError = ((int16_t)scalling_factor*50)/I_Factor;
+      maxSumError = ((int16_t)scalling_factor*50)/config.I_Factor;
   }
   if(sumError > maxSumError){
     sumError = maxSumError;
@@ -286,15 +277,10 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old
   // error32 -> for overload limit: maximum is +-(4000*4000/200) = +-160000
 
   // Calculate Pterm
-  pi_term = (P_Factor * error32);
-  { 
-    uint16_t max_p_term = (uint16_t)scalling_factor * (uint16_t)(config.P_max);
-    if (pi_term > max_p_term) { pi_term = max_p_term; }
-    else if (pi_term < -(int32_t)max_p_term) { pi_term = -(int32_t)max_p_term; }
-  }
+  pi_term = (config.P_Factor * error32);
   // pi_term - > for overload limit: maximum is +-(40800000+3251250) = +-44051250
   
-  pi_term += I_Factor * sumError;
+  pi_term += config.I_Factor * sumError;
   // pi_term - > for overload limit: maximum is +- 255*12750 = 3251250
    
 
@@ -303,21 +289,32 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old
   d_term = lastProcessValue - processValue;
   d_term *= labs(d_term); // non linear characteristic 
   d_term /= scalling_factor;
-  d_term *= D_Factor;
+  d_term *= config.D_Factor;
   pi_term += d_term;
 #endif
   lastProcessValue = processValue;
 
-  if (labs(pi_term-((int32_t)old_result*scalling_factor))<config.pid_hysteresis) return old_result;
-  
-  pi_term /= scalling_factor;
-  pi_term += 50;
-
-  if(pi_term > 100){
-    return 100;
-  } else if(pi_term < 0){
-    return 0; 
+  if(pi_term > 50*256){
+    return config.valve_max;
+  } else if(pi_term < -50*256){
+    return config.valve_min; 
   }
-  return((uint8_t)pi_term);
+  // now we can use 16bit value
+  {
+    int16_t pi_term16 = pi_term;
+    
+    if (abs(pi_term16-((int16_t)old_result*scalling_factor))<config.pid_hysteresis) return old_result;
+    
+    pi_term16 /= scalling_factor;
+    pi_term16 += 50;
+  
+    if(pi_term16 > config.valve_max){
+      return config.valve_max;
+    } else if(pi_term16 < config.valve_min){
+      return config.valve_min; 
+    }
+    return((uint8_t)pi_term16);
+  }
+
 }
 
