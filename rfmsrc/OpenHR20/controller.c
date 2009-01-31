@@ -248,6 +248,10 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old
   // Calculate Iterm and limit integral runaway  
   {
     int16_t d = lastProcessValue - processValue;
+    #if ! CONFIG_ENABLE_D
+      lastProcessValue = processValue;
+    #endif
+
     if (((d>0)&&(error16>0)) || ((d<0)&&(error16<0))) {
         // update sumError if turn is wrong only 
         int16_t max = (int16_t)scalling_factor*50/config.P_Factor;
@@ -261,9 +265,9 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old
     }
   }
   if (config.I_Factor == 0) {
-      maxSumError = 12750; // 255*50/1
+      maxSumError = 12800; // scalling_factor*50/1
   } else {
-      // for overload protection: maximum is 255*50/1 = 12750
+      // for overload protection: maximum is scalling_factor*50/1 = 12800
       maxSumError = ((int16_t)scalling_factor*50)/config.I_Factor;
   }
   if(sumError > maxSumError){
@@ -278,10 +282,10 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old
 
   // Calculate Pterm
   pi_term = (config.P_Factor * error32);
-  // pi_term - > for overload limit: maximum is +-(40800000+3251250) = +-44051250
+  // pi_term - > for overload limit: maximum is +-(255*160000) = +-40800000
   
-  pi_term += config.I_Factor * sumError;
-  // pi_term - > for overload limit: maximum is +- 255*12750 = 3251250
+  pi_term += config.I_Factor * sumError; // maximum is (scalling_factor*50/I_Factor)*I_Factor
+  // pi_term - > for overload limit: maximum is +- (40800000 + scalling_factor*50) = +-40812800
    
 
 #if CONFIG_ENABLE_D
@@ -291,22 +295,26 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old
   d_term /= scalling_factor;
   d_term *= config.D_Factor;
   pi_term += d_term;
-#endif
   lastProcessValue = processValue;
+#endif
 
-  if(pi_term > 50*256){
+  pi_term += 50*scalling_factor;
+  if(pi_term > 100*scalling_factor){
     return config.valve_max;
-  } else if(pi_term < -50*256){
+  } else if(pi_term < 0){
     return config.valve_min; 
   }
   // now we can use 16bit value
   {
     int16_t pi_term16 = pi_term;
-    pi_term16 += 50*scalling_factor;
     
     if (abs(pi_term16-((int16_t)(old_result)*scalling_factor))<config.pid_hysteresis) return old_result;
     
-    pi_term16 /= scalling_factor;
+    #if (scalling_factor == 256)
+        pi_term16 >>=8; //= scalling_factor;
+    #else
+        pi_term16 /= scalling_factor;
+    #endif
   
     if(pi_term16 > config.valve_max){
       return config.valve_max;
@@ -317,4 +325,3 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old
   }
 
 }
-
