@@ -135,7 +135,7 @@ int8_t CTL_update(bool minute_ch, int8_t valve) {
             if (temp>TEMP_MAX) {
                 valve = 100;
             } else {
-                valve = (int16_t)pid_Controller(calc_temp(temp),temp_average,valve-50);
+                valve = (int16_t)pid_Controller(calc_temp(temp),temp_average,valve);
             }
         } 
         PID_force_update = -1;
@@ -302,11 +302,11 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old
   // now we can use 16bit value
   {
     int16_t pi_term16 = pi_term;
+    pi_term16 += 50*scalling_factor;
     
-    if (abs(pi_term16-((int16_t)old_result*scalling_factor))<config.pid_hysteresis) return old_result;
+    if (abs(pi_term16-((int16_t)(old_result)*scalling_factor))<config.pid_hysteresis) return old_result;
     
     pi_term16 /= scalling_factor;
-    pi_term16 += 50;
   
     if(pi_term16 > config.valve_max){
       return config.valve_max;
