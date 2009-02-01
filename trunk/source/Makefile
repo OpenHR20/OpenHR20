@@ -89,7 +89,6 @@ motor.c \
 eeprom.c \
 keyboard.c \
 menu.c \
-pid.c \
 com.c \
 watch.c \
 controller.c

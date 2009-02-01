@@ -31,6 +31,8 @@
  * $Rev$
  */
 
+#pragma once
+
 extern uint8_t CTL_temp_wanted; //!< wanted temperature
 extern uint8_t CTL_temp_wanted_last;   // desired temperatur value used for last PID control
 extern uint8_t CTL_temp_auto;
@@ -62,3 +64,6 @@ void CTL_change_mode(int8_t dif);
 #define CTL_ERR_MONTAGE                 (1<<2)
 #define CTL_ERR_NA_1                    (1<<1)    
 #define CTL_ERR_NA_0                    (1<<0)    
+
+extern int16_t sumError;
+

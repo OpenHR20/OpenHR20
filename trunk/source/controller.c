@@ -39,7 +39,6 @@
 #include "main.h"
 #include "com.h"
 #include "rtc.h"
-#include "pid.h"
 #include "adc.h"
 #include "eeprom.h"
 #include "controller.h"
@@ -54,6 +53,8 @@ uint16_t CTL_open_window_timeout;
 
 static uint16_t PID_update_timeout=16;   // timer to next PID controler action/first is 16 sec after statup 
 int8_t PID_force_update=16;      // signed value, val<0 means disable force updates \todo rename
+
+static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old_result);
 
 uint8_t CTL_error=0;
 
@@ -125,7 +126,6 @@ int8_t CTL_update(bool minute_ch, int8_t valve) {
         //update now
         if (temp!=CTL_temp_wanted_last) {
             CTL_temp_wanted_last=temp;
-            pid_Init(temp_average); // restart PID controler
             goto UPDATE_NOW; // optimization
         }
         if (PID_update_timeout == 0) {
@@ -134,7 +134,7 @@ int8_t CTL_update(bool minute_ch, int8_t valve) {
             if (temp>TEMP_MAX) {
                 valve = 100;
             } else {
-                valve = 50+(int16_t)pid_Controller(calc_temp(temp),temp_average,valve-50);
+                valve = (int16_t)pid_Controller(calc_temp(temp),temp_average,valve);
             }
         } 
         PID_force_update = -1;
@@ -202,4 +202,101 @@ void CTL_change_mode(int8_t m) {
     }
     CTL_mode_window = 0;
     PID_force_update = 10; 
+}
+
+//! Last process value, used to find derivative of process value.
+static int16_t lastProcessValue=0;
+
+//! Summation of errors, used for integrate calculations
+int16_t sumError=0;
+//! The scalling_factor for PID constants
+#define scalling_factor  (256)
+#if (scalling_factor != 256)
+    #error optimized only for (scalling_factor == 256)
+#endif
+
+
+/*! \brief non-linear  PID control algorithm.
+ *
+ *  Calculates output from setpoint, process value and PID status.
+ *
+ *  \param setPoint  Desired value.
+ *  \param processValue  Measured value.
+ */
+static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old_result)
+{
+  int32_t /*error2,*/ pi_term;
+  int16_t error16, maxSumError;
+  error16 = setPoint - processValue;
+  
+  // maximum error is 20 degree C
+  if (error16 > 2000) { 
+    error16=2000;
+  } else if (error16 < -2000) {
+    error16=-2000;
+  }
+
+  // Calculate Iterm and limit integral runaway  
+  {
+    int16_t d = lastProcessValue - processValue;
+    if ((lastProcessValue!=0)&&(((d>0)&&(error16>0)) || ((d<0)&&(error16<0)))) {
+        // update sumError if turn is wrong only 
+        int16_t max = (int16_t)scalling_factor*50/config.P_Factor;
+        if (error16 > max) {  // maximum sumError change + limiter
+          sumError += max;  
+        } else if (error16 < -max) { // maximum sumError change - limiter
+          sumError -= max;  
+        } else {
+          sumError += error16;
+        }
+    }
+    lastProcessValue = processValue;
+  }
+  if (config.I_Factor == 0) {
+      maxSumError = 12800; // scalling_factor*50/1
+  } else {
+      // for overload protection: maximum is scalling_factor*50/1 = 12800
+      maxSumError = ((int16_t)scalling_factor*50)/config.I_Factor;
+  }
+  if(sumError > maxSumError){
+    sumError = maxSumError;
+  } else if(sumError < -maxSumError){
+    sumError = -maxSumError;
+  }
+  
+  pi_term = ((int32_t)config.PP_Factor * (int32_t)abs(error16));
+  pi_term += (int32_t)((uint16_t)config.P_Factor <<8);
+  pi_term *= (int32_t)error16;
+  pi_term >>= 8; 
+  // pi_term - > for overload limit: maximum is +-(((255*2000)+255)*2000) = +-1020510000/256=3986367
+  
+  pi_term += (int16_t)(config.I_Factor) * (int16_t)sumError; // maximum is (scalling_factor*50/I_Factor)*I_Factor
+  // pi_term - > for overload limit: maximum is +- (3986367 + scalling_factor*50) = +-3999167
+   
+  pi_term += 50*scalling_factor;
+  if(pi_term > 100*scalling_factor){
+    return config.valve_max;
+  } else if(pi_term < 0){
+    return config.valve_min; 
+  }
+  // now we can use 16bit value
+  {
+    int16_t pi_term16 = pi_term;
+    
+    if (abs(pi_term16-((int16_t)(old_result)*scalling_factor))<config.pid_hysteresis) return old_result;
+    
+    #if (scalling_factor == 256)
+        pi_term16 >>=8; //= scalling_factor;
+    #else
+        pi_term16 /= scalling_factor;
+    #endif
+  
+    if(pi_term16 > config.valve_max){
+      return config.valve_max;
+    } else if(pi_term16 < config.valve_min){
+      return config.valve_min; 
+    }
+    return((uint8_t)pi_term16);
+  }
+
 }

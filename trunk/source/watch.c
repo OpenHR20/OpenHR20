@@ -37,7 +37,6 @@
 
 #include "main.h"
 #include "adc.h"
-#include "pid.h"
 #include "controller.h"
 #include "motor.h"
 #include "watch.h"

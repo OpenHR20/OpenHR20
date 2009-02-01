@@ -48,7 +48,6 @@
 #include "watch.h"
 #include "eeprom.h"
 #include "controller.h"
-#include "pid.h"
 #include "debug.h"
 
 

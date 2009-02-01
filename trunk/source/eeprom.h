@@ -41,13 +41,13 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
     /* 02 */ uint8_t temperature1;   //!< temperature 1  - energy save (unit is 0.5stC)
     /* 03 */ uint8_t temperature2;   //!< temperature 2  - comfort (unit is 0.5stC)
     /* 04 */ uint8_t temperature3;   //!< temperature 3  - supercomfort (unit is 0.5stC)
-    /* 05 */ uint8_t P_Factor;  //!< Proportional tuning constant, multiplied with scalling_factor
-    /* 06 */ uint8_t I_Factor;  //!< Integral tuning constant, multiplied with scalling_factor
-    /* 07 */ uint8_t D_Factor;  //!< Derivative tuning constant, multiplied with scalling_factor
-    /* 08 */ uint8_t scalling_factor;
-    /* 09 */ uint8_t pid_hysteresis;  
-    /* 0a */ uint8_t PID_interval; //!< PID_interval*5 = interval in seconds    
-    /* 0b */ uint8_t P_max;
+    /* 05 */ uint8_t PP_Factor;  //!< Proportional kvadratic tuning constant, multiplied with 256
+    /* 06 */ uint8_t P_Factor;  //!< Proportional tuning constant, multiplied with 256
+    /* 07 */ uint8_t I_Factor;  //!< Integral tuning constant, multiplied with 256
+    /* 08 */ uint8_t pid_hysteresis;  
+    /* 09 */ uint8_t PID_interval; //!< PID_interval*5 = interval in seconds    
+    /* 0a */ uint8_t valve_min; // valve position limiter min
+    /* 0b */ uint8_t valve_max; // valve position limiter max
     /* 0c */ uint8_t motor_pwm_min;   //!< min PWM for motor 
     /* 0d */ uint8_t motor_pwm_max;  //!< max PWM for motor
         /*! TODO: describe  motor_protection and motor_hysteresis better, picture wanted */
@@ -93,7 +93,7 @@ extern uint8_t EEPROM ee_layout;
 #define BOOT_ON2      (16*60+0x2000) //!<  16:00
 #define BOOT_OFF2     (21*60+0x1000) //!<  21:00
 
-#define EE_LAYOUT (0x03) //!< EEPROM layout version 
+#define EE_LAYOUT (0x04) //!< EEPROM layout version 
 
 #ifdef __EEPROM_C__
 // this is definition, not just declaration
@@ -140,6 +140,9 @@ uint8_t EEPROM ee_reserved2_60 [60] = {
 }
     
 ; // reserved for future
+#if CONFIG_ENABLE_D
+    #error D_Factor have not EEPROM configuration
+#endif
 
 uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
 // order on this table depend to config_t
@@ -149,17 +152,13 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 02 */  {33,        33,  TEMP_MIN,TEMP_MAX},    //!< temperature 1  - energy save (unit is 0.5stC)
   /* 03 */  {40,        40,  TEMP_MIN,TEMP_MAX},    //!< temperature 2  - comfort (unit is 0.5stC)
   /* 04 */  {42,        42,  TEMP_MIN,TEMP_MAX},    //!< temperature 3  - supercomfort (unit is 0.5stC)
-  /* 05 */  {50,        50,         0,      255},   //!< P_Factor;
-  /* 06 */  {3,          3,         0,      255},   //!< I_Factor;
-#if CONFIG_ENABLE_D
-  /* 07 */  {0,          0,         0,      255},   //!< D_Factor;
-#else
-  /* 07 */  {0,          0,         0,      0}, //!< D_Factor;
-#endif
-  /* 08 */  {200,       200,        1,      255},   //!< scalling_factor / odd values is recomended
-  /* 09 */  {120,       120,       20,      255},   //!< pid_hysteresis
-  /* 0a */  {240/5,     240/5,      20/5,   255},   //!< PID_interval*5 = interval in seconds;  min=20sec, max=21.25 minutes
-  /* 0b */  {100,        100,        1,      100},   //!< P_max (100 = most safe value not energy effective)
+  /* 05 */  {44,        44,         0,      255},   //!< PP_Factor;
+  /* 06 */  {15,        15,         0,      255},   //!< P_Factor;
+  /* 07 */  {3,          3,         0,      255},   //!< I_Factor;
+  /* 08 */  {120,       120,       20,      255},   //!< pid_hysteresis
+  /* 09 */  {240/5,     240/5,      20/5,   255},   //!< PID_interval*5 = interval in seconds;  min=20sec, max=21.25 minutes
+  /* 0a */  {30,         30,        0,      100},   //!< valve_min
+  /* 0b */  {80,         80,        0,      100},   //!< valve_max
   /* 0c */  {32,         32,        32,     255},   //!< min motor_pwm PWM setting
   /* 0d */  {250,       250,        180,    255},   //!< max motor_pwm PWM setting
   /* 0e */  {30,         30,        0,      200},   //!< motor_protection
