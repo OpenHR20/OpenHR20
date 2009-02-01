@@ -53,9 +53,9 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
     /* 02 */ uint8_t temperature1;   //!< temperature 1  - energy save (unit is 0.5stC)
     /* 03 */ uint8_t temperature2;   //!< temperature 2  - comfort (unit is 0.5stC)
     /* 04 */ uint8_t temperature3;   //!< temperature 3  - supercomfort (unit is 0.5stC)
-    /* 05 */ uint8_t P_Factor;  //!< Proportional tuning constant, multiplied with 256
-    /* 06 */ uint8_t I_Factor;  //!< Integral tuning constant, multiplied with 256
-    /* 07 */ uint8_t D_Factor;  //!< Derivative tuning constant, multiplied with 256
+    /* 05 */ uint8_t PP_Factor;  //!< Proportional kvadratic tuning constant, multiplied with 256
+    /* 06 */ uint8_t P_Factor;  //!< Proportional tuning constant, multiplied with 256
+    /* 07 */ uint8_t I_Factor;  //!< Integral tuning constant, multiplied with 256
     /* 08 */ uint8_t pid_hysteresis;  
     /* 09 */ uint8_t PID_interval; //!< PID_interval*5 = interval in seconds    
     /* 0a */ uint8_t valve_min; // valve position limiter min
@@ -162,6 +162,9 @@ uint8_t EEPROM ee_reserved2_60 [60] = {
 }
     
 ; // reserved for future
+#if CONFIG_ENABLE_D
+    #error D_Factor have not EEPROM configuration
+#endif
 
 uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
 // order on this table depend to config_t
@@ -171,13 +174,9 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 02 */  {34,        34,  TEMP_MIN,TEMP_MAX},    //!< temperature 1  - energy save (unit is 0.5stC)
   /* 03 */  {42,        42,  TEMP_MIN,TEMP_MAX},    //!< temperature 2  - comfort (unit is 0.5stC)
   /* 04 */  {48,        48,  TEMP_MIN,TEMP_MAX},    //!< temperature 3  - supercomfort (unit is 0.5stC)
-  /* 05 */  {64,        64,         0,      255},   //!< P_Factor;
-  /* 06 */  {3,          3,         0,      255},   //!< I_Factor;
-#if CONFIG_ENABLE_D
-  /* 07 */  {0,          0,         0,      255},   //!< D_Factor;
-#else
-  /* 07 */  {0,          0,         0,      0}, //!< D_Factor;
-#endif
+  /* 05 */  {44,        44,         0,      255},   //!< PP_Factor;
+  /* 06 */  {15,        15,         0,      255},   //!< P_Factor;
+  /* 07 */  {3,          3,         0,      255},   //!< I_Factor;
   /* 08 */  {120,       120,       20,      255},   //!< pid_hysteresis
   /* 09 */  {240/5,     240/5,      20/5,   255},   //!< PID_interval*5 = interval in seconds;  min=20sec, max=21.25 minutes
   /* 0a */  {30,         30,        0,      100},   //!< valve_min

@@ -69,8 +69,3 @@ void CTL_change_mode(int8_t dif);
 
 extern int16_t sumError;
 
-#if CONFIG_ENABLE_D
-  void pid_Init(int16_t processValue);
-#else
-  #define pid_Init(processValue)
-#endif

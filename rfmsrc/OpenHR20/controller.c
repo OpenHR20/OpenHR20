@@ -126,7 +126,6 @@ int8_t CTL_update(bool minute_ch, int8_t valve) {
         //update now
         if (temp!=CTL_temp_wanted_last) {
             CTL_temp_wanted_last=temp;
-            pid_Init(temp_average); // restart PID controler
             goto UPDATE_NOW; // optimization
         }
         if (PID_update_timeout == 0) {
@@ -206,19 +205,14 @@ void CTL_change_mode(int8_t m) {
 }
 
 //! Last process value, used to find derivative of process value.
-static int16_t lastProcessValue;
+static int16_t lastProcessValue=0;
 
 //! Summation of errors, used for integrate calculations
 int16_t sumError=0;
 //! The scalling_factor for PID constants
 #define scalling_factor  (256)
-
-#if CONFIG_ENABLE_D
-void pid_Init( int16_t processValue)
-// Set up PID controller parameters
-{
-  lastProcessValue =  processValue;
-}
+#if (scalling_factor != 256)
+    #error optimized only for (scalling_factor == 256)
 #endif
 
 
@@ -231,38 +225,32 @@ void pid_Init( int16_t processValue)
  */
 static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old_result)
 {
-  int32_t error32, pi_term;
+  int32_t /*error2,*/ pi_term;
   int16_t error16, maxSumError;
-#if CONFIG_ENABLE_D
-  int32_t d_term,
-#endif
   error16 = setPoint - processValue;
   
-  // maximum error is 40 degree C
-  if (error16 > 4000) { 
-    error16=4000;
-  } else if (error16 < -4000) {
-    error16=-4000;
+  // maximum error is 20 degree C
+  if (error16 > 2000) { 
+    error16=2000;
+  } else if (error16 < -2000) {
+    error16=-2000;
   }
 
   // Calculate Iterm and limit integral runaway  
   {
     int16_t d = lastProcessValue - processValue;
-    #if ! CONFIG_ENABLE_D
-      lastProcessValue = processValue;
-    #endif
-
-    if (((d>0)&&(error16>0)) || ((d<0)&&(error16<0))) {
+    if ((lastProcessValue!=0)&&(((d>0)&&(error16>0)) || ((d<0)&&(error16<0)))) {
         // update sumError if turn is wrong only 
         int16_t max = (int16_t)scalling_factor*50/config.P_Factor;
-        if (error16 > max) {  // maximum sumError change + limmiter
+        if (error16 > max) {  // maximum sumError change + limiter
           sumError += max;  
-        } else if (error16 < -max) { // maximum sumError change - limmiter
+        } else if (error16 < -max) { // maximum sumError change - limiter
           sumError -= max;  
         } else {
           sumError += error16;
         }
     }
+    lastProcessValue = processValue;
   }
   if (config.I_Factor == 0) {
       maxSumError = 12800; // scalling_factor*50/1
@@ -275,29 +263,16 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old
   } else if(sumError < -maxSumError){
     sumError = -maxSumError;
   }
-
-  error32 = (int32_t)error16 * (int32_t)abs(error16); // non linear P characteristic 
-  error32 /= 100L; // P gain
-  // error32 -> for overload limit: maximum is +-(4000*4000/200) = +-160000
-
-  // Calculate Pterm
-  pi_term = (config.P_Factor * error32);
-  // pi_term - > for overload limit: maximum is +-(255*160000) = +-40800000
   
-  pi_term += config.I_Factor * sumError; // maximum is (scalling_factor*50/I_Factor)*I_Factor
-  // pi_term - > for overload limit: maximum is +- (40800000 + scalling_factor*50) = +-40812800
+  pi_term = ((int32_t)config.PP_Factor * (int32_t)abs(error16));
+  pi_term += (int32_t)((uint16_t)config.P_Factor <<8);
+  pi_term *= (int32_t)error16;
+  pi_term >>= 8; 
+  // pi_term - > for overload limit: maximum is +-(((255*2000)+255)*2000) = +-1020510000/256=3986367
+  
+  pi_term += (int16_t)(config.I_Factor) * (int16_t)sumError; // maximum is (scalling_factor*50/I_Factor)*I_Factor
+  // pi_term - > for overload limit: maximum is +- (3986367 + scalling_factor*50) = +-3999167
    
-
-#if CONFIG_ENABLE_D
-  // Calculate Dterm
-  d_term = lastProcessValue - processValue;
-  d_term *= labs(d_term); // non linear characteristic 
-  d_term /= scalling_factor;
-  d_term *= config.D_Factor;
-  pi_term += d_term;
-  lastProcessValue = processValue;
-#endif
-
   pi_term += 50*scalling_factor;
   if(pi_term > 100*scalling_factor){
     return config.valve_max;
