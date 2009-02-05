@@ -1,4 +1,4 @@
-	/*
+/*
  *  Open HR20
  *
  *  target:     ATmega169 @ 4 MHz in Honnywell Rondostat HR20E

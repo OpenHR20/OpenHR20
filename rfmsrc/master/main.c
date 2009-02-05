@@ -120,9 +120,14 @@ int main(void)
 			if (rfm_mode == rfmmode_tx_done)
 			{
 					rfm_mode    = rfmmode_stop;
+					rfm_framesize = 5;
 					RFM_INT_DIS();
-				    RFM_OFF();		// turn everything off
-				    RFM_WRITE(0);	// Clear TX-IRQ
+				    RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
+				    RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
+                    RFM_RX_ON();    //re-enable RX
+					rfm_framepos=0;
+					rfm_mode = rfmmode_rx;
+				    RFM_INT_EN(); // enable RFM interrupt
 
 					// actually now its time to switch into listening
 					continue;
@@ -152,11 +157,45 @@ int main(void)
             {
                 bool minute = RTC_AddOneSecond();
                 if (minute || RTC_GetSecond()==30) {
-                    //send Sync packet \todo
+                    rfm_putchar(RTC_GetYearYY());
+                    uint8_t d = RTC_GetDay(); 
+                    rfm_putchar((RTC_GetMonth()<<4) + (d>>3)); 
+                    rfm_putchar((d<<5) + RTC_GetHour());
+                    rfm_putchar((RTC_GetMinute()<<1) + ((RTC_GetSecond()==30)?1:0));
+                
+                    RFM_TX_ON_PRE();
+					rfm_framebuf[ 0] = 0xaa; // preamble
+					rfm_framebuf[ 1] = 0xaa; // preamble
+					rfm_framebuf[ 2] = 0x2d; // rfm fifo start pattern
+					rfm_framebuf[ 3] = 0xd4; // rfm fifo start pattern
+
+					rfm_framebuf[ 4] = (rfm_framesize-4+4) | 0xc0; // length (sync)
+
+					rfm_framebuf[rfm_framesize++] = 0xab; // dummy MAC
+					rfm_framebuf[rfm_framesize++] = 0xcd; // dummy MAC
+					rfm_framebuf[rfm_framesize++] = 0xef; // dummy MAC
+					rfm_framebuf[rfm_framesize++] = 0x00; // dummy MAC
+
+
+					rfm_framebuf[rfm_framesize++] = 0xaa; // dummy byte
+					rfm_framebuf[rfm_framesize++] = 0xaa; // dummy byte
+
+					rfm_framepos  = 0;
+					rfm_mode    = rfmmode_tx;
+					RFM_TX_ON();
+    			    RFM_SPI_SELECT; // set nSEL low: from this moment SDO indicate FFIT or RGIT
+                    RFM_INT_EN(); // enable RFM interrupt
+
                     COM_print_datetime();
                 }
             }
         }
+        // serial communication
+		if (task & TASK_COM) {
+			task&=~TASK_COM;
+			COM_commad_parse();
+			continue; // on most case we have only 1 task, iprove time to sleep
+		}
 
 
     } //End Main loop

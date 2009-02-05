@@ -70,5 +70,7 @@
 
 #define RFM_PERMANENT_CLK 1
 
+void INT2_vect(void);
+
 #define RFM_INT_EN() (GICR |= _BV(INT2), INT2_vect())
 #define RFM_INT_DIS() (GICR &= ~_BV(INT2))

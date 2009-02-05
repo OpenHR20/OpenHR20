@@ -75,23 +75,29 @@ extern uint32_t RTC_Ticks; //!< Ticks since last RTC.Init
 
 
 void RTC_Init(void);                 // init Timer, activate 500ms IRQ
-#define RTC_GetHour() ((int8_t) RTC_hh)                 // get hour
-#define RTC_GetMinute() ((int8_t) RTC_mm)               // get minute
-#define RTC_GetSecond() ((int8_t) RTC_ss)               // get second
-#define RTC_GetDay() ((int8_t) RTC_DD)                  // get day
-#define RTC_GetMonth() ((int8_t) RTC_MM)                // get month
-#define RTC_GetYearYY() ((int8_t) RTC_YY)               // get year (00-255)
+#define RTC_GetHour() ((uint8_t) RTC_hh)                 // get hour
+#define RTC_GetMinute() ((uint8_t) RTC_mm)               // get minute
+#define RTC_GetSecond() ((uint8_t) RTC_ss)               // get second
+#if defined(MASTER_CONFIG_H)
+    #define RTC_GetS100() ((uint8_t) RTC_s100)           // get 1/100 second
+#endif
+#define RTC_GetDay() ((uint8_t) RTC_DD)                  // get day
+#define RTC_GetMonth() ((uint8_t) RTC_MM)                // get month
+#define RTC_GetYearYY() ((uint8_t) RTC_YY)               // get year (00-255)
 #define RTC_GetYearYYYY() (2000 + (uint16_t) RTC_YY)  // get year (2000-2255) 
 #define RTC_GetDayOfWeek() ((uint8_t) RTC_DOW)          // get day of week (0:monday)
 #define RTC_GetTicks() ((uint32_t) RTC_Ticks)          // 1s ticks from startup
 
 
-void RTC_SetHour(int8_t);                     // Set hour
-void RTC_SetMinute(int8_t);                   // Set minute
-void RTC_SetSecond(int8_t);                   // Set second
-void RTC_SetDay(int8_t);                      // Set day
-void RTC_SetMonth(int8_t);                    // Set month
-void RTC_SetYear(int8_t);                     // Set year
+void RTC_SetHour(uint8_t);                     // Set hour
+void RTC_SetMinute(uint8_t);                   // Set minute
+void RTC_SetSecond(uint8_t);                   // Set second
+#if defined(MASTER_CONFIG_H)
+    void RTC_SetSecond100(uint8_t);            // Set 1/100 second
+#endif
+void RTC_SetDay(uint8_t);                      // Set day
+void RTC_SetMonth(uint8_t);                    // Set month
+void RTC_SetYear(uint8_t);                     // Set year
 #if 0
     bool RTC_SetDate(int8_t, int8_t, int8_t);   // Set Date, and do all the range checking
 #else

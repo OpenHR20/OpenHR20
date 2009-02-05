@@ -41,4 +41,4 @@ void COM_init(void);
 
 void COM_dump_packet(uint8_t *d, uint8_t len);
 
-void COM_print_datetime();
+void COM_print_datetime(void);

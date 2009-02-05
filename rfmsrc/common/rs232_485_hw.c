@@ -65,7 +65,9 @@ ISR(USART_RXC_vect)
 		UCSR0B &= ~(_BV(RXEN0)|_BV(RXCIE0)); // disable receive
 	#elif defined(_AVR_IOM169_H_) || defined(_AVR_IOM16_H_)
 		COM_rx_char_isr(UDR);	// Add char to input buffer
-		UCSRB &= ~(_BV(RXEN)|_BV(RXCIE)); // disable receive
+		#if !defined(MASTER_CONFIG_H)
+			UCSRB &= ~(_BV(RXEN)|_BV(RXCIE)); // disable receive
+		#endif
 	#endif
 	#if !defined(_AVR_IOM16_H_)
     PCMSK0 |= (1<<PCINT0); // activate interrupt
@@ -159,6 +161,9 @@ void RS_Init(uint16_t baud)
 		UBRRL = (unsigned char)(ubrr_val & 0xFF);
 		#if defined(_AVR_IOM16_H_)
             UCSRC = (1<<URSEL) | (_BV(UCSZ0) | _BV(UCSZ1));     // Asynchron 8N1
+            #if defined(MASTER_CONFIG_H)
+			  UCSRB = _BV(RXCIE) | _BV(RXEN);
+			#endif
         #else 
             UCSRC = (_BV(UCSZ0) | _BV(UCSZ1));     // Asynchron 8N1
         #endif

@@ -237,6 +237,136 @@ void COM_init(void) {
 
 /*!
  *******************************************************************************
+ *  \brief Print debug line
+ *
+ *  \note
+ ******************************************************************************/
+void COM_print_debug(int8_t valve) {
+    print_s_p(PSTR("D: "));
+    print_hexXX(RTC_GetDayOfWeek()+0xd0);
+	COM_putchar(' ');
+	print_decXX(RTC_GetDay());
+	COM_putchar('.');
+	print_decXX(RTC_GetMonth());
+	COM_putchar('.');
+	print_decXX(RTC_GetYearYY());
+	COM_putchar(' ');
+	print_decXX(RTC_GetHour());
+	COM_putchar(':');
+	print_decXX(RTC_GetMinute());
+	COM_putchar(':');
+	print_decXX(RTC_GetSecond());
+	COM_putchar('.');
+	print_decXX(RTC_GetS100());
+	COM_putchar('\n');
+	COM_flush();
+}
+
+
+
+/*! 
+    \note dirty trick with shared array for \ref COM_hex_parse and \ref COM_commad_parse
+    code size optimalization
+*/
+static uint8_t com_hex[4];
+
+/*!
+ *******************************************************************************
+ *  \brief parse hex number (helper function)
+ *
+ *	\note hex numbers use ONLY lowcase chars, upcase is reserved for commands
+ *	
+ ******************************************************************************/
+static char COM_hex_parse (uint8_t n) {
+	uint8_t i;
+	for (i=0;i<n;i++) {
+    	uint8_t c = COM_getchar()-'0';
+    	if ( c>9 ) {  // chars < '0' overload var c
+			if ((c>=('a'-'0')) && (c<=('f'-'0'))) {
+    			c-= (('a'-'0')-10);
+			} else return c+'0';
+		}
+    	if (i&1) {
+    	   com_hex[i>>1]+=c;
+        } else {
+    	   com_hex[i>>1]=(uint8_t)c<<4;
+        }
+    }
+	{
+		char c;
+    	if ((c=COM_getchar())!='\n') return c;
+	}
+	return '\0';
+}
+
+/*!
+ *******************************************************************************
+ *  \brief print X[xx]=
+ *
+ ******************************************************************************/
+static void print_idx(char t) {
+    super_COM_putchar(t);
+    COM_putchar('[');
+    super_print_hexXX(com_hex[0]);
+    COM_putchar(']');
+    COM_putchar('=');
+}
+
+
+
+
+/*!
+ *******************************************************************************
+ *  \brief parse command
+ *
+ *  \note commands have FIXED format
+ *  \note command X.....\n    - X is upcase char as commad name, \n is termination char
+ *  \note hex numbers use ONLY lowcase chars, upcase is reserved for commands
+ *  \note   V\n - print version information
+ *  \note   D\n - print status line 
+ *  \note   Yyymmdd\n - set, year yy, month mm, day dd; HEX values!!!
+ *  \note   HhhmmSSss\n - set, hour hh, minute mm, second SS, 1/100 second ss; HEX values!!!
+ *	
+ ******************************************************************************/
+void COM_commad_parse (void) {
+	char c;
+	while ((c=COM_getchar())!='\0') {
+		switch(c) {
+		case 'V':
+			if (COM_getchar()=='\n') print_version();
+			c='\0';
+			break;
+		case 'D':
+			if (COM_getchar()=='\n') COM_print_debug(-1);
+			c='\0';
+			break;
+		case 'Y':
+			if (COM_hex_parse(3*2)!='\0') { break; }
+			RTC_SetDate(com_hex[2],com_hex[1],com_hex[0]);
+			COM_print_debug(-1);
+			c='\0';
+			break;
+		case 'H':
+			if (COM_hex_parse(4*2)!='\0') { break; }
+			RTC_SetHour(com_hex[0]);
+			RTC_SetMinute(com_hex[1]);
+			RTC_SetSecond(com_hex[2]);
+			RTC_SetSecond100(com_hex[3]);
+			COM_print_debug(-1);
+			c='\0';
+			break;
+		default:
+			c='\0';
+			break;
+		}
+		if (c!='\0') COM_putchar('\n');
+		COM_flush();
+	}
+}
+
+
+/*!
+ *******************************************************************************
  *  \brief dump data from *d length len
  *
  *  \note
