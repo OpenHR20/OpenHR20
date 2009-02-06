@@ -491,4 +491,5 @@ extern uint8_t rfm_framesize;
 extern uint8_t rfm_framepos;
 extern rfm_mode_t rfm_mode;
 
-#define rfm_start_tx() (rfm_mode=rfmmode_start_tx)
+#define rfm_start_tx() (1) 
+// (rfm_mode=rfmmode_start_tx)

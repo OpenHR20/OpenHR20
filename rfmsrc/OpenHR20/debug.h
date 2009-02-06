@@ -53,3 +53,9 @@
 #define DEBUG_PRINT_MEASURE 0
 #define DEBUG_PRINT_I_SUM 1
 #define DEBUG_IGNORE_MONT_CONTACT 0
+
+#if RFM
+    #define DEBUG_DUMP_RFM DEBUG_MODE
+#else 
+    #define DEBUG_DUMP_RFM
+#endif

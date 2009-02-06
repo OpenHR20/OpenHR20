@@ -120,7 +120,6 @@ int main(void)
 			if (rfm_mode == rfmmode_tx_done)
 			{
 					rfm_mode    = rfmmode_stop;
-					rfm_framesize = 5;
 					RFM_INT_DIS();
 				    RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
 				    RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
@@ -157,6 +156,8 @@ int main(void)
             {
                 bool minute = RTC_AddOneSecond();
                 if (minute || RTC_GetSecond()==30) {
+					rfm_framesize = 5;
+					rfm_mode = rfmmode_stop;
                     rfm_putchar(RTC_GetYearYY());
                     uint8_t d = RTC_GetDay(); 
                     rfm_putchar((RTC_GetMonth()<<4) + (d>>3)); 
@@ -262,6 +263,7 @@ ISR (INT2_vect){
         if (rfm_framepos >= RFM_FRAME_MAX) rfm_mode = rfmmode_rx_owf;
     	task |= TASK_RFM; // inform the rfm task about next RX byte
     } else if (rfm_mode == rfmmode_rx_owf) {
+        RFM_READ_FIFO();
     	task |= TASK_RFM; // inform the rfm task about next RX byte
 	}
     cli(); // disable global interrupts

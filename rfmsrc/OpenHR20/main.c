@@ -57,7 +57,7 @@
 #include "../common/rfm.h"
 #include "controller.h"
 
-#if (RFM == 1)
+#if RFM
 	#include "rfm_config.h"
 	#include "../common/rfm.h"
 #endif
@@ -80,6 +80,10 @@ void load_defauls(void);                   // load default values
 void callback_settemp(uint8_t);            // called from RTC to set new reftemp
 void setautomode(bool);                    // activate/deactivate automode
 uint8_t input_temp(uint8_t);
+
+#if RFM
+    int8_t RFM_sync_tmo=0;
+#endif
 
 // Check AVR LibC Version >= 1.6.0
 #if __AVR_LIBC_VERSION__ < 10600UL
@@ -109,6 +113,14 @@ int main(void)
     }
 
 	COM_init();
+    #if RFM
+        // enable persistent RX for initial sync
+        RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
+        RFM_SPI_16(RFM_LOW_BATT_DETECT_D_10MHZ);
+        RFM_RX_ON();
+		RFM_INT_EN(); // enable RFM interrupt
+    	rfm_mode = rfmmode_rx;
+    #endif
 
 	// We should do the following once here to have valid data from the start
 
@@ -148,7 +160,7 @@ int main(void)
 			asm volatile ("sei");
 		}
 
-		#if (RFM==1)
+		#if RFM
 		  // RFM12
 		  if (task & TASK_RFM) {
 			task &= ~TASK_RFM;
@@ -165,10 +177,22 @@ int main(void)
 					// actually now its time to switch into listening
 					continue;
 			}
-			else // rfmmode_rxd
-			{
-			    // \todo
-			}
+  			else if ((rfm_mode == rfmmode_rx) || (rfm_mode == rfmmode_rx_owf))
+  			{
+  				if (rfm_framepos>=1) {
+                    if ((rfm_framepos >= (rfm_framebuf[0]&0x3f)) 
+                            || ((rfm_framebuf[0]&0x3f)>= RFM_FRAME_MAX)  // reject noise
+                            || (rfm_framepos >= RFM_FRAME_MAX)) {
+                        COM_dump_packet(rfm_framebuf, rfm_framepos);
+                        rfm_framepos=0;
+						rfm_mode = rfmmode_rx;
+                            RFM_INT_DIS(); // disable RFM interrupt
+                        	RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
+	                        RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
+	                        RFM_INT_EN(); // enable RFM interrupt
+                    }
+                }
+  			}
 		}
 		#endif
 
@@ -183,13 +207,12 @@ int main(void)
 			task&=~TASK_ADC;
 			if (task_ADC()==0) {
                 // ADC is done
-#if (RFM==1)
+#if RFM
 				//if (config.RFM_enable 
                 //    && (RTC_GetSecond() == config.RFM_devaddr) 
                 //    && (rfm_mode == rfmmode_start_tx)) // collission protection: every HR20 shall send when the second counter is equal to it's own address.
-				if ((config.RFM_enable) && !(RTC_GetSecond() % 4) ) // for testing all 4 seconds ...
+				if ((RFM_sync_tmo>1) && (config.RFM_enable) && !(RTC_GetSecond() % 4) ) // for testing all 4 seconds ...
 				{
-
 					RFM_TX_ON_PRE();
 
 					rfm_framebuf[ 0] = 0xaa; // preamble
@@ -254,8 +277,26 @@ int main(void)
                     // valve protection / CyCL
                     MOTOR_updateCalibration(0);
                 }
-
-
+                #if RFM
+                    if (minute) {
+                        RFM_sync_tmo--;
+                        if (RFM_sync_tmo<=0) {
+                            if (RFM_sync_tmo==0) {
+                            		RFM_INT_DIS();
+                				    RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
+				                    RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
+                                    RFM_RX_ON();    //re-enable RX
+                					rfm_framepos=0;
+                					rfm_mode = rfmmode_rx;
+                				    RFM_INT_EN(); // enable RFM interrupt
+                            } else if (RFM_sync_tmo<-4) {
+            					RFM_INT_DIS();
+            				    RFM_OFF();		// turn everything off
+            				    CTL_error |= CTL_ERR_RFM_SYNC;
+                            } 
+                        }
+                    }
+                #endif
             }
             MOTOR_updateCalibration(mont_contact_pooling());
             MOTOR_Goto(valve_wanted);
@@ -369,7 +410,7 @@ static inline void init(void)
     //1 Initialize the LCD
     LCD_Init();
 
-#if (RFM==1)
+#if RFM
 	RFM_init();
 	RFM_OFF();
 #endif

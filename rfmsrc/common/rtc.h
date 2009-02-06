@@ -87,7 +87,9 @@ void RTC_Init(void);                 // init Timer, activate 500ms IRQ
 #define RTC_GetYearYYYY() (2000 + (uint16_t) RTC_YY)  // get year (2000-2255) 
 #define RTC_GetDayOfWeek() ((uint8_t) RTC_DOW)          // get day of week (0:monday)
 #define RTC_GetTicks() ((uint32_t) RTC_Ticks)          // 1s ticks from startup
-
+#if ! defined(MASTER_CONFIG_H)
+    #define RTC_s256 TCNT2
+#endif
 
 void RTC_SetHour(uint8_t);                     // Set hour
 void RTC_SetMinute(uint8_t);                   // Set minute

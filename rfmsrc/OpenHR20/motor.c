@@ -412,12 +412,15 @@ ISR (PCINT0_vect){
               rfm_mode = rfmmode_tx_done;
               task |= TASK_RFM; // inform the rfm task about end of transmition
               return; // \note !!WARNING!!
-            } 
-          } else if (rfm_mode == rfmmode_rx) {
-            rfm_framebuf[rfm_framepos++]=RFM_READ_FIFO();
-            if (rfm_framepos >= RFM_FRAME_MAX) rfm_mode = rfmmode_rx_owf;
-            task |= TASK_RFM; // inform the rfm task about next RX byte
-          }
+            }
+		  } else if (rfm_mode == rfmmode_rx) {
+	        rfm_framebuf[rfm_framepos++]=RFM_READ_FIFO();
+        	if (rfm_framepos >= RFM_FRAME_MAX) rfm_mode = rfmmode_rx_owf;
+    		task |= TASK_RFM; // inform the rfm task about next RX byte
+    	  } else if (rfm_mode == rfmmode_rx_owf) {
+		  	RFM_READ_FIFO();
+   			task |= TASK_RFM; // inform the rfm task about next RX byte
+		  }
           cli(); // disable global interrupts
           asm volatile("nop"); // we must have one instruction after cli() 
           PCMSK0 |= _BV(RFM_SDO_PCINT); // enable RFM interrupt

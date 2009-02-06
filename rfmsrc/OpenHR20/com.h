@@ -33,6 +33,8 @@
 
 #pragma once
 
+#include "debug.h"
+
 char COM_tx_char_isr(void);
 
 void COM_rx_char_isr(char c);
@@ -46,3 +48,8 @@ void COM_commad_parse (void);
 void COM_debug_print_motor(int8_t dir, uint16_t m, uint8_t pwm);
 void COM_debug_print_temperature(uint16_t t);
 
+#if DEBUG_DUMP_RFM
+    void COM_dump_packet(uint8_t *d, uint8_t len);
+#else 
+    #define COM_dump_packet(d,len) ()
+#endif
