@@ -87,8 +87,7 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
     /* 23 */ uint8_t window_open_noise_filter;
     /* 24 */ uint8_t window_close_noise_filter;
 #if (RFM==1)
-	/* 25 */ uint8_t RFM_devaddr; //!< HR20's own device address in RFM radio networking.
-	/* 26 */ uint8_t RFM_enable; //!< enable rfm at all
+	/* 25 */ uint8_t RFM_devaddr; //!< HR20's own device address in RFM radio networking. =0 mean disable radio
 #endif
 
 #if (SECURITY==1)
@@ -207,8 +206,7 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 23 */  {5,           5,        2,       60},   //!< window_open_noise_filter
   /* 24 */  {15,         15,        2,      255},   //!< window_close_noise_filter
 #if (RFM==1)
-  /* 25 */  {RFM_DEVICE_ADDRESS, RFM_DEVICE_ADDRESS, 1, 29}, //!< RFM_devaddr: HR20's own device address in RFM radio networking.
-  /* 26 */  {1,         1,        0,        1},   //!< RFM_enabled
+  /* 25 */  {RFM_DEVICE_ADDRESS, RFM_DEVICE_ADDRESS, 0, 29}, //!< RFM_devaddr: HR20's own device address in RFM radio networking.
 #endif
 
 #if (SECURITY==1)

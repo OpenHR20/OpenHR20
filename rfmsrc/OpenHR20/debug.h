@@ -32,6 +32,7 @@
  */
 
 #pragma once
+#include "config.h"
 
 #define DEBUG_MODE 1
 #define DEBUG_SKIP_DATETIME_SETTING_AFTER_RESET 0

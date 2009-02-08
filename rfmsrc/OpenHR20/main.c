@@ -170,6 +170,7 @@ int main(void)
 			{
 					rfm_mode    = rfmmode_stop;
 					rfm_framesize = 6;
+					rfm_framepos=0;
 					RFM_INT_DIS();
 				    RFM_OFF();		// turn everything off
 				    //RFM_WRITE(0);	// Clear TX-IRQ
@@ -186,10 +187,23 @@ int main(void)
                         COM_dump_packet(rfm_framebuf, rfm_framepos);
                         rfm_framepos=0;
 						rfm_mode = rfmmode_rx;
-                            RFM_INT_DIS(); // disable RFM interrupt
-                        	RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
-	                        RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
-	                        RFM_INT_EN(); // enable RFM interrupt
+                        RFM_INT_DIS(); // disable RFM interrupt
+                      	RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
+                        RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
+                        RFM_INT_EN(); // enable RFM interrupt
+                        if (rfm_framebuf[0] == 0xc9) {
+                            //sync packet
+                			RTC_s256=10;
+                            RFM_sync_tmo=10;
+                            rfm_mode = rfmmode_stop;
+                            RFM_OFF();
+                            RTC_SetYear(rfm_framebuf[1]);
+                            RTC_SetMonth(rfm_framebuf[2]>>4);
+                            RTC_SetDay((rfm_framebuf[3]>>5)+((rfm_framebuf[2]<<3)&0x18));
+                			RTC_SetHour(rfm_framebuf[3]&0x1f);
+                			RTC_SetMinute(rfm_framebuf[4]>>1);
+                			RTC_SetSecond((rfm_framebuf[4]&1)?30:00);
+                        }
                     }
                 }
   			}
@@ -208,10 +222,10 @@ int main(void)
 			if (task_ADC()==0) {
                 // ADC is done
 #if RFM
-				//if (config.RFM_enable 
-                //    && (RTC_GetSecond() == config.RFM_devaddr) 
-                //    && (rfm_mode == rfmmode_start_tx)) // collission protection: every HR20 shall send when the second counter is equal to it's own address.
-				if ((RFM_sync_tmo>1) && (config.RFM_enable) && !(RTC_GetSecond() % 4) ) // for testing all 4 seconds ...
+				if ((config.RFM_devaddr!=0)
+				    && (RFM_sync_tmo>1)
+                    && (RTC_GetSecond() == config.RFM_devaddr)) // collission protection: every HR20 shall send when the second counter is equal to it's own address.
+				// if ((RFM_sync_tmo>1) && (config.RFM_devaddr!=0) && !(RTC_GetSecond() % 4) ) // for testing all 4 seconds ...
 				{
 					RFM_TX_ON_PRE();
 
@@ -227,11 +241,22 @@ int main(void)
 					rfm_framebuf[rfm_framesize++] = 0xaa; // dummy byte
 
 					rfm_framepos  = 0;
-					rfm_mode    = rfmmode_tx;
+					rfm_mode = rfmmode_tx;
 					RFM_TX_ON();
     			    RFM_SPI_SELECT; // set nSEL low: from this moment SDO indicate FFIT or RGIT
                     RFM_INT_EN(); // enable RFM interrupt
 				}
+				if ((config.RFM_devaddr!=0)
+				    && (RFM_sync_tmo>1)
+                    && ((RTC_GetSecond() == 00) || (RTC_GetSecond() == 30)))
+                {
+                      	RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
+                        RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
+                        RFM_RX_ON();
+	    			    RFM_SPI_SELECT; // set nSEL low: from this moment SDO indicate FFIT or RGIT
+                        RFM_INT_EN(); // enable RFM interrupt
+                    	rfm_mode = rfmmode_rx;
+                }
 #endif
             }
 			continue; // on most case we have only 1 task, iprove time to sleep

@@ -61,14 +61,14 @@ In this file we define only configuration parameters, for example what kind of c
 // our Version
 #define REVHIGH  0  //! Revision number high
 #define REVLOW   92 //! Revision number low
-#define VERSION_N 0xE001 //! Version as HEX value F0.92 (E for Experimental)
+#define VERSION_N 0xE002 //! Version as HEX value F0.92 (E for Experimental)
 
-#define DEVICE_ADDRESS 0x01 //! Individual Device Adress for each HR20 for addressing in Networks (e.g. RFM Radio)
+#define DEVICE_ADDRESS 0x02 //! Individual Device Adress for each HR20 for addressing in Networks (e.g. RFM Radio)
 
 #ifndef REVISION
  #define REVISION "$Rev$"
 #endif 
-#define VERSION_STRING  "V: OpenHR20 (+rfm) SW version 0.92 build " __DATE__ " " __TIME__ " " REVISION
+#define VERSION_STRING  "V:OpenHR20rfm E0.02 " __DATE__ " " __TIME__ " " REVISION
 
 // Parameters for the COMM-Port
 #define COM_BAUD_RATE 9600
