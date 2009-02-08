@@ -182,26 +182,24 @@ static uint8_t menu_temp_rewoke2;
 void CTL_change_mode(int8_t m) {
     if (m == CTL_CHANGE_MODE) {
         // change
-    	if (!CTL_mode_auto || (CTL_temp_wanted!=CTL_temp_auto)) {
-    		menu_temp_rewoke1=CTL_temp_wanted;
-    		menu_temp_rewoke2=CTL_temp_auto; // \todo 
-    	} else {
-    		menu_temp_rewoke1=0;
-    		menu_temp_rewoke2=0;
-    	}
+  		menu_temp_rewoke1=CTL_temp_wanted;
+  		menu_temp_rewoke2=CTL_temp_auto; 
         CTL_mode_auto=!CTL_mode_auto;
-        if (CTL_mode_auto) CTL_temp_wanted=CTL_temp_auto;
+        PID_force_update = 10; 
     } else if (m == CTL_CHANGE_MODE_REWOKE) {
         //rewoke
-    	if (CTL_mode_auto || (menu_temp_rewoke2==CTL_temp_auto)) {
-    		CTL_temp_wanted=menu_temp_rewoke1;
-    	}
+  		CTL_temp_wanted=menu_temp_rewoke1;
+  		CTL_temp_auto=menu_temp_rewoke2;
         CTL_mode_auto=!CTL_mode_auto;
+        PID_force_update = 10; 
     } else {
         CTL_mode_auto=m;
+        PID_force_update = 0; 
+    }
+    if (CTL_mode_auto && (m != CTL_CHANGE_MODE_REWOKE)) {
+        CTL_temp_wanted=(CTL_temp_auto=RTC_ActualTimerTemperature(false));
     }
     CTL_mode_window = 0;
-    PID_force_update = 10; 
 }
 
 //! Last process value, used to find derivative of process value.

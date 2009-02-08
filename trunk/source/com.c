@@ -448,7 +448,7 @@ void COM_commad_parse (void) {
         case 'M':
             if (COM_hex_parse(1*2)!='\0') { break; }
             CTL_change_mode(com_hex[0]==1);
-            COM_print_debug(-1);
+            // COM_print_debug(-1);
             break;
         case 'A':
             if (COM_hex_parse(1*2)!='\0') { break; }
