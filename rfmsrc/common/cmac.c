@@ -46,79 +46,52 @@ uint8_t K_mac[16] = {
 static uint8_t K1[8];
 static uint8_t K2[8];
 
-static void left_roll (uint8_t* p) {
-    asm (
-    "   ld r25,%a0      \n"
-    "   lsl r25         \n"
-    "   ldd __tmp_reg__,%a0+1   \n"
-    "   rol __tmp_reg__         \n"
-    "   std %a0+1,__tmp_reg__   \n"
-    "   ldd __tmp_reg__,%a0+2   \n"
-    "   rol __tmp_reg__         \n"
-    "   std %a0+2,__tmp_reg__   \n"
-    "   ldd __tmp_reg__,%a0+3   \n"
-    "   rol __tmp_reg__         \n"
-    "   std %a0+3,__tmp_reg__   \n"
-    "   ldd __tmp_reg__,%a0+4   \n"
-    "   rol __tmp_reg__         \n"
-    "   std %a0+4,__tmp_reg__   \n"
-    "   ldd __tmp_reg__,%a0+5   \n"
-    "   rol __tmp_reg__         \n"
-    "   std %a0+5,__tmp_reg__   \n"
-    "   ldd __tmp_reg__,%a0+6   \n"
-    "   rol __tmp_reg__         \n"
-    "   std %a0+6,__tmp_reg__   \n"
-    "   ldd __tmp_reg__,%a0+7   \n"
-    "   rol __tmp_reg__         \n"
-    "   std %a0+7,__tmp_reg__   \n"
-    "   brcc L_%=       \n"
-    "   ori r25,1       \n"
-    "L_%=:              \n"
-    "   st %a0,r25      \n"
-    :: "b" (p)
-    :"r25" 
-    );
-}
-
+/* internal function for cmac_init */
+asm (
+    "left_roll:               \n"
+    "   ld r25,Y              \n"
+    "   lsl r25               \n"
+    "   ldd __tmp_reg__,Y+1   \n"
+    "   rol __tmp_reg__       \n"
+    "   std Z+1,__tmp_reg__   \n"
+    "   ldd __tmp_reg__,Y+2   \n"
+    "   rol __tmp_reg__       \n"
+    "   std Z+2,__tmp_reg__   \n"
+    "   ldd __tmp_reg__,Y+3   \n"
+    "   rol __tmp_reg__       \n"
+    "   std Z+3,__tmp_reg__   \n"
+    "   ldd __tmp_reg__,Y+4   \n"
+    "   rol __tmp_reg__       \n"
+    "   std Z+4,__tmp_reg__   \n"
+    "   ldd __tmp_reg__,Y+5   \n"
+    "   rol __tmp_reg__       \n"
+    "   std Z+5,__tmp_reg__   \n"
+    "   ldd __tmp_reg__,Y+6   \n"
+    "   rol __tmp_reg__       \n"
+    "   std Z+6,__tmp_reg__   \n"
+    "   ldd __tmp_reg__,Y+7   \n"
+    "   rol __tmp_reg__       \n"
+    "   std Z+7,__tmp_reg__   \n"
+    "   brcc left_roll_brcc   \n"
+    "   ori r25,1             \n"
+    "left_roll_brcc:          \n"
+    "   st Z,r25              \n"
+    "   ret "
+);
 void cmac_init(void) {
     uint8_t i;
-    for (i=0;i<8;i++) {
-        K2[i]=0;
+    for (i=0;i<8;i++) { // smaller&faster than memset
+        K1[i]=0;
     }
-    
-    xtea_enc(K1, K2, K_mac);
-    
-    left_roll(K1);
+    xtea_enc(K1, K1, K_mac);
     asm (
-    "   ld r25,%a0      \n"
-    "   lsl r25         \n"
-    "   ldd __tmp_reg__,%a0+1   \n"
-    "   rol __tmp_reg__         \n"
-    "   std %a1+1,__tmp_reg__   \n"
-    "   ldd __tmp_reg__,%a0+2   \n"
-    "   rol __tmp_reg__         \n"
-    "   std %a1+2,__tmp_reg__   \n"
-    "   ldd __tmp_reg__,%a0+3   \n"
-    "   rol __tmp_reg__         \n"
-    "   std %a1+3,__tmp_reg__   \n"
-    "   ldd __tmp_reg__,%a0+4   \n"
-    "   rol __tmp_reg__         \n"
-    "   std %a1+4,__tmp_reg__   \n"
-    "   ldd __tmp_reg__,%a0+5   \n"
-    "   rol __tmp_reg__         \n"
-    "   std %a1+5,__tmp_reg__   \n"
-    "   ldd __tmp_reg__,%a0+6   \n"
-    "   rol __tmp_reg__         \n"
-    "   std %a1+6,__tmp_reg__   \n"
-    "   ldd __tmp_reg__,%a0+7   \n"
-    "   rol __tmp_reg__         \n"
-    "   std %a1+7,__tmp_reg__   \n"
-    "   brcc L_%=       \n"
-    "   ori r25,1       \n"
-    "L_%=:              \n"
-    "   st %a1,r25      \n"
-    :: "b" (K1), "b" (K2)
-    :"r25" 
+    "   movw  R30,%A0   \n"
+    "   call left_roll \n"
+    "   ldi r30,lo8(K2) \n"
+    "   ldi r31,hi8(K2) \n"
+    "   call left_roll \n"
+    :: "y" (K1)
+    :"r25","r30","r31" 
     );
 }
 
@@ -142,7 +115,7 @@ void cmac_calc_add (uint8_t* m, uint8_t bytes) {
     uint8_t i,j;
 
     uint8_t buf[8];
-    for (i=0;i<8;i++) { // smaller than memset
+    for (i=0;i<8;i++) { // smaller&faster than memset
         buf[i]=0;
         m[i+bytes]=0;   // for step 4 incomplete blocks / slow but small
     }
