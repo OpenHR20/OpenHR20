@@ -80,7 +80,6 @@ static void left_roll (uint8_t* p) {
     );
 }
 
-
 void cmac_init(void) {
     uint8_t i;
     for (i=0;i<8;i++) {
@@ -90,10 +89,37 @@ void cmac_init(void) {
     xtea_enc(K1, K2, K_mac);
     
     left_roll(K1);
-    for (i=0;i<8;i++) {
-        K2[i]=K1[i];
-    }
-    left_roll(K1);
+    asm (
+    "   ld r25,%a0      \n"
+    "   lsl r25         \n"
+    "   ldd __tmp_reg__,%a0+1   \n"
+    "   rol __tmp_reg__         \n"
+    "   std %a1+1,__tmp_reg__   \n"
+    "   ldd __tmp_reg__,%a0+2   \n"
+    "   rol __tmp_reg__         \n"
+    "   std %a1+2,__tmp_reg__   \n"
+    "   ldd __tmp_reg__,%a0+3   \n"
+    "   rol __tmp_reg__         \n"
+    "   std %a1+3,__tmp_reg__   \n"
+    "   ldd __tmp_reg__,%a0+4   \n"
+    "   rol __tmp_reg__         \n"
+    "   std %a1+4,__tmp_reg__   \n"
+    "   ldd __tmp_reg__,%a0+5   \n"
+    "   rol __tmp_reg__         \n"
+    "   std %a1+5,__tmp_reg__   \n"
+    "   ldd __tmp_reg__,%a0+6   \n"
+    "   rol __tmp_reg__         \n"
+    "   std %a1+6,__tmp_reg__   \n"
+    "   ldd __tmp_reg__,%a0+7   \n"
+    "   rol __tmp_reg__         \n"
+    "   std %a1+7,__tmp_reg__   \n"
+    "   brcc L_%=       \n"
+    "   ori r25,1       \n"
+    "L_%=:              \n"
+    "   st %a1,r25      \n"
+    :: "b" (K1), "b" (K2)
+    :"r25" 
+    );
 }
 
 
