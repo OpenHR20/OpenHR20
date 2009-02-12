@@ -27,8 +27,8 @@
  * \file       cmac.c
  * \brief      CMAC implementation (http://csrc.nist.gov/publications/nistpubs/800-38B/SP_800-38B.pdf)
  * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>
- * \date       $Date: 2009-01-06 21:41:13 +0100 (út, 06 I 2009) $
- * $Rev: 146 $
+ * \date       $Date$
+ * $Rev$
  */
 
 #include "config.h"
