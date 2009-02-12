@@ -91,6 +91,10 @@ uint8_t input_temp(uint8_t);
 #warning "This code has not been tested with older versions."
 #endif
 
+uint8_t cmac_test[16] = {
+    1,2,3,4,5,6,7,8, 9,1,1,1,1,1,1,1
+};
+
 /*!
  *******************************************************************************
  * main program
@@ -98,6 +102,9 @@ uint8_t input_temp(uint8_t);
 int main(void)
 {
     //! initalization
+    cmac_init(); // just test
+    cmac_calc_add(cmac_test,9); // just test
+    
     init();
 
 	task=0;
