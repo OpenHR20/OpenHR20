@@ -58,17 +58,20 @@ In this file we define only configuration parameters, for example what kind of c
 //#define LANG LANG_de
 //#define LANG LANG_cs
 
+#define _STR(x) #x
+#define STR(x) _STR(x)
+
 // our Version
 #define REVHIGH  0  //! Revision number high
-#define REVLOW   92 //! Revision number low
-#define VERSION_N 0xE002 //! Version as HEX value F0.92 (E for Experimental)
+#define REVLOW   02 //! Revision number low
+#define VERSION_N (0xE000 + REVLOW + (REVHIGH<<8)) //! Version as HEX value F0.92 (E for Experimental)
 
 #define DEVICE_ADDRESS 0x02 //! Individual Device Adress for each HR20 for addressing in Networks (e.g. RFM Radio)
 
 #ifndef REVISION
  #define REVISION "$Rev$"
 #endif 
-#define VERSION_STRING  "V:OpenHR20rfm E0.02 " __DATE__ " " __TIME__ " " REVISION
+#define VERSION_STRING  "V:OpenHR20rfm E" STR(REVHIGH) "." STR(REVLOW) " " __DATE__ " " __TIME__ " " REVISION
 
 // Parameters for the COMM-Port
 #define COM_BAUD_RATE 9600
@@ -86,7 +89,6 @@ In this file we define only configuration parameters, for example what kind of c
 #define RFM 1 //!< define RFM to 1 if you want to have support for the RFM Radio Moodule in the Code
 #define RFM_WIRE_MARIOJTAG 0 //!< define that if you want to wire your RFM to external JTAG pins
 #define RFM_WIRE_JD_INTERNAL 1 //!< define that if you want to wire your RFM to free internal pins
-#define SECURITY 0 //!< define SECURITY to 1 to protect RFM's commnunication
 
 #if (RFM == 1)
 	#define RFM12 1 // just a synonym
@@ -95,20 +97,19 @@ In this file we define only configuration parameters, for example what kind of c
 	#if (RFM_WIRE_MARIOJTAG == 1)
 		#define DISABLE_JTAG 1 //!< define DISABLE_JTAG if your RFM's connection uses any JTAG pins
 	#endif
+	#define SECURITY_KEY_0		0x01
+	#define SECURITY_KEY_1		0x23
+	#define SECURITY_KEY_2		0x45
+	#define SECURITY_KEY_3		0x67
+	#define SECURITY_KEY_4		0x89
+	#define SECURITY_KEY_5     	0xab
+	#define SECURITY_KEY_6		0xcd
+	#define SECURITY_KEY_7		0xef
 #else
 	#define RFM12                  0
-	#define SECURITY               0
 	#define RFM_WIRE_MARIOJTAG     0
 	#define RFM_WIRE_JD_INTERNAL   0
 	#define DISABLE_JTAG           0
-#endif
-
-#if (SECURITY == 1)
-	#define SECURITY_KEYSIZE	4
-	#define SECURITY_KEY_0		0x12
-	#define SECURITY_KEY_1		0x34
-	#define SECURITY_KEY_2		0x56
-	#define SECURITY_KEY_3		0x78
 #endif
 
 

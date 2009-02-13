@@ -31,5 +31,5 @@
  * $Rev$
  */
 
-void cmac_init(void);
+void crypto_init(void);
 void cmac_calc_add (uint8_t* m, uint8_t bytes);

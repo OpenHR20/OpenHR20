@@ -31,22 +31,26 @@
  * $Rev$
  */
 
+#include <avr/pgmspace.h>
 #include "config.h"
 #include "../common/xtea.h"
+#include "eeprom.h"
 
 #warning "test only"
 
-uint8_t K_mac[16] = {
-    0x00, 0x01, 0x02, 0x03, 
-    0x10, 0x11, 0x12, 0x13, 
-    0x20, 0x21, 0x22, 0x23, 
-    0x30, 0x31, 0x32, 0x33 
+uint8_t Keys[5*8]; // 40 bytes
+#define K_mac (Keys+0*8)
+#define K_enc (Keys+1*8)
+#define K1 (Keys+3*8)
+#define K2 (Keys+4*8)
+#define K_m (Keys+3*8)  /* share same position as K1 & K2 */
+// note: do not change order of keys in Keys array, it depend to crypto_init
+
+uint8_t Km_upper[8] PROGMEM = {
+    0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef
 };
 
-static uint8_t K1[8];
-static uint8_t K2[8];
-
-/* internal function for cmac_init */
+/* internal function for crypto_init */
 asm (
     "left_roll:               \n"
     "   ld r25,Y              \n"
@@ -78,26 +82,34 @@ asm (
     "   st Z,r25              \n"
     "   ret "
 );
-void cmac_init(void) {
+void crypto_init(void) {
     uint8_t i;
+    memcpy(K_m,config.security_key,8);
+    memcpy_P(K_m+8,Km_upper,sizeof(Km_upper)); 
+    for (i=0;i<3*8;i++) {
+        Keys[i]=0xc0+i;
+    }
+    xtea_enc(K_mac, K_mac, K_m); /* generate K_mac low 8 bytes */
+    xtea_enc(K_enc, K_enc, K_m); /* generate K_mac high 8 bytes  and K_enc low 8 bytes*/
+    xtea_enc(K_enc+8, K_enc+8, K_m); /* generate K_enc high 8 bytes */
     for (i=0;i<8;i++) { // smaller&faster than memset
         K1[i]=0;
     }
     xtea_enc(K1, K1, K_mac);
     asm (
     "   movw  R30,%A0   \n"
-    "   call left_roll \n"
-    "   ldi r30,lo8(K2) \n"
-    "   ldi r31,hi8(K2) \n"
-    "   call left_roll \n"
+    "   rcall left_roll \n" /* generate K1 */
+    "   ldi r30,lo8(" STR(K2) ") \n"
+    "   ldi r31,hi8(" STR(K2) ") \n"
+    "   rcall left_roll \n" /* generate K2 */
     :: "y" (K1)
     :"r25","r30","r31" 
     );
 }
 
-
 void cmac_calc_add (uint8_t* m, uint8_t bytes) {
-/*  1.Let Mlen = message length in bits
+/*   reference: http://csrc.nist.gov/publications/nistpubs/800-38B/SP_800-38B.pdf
+ *   1.Let Mlen = message length in bits
  *   2.Let n = Mlen / 64
  *   3.Let M1, M2, ... , Mn-1, Mn
  *    denote the unique sequence of bit strings such that
@@ -111,38 +123,27 @@ void cmac_calc_add (uint8_t* m, uint8_t bytes) {
  *   8.Add MAC to end of "m" 
  */
   
-    uint8_t blocks = (bytes-1)/8;
     uint8_t i,j;
-
     uint8_t buf[8];
-    for (i=0;i<8;i++) { // smaller&faster than memset
-        buf[i]=0;
-        m[i+bytes]=0;   // for step 4 incomplete blocks / slow but small
-    }
-    
-//    i=8-bytes%8;  // faster but longer
-//    while(i>0) {
-//        m[(i--)+bytes]=0;  // for step 4 incomplete blocks
-//    }
-    m[bytes]=0x80;     // for step 4 incomplete blocks
 
-    for (i=0; i<=blocks; i++) {
-        if (i==blocks) {  // step 4
-            uint8_t* Kx;
-            Kx = ((blocks%8) != 0)?K2:K1;
-            for (j=0;j<8;j++) {
-                buf[j] ^= Kx[j];
-            }
-        }    
-        for (j=0;j<8;j++) {
-            buf[j] ^= m[(i<<3) + j]; 
+    for (i=0; i<bytes; ) {
+        uint8_t x=i;
+        i+=8;
+        uint8_t* Kx;
+        if (i>=bytes) Kx=((i==bytes)?K1:K2);
+        for (j=0;j<8;j++,x++) {
+            uint8_t tmp;
+            if (x<bytes) tmp=m[x];
+            else tmp=((x==bytes)?0x80:0);
+            if (i>=bytes) tmp ^= Kx[j];
+            if (i==8) buf[j] = tmp;
+            else buf[j] ^= tmp;
         }
         xtea_enc(buf, buf, K_mac);
     }
     memcpy(m+bytes,buf,4);
-    #if 1
+    #if 0
     // hack to use __prologue_saves__ and __epilogue_restores__ rather push&pop
-    // it save 78 bytes
     asm ( "" ::: 
         "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", 
         "r9", "r10", "r11", "r12", "r13", "r14", "r15", "r16", 

@@ -62,10 +62,6 @@
 	#include "../common/rfm.h"
 #endif
 
-#if (SECURITY == 1)
-	#include "security.h"
-#endif
-
 // global Vars
 //volatile bool    m_automatic_mode;         // auto mode (false: manu mode)
 
@@ -99,13 +95,17 @@ uint8_t cmac_test[16] = {
  *******************************************************************************
  * main program
  ******************************************************************************/
-int main(void)
+int __attribute__((naked)) main(void)
+// __attribute__((naked)) mean that we not need prologue and epilogue for main()
 {
     //! initalization
-    cmac_init(); // just test
+    init();
+
+
+		    crypto_init(); // just test
     cmac_calc_add(cmac_test,9); // just test
     
-    init();
+
 
 	task=0;
 

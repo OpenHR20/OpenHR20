@@ -51,10 +51,6 @@
 	#include "../common/rfm.h"
 #endif
 
-#if (SECURITY == 1)
-	#include "security.h"
-#endif
-
 int main(void);                            // main with main loop
 static inline void init(void);             // init the whole thing
 

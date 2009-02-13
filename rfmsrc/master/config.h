@@ -78,24 +78,24 @@ In this file we define only configuration parameters, for example what kind of c
 #define LED_off() (PORTD &= ~_BV(PD6))
 
 #define RFM 1 //!< define RFM to 1 if you want to have support for the RFM Radio Moodule in the Code
-#define SECURITY 0 //!< define SECURITY to 1 to protect RFM's commnunication
 
 #if (RFM == 1)
 	#define RFM12 1 // just a synonym
 	#define RFM_DEVICE_ADDRESS 0x04
 	#define DISABLE_JTAG           0
+	#define SECURITY_KEY_0		0x01
+	#define SECURITY_KEY_1		0x23
+	#define SECURITY_KEY_2		0x45
+	#define SECURITY_KEY_3		0x67
+	#define SECURITY_KEY_4		0x89
+	#define SECURITY_KEY_5     	0xab
+	#define SECURITY_KEY_6		0xcd
+	#define SECURITY_KEY_7		0xef
 #else
 	#define RFM12                  0
-	#define SECURITY               0
 	#define DISABLE_JTAG           0
 #endif
 
-#if (SECURITY == 1)
-	#define SECURITY_KEYSIZE	4
-	#define SECURITY_KEY_0		0x12
-	#define SECURITY_KEY_1		0x34
-	#define SECURITY_KEY_2		0x56
-	#define SECURITY_KEY_3		0x78
 #endif
 
 /* compiler compatibility */

@@ -88,12 +88,9 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
     /* 24 */ uint8_t window_close_noise_filter;
 #if (RFM==1)
 	/* 25 */ uint8_t RFM_devaddr; //!< HR20's own device address in RFM radio networking. =0 mean disable radio
+	/* 26...29 */ uint8_t security_key[4]; //!< key for encrypted radio messasges
+    /* 2a unused */ 
 #endif
-
-#if (SECURITY==1)
-	/* 27...24+SECURITY_KEYSIZE */ uint8_t security_key[SECURITY_KEYSIZE]; //!< key for encrypted radio messasges 
-#endif
-
 
 } config_t;
 
@@ -104,6 +101,7 @@ extern config_t config;
 #define CONFIG_RAW_SIZE (sizeof(config_t))
 
 extern uint16_t EEPROM ee_timers[8][RTC_TIMERS_PER_DOW];
+extern uint8_t EEPROM ee_master_key [16];
 extern uint8_t EEPROM ee_layout;
 extern uint8_t EEPROM ee_xtea_initvector[];
 
@@ -158,7 +156,7 @@ uint8_t EEPROM ee_reserved2_60 [60] = {
     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
     0xff, 0xff, 0xff, 0xff 
-}
+};
     
 ; // reserved for future
 #if CONFIG_ENABLE_D
@@ -207,29 +205,17 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 24 */  {15,         15,        2,      255},   //!< window_close_noise_filter
 #if (RFM==1)
   /* 25 */  {RFM_DEVICE_ADDRESS, RFM_DEVICE_ADDRESS, 0, 29}, //!< RFM_devaddr: HR20's own device address in RFM radio networking.
+  /* 26 */  {SECURITY_KEY_0, SECURITY_KEY_0, 0x00, 0xff},   //!< security_key[0] for encrypted radio messasges
+  /* 27 */  {SECURITY_KEY_1, SECURITY_KEY_1, 0x00, 0xff},   //!< security_key[1] for encrypted radio messasges
+  /* 28 */  {SECURITY_KEY_2, SECURITY_KEY_2, 0x00, 0xff},   //!< security_key[2] for encrypted radio messasges
+  /* 29 */  {SECURITY_KEY_3, SECURITY_KEY_3, 0x00, 0xff},   //!< security_key[3] for encrypted radio messasges
+  /* 29 */  {SECURITY_KEY_4, SECURITY_KEY_4, 0x00, 0xff},   //!< security_key[4] for encrypted radio messasges
+  /* 29 */  {SECURITY_KEY_5, SECURITY_KEY_5, 0x00, 0xff},   //!< security_key[5] for encrypted radio messasges
+  /* 29 */  {SECURITY_KEY_6, SECURITY_KEY_6, 0x00, 0xff},   //!< security_key[6] for encrypted radio messasges
+  /* 29 */  {SECURITY_KEY_7, SECURITY_KEY_7, 0x00, 0xff},   //!< security_key[7] for encrypted radio messasges
 #endif
-
-#if (SECURITY==1)
-	// amount must match with SECURITY_KEYSIZE:
-	/* 27 */  {SECURITY_KEY_0, SECURITY_KEY_0, 0x00, 0xff},   //!< security_key[0] for encrypted radio messasges
-	/* 28 */  {SECURITY_KEY_1, SECURITY_KEY_1, 0x00, 0xff},   //!< security_key[1] for encrypted radio messasges
-	/* 29 */  {SECURITY_KEY_2, SECURITY_KEY_2, 0x00, 0xff},   //!< security_key[2] for encrypted radio messasges
-	/* 2a */  {SECURITY_KEY_3, SECURITY_KEY_3, 0x00, 0xff},   //!< security_key[3] for encrypted radio messasges
-#endif
-
 };
-
-#if (SECURITY==1)
-	uint8_t EEPROM ee_xtea_initvector[] =
-	{0x0f,0x1e,0x2d,0x3c, 0x4b,0x5a,0x69,0x78}; //!< XTEA CFB initialization vector. either it must be kept secret or you start your cipher messages with  random byte
-#endif
-
 #endif //__EEPROM_C__
-
-
-
-
-
 
 
 uint8_t config_read(uint8_t cfg_address, uint8_t cfg_type);

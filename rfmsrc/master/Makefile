@@ -75,7 +75,6 @@ rs232_485_hw.c \
 com.c \
 rfm.c \
 rtc.c
-#../common/security.c
 
 
 # List C++ source files here. (C dependencies are automatically generated.)
