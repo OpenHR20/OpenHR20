@@ -88,8 +88,8 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
     /* 24 */ uint8_t window_close_noise_filter;
 #if (RFM==1)
 	/* 25 */ uint8_t RFM_devaddr; //!< HR20's own device address in RFM radio networking. =0 mean disable radio
-	/* 26...29 */ uint8_t security_key[4]; //!< key for encrypted radio messasges
-    /* 2a unused */ 
+	/* 26...2d */ uint8_t security_key[8]; //!< key for encrypted radio messasges
+    /* 2e unused */ 
 #endif
 
 } config_t;
@@ -101,9 +101,7 @@ extern config_t config;
 #define CONFIG_RAW_SIZE (sizeof(config_t))
 
 extern uint16_t EEPROM ee_timers[8][RTC_TIMERS_PER_DOW];
-extern uint8_t EEPROM ee_master_key [16];
 extern uint8_t EEPROM ee_layout;
-extern uint8_t EEPROM ee_xtea_initvector[];
 
 // Boot Timeslots -> move to CONFIG.H
 // 10 Minutes after BOOT_hh:00

@@ -101,13 +101,7 @@ int __attribute__((naked)) main(void)
 {
     //! initalization
     init();
-
-
-		    crypto_init(); // just test
-    cmac_calc(cmac_test,9,NULL,false); // just test
     
-
-
 	task=0;
 
     //! Enable interrupts
@@ -199,18 +193,23 @@ int __attribute__((naked)) main(void)
                       	RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
                         RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
                         RFM_INT_EN(); // enable RFM interrupt
-                        if (rfm_framebuf[0] == 0xc9) {
-                            //sync packet
-                			RTC_s256=10;
-                            RFM_sync_tmo=10;
-                            rfm_mode = rfmmode_stop;
-                            RFM_OFF();
-                            RTC_SetYear(rfm_framebuf[1]);
-                            RTC_SetMonth(rfm_framebuf[2]>>4);
-                            RTC_SetDay((rfm_framebuf[3]>>5)+((rfm_framebuf[2]<<3)&0x18));
-                			RTC_SetHour(rfm_framebuf[3]&0x1f);
-                			RTC_SetMinute(rfm_framebuf[4]>>1);
-                			RTC_SetSecond((rfm_framebuf[4]&1)?30:00);
+                        if ((rfm_framebuf[0]&0x3f)>5) { 
+                          if (cmac_calc(rfm_framebuf+1,(rfm_framebuf[0]&0x3f)-5,NULL,true)) {
+                            COM_mac_ok();
+                            if (rfm_framebuf[0] == 0xc9) {
+                                //sync packet
+                    			RTC_s256=10;
+                                RFM_sync_tmo=10;
+                                rfm_mode = rfmmode_stop;
+                                RFM_OFF();
+                                RTC_SetYear(rfm_framebuf[1]);
+                                RTC_SetMonth(rfm_framebuf[2]>>4);
+                                RTC_SetDay((rfm_framebuf[3]>>5)+((rfm_framebuf[2]<<3)&0x18));
+                    			RTC_SetHour(rfm_framebuf[3]&0x1f);
+                    			RTC_SetMinute(rfm_framebuf[4]>>1);
+                    			RTC_SetSecond((rfm_framebuf[4]&1)?30:00);
+                            }
+                          }
                         }
                     }
                 }
@@ -435,6 +434,9 @@ static inline void init(void)
     RTC_Init();
 
     eeprom_config_init((~PINB & (KBI_PROG | KBI_C | KBI_AUTO))==(KBI_PROG | KBI_C | KBI_AUTO));
+
+	crypto_init();
+    cmac_calc(cmac_test,9,NULL,false); // just test
 
     //! Initialize the motor
     MOTOR_Init();

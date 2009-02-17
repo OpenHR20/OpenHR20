@@ -127,12 +127,9 @@ bool cmac_calc (uint8_t* m, uint8_t bytes, uint8_t* data_prefix, bool check) {
     uint8_t i,j;
     uint8_t buf[8];
 
-#if defined(MASTER_CONFIG_H)
     if (data_prefix==NULL) {
         for (i=0;i<8;buf[i++]=0) {;}
-    } else 
-#endif
-    {
+    } else {
         memcpy(buf,data_prefix,sizeof(buf));
         xtea_enc(buf, buf, K_mac);
     } 

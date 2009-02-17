@@ -557,4 +557,9 @@ void COM_dump_packet(uint8_t *d, uint8_t len) {
     COM_putchar('\n');
 	COM_flush();
 }
+
+void COM_mac_ok(void) {
+    print_s_p(PSTR("MAC OK!\n"));
+	COM_flush();
+}
 #endif

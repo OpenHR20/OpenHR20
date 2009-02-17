@@ -39,12 +39,15 @@
 #include <avr/pgmspace.h>
 #include <avr/sleep.h>
 #include <avr/version.h>
+#include <string.h>
 
 // HR20 Project includes
 #include "config.h"
 #include "com.h"
 #include "task.h"
+#include "eeprom.h"
 #include "../common/rtc.h"
+#include "../common/cmac.h"
 
 #if (RFM == 1)
 	#include "rfm_config.h"
@@ -168,11 +171,9 @@ int main(void)
 
 					rfm_framebuf[ 4] = (rfm_framesize-4+4) | 0xc0; // length (sync)
 
-					rfm_framebuf[rfm_framesize++] = 0xab; // dummy MAC
-					rfm_framebuf[rfm_framesize++] = 0xcd; // dummy MAC
-					rfm_framebuf[rfm_framesize++] = 0xef; // dummy MAC
-					rfm_framebuf[rfm_framesize++] = 0x00; // dummy MAC
-
+					cmac_calc(rfm_framebuf+5,rfm_framesize-5,NULL,false);
+					
+					rfm_framesize+=4;
 
 					rfm_framebuf[rfm_framesize++] = 0xaa; // dummy byte
 					rfm_framebuf[rfm_framesize++] = 0xaa; // dummy byte
@@ -233,6 +234,10 @@ static inline void init(void)
 	RFM_init();
 	RFM_OFF();
 #endif
+
+    eeprom_config_init(false);
+    
+   	crypto_init();
 }
 
 /*!

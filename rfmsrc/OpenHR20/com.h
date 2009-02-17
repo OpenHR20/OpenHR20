@@ -50,6 +50,8 @@ void COM_debug_print_temperature(uint16_t t);
 
 #if DEBUG_DUMP_RFM
     void COM_dump_packet(uint8_t *d, uint8_t len);
+    void COM_mac_ok(void);
 #else 
     #define COM_dump_packet(d,len) ()
+    #define COM_mac_ok() ()
 #endif

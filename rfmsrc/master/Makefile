@@ -74,7 +74,9 @@ SRC = main.c \
 rs232_485_hw.c \
 com.c \
 rfm.c \
-rtc.c
+rtc.c \
+cmac.c \
+eeprom.c
 
 
 # List C++ source files here. (C dependencies are automatically generated.)
@@ -427,7 +429,7 @@ end:
 HEXSIZE = $(SIZE) --target=$(FORMAT) $(TARGET).hex
 
 # different command line parameters for "avr-size" on Linux and Windows.
-ifdef COMSPEC  
+ifdef ComSpec  
   # WIN32
   ELFSIZE = $(SIZE) --mcu=$(MCU) --format=avr $(TARGET).elf
 else

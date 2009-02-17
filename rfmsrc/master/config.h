@@ -58,6 +58,9 @@ In this file we define only configuration parameters, for example what kind of c
 //#define LANG LANG_de
 //#define LANG LANG_cs
 
+#define _STR(x) #x
+#define STR(x) _STR(x)
+
 #ifndef REVISION
  #define REVISION "$Rev$"
 #endif 
@@ -94,8 +97,6 @@ In this file we define only configuration parameters, for example what kind of c
 #else
 	#define RFM12                  0
 	#define DISABLE_JTAG           0
-#endif
-
 #endif
 
 /* compiler compatibility */
