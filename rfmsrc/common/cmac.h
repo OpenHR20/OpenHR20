@@ -32,4 +32,4 @@
  */
 
 void crypto_init(void);
-void cmac_calc_add (uint8_t* m, uint8_t bytes);
+void cmac_calc (uint8_t* m, uint8_t bytes, uint8_t* data_prefix, bool check);

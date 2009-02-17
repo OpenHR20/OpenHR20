@@ -32,6 +32,7 @@
  */
 
 #include <avr/pgmspace.h>
+#include <string.h>
 #include "config.h"
 #include "../common/xtea.h"
 #include "eeprom.h"
@@ -107,7 +108,7 @@ void crypto_init(void) {
     );
 }
 
-void cmac_calc_add (uint8_t* m, uint8_t bytes) {
+bool cmac_calc (uint8_t* m, uint8_t bytes, uint8_t* data_prefix, bool check) {
 /*   reference: http://csrc.nist.gov/publications/nistpubs/800-38B/SP_800-38B.pdf
  *   1.Let Mlen = message length in bits
  *   2.Let n = Mlen / 64
@@ -126,6 +127,17 @@ void cmac_calc_add (uint8_t* m, uint8_t bytes) {
     uint8_t i,j;
     uint8_t buf[8];
 
+#if defined(MASTER_CONFIG_H)
+    if (data_prefix==NULL) {
+        for (i=0;i<8;buf[i++]=0) {;}
+    } else 
+#endif
+    {
+        memcpy(buf,data_prefix,sizeof(buf));
+        xtea_enc(buf, buf, K_mac);
+    } 
+
+
     for (i=0; i<bytes; ) {
         uint8_t x=i;
         i+=8;
@@ -136,12 +148,18 @@ void cmac_calc_add (uint8_t* m, uint8_t bytes) {
             if (x<bytes) tmp=m[x];
             else tmp=((x==bytes)?0x80:0);
             if (i>=bytes) tmp ^= Kx[j];
-            if (i==8) buf[j] = tmp;
-            else buf[j] ^= tmp;
+            buf[j] ^= tmp;
         }
         xtea_enc(buf, buf, K_mac);
     }
-    memcpy(m+bytes,buf,4);
+    if (check) {
+        for (i=0;i<4;i++) {
+            if (m[bytes+i]!=buf[i]) return false;
+        }
+    } else {
+        memcpy(m+bytes,buf,4);
+    }
+    return true;
     #if 0
     // hack to use __prologue_saves__ and __epilogue_restores__ rather push&pop
     asm ( "" ::: 

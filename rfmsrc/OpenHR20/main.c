@@ -34,6 +34,7 @@
 
 // AVR LibC includes 
 #include <stdint.h>
+#include <string.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
@@ -103,7 +104,7 @@ int __attribute__((naked)) main(void)
 
 
 		    crypto_init(); // just test
-    cmac_calc_add(cmac_test,9); // just test
+    cmac_calc(cmac_test,9,NULL,false); // just test
     
 
 
