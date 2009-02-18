@@ -137,10 +137,19 @@ int main(void)
                     if ((rfm_framepos >= rfm_framebuf[0]) 
                             || (rfm_framebuf[0] >= RFM_FRAME_MAX)  // reject noise
                             || (rfm_framepos >= RFM_FRAME_MAX)) {
-                        COM_dump_packet(rfm_framebuf, rfm_framepos);
+                        RFM_INT_DIS(); // disable RFM interrupt
+                        if (rfm_framepos>rfm_framebuf[0]) rfm_framepos=rfm_framebuf[0]; 
+                        if (rfm_framepos>=2+4) {
+                            bool mac_ok;
+                            RTC.pkt_cnt+= (rfm_framepos+7-2-4)/8;
+                            mac_ok = cmac_calc(rfm_framebuf+1,rfm_framepos-1-4,(uint8_t*)&RTC,true);
+                            RTC.pkt_cnt-= (rfm_framepos+7-2-4)/8;
+                            encrypt_decrypt (rfm_framebuf+2, rfm_framepos-2-4);
+                            RTC.pkt_cnt++;
+                            COM_dump_packet(rfm_framebuf, rfm_framepos,mac_ok);
+                        }
                         rfm_framepos=0;
 						rfm_mode = rfmmode_rx;
-                            RFM_INT_DIS(); // disable RFM interrupt
                         	RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
 	                        RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
 	                        RFM_INT_EN(); // enable RFM interrupt

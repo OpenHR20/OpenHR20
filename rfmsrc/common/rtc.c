@@ -53,17 +53,23 @@
 
 // Vars
 
-
-uint8_t RTC_hh=BOOT_hh;   //!< \brief Time: Hours
-uint8_t RTC_mm=BOOT_mm;   //!< \brief Time: Minutes
-uint8_t RTC_ss=0;   //!< \brief Time: Seconds
-uint8_t RTC_DD=BOOT_DD;   //!< \brief Date: Day
-uint8_t RTC_MM=BOOT_MM;   //!< \brief Date: Month
-uint8_t RTC_YY=BOOT_YY;   //!< \brief Date: Year (0-255) -> 2000 - 2255
-uint8_t RTC_DOW;  //!< Date: Day of Week
+rtc_t RTC = {
+   BOOT_YY,
+   BOOT_MM,
+   BOOT_DD,
+   BOOT_hh,
+   BOOT_mm,
+   0,
+   0,
+  #if (RFM==1)
+   0 
+  #endif
+};
 
 uint8_t RTC_DS;     //!< Daylightsaving Flag
-uint32_t RTC_Ticks=0; //!< Ticks since last Reset
+#ifdef RTC_TICKS
+    uint32_t RTC_Ticks=0; //!< Ticks since last Reset
+#endif
 
 // prototypes
 void    RTC_AddOneDay(void);        // add one day to actual date
@@ -73,7 +79,7 @@ bool    RTC_IsLastSunday(void);     // check actual date if last sun in mar/oct
 
     // year mod 100 = 0 is only every 400 years a leap year
     // we calculate only till the year 2255, so don't care
-#define RTC_NoLeapyear() (RTC_YY % 4) 
+#define RTC_NoLeapyear() (RTC.YY % 4) 
 
 // Progmem constants
 
@@ -130,7 +136,7 @@ void RTC_Init(void)
 void RTC_SetDay(uint8_t day)
 {
     uint8_t day_in_m = RTC_DaysOfMonth();
-    RTC_DD = (day+(-1+day_in_m))%day_in_m + 1;
+    RTC.DD = (day+(-1+day_in_m))%day_in_m + 1;
     RTC_SetDayOfWeek();
 }
 
@@ -141,7 +147,7 @@ void RTC_SetDay(uint8_t day)
  ******************************************************************************/
 void RTC_SetMonth(uint8_t month)
 {
-    RTC_MM = (month+(-1+12))%12 + 1;
+    RTC.MM = (month+(-1+12))%12 + 1;
     RTC_SetDayOfWeek();
 }
 
@@ -152,7 +158,7 @@ void RTC_SetMonth(uint8_t month)
  ******************************************************************************/
 void RTC_SetYear(uint8_t year)
 {
-    RTC_YY = year;
+    RTC.YY = year;
     RTC_SetDayOfWeek();
 }
 
@@ -163,7 +169,7 @@ void RTC_SetYear(uint8_t year)
  ******************************************************************************/
 void RTC_SetHour(uint8_t hour)
 {
-    RTC_hh = (hour+24)%24;
+    RTC.hh = (hour+24)%24;
 }
 
 
@@ -174,7 +180,7 @@ void RTC_SetHour(uint8_t hour)
  ******************************************************************************/
 void RTC_SetMinute(uint8_t minute)
 {
-    RTC_mm = (minute+60)%60;
+    RTC.mm = (minute+60)%60;
 }
 
 
@@ -185,7 +191,7 @@ void RTC_SetMinute(uint8_t minute)
  ******************************************************************************/
 void RTC_SetSecond(uint8_t second)
 {
-    RTC_ss = (second+60)%60;
+    RTC.ss = (second+60)%60;
 }
 
 
@@ -343,8 +349,8 @@ int32_t RTC_DowTimerGetHourBar(uint8_t dow) {
  ******************************************************************************/
 
 uint8_t RTC_ActualTimerTemperature(bool exact) {
-    uint16_t minutes=RTC_hh*60 + RTC_mm;
-    int8_t dow=((config.timer_mode==1)?RTC_DOW:0);
+    uint16_t minutes=RTC.hh*60 + RTC.mm;
+    int8_t dow=((config.timer_mode==1)?RTC.DOW:0);
     int8_t raw_index=RTC_FindTimerRawIndex(dow,minutes);
     uint16_t data = eeprom_timers_read_raw(raw_index);
     if (raw_index<0) return 0; //not found
@@ -373,29 +379,34 @@ uint8_t RTC_ActualTimerTemperature(bool exact) {
  ******************************************************************************/
 bool RTC_AddOneSecond(void)
 {
+#ifdef RTC_TICKS
     RTC_Ticks++;          // overflow every 136 Years
-	if (++RTC_ss >= 60) {
-		RTC_ss = 0;
+#endif
+#if (RFM==1)
+    RTC.pkt_cnt=0;
+#endif
+	if (++RTC.ss >= 60) {
+		RTC.ss = 0;
 		// notify com.c about the changed minute
-		if (++RTC_mm >= 60) {
-			RTC_mm = 0;
+		if (++RTC.mm >= 60) {
+			RTC.mm = 0;
 			// add one hour
-			if (++RTC_hh >= 24) {
-				RTC_hh = 0;
+			if (++RTC.hh >= 24) {
+				RTC.hh = 0;
 				RTC_AddOneDay();
 			}
 			// start of summertime: March, 2:00:00 ?
-			if ((RTC_MM==3)&&(RTC_hh==2)){
+			if ((RTC.MM==3)&&(RTC.hh==2)){
                 // Last Sunday ?
                 if (RTC_IsLastSunday()){
-                    RTC_hh++; // 2:00 -> 3:00
+                    RTC.hh++; // 2:00 -> 3:00
                 }
             }
 			// end of summertime: October, 03:00, RTC_DS == 0
-			if ((RTC_MM==10)&&(RTC_hh==3)&&(RTC_DS==0)){
+			if ((RTC.MM==10)&&(RTC.hh==3)&&(RTC_DS==0)){
                 // Last Sunday ?
                 if (RTC_IsLastSunday()){
-                    RTC_hh--; // 3:00 -> 2:00
+                    RTC.hh--; // 3:00 -> 2:00
                     RTC_DS=1;
                 }
 			}
@@ -420,20 +431,20 @@ void RTC_AddOneDay(void)
     uint8_t dom;
     // How many day has actual month
     dom = RTC_DaysOfMonth();
-    if (++RTC_DD > dom) {                   // Next Month
-		RTC_DD = 1;
-		if (++RTC_MM > 12) {                    // Next year
-			RTC_MM = 1;
-			RTC_YY++;
+    if (++RTC.DD > dom) {                   // Next Month
+		RTC.DD = 1;
+		if (++RTC.MM > 12) {                    // Next year
+			RTC.MM = 1;
+			RTC.YY++;
 		}
 		// Clear Daylight saving Flag
         RTC_DS=0;
 	}
     // next day of week
-    RTC_DOW = (RTC_DOW %7)+1; // Monday = 1 Sat=7
+    RTC.DOW = (RTC.DOW %7)+1; // Monday = 1 Sat=7
 	#if !defined(MASTER_CONFIG_H)
         // update hourbar
-	   menu_update_hourbar((config.timer_mode==1)?RTC_DOW:0);
+	   menu_update_hourbar((config.timer_mode==1)?RTC.DOW:0);
 	#endif
 }
 
@@ -446,8 +457,8 @@ void RTC_AddOneDay(void)
  ******************************************************************************/
 uint8_t RTC_DaysOfMonth()
 {
-    uint8_t dom = pgm_read_byte(&RTC_DayOfMonthTablePrgMem[RTC_MM-1]);
-    if ((RTC_MM == 2)&&(!RTC_NoLeapyear()))
+    uint8_t dom = pgm_read_byte(&RTC_DayOfMonthTablePrgMem[RTC.MM-1]);
+    if ((RTC.MM == 2)&&(!RTC_NoLeapyear()))
         return 29; // leapyear feb=29
     return dom;
 }
@@ -461,16 +472,16 @@ uint8_t RTC_DaysOfMonth()
  ******************************************************************************/
 bool RTC_IsLastSunday(void)
 {
-    if (RTC_DOW == 7){ // sunday ?
+    if (RTC.DOW == 7){ // sunday ?
         return 0;  // not sunday
     }
     // March or October ?
-    if (RTC_MM == 3){
+    if (RTC.MM == 3){
         // last seven days of month
-        return (RTC_DD > (31-7));
-    } else if (RTC_MM == 10){
+        return (RTC.DD > (31-7));
+    } else if (RTC.MM == 10){
         // last seven days of month
-        return (RTC_DD > (30-7));
+        return (RTC.DD > (30-7));
     } else {
         return 0;  // not march or october
     }    
@@ -507,19 +518,19 @@ void RTC_SetDayOfWeek(void)
     uint16_t tmp_dow;
 
     // Day of year
-    day_of_year = pgm_read_word(&(daysInYear[RTC_MM-1])) + RTC_DD;
-    if (RTC_MM > 2) { // february
+    day_of_year = pgm_read_word(&(daysInYear[RTC.MM-1])) + RTC.DD;
+    if (RTC.MM > 2) { // february
         if (! RTC_NoLeapyear() ){
             day_of_year ++;
         }
     }
     // calc weekday
-    tmp_dow = RTC_YY + ((RTC_YY-1) / 4) - ((RTC_YY-1) / 100) + day_of_year;
+    tmp_dow = RTC.YY + ((RTC.YY-1) / 4) - ((RTC.YY-1) / 100) + day_of_year;
     // set DOW
-    RTC_DOW = (uint8_t) ((tmp_dow + 5) % 7) +1;
+    RTC.DOW = (uint8_t) ((tmp_dow + 5) % 7) +1;
     
     #if !defined(MASTER_CONFIG_H)
-   	    menu_update_hourbar((config.timer_mode==1)?RTC_DOW:0);
+   	    menu_update_hourbar((config.timer_mode==1)?RTC.DOW:0);
     #endif    
 }
 #if 0

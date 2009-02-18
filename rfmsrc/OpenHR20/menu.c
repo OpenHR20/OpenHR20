@@ -268,7 +268,7 @@ bool menu_controller(bool new_state) {
             config.timer_mode = (menu_set_dow>0);
             eeprom_config_save((uint16_t)(&config.timer_mode)-(uint16_t)(&config)); // save value to eeprom
             	// update hourbar
-        	menu_update_hourbar((config.timer_mode==1)?RTC_DOW:0);
+        	menu_update_hourbar((config.timer_mode==1)?RTC_GetDayOfWeek():0);
             ret=true; 
         } else if ( kb_events & KB_EVENT_AUTO ) { // exit without save
             menu_state=menu_home;
@@ -292,7 +292,7 @@ bool menu_controller(bool new_state) {
                 menu_state=menu_set_timmer_dow;
             }
             CTL_update_temp_auto();
-        	menu_update_hourbar((config.timer_mode==1)?RTC_DOW:0);
+        	menu_update_hourbar((config.timer_mode==1)?RTC_GetDayOfWeek():0);
             ret=true; 
         } else if ( kb_events & KB_EVENT_AUTO ) { // exit without save
             menu_state=menu_home;

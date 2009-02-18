@@ -130,12 +130,12 @@ bool cmac_calc (uint8_t* m, uint8_t bytes, uint8_t* data_prefix, bool check) {
     if (data_prefix==NULL) {
         for (i=0;i<8;buf[i++]=0) {;}
     } else {
-        memcpy(buf,data_prefix,sizeof(buf));
+        memcpy(buf,data_prefix,8);
         xtea_enc(buf, buf, K_mac);
     } 
 
 
-    for (i=0; i<bytes; ) {
+    for (i=0; i<bytes; ) { // i modification inside loop
         uint8_t x=i;
         i+=8;
         uint8_t* Kx;
@@ -165,4 +165,18 @@ bool cmac_calc (uint8_t* m, uint8_t bytes, uint8_t* data_prefix, bool check) {
         "r17", "r18", "r19", "r20", "r21", "r22", "r23", "r24" 
         ); 
     #endif
+}
+
+void encrypt_decrypt (uint8_t* p, uint8_t len) {
+    uint8_t i=0;
+    uint8_t buf[8];
+    for(;i<len;) {
+        xtea_enc(buf,&RTC,K_enc);
+        RTC.pkt_cnt++;
+        do {
+            p[i]^=buf[i&7];
+            i++;
+            if (i>=len) return; //done
+        } while ((i&7)!=0);
+    }
 }

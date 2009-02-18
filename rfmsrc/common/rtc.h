@@ -63,33 +63,43 @@ typedef enum {
 /*****************************************************************************
 *   Prototypes
 *****************************************************************************/
-extern uint8_t RTC_hh;   //!< \brief Time: Hours
-extern uint8_t RTC_mm;   //!< \brief Time: Minutes
-extern uint8_t RTC_ss;   //!< \brief Time: Seconds
 extern volatile uint8_t RTC_s100; //!< \brief Time: 1/100 Seconds
-extern uint8_t RTC_DD;   //!< \brief Date: Day
-extern uint8_t RTC_MM;   //!< \brief Date: Month
-extern uint8_t RTC_YY;   //!< \brief Date: Year (0-255) -> 2000 - 2255
-extern uint8_t RTC_DOW;  //!< Date: Day of Week
-extern uint32_t RTC_Ticks; //!< Ticks since last RTC.Init
+#ifdef RTC_TICKS
+    extern uint32_t RTC_Ticks; //!< Ticks since last RTC.Init
+    #define RTC_GetTicks() ((uint32_t) RTC_Ticks)          // 1s ticks from startup
+#endif
+
+/* rtc_t structure can be used for encryption, in this case it must be 8 byte ling and same on both sides */ 
+typedef struct {
+    uint8_t YY; //!< \brief Date: Year (0-255) -> 2000 - 2255
+    uint8_t MM; //!< \brief Date: Month
+    uint8_t DD; //!< \brief Date: Day
+    uint8_t hh; //!< \brief Time: Hours
+    uint8_t mm; //!< \brief Time: Minutes
+    uint8_t ss; //!< \brief Time: Seconds
+    uint8_t DOW;  //!< Date: Day of Week
+  #if (RFM==1)
+    uint8_t pkt_cnt;
+  #endif 
+} rtc_t;
+
+extern rtc_t RTC;
 
 
 void RTC_Init(void);                 // init Timer, activate 500ms IRQ
-#define RTC_GetHour() ((uint8_t) RTC_hh)                 // get hour
-#define RTC_GetMinute() ((uint8_t) RTC_mm)               // get minute
-#define RTC_GetSecond() ((uint8_t) RTC_ss)               // get second
+#define RTC_GetHour() ((uint8_t) RTC.hh)                 // get hour
+#define RTC_GetMinute() ((uint8_t) RTC.mm)               // get minute
+#define RTC_GetSecond() ((uint8_t) RTC.ss)               // get second
 #if defined(MASTER_CONFIG_H)
     #define RTC_GetS100() ((uint8_t) RTC_s100)           // get 1/100 second
-#endif
-#define RTC_GetDay() ((uint8_t) RTC_DD)                  // get day
-#define RTC_GetMonth() ((uint8_t) RTC_MM)                // get month
-#define RTC_GetYearYY() ((uint8_t) RTC_YY)               // get year (00-255)
-#define RTC_GetYearYYYY() (2000 + (uint16_t) RTC_YY)  // get year (2000-2255) 
-#define RTC_GetDayOfWeek() ((uint8_t) RTC_DOW)          // get day of week (0:monday)
-#define RTC_GetTicks() ((uint32_t) RTC_Ticks)          // 1s ticks from startup
-#if ! defined(MASTER_CONFIG_H)
+#else 
     #define RTC_s256 TCNT2
 #endif
+#define RTC_GetDay() ((uint8_t) RTC.DD)                  // get day
+#define RTC_GetMonth() ((uint8_t) RTC.MM)                // get month
+#define RTC_GetYearYY() ((uint8_t) RTC.YY)               // get year (00-255)
+#define RTC_GetYearYYYY() (2000 + (uint16_t) RTC.YY)  // get year (2000-2255) 
+#define RTC_GetDayOfWeek() ((uint8_t) RTC.DOW)          // get day of week (0:monday)
 
 void RTC_SetHour(uint8_t);                     // Set hour
 void RTC_SetMinute(uint8_t);                   // Set minute

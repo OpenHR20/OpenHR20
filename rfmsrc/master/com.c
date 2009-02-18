@@ -42,6 +42,7 @@
 #include "../common/rs232_485.h"
 #include "../common/rtc.h"
 #include "task.h"
+#include "eeprom.h"
 
 
 #define TX_BUFF_SIZE 128
@@ -305,9 +306,9 @@ static char COM_hex_parse (uint8_t n) {
  *
  ******************************************************************************/
 static void print_idx(char t) {
-    super_COM_putchar(t);
+    COM_putchar(t);
     COM_putchar('[');
-    super_print_hexXX(com_hex[0]);
+    print_hexXX(com_hex[0]);
     COM_putchar(']');
     COM_putchar('=');
 }
@@ -355,6 +356,24 @@ void COM_commad_parse (void) {
 			COM_print_debug(-1);
 			c='\0';
 			break;
+		case 'G':
+		case 'S':
+			if (c=='G') {
+				if (COM_hex_parse(1*2)!='\0') { break; }
+			} else {
+				if (COM_hex_parse(2*2)!='\0') { break; }
+  				if (com_hex[0]<CONFIG_RAW_SIZE) {
+  					config_raw[com_hex[0]]=(uint8_t)(com_hex[1]);
+  					eeprom_config_save(com_hex[0]);
+  				}
+			}
+            print_idx(c);
+			if (com_hex[0]==0xff) {
+			     print_hexXX(EE_LAYOUT);
+            } else {
+			     print_hexXX(config_raw[com_hex[0]]);
+			}
+			break;
 		default:
 			c='\0';
 			break;
@@ -372,11 +391,12 @@ void COM_commad_parse (void) {
  *  \note
  ******************************************************************************/
 static uint16_t seq=0;
-void COM_dump_packet(uint8_t *d, uint8_t len) {
+void COM_dump_packet(uint8_t *d, uint8_t len, bool mac_ok) {
 	print_decXX(RTC_GetSecond());
 	COM_putchar('.');
     print_decXX(RTC_s100);
-    print_s_p(PSTR(" PKT"));
+    if (mac_ok) print_s_p(PSTR(" PKT"));
+    else print_s_p(PSTR(" ERR"));
     print_hexXXXX(seq++);
     COM_putchar(':');
 	while ((len--)>0) {
@@ -403,4 +423,9 @@ void COM_print_datetime() {
 	print_decXX(RTC_GetSecond());
 	COM_putchar('\n');
     COM_flush();
+}
+
+void COM_mac_ok(void) {
+    print_s_p(PSTR("MAC OK!\n"));
+	COM_flush();
 }

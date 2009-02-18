@@ -88,10 +88,6 @@ uint8_t input_temp(uint8_t);
 #warning "This code has not been tested with older versions."
 #endif
 
-uint8_t cmac_test[16] = {
-    1,2,3,4,5,6,7,8, 9,1,1,1,1,1,1,1
-};
-
 /*!
  *******************************************************************************
  * main program
@@ -241,9 +237,13 @@ int __attribute__((naked)) main(void)
 					rfm_framebuf[ 2] = 0x2d; // rfm fifo start pattern
 					rfm_framebuf[ 3] = 0xd4; // rfm fifo start pattern
 
-					rfm_framebuf[ 4] = rfm_framesize-4;    // length
+					rfm_framebuf[ 4] = rfm_framesize-4+4;    // length
 					rfm_framebuf[ 5] = config.RFM_devaddr;
 
+                    encrypt_decrypt (rfm_framebuf+6, rfm_framesize-6);
+                    cmac_calc(rfm_framebuf+5,rfm_framesize-5,(uint8_t*)&RTC,false);
+                    RTC.pkt_cnt++;
+                    rfm_framesize+=4; //MAC
 					rfm_framebuf[rfm_framesize++] = 0xaa; // dummy byte
 					rfm_framebuf[rfm_framesize++] = 0xaa; // dummy byte
 
@@ -436,11 +436,9 @@ static inline void init(void)
     eeprom_config_init((~PINB & (KBI_PROG | KBI_C | KBI_AUTO))==(KBI_PROG | KBI_C | KBI_AUTO));
 
 	crypto_init();
-    cmac_calc(cmac_test,9,NULL,false); // just test
 
     //! Initialize the motor
     MOTOR_Init();
-
 
     //1 Initialize the LCD
     LCD_Init();
