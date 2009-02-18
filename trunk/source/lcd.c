@@ -402,8 +402,9 @@ void LCD_PrintDec(uint8_t value, uint8_t pos, uint8_t mode)
  *  \param pos   position in lcd
  *  \param mode  \ref LCD_MODE_ON, \ref LCD_MODE_OFF, \ref LCD_MODE_BLINK_1
  ******************************************************************************/
-void LCD_PrintDec3(uint8_t value, uint8_t pos, uint8_t mode)
+void LCD_PrintDec3(uint16_t value, uint8_t pos, uint8_t mode)
 {
+    if (value>999) value=999;
     if (pos <= 1) {
         // 3nd Digit 
         LCD_PrintChar(value / 100, pos+2, mode);
@@ -517,8 +518,6 @@ void LCD_PrintTempInt(int16_t temp, uint8_t mode)
     // check min / max
     if (temp < -999){
         temp = -999;
-    } else if (temp > 9999){
-        temp = 9999;
     }
  
     // negative ?    

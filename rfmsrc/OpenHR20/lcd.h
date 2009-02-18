@@ -66,7 +66,7 @@ void LCD_ClearSymbols(void);               // Clear AUTO MANU PROG SUN MOON SNOW
 void LCD_ClearNumbers(void);               // Clear 7 Segments and Collumns
 
 void LCD_PrintDec(uint8_t, uint8_t, uint8_t);  // Print DEC-val (0-99)
-void LCD_PrintDec3(uint8_t value, uint8_t pos, uint8_t mode); // Print DEC-val (0-255)
+void LCD_PrintDec3(uint16_t value, uint8_t pos, uint8_t mode); // Print DEC-val (0-255)
 void LCD_PrintDecW(uint16_t, uint8_t);         // Print DEC-val (0-9999)                       
 void LCD_PrintHex(uint8_t, uint8_t, uint8_t);  // Print HEX-val (0-ff)
 void LCD_PrintHexW(uint16_t, uint8_t);         // Print HEX-val (0-ffff) 

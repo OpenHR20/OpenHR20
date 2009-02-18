@@ -171,7 +171,7 @@ bool ADC_Get_Bat_isOk(void)
  *
  *  \todo: store values for conversion in EEPROM 
  ******************************************************************************/
-static int16_t ADC_Convert_To_Degree(uint16_t adc)
+static int16_t ADC_Convert_To_Degree(int16_t adc)
 {
     int16_t dummy;
     uint8_t i;
