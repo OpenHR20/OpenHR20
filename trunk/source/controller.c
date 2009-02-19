@@ -66,7 +66,7 @@ uint8_t CTL_error=0;
  *  \returns valve position
  *   
  ******************************************************************************/
-int8_t CTL_update(bool minute_ch, int8_t valve) {
+uint8_t CTL_update(bool minute_ch, uint8_t valve) {
     if ( minute_ch || (CTL_temp_auto==0) ) {
         // minutes changed or we need return to timers
         uint8_t t=RTC_ActualTimerTemperature(!(CTL_temp_auto==0));
