@@ -46,6 +46,21 @@
 //! Do we support calibrate_rco
 #define	HAS_CALIBRATE_RCO     0
 
+//! RTC high precision timers
+#define RTC_TIMER_OVF 0 // 
+#if defined(MASTER_CONFIG_H)
+    #define RTC_TIMER_RFM 1
+    #define RTC_TIMERS 1
+#else
+    #define RTC_TIMER_KB  1 // keyboard timer
+    #if (RFM==1)
+        #define RTC_TIMER_RFM 2
+        #define RTC_TIMERS 2
+    #else
+        #define RTC_TIMERS 1
+    #endif
+#endif
+
 /*****************************************************************************
 *   Typedefs
 *****************************************************************************/
@@ -59,15 +74,6 @@ typedef enum {
 typedef enum {
     temperature0=0, temperature1=1, temperature2=2, temperature3=3
 } timermode_t;
-
-/*****************************************************************************
-*   Prototypes
-*****************************************************************************/
-extern volatile uint8_t RTC_s100; //!< \brief Time: 1/100 Seconds
-#ifdef RTC_TICKS
-    extern uint32_t RTC_Ticks; //!< Ticks since last RTC.Init
-    #define RTC_GetTicks() ((uint32_t) RTC_Ticks)          // 1s ticks from startup
-#endif
 
 /* rtc_t structure can be used for encryption, in this case it must be 8 byte ling and same on both sides */ 
 typedef struct {
@@ -83,9 +89,15 @@ typedef struct {
   #endif 
 } rtc_t;
 
+/*****************************************************************************
+*   Prototypes
+*****************************************************************************/
+extern volatile uint8_t RTC_s100; //!< \brief Time: 1/100 Seconds
+#ifdef RTC_TICKS
+    extern uint32_t RTC_Ticks; //!< Ticks since last RTC.Init
+    #define RTC_GetTicks() ((uint32_t) RTC_Ticks)          // 1s ticks from startup
+#endif
 extern rtc_t RTC;
-
-
 void RTC_Init(void);                 // init Timer, activate 500ms IRQ
 #define RTC_GetHour() ((uint8_t) RTC.hh)                 // get hour
 #define RTC_GetMinute() ((uint8_t) RTC.mm)               // get minute
@@ -101,14 +113,14 @@ void RTC_Init(void);                 // init Timer, activate 500ms IRQ
 #define RTC_GetYearYYYY() (2000 + (uint16_t) RTC.YY)  // get year (2000-2255) 
 #define RTC_GetDayOfWeek() ((uint8_t) RTC.DOW)          // get day of week (0:monday)
 
-void RTC_SetHour(uint8_t);                     // Set hour
-void RTC_SetMinute(uint8_t);                   // Set minute
-void RTC_SetSecond(uint8_t);                   // Set second
+void RTC_SetHour(int8_t);                     // Set hour
+void RTC_SetMinute(int8_t);                   // Set minute
+void RTC_SetSecond(int8_t);                   // Set second
 #if defined(MASTER_CONFIG_H)
     void RTC_SetSecond100(uint8_t);            // Set 1/100 second
 #endif
-void RTC_SetDay(uint8_t);                      // Set day
-void RTC_SetMonth(uint8_t);                    // Set month
+void RTC_SetDay(int8_t);                      // Set day
+void RTC_SetMonth(int8_t);                    // Set month
 void RTC_SetYear(uint8_t);                     // Set year
 #if 0
     bool RTC_SetDate(int8_t, int8_t, int8_t);   // Set Date, and do all the range checking
@@ -121,6 +133,8 @@ uint16_t RTC_DowTimerGet(rtc_dow_t dow, uint8_t slot, timermode_t *timermode);
 uint8_t RTC_ActualTimerTemperature(bool exact);
 int32_t RTC_DowTimerGetHourBar(uint8_t dow);
 bool RTC_AddOneSecond(void);
+
+extern uint8_t RTC_timer_done;
 
 #if	HAS_CALIBRATE_RCO
 void calibrate_rco(void);

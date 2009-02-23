@@ -448,6 +448,6 @@ static inline void init(void)
 	RFM_OFF();
 #endif
     
-	// init keyboard by one dummy call
-    task_keyboard();
+	// init keyboard
+    state_wheel_prev = ~PINB & (KBI_ROT1 | KBI_ROT2);
 }

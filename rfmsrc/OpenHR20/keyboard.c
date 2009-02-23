@@ -42,16 +42,17 @@
 #include "keyboard.h"
 #include "controller.h"
 #include "debug.h"
+#include "../common/rtc.h"
 
 
 // global Vars for keypress and wheel status
 static uint8_t state_front_prev;
-static uint8_t state_wheel_prev;
+uint8_t state_wheel_prev;
 static uint8_t long_press;
 static uint8_t long_quiet;
 static volatile uint8_t keys = 0;  // must be volatile, shared into interrupt
 uint16_t kb_events = 0;
-static volatile bool kb_timeout = true;
+volatile bool kb_timeout = true;
 static bool allow_rewoke = false; 
 
 
@@ -113,9 +114,7 @@ void task_keyboard(void) {
 		if (kb_timeout) { // keyboard noise cancellation
             kb_timeout = false;
             // while (ASSR & (1<<OCR2UB)) {;} //this is not needed; kb_timeout==true means that OCR2A must be free
-            OCR2A = TCNT2 + KEYBOARD_NOISE_CANCELATION;
-			TIFR2 |= (1<<OCF2A); // clear interrupt flag
-            TIMSK2 |= (1<<OCIE2A); // enable interupt again
+            RTC_timer_set(RTC_TIMER_KB,TCNT2 + KEYBOARD_NOISE_CANCELATION);
         }
         state_front_prev = front;
 
@@ -182,7 +181,10 @@ void task_keyboard_long_press_detect(void) {
  *  - read keyboard status
  ******************************************************************************/
 bool mont_contact_pooling(void){
-    bool mont_contact;
+#if defined(THERMOTRONIC) || DEBUG_IGNORE_MONT_CONTACT
+	return 1; //no contact - exit!
+#else
+   bool mont_contact;
     enable_mont_input();
     nop(); nop();
     // crazy order of instructions, but we need any instructions
@@ -203,6 +205,7 @@ bool mont_contact_pooling(void){
         if (mont_contact & KBI_PROG) return 3;
         return 1;
     }
+#endif
 }
 
 
@@ -226,44 +229,3 @@ ISR(PCINT1_vect){
 
     disable_rot2_input();
 }
-
-/*!
- *******************************************************************************
- *
- *  timer/counter2 compare interrupt routine
- *
- *  \note - clear keyboard timeout flag
- *  \note - disable this interrupt 
- *
- ******************************************************************************/
-#if 0
-// not optimized
-ISR(TIMER2_COMP_vect) {
-    kb_timeout=1;   // for noise cancelation
-    TIMSK2 &= ~(1<<OCIE2A);
-}
-#else
-// optimized
-ISR_NAKED ISR (TIMER2_COMP_vect) {
-    asm volatile(
-        "__my_tmp_reg__ = 16" "\n"
-        /* prologue */
-        "	push __my_tmp_reg__" "\n"
-        "   in __my_tmp_reg__,__SREG__" "\n"
-        "	push __my_tmp_reg__" "\n"
-        /* prologue end  */ 
-        "	ldi __my_tmp_reg__,1"  "\n"
-        "	sts kb_timeout,__my_tmp_reg__" "\n"
-        "	lds __my_tmp_reg__, %0" "\n"
-        "   andi __my_tmp_reg__,~ (1 << %1)" "\n"
-        "	sts %0,__my_tmp_reg__" "\n"
-        /* epilogue */
-        "	pop __my_tmp_reg__" "\n"
-        "   out __SREG__,__my_tmp_reg__" "\n"
-        "	pop __my_tmp_reg__" "\n"
-        "	reti" "\n"
-        /* epilogue end */
-        ::"M" (&TIMSK2) , "I" (OCIE2A)
-    );
-}
-#endif 

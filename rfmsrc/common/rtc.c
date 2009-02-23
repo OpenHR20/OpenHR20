@@ -133,10 +133,10 @@ void RTC_Init(void)
  *  set actual date
  *  \param day new value for day
  ******************************************************************************/
-void RTC_SetDay(uint8_t day)
+void RTC_SetDay(int8_t day)
 {
     uint8_t day_in_m = RTC_DaysOfMonth();
-    RTC.DD = (day+(-1+day_in_m))%day_in_m + 1;
+    RTC.DD = (uint8_t)(day+(-1+day_in_m))%day_in_m + 1;
     RTC_SetDayOfWeek();
 }
 
@@ -145,9 +145,9 @@ void RTC_SetDay(uint8_t day)
  *  set actual date
  *  \param month new value for month
  ******************************************************************************/
-void RTC_SetMonth(uint8_t month)
+void RTC_SetMonth(int8_t month)
 {
-    RTC.MM = (month+(-1+12))%12 + 1;
+    RTC.MM = (uint8_t)(month+(-1+12))%12 + 1;
     RTC_SetDayOfWeek();
 }
 
@@ -167,9 +167,9 @@ void RTC_SetYear(uint8_t year)
  *  set actual time
  *  \param hour new value for hour
  ******************************************************************************/
-void RTC_SetHour(uint8_t hour)
+void RTC_SetHour(int8_t hour)
 {
-    RTC.hh = (hour+24)%24;
+    RTC.hh = (uint8_t)(hour+24)%24;
 }
 
 
@@ -178,9 +178,9 @@ void RTC_SetHour(uint8_t hour)
  *  set actual time
  *  \param minute new value for minute
  ******************************************************************************/
-void RTC_SetMinute(uint8_t minute)
+void RTC_SetMinute(int8_t minute)
 {
-    RTC.mm = (minute+60)%60;
+    RTC.mm = (uint8_t)(minute+60)%60;
 }
 
 
@@ -189,9 +189,9 @@ void RTC_SetMinute(uint8_t minute)
  *  set actual time
  *  \param second new value for second
  ******************************************************************************/
-void RTC_SetSecond(uint8_t second)
+void RTC_SetSecond(int8_t second)
 {
-    RTC.ss = (second+60)%60;
+    RTC.ss = (uint8_t)(second+60)%60;
 }
 
 
@@ -566,6 +566,38 @@ bool RTC_SetDate(int8_t dd, int8_t mm, int8_t yy)
 }
 #endif
 
+static uint8_t RTC_timer_todo = 0;
+uint8_t RTC_timer_done = 0;
+static uint8_t RTC_timer_time[RTC_TIMERS];
+#if defined(MASTER_CONFIG_H)
+    static RTC_next_compare;
+#endif
+
+void RTC_timer_set(uint8_t timer_id, uint8_t time) {
+    uint8_t t2,i,next,dif;
+    
+    cli();
+    RTC_timer_todo |= timer_id;
+    t2=TCNT2;
+    dif=255;
+    for (i=0;i<RTC_TIMERS;i++) {
+        if ((RTC_timer_todo&(2<<i))) {
+            if ((RTC_timer_time[i]-t2)<dif) {
+                next = RTC_timer_time[i];
+                dif = next-t2;
+            }
+        }
+    }
+    #if defined(MASTER_CONFIG_H)
+        RTC_next_compare = next;
+    #else
+        OCR2A = next;
+    #endif
+    sei();
+    #if ! defined(MASTER_CONFIG_H)
+        TIMSK2 |= (1<<OCIE2A); // enable interupt again
+    #endif
+}
 
 #if !defined(MASTER_CONFIG_H)
     /*!
@@ -581,18 +613,58 @@ bool RTC_SetDate(int8_t dd, int8_t mm, int8_t yy)
     // not optimized
     ISR(TIMER2_OVF_vect) {
         task |= TASK_RTC;   // increment second and check Dow_Timer
+        RTC_timer_done |= _BV(RTC_TIMER_OVF);
     }
     #else
     // optimized
     ISR_NAKED ISR (TIMER2_OVF_vect) {
         asm volatile(
-            // prologue and epilogue is not needed, this code  not touch flags in SREG
+            "__my_tmp_reg__ = 16" "\n"
+            /* prologue */
+            "	push __my_tmp_reg__" "\n"
+            "   in __my_tmp_reg__,__SREG__" "\n"
+            "	push __my_tmp_reg__" "\n"
+            /* prologue end  */ 
             "	sbi %0,%1" "\t\n"
-            "	reti" "\t\n"
-            ::"I" (_SFR_IO_ADDR(task)) , "I" (TASK_RTC_BIT)
+            "   lds __my_tmp_reg__,RTC_timer_done" "\n"
+            "	ori __my_tmp_reg__,%2" "\n"
+            "   sts RTC_timer_done,__my_tmp_reg__" "\n"
+            /* epilogue */
+            "	pop __my_tmp_reg__" "\n"
+            "   out __SREG__,__my_tmp_reg__" "\n"
+            "	pop __my_tmp_reg__" "\n"
+            "	reti" "\n"
+            /* epilogue end */
+            ::"I" (_SFR_IO_ADDR(task)) , "I" (TASK_RTC_BIT), "I" (_BV(RTC_TIMER_OVF))
         );
     }
     #endif 
+    extern volatile bool kb_timeout;
+    /*!
+     *******************************************************************************
+     *
+     *  timer/counter2 compare interrupt routine
+     *
+     *  \note - clear keyboard timeout flag
+     *  \note - disable this interrupt 
+     *
+     ******************************************************************************/
+    ISR(TIMER2_COMP_vect) {
+        if ((RTC_timer_todo&_BV(RTC_TIMER_KB)) && (TCNT2==RTC_timer_time[RTC_TIMER_KB-1])) { 
+            kb_timeout=true;   // keyboard noise cancelation
+            RTC_timer_todo &= ~_BV(RTC_TIMER_KB);
+        }
+        {
+            uint8_t i;
+            for (i=2;i<=RTC_TIMERS;i++) {
+                if ((RTC_timer_todo&_BV(i)) && (TCNT2==RTC_timer_time[i-1])) { 
+                   RTC_timer_done |= _BV(i);
+                   RTC_timer_todo &= ~_BV(i);
+                }
+            }                
+        }
+        if (RTC_timer_todo==0) TIMSK2 &= ~(1<<OCIE2A);
+    }
 #else
     /*!
      *******************************************************************************
@@ -608,9 +680,20 @@ bool RTC_SetDate(int8_t dd, int8_t mm, int8_t yy)
         if (++RTC_s100 >= 100) {
             RTC_s100 = 0;
             task |= TASK_RTC;   // increment second and check Dow_Timer
+            RTC_timer_done |= _BV(RTC_TIMER_OVF);
+        }
+        if (RTC_timer_todo && (RTC_next_compare==RTC_s100)) {
+            uint8_t i;
+            for (i=1;i<=RTC_TIMERS;i++) {
+                if ((RTC_timer_todo&_BV(i)) && (TCNT2==RTC_timer_time[i-1])) { 
+                   RTC_timer_done |= _BV(i);
+                   RTC_timer_todo &= ~_BV(i);
+                }
+            }                
         }
     }
-#endif
+#endif 
+
 
 #if HAS_CALIBRATE_RCO && !defined(MASTER_CONFIG_H)
 /*!
