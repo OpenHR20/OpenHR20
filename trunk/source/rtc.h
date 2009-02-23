@@ -82,11 +82,11 @@ void RTC_Init(void);                 // init Timer, activate 500ms IRQ
 #define RTC_GetTicks() ((uint32_t) RTC_Ticks)          // 1s ticks from startup
 
 
-void RTC_SetHour(uint8_t);                     // Set hour
-void RTC_SetMinute(uint8_t);                   // Set minute
-void RTC_SetSecond(uint8_t);                   // Set second
-void RTC_SetDay(uint8_t);                      // Set day
-void RTC_SetMonth(uint8_t);                    // Set month
+void RTC_SetHour(int8_t);                     // Set hour
+void RTC_SetMinute(int8_t);                    // Set minute
+void RTC_SetSecond(int8_t);                   // Set second
+void RTC_SetDay(int8_t);                      // Set day
+void RTC_SetMonth(int8_t);                    // Set month
 void RTC_SetYear(uint8_t);                     // Set year
 #if 0
     bool RTC_SetDate(int8_t, int8_t, int8_t);   // Set Date, and do all the range checking

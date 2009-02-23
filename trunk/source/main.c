@@ -302,6 +302,6 @@ static inline void init(void)
     //1 Initialize the LCD
     LCD_Init();
     
-	// init keyboard by one dummy call
-    task_keyboard();
+	// init keyboard
+    state_wheel_prev = ~PINB & (KBI_ROT1 | KBI_ROT2);
 }

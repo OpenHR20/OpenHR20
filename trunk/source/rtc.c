@@ -127,10 +127,10 @@ void RTC_Init(void)
  *  set actual date
  *  \param day new value for day
  ******************************************************************************/
-void RTC_SetDay(uint8_t day)
+void RTC_SetDay(int8_t day)
 {
     uint8_t day_in_m = RTC_DaysOfMonth();
-    RTC_DD = (day+(-1+day_in_m))%day_in_m + 1;
+    RTC_DD = (uint8_t)(day+(-1+day_in_m))%day_in_m + 1;
     RTC_SetDayOfWeek();
 }
 
@@ -139,9 +139,9 @@ void RTC_SetDay(uint8_t day)
  *  set actual date
  *  \param month new value for month
  ******************************************************************************/
-void RTC_SetMonth(uint8_t month)
+void RTC_SetMonth(int8_t month)
 {
-    RTC_MM = (month+(-1+12))%12 + 1;
+    RTC_MM = (uint8_t)(month+(-1+12))%12 + 1;
     RTC_SetDayOfWeek();
 }
 
@@ -161,9 +161,9 @@ void RTC_SetYear(uint8_t year)
  *  set actual time
  *  \param hour new value for hour
  ******************************************************************************/
-void RTC_SetHour(uint8_t hour)
+void RTC_SetHour(int8_t hour)
 {
-    RTC_hh = (hour+24)%24;
+    RTC_hh = (uint8_t)(hour+24)%24;
 }
 
 
@@ -172,9 +172,9 @@ void RTC_SetHour(uint8_t hour)
  *  set actual time
  *  \param minute new value for minute
  ******************************************************************************/
-void RTC_SetMinute(uint8_t minute)
+void RTC_SetMinute(int8_t minute)
 {
-    RTC_mm = (minute+60)%60;
+    RTC_mm = (uint8_t)(minute+60)%60;
 }
 
 
@@ -183,9 +183,9 @@ void RTC_SetMinute(uint8_t minute)
  *  set actual time
  *  \param second new value for second
  ******************************************************************************/
-void RTC_SetSecond(uint8_t second)
+void RTC_SetSecond(int8_t second)
 {
-    RTC_ss = (second+60)%60;
+    RTC_ss = (uint8_t)(second+60)%60;
 }
 
 /*!

@@ -48,7 +48,7 @@
 
 // global Vars for keypress and wheel status
 static uint8_t state_front_prev;
-static uint8_t state_wheel_prev;
+uint8_t state_wheel_prev;
 static uint8_t long_press;
 static uint8_t long_quiet;
 static volatile uint8_t keys = 0;  // must be volatile, shared into interrupt
@@ -184,7 +184,7 @@ void task_keyboard_long_press_detect(void) {
  *  - read keyboard status
  ******************************************************************************/
 bool mont_contact_pooling(void){
-#ifdef THERMOTRONIC
+#if defined(THERMOTRONIC) || DEBUG_IGNORE_MONT_CONTACT
 	return 1; //no contact - exit!
 #else
     bool mont_contact;
@@ -192,11 +192,7 @@ bool mont_contact_pooling(void){
     nop(); nop();
     // crazy order of instructions, but we need any instructions
     // between PORTB setting and reading PINB due to AVR design
-    #if DEBUG_IGNORE_MONT_CONTACT==1
-        mont_contact= 1;
-    #else
         mont_contact = ~PINB & (KBI_MONT | KBI_PROG | KBI_C);
-    #endif
       // low active
     disable_mont_input();
     if (mont_contact & KBI_MONT) { 

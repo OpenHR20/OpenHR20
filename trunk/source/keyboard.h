@@ -71,6 +71,7 @@ extern uint16_t kb_events;
 #define KBI_ROT2	(1 << 6)
 #endif
 
+extern uint8_t state_wheel_prev;
 void task_keyboard(void);
 void task_keyboard_long_press_detect(void);
 bool mont_contact_pooling(void);
