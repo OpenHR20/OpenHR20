@@ -118,7 +118,7 @@ void RTC_Init(void)
     #else
     	OCR1A = 12500-1; // 1/100s interrupt
     	TCCR1B= _BV(CS11) | _BV(WGM12); // clk/8 CTC mode
-    	TIFR  |= _BV(OCF1A);                       // clear interrupt-flags
+    	TIFR  = _BV(OCF1A);                       // clear interrupt-flags
     	TIMSK |= _BV(OCIE1A);
     #endif
 

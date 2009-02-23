@@ -116,7 +116,7 @@ void task_keyboard(void) {
             kb_timeout = false;
             // while (ASSR & (1<<OCR2UB)) {;} //this is not needed; kb_timeout==true means that OCR2A must be free
             OCR2A = TCNT2 + KEYBOARD_NOISE_CANCELATION;
-			TIFR2 |= (1<<OCF2A); // clear interrupt flag
+			TIFR2 = (1<<OCF2A); // clear interrupt flag
             TIMSK2 |= (1<<OCIE2A); // enable interupt again
         }
         state_front_prev = front;
