@@ -194,10 +194,10 @@ int __attribute__((naked)) main(void)
                             COM_mac_ok();
                             if (rfm_framebuf[0] == 0xc9) {
                                 //sync packet
-                    			RTC_s256=10;
                                 RFM_sync_tmo=10;
                                 rfm_mode = rfmmode_stop;
                                 RFM_OFF();
+                                RTC_s256=1;
                                 RTC_SetYear(rfm_framebuf[1]);
                                 RTC_SetMonth(rfm_framebuf[2]>>4);
                                 RTC_SetDay((rfm_framebuf[3]>>5)+((rfm_framebuf[2]<<3)&0x18));
@@ -224,47 +224,6 @@ int __attribute__((naked)) main(void)
 			task&=~TASK_ADC;
 			if (task_ADC()==0) {
                 // ADC is done
-#if RFM
-				if ((config.RFM_devaddr!=0)
-				    && (RFM_sync_tmo>1)
-                    && (RTC_GetSecond() == config.RFM_devaddr)) // collission protection: every HR20 shall send when the second counter is equal to it's own address.
-				// if ((RFM_sync_tmo>1) && (config.RFM_devaddr!=0) && !(RTC_GetSecond() % 4) ) // for testing all 4 seconds ...
-				{
-					RFM_TX_ON_PRE();
-
-					rfm_framebuf[ 0] = 0xaa; // preamble
-					rfm_framebuf[ 1] = 0xaa; // preamble
-					rfm_framebuf[ 2] = 0x2d; // rfm fifo start pattern
-					rfm_framebuf[ 3] = 0xd4; // rfm fifo start pattern
-
-					rfm_framebuf[ 4] = rfm_framesize-4+4;    // length
-					rfm_framebuf[ 5] = config.RFM_devaddr;
-
-                    encrypt_decrypt (rfm_framebuf+6, rfm_framesize-6);
-                    cmac_calc(rfm_framebuf+5,rfm_framesize-5,(uint8_t*)&RTC,false);
-                    RTC.pkt_cnt++;
-                    rfm_framesize+=4; //MAC
-					rfm_framebuf[rfm_framesize++] = 0xaa; // dummy byte
-					rfm_framebuf[rfm_framesize++] = 0xaa; // dummy byte
-
-					rfm_framepos  = 0;
-					rfm_mode = rfmmode_tx;
-					RFM_TX_ON();
-    			    RFM_SPI_SELECT; // set nSEL low: from this moment SDO indicate FFIT or RGIT
-                    RFM_INT_EN(); // enable RFM interrupt
-				}
-				if ((config.RFM_devaddr!=0)
-				    && (RFM_sync_tmo>1)
-                    && ((RTC_GetSecond() == 00) || (RTC_GetSecond() == 30)))
-                {
-                      	RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
-                        RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
-                        RFM_RX_ON();
-	    			    RFM_SPI_SELECT; // set nSEL low: from this moment SDO indicate FFIT or RGIT
-                        RFM_INT_EN(); // enable RFM interrupt
-                    	rfm_mode = rfmmode_rx;
-                }
-#endif
             }
 			continue; // on most case we have only 1 task, iprove time to sleep
 		}
@@ -300,7 +259,9 @@ int __attribute__((naked)) main(void)
 
         if (task & TASK_RTC) {
             task&=~TASK_RTC;
-            {
+            if (RTC_timer_done&_BV(RTC_TIMER_OVF))
+            {   
+                cli(); RTC_timer_done&=~_BV(RTC_TIMER_OVF); sei();
                 bool minute = RTC_AddOneSecond();
                 valve_wanted = CTL_update(minute,valve_wanted);
                 if (minute && (RTC_GetDayOfWeek()==6) && (RTC_GetHour()==10) && (RTC_GetMinute()==0)) {
@@ -328,17 +289,62 @@ int __attribute__((naked)) main(void)
                             } 
                         }
                     }
+    				if ((config.RFM_devaddr!=0)
+    				    && (RFM_sync_tmo>1)
+                        && (RTC_GetSecond() == config.RFM_devaddr)) // collission protection: every HR20 shall send when the second counter is equal to it's own address.
+    				// if ((RFM_sync_tmo>1) && (config.RFM_devaddr!=0) && !(RTC_GetSecond() % 4) ) // for testing all 4 seconds ...
+    				{
+    					RFM_TX_ON_PRE();
+    
+    					rfm_framebuf[ 0] = 0xaa; // preamble
+    					rfm_framebuf[ 1] = 0xaa; // preamble
+    					rfm_framebuf[ 2] = 0x2d; // rfm fifo start pattern
+    					rfm_framebuf[ 3] = 0xd4; // rfm fifo start pattern
+    
+    					rfm_framebuf[ 4] = rfm_framesize-4+4;    // length
+    					rfm_framebuf[ 5] = config.RFM_devaddr;
+    
+                        encrypt_decrypt (rfm_framebuf+6, rfm_framesize-6);
+                        cmac_calc(rfm_framebuf+5,rfm_framesize-5,(uint8_t*)&RTC,false);
+                        RTC.pkt_cnt++;
+                        rfm_framesize+=4; //MAC
+    					rfm_framebuf[rfm_framesize++] = 0xaa; // dummy byte
+    					rfm_framebuf[rfm_framesize++] = 0xaa; // dummy byte
+    
+    					rfm_framepos  = 0;
+    					rfm_mode = rfmmode_tx;
+    					RFM_TX_ON();
+        			    RFM_SPI_SELECT; // set nSEL low: from this moment SDO indicate FFIT or RGIT
+                        RFM_INT_EN(); // enable RFM interrupt
+    				}
+    				if ((config.RFM_devaddr!=0)
+    				    && (RFM_sync_tmo>1)
+                        && ((RTC_GetSecond() == 59) || (RTC_GetSecond() == 29)))
+                    {
+                        RTC_timer_set(RTC_TIMER_RFM, RTC_TIMER_CALC(900));
+                    }
                 #endif
+                MOTOR_updateCalibration(mont_contact_pooling());
+                MOTOR_Goto(valve_wanted);
+                task_keyboard_long_press_detect();
+                start_task_ADC();
+                if (menu_auto_update_timeout>=0) {
+                    menu_auto_update_timeout--;
+                }
+                menu_view(false); // TODO: move it, it is wrong place
+                LCD_Update(); // TODO: move it, it is wrong place
             }
-            MOTOR_updateCalibration(mont_contact_pooling());
-            MOTOR_Goto(valve_wanted);
-            task_keyboard_long_press_detect();
-            start_task_ADC();
-            if (menu_auto_update_timeout>=0) {
-                menu_auto_update_timeout--;
+            if (RTC_timer_done&_BV(RTC_TIMER_RFM))
+            {   
+                cli(); RTC_timer_done&=~_BV(RTC_TIMER_RFM); sei();
+                RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
+                RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
+                RFM_RX_ON();
+			    RFM_SPI_SELECT; // set nSEL low: from this moment SDO indicate FFIT or RGIT
+                RFM_INT_EN(); // enable RFM interrupt
+            	rfm_mode = rfmmode_rx;
             }
-            menu_view(false); // TODO: move it, it is wrong place
-            LCD_Update(); // TODO: move it, it is wrong place
+
             // do not use continue here (menu_auto_update_timeout==0)
         }
 

@@ -62,6 +62,10 @@ static inline void init(void);             // init the whole thing
 #warning "avr-libc >= version 1.6.0 recommended"
 #warning "This code has not been tested with older versions."
 #endif
+#if ! TASK_IS_SFR 
+#warning task variable manipulation is not protected to interrupt, fix it
+#endif
+
 
 volatile uint8_t task;
 
@@ -196,6 +200,9 @@ int main(void)
                     COM_print_datetime();
                 }
             }
+        }
+		if (task & TASK_TIMER) {
+  			task &= ~TASK_TIMER;
         }
         // serial communication
 		if (task & TASK_COM) {

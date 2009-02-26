@@ -108,7 +108,7 @@ char COM_tx_char_isr(void) {
  ******************************************************************************/
 void COM_rx_char_isr(char c) {
 	if (c!='\0') {  // ascii based protocol, \0 char is not alloweed, ignore it
-		if (c=='\r') c='\n';  // mask diffrence between operating systems
+ 		if (c=='\r') c='\n';  // mask diffrence between operating systems
 		rx_buff[rx_buff_in++]=c;
 		rx_buff_in%=RX_BUFF_SIZE;
 		if (rx_buff_in==rx_buff_out) { // buffer overloaded, drop oldest char 

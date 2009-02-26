@@ -383,6 +383,7 @@ void COM_commad_parse (void) {
 	}
 }
 
+#define calc_temp(t) (((uint16_t)t)*50)   // result unit is 1/100 C
 
 /*!
  *******************************************************************************
@@ -392,16 +393,41 @@ void COM_commad_parse (void) {
  ******************************************************************************/
 static uint16_t seq=0;
 void COM_dump_packet(uint8_t *d, uint8_t len, bool mac_ok) {
-	print_decXX(RTC_GetSecond());
+	uint8_t type;
+    print_decXX(RTC_GetSecond());
 	COM_putchar('.');
     print_decXX(RTC_s100);
-    if (mac_ok) print_s_p(PSTR(" PKT"));
-    else print_s_p(PSTR(" ERR"));
+    if (mac_ok && (len>(2+4))) {
+        print_s_p(PSTR(" PKT"));
+        len-=4; // mac is correct and not needed
+        type = d[2];
+    } else {
+        print_s_p(PSTR(" ERR"));
+        type = 0;
+    }
     print_hexXXXX(seq++);
     COM_putchar(':');
-	while ((len--)>0) {
-        COM_putchar(' ');
-        print_hexXX(*(d++));
+	switch (type) {
+        case 'D':
+            print_s_p(PSTR("D V:"));
+            print_decXX(d[8]);
+            print_s_p(PSTR(" I:"));
+            print_decXXXX(((uint16_t)d[3]<<8) | d[4]);
+            print_s_p(PSTR(" S:"));
+            print_decXXXX(calc_temp(d[7]));
+            print_s_p(PSTR(" B:"));
+            print_decXXXX(((uint16_t)d[5]<<8) | d[6]);
+            break;
+        default:
+            type=0;
+            break;
+    }
+    
+    if (type==0) { 
+        while ((len--)>0) {
+            COM_putchar(' ');
+            print_hexXX(*(d++));
+        }
     }
     COM_putchar('\n');
 	COM_flush();

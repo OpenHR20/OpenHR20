@@ -51,6 +51,8 @@
 #if defined(MASTER_CONFIG_H)
     #define RTC_TIMER_RFM 1
     #define RTC_TIMERS 1
+    
+    #define RTC_TIMER_CALC(t) (t/10)
 #else
     #define RTC_TIMER_KB  1 // keyboard timer
     #if (RFM==1)
@@ -59,6 +61,7 @@
     #else
         #define RTC_TIMERS 1
     #endif
+    #define RTC_TIMER_CALC(t) ((t*255)/1000)
 #endif
 
 /*****************************************************************************
@@ -135,6 +138,7 @@ int32_t RTC_DowTimerGetHourBar(uint8_t dow);
 bool RTC_AddOneSecond(void);
 
 extern uint8_t RTC_timer_done;
+void RTC_timer_set(uint8_t timer_id, uint8_t time);
 
 #if	HAS_CALIBRATE_RCO
 void calibrate_rco(void);

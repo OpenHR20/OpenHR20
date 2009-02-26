@@ -117,7 +117,7 @@ bool cmac_calc (uint8_t* m, uint8_t bytes, uint8_t* data_prefix, bool check) {
  *     M = M1 || M2 || ... || Mn-1 || Mn,
  *      where M1, M2,..., Mn-1 are complete 8 byte blocks.
  *   4.If Mn is a complete block, let Mn = K1 XOR Mn else,
- *    let Mn = K2 XOR (Mn ||10j), where j = n*64 – Mlen - 1.
+ *    let Mn = K2 XOR (Mn ||10j), where j = n*64 - Mlen - 1.
  *   5.Let C0 = 0
  *   6.For i = 1 to n, let Ci = ENC_KMAC(Ci-1 XOR Mi).
  *   7.Let MAC = MSB32(Cn). (4 most significant byte)

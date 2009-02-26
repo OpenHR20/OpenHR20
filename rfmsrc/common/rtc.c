@@ -577,7 +577,8 @@ void RTC_timer_set(uint8_t timer_id, uint8_t time) {
     uint8_t t2,i,next,dif;
     
     cli();
-    RTC_timer_todo |= timer_id;
+    RTC_timer_todo |= _BV(timer_id);
+	RTC_timer_time[timer_id-1]=time;
     t2=TCNT2;
     dif=255;
     for (i=0;i<RTC_TIMERS;i++) {
@@ -650,14 +651,16 @@ void RTC_timer_set(uint8_t timer_id, uint8_t time) {
      *
      ******************************************************************************/
     ISR(TIMER2_COMP_vect) {
-        if ((RTC_timer_todo&_BV(RTC_TIMER_KB)) && (TCNT2==RTC_timer_time[RTC_TIMER_KB-1])) { 
+		uint8_t t2=TCNT2-1;
+        task |= TASK_RTC;
+        if ((RTC_timer_todo&_BV(RTC_TIMER_KB)) && (t2==RTC_timer_time[RTC_TIMER_KB-1])) { 
             kb_timeout=true;   // keyboard noise cancelation
             RTC_timer_todo &= ~_BV(RTC_TIMER_KB);
         }
         {
             uint8_t i;
             for (i=2;i<=RTC_TIMERS;i++) {
-                if ((RTC_timer_todo&_BV(i)) && (TCNT2==RTC_timer_time[i-1])) { 
+                if ((RTC_timer_todo&_BV(i)) && (t2==RTC_timer_time[i-1])) { 
                    RTC_timer_done |= _BV(i);
                    RTC_timer_todo &= ~_BV(i);
                 }
@@ -678,8 +681,8 @@ void RTC_timer_set(uint8_t timer_id, uint8_t time) {
     volatile uint8_t RTC_s100=0;
     ISR(TIMER1_COMPA_vect) {
         if (++RTC_s100 >= 100) {
-            RTC_s100 = 0;
             task |= TASK_RTC;   // increment second and check Dow_Timer
+            RTC_s100 = 0;
             RTC_timer_done |= _BV(RTC_TIMER_OVF);
         }
         if (RTC_timer_todo && (RTC_next_compare==RTC_s100)) {
@@ -688,6 +691,7 @@ void RTC_timer_set(uint8_t timer_id, uint8_t time) {
                 if ((RTC_timer_todo&_BV(i)) && (TCNT2==RTC_timer_time[i-1])) { 
                    RTC_timer_done |= _BV(i);
                    RTC_timer_todo &= ~_BV(i);
+                   task |= TASK_TIMER;   // increment second and check Dow_Timer
                 }
             }                
         }

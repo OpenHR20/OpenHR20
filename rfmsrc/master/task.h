@@ -44,24 +44,24 @@ extern volatile uint8_t task;
 #define  TASK_IS_SFR 0
 
 
-#define TASK_KB_BIT	          0
+#define TASK_0_BIT	          0
 #define TASK_RTC_BIT	      1
-#define TASK_ADC_BIT          2
-#define TASK_LCD_BIT	      3
-#define TASK_MOTOR_PULSE_BIT  4
-#define TASK_MOTOR_STOP_BIT	  5
-#define TASK_COM_BIT          6  
+#define TASK_TIMER_BIT        2
+#define TASK_3_BIT	            3
+#define TASK_4_BIT              4
+#define TASK_5_BIT	            5
+#define TASK_COM_BIT            6  
 #if (RFM==1)
   #define TASK_RFM_BIT          7  
 #endif 
 
-#define TASK_KB			     (1 << TASK_KB_BIT)
+#define TASK_0			     (1 << TASK_0_BIT)
 #define TASK_RTC		     (1 << TASK_RTC_BIT)
-#define TASK_ADC		     (1 << TASK_ADC_BIT)
-#define TASK_LCD		     (1 << TASK_LCD_BIT)
-#define TASK_MOTOR_PULSE     (1 << TASK_MOTOR_PULSE_BIT)
-#define TASK_MOTOR_STOP 	 (1 << TASK_MOTOR_STOP_BIT)
-#define TASK_COM			 (1 << TASK_COM_BIT)
+#define TASK_TIMER		     (1 << TASK_TIMER_BIT)
+#define TASK_3  		     (1 << TASK_3_BIT)
+#define TASK_4               (1 << TASK_4_BIT)
+#define TASK_5 	             (1 << TASK_5_BIT)
+#define TASK_COM		     (1 << TASK_COM_BIT)
 #if (RFM==1)
   #define TASK_RFM		     (1 << TASK_RFM_BIT)
 #endif
