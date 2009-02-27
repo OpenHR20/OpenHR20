@@ -41,22 +41,10 @@
 
 #if (RFM==1)
 
-
-
 uint8_t rfm_framebuf[RFM_FRAME_MAX];
 uint8_t rfm_framesize = 6;
 uint8_t rfm_framepos = 0;
 rfm_mode_t rfm_mode = rfmmode_stop;
-
-/*!
- *******************************************************************************
- *  RFM put one byte
- ******************************************************************************/
-void rfm_putchar(uint8_t b) {
-    if ((rfm_mode == rfmmode_stop) && (rfm_framepos < RFM_FRAME_MAX)) {
-        rfm_framebuf[rfm_framesize++] = b;
-    }
-}
 
 /*!
  *******************************************************************************

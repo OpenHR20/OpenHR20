@@ -24,11 +24,37 @@
  */
 
 /*!
- * \file       cmac.h
- * \brief      CMAC implementation (http://csrc.nist.gov/publications/nistpubs/800-38B/SP_800-38B.pdf)
+ * \file       wireless.c
+ * \brief      wireless layer
  * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>
  * \date       $Date$
  * $Rev$
  */
 
-bool cmac_calc (uint8_t* m, uint8_t bytes, uint8_t* data_prefix, bool check);
+
+extern uint8_t Keys[5*8]; // 40 bytes
+#define K_mac (Keys+0*8)
+#define K_enc (Keys+1*8)
+#define K1 (Keys+3*8)
+#define K2 (Keys+4*8)
+#define K_m (Keys+3*8)  /* share same position as K1 & K2 */
+// note: do not change order of keys in Keys array, it depend to crypto_init
+
+void crypto_init(void);
+void wirelessSendPacket(void);
+void wirelessReceivePacket(void);
+#if defined(MASTER_CONFIG_H)
+    void wirelessSendSync(void);
+#else
+    void wirelesTimeSyncCheck(void);
+#endif 
+
+#if (RFM==1)
+void wireless_putchar(uint8_t ch);
+#else
+#define wireless_putchar(ch) 
+#endif
+
+
+extern int8_t time_sync_tmo;
+extern uint8_t wireless_buf_ptr;

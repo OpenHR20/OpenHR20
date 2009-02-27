@@ -138,7 +138,7 @@ int16_t ADC_Get_Temp_Degree(void)            // Get Temperature in 1/100 Deg �
  *  - measurment has been performed before using \ref ADC_Measure_Ub
  *  - Battery voltage = (V_ref * 1024) / ADC_Val_Ub with V_ref=1.1V
  ******************************************************************************/
-int16_t ADC_Get_Bat_Voltage(uint16_t adc)             // Get Batteriy Voltage in mV
+static int16_t ADC_Get_Bat_Voltage(uint16_t adc)             // Get Batteriy Voltage in mV
 {
     uint32_t millivolt;
     millivolt = 1126400;

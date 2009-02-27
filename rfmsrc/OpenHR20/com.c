@@ -47,7 +47,7 @@
 #include "watch.h"
 #include "eeprom.h"
 #include "controller.h"
-#include "../common/rfm.h"
+#include "../common/wireless.h"
 #include "debug.h"
 
 
@@ -80,7 +80,7 @@ static void COM_putchar(char c) {
 #if (RFM==1)
 static void super_COM_putchar(char c) {
     COM_putchar(c);
-    rfm_putchar(c);
+    wireless_putchar(c);
 }
 #else
 #define super_COM_putchar(c) 
@@ -205,7 +205,7 @@ static void print_hexXX(uint8_t i) {
 #if (RFM==1)
 static void super_print_hexXX(uint8_t i) {
     print_hexXX(i);
-    rfm_putchar(i);
+    wireless_putchar(i);
 }
 #else
 #define super_print_hexXX(i) print_hexXX(i)
@@ -225,9 +225,9 @@ static void print_hexXXXX(uint16_t i) {
 #if (RFM==1)
 static void super_print_hexXXXX(uint16_t i) {
 	print_hexXX(i>>8);
-	rfm_putchar(i>>8);
+	wireless_putchar(i>>8);
 	print_hexXX(i&0xff);
-	rfm_putchar(i&0xff);
+	wireless_putchar(i&0xff);
 }
 #else
 #define super_print_hexXXXX(i) print_hexXXXX(i)
@@ -324,13 +324,13 @@ void COM_print_debug(int8_t valve) {
 	COM_putchar('\n');
 	COM_flush();
 #if (RFM==1)
-    rfm_putchar('D');
-	rfm_putchar(temp_average >> 8); // current temp
-	rfm_putchar(temp_average & 0xff);
-	rfm_putchar(bat_average >> 8); // current temp
-	rfm_putchar(bat_average & 0xff);
-	rfm_putchar(CTL_temp_wanted); // wanted temp
-	rfm_putchar((valve>=0) ? valve : valve_wanted); // valve pos
+    wireless_putchar('D');
+	wireless_putchar(temp_average >> 8); // current temp
+	wireless_putchar(temp_average & 0xff);
+	wireless_putchar(bat_average >> 8); // current temp
+	wireless_putchar(bat_average & 0xff);
+	wireless_putchar(CTL_temp_wanted); // wanted temp
+	wireless_putchar((valve>=0) ? valve : valve_wanted); // valve pos
 	rfm_start_tx();
 #endif
     
@@ -543,14 +543,20 @@ void COM_debug_print_temperature(uint16_t t) {
  *  \note
  ******************************************************************************/
 static uint16_t seq=0;
-void COM_dump_packet(uint8_t *d, uint8_t len) {
-	print_decXX(RTC_GetSecond());
-	COM_putchar('x');
-	print_hexXX(RTC_s256);
-    print_s_p(PSTR(" PKT"));
+void COM_dump_packet(uint8_t *d, uint8_t len, bool mac_ok) {
+	uint8_t type;
+    print_decXX(RTC_GetSecond());
+	COM_putchar('.');
+    print_hexXX(RTC_s256);
+    if (mac_ok && (len>=(2+4))) {
+        print_s_p(PSTR(" PKT"));
+        len-=4; // mac is correct and not needed
+    } else {
+        print_s_p(PSTR(" ERR"));
+    }
     print_hexXXXX(seq++);
     COM_putchar(':');
-	while ((len--)>0) {
+    while ((len--)>0) {
         COM_putchar(' ');
         print_hexXX(*(d++));
     }
@@ -558,8 +564,4 @@ void COM_dump_packet(uint8_t *d, uint8_t len) {
 	COM_flush();
 }
 
-void COM_mac_ok(void) {
-    print_s_p(PSTR("MAC OK!\n"));
-	COM_flush();
-}
 #endif

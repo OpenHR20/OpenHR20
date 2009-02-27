@@ -446,13 +446,6 @@
 void RFM_init (void);
 uint16_t rfm_spi16(uint16_t outval);
 
-#if (RFM==1)
-void rfm_putchar(uint8_t ch);
-#else
-#define rfm_putchar(ch) 
-#endif
-
-
 ///////////////////////////////////////////////////////////////////////////////
 
 // RFM air protocol flags:
@@ -476,7 +469,7 @@ void rfm_putchar(uint8_t ch);
 
 // RFM send and receive buffer:
 
-#define RFM_FRAME_MAX 0x30
+#define RFM_FRAME_MAX 80
 
 typedef enum {rfmmode_stop=0, 
               rfmmode_start_tx=1,

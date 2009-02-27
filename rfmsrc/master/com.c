@@ -397,7 +397,7 @@ void COM_dump_packet(uint8_t *d, uint8_t len, bool mac_ok) {
     print_decXX(RTC_GetSecond());
 	COM_putchar('.');
     print_decXX(RTC_s100);
-    if (mac_ok && (len>(2+4))) {
+    if (mac_ok && (len>=(2+4))) {
         print_s_p(PSTR(" PKT"));
         len-=4; // mac is correct and not needed
         type = d[2];

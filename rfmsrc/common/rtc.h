@@ -52,7 +52,7 @@
     #define RTC_TIMER_RFM 1
     #define RTC_TIMERS 1
     
-    #define RTC_TIMER_CALC(t) (t/10)
+    #define RTC_TIMER_CALC(t) ((uint8_t)(t/10))
 #else
     #define RTC_TIMER_KB  1 // keyboard timer
     #if (RFM==1)
@@ -61,7 +61,7 @@
     #else
         #define RTC_TIMERS 1
     #endif
-    #define RTC_TIMER_CALC(t) ((t*255)/1000)
+    #define RTC_TIMER_CALC(t) ((uint8_t)((t*256L)/1000L))
 #endif
 
 /*****************************************************************************

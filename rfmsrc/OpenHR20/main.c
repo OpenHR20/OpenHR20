@@ -57,6 +57,7 @@
 #include "../common/rs232_485.h"
 #include "../common/rfm.h"
 #include "controller.h"
+#include "../common/wireless.h"
 
 #if RFM
 	#include "rfm_config.h"
@@ -77,10 +78,6 @@ void load_defauls(void);                   // load default values
 void callback_settemp(uint8_t);            // called from RTC to set new reftemp
 void setautomode(bool);                    // activate/deactivate automode
 uint8_t input_temp(uint8_t);
-
-#if RFM
-    int8_t RFM_sync_tmo=0;
-#endif
 
 // Check AVR LibC Version >= 1.6.0
 #if __AVR_LIBC_VERSION__ < 10600UL
@@ -167,7 +164,7 @@ int __attribute__((naked)) main(void)
 			if (rfm_mode == rfmmode_tx_done)
 			{
 					rfm_mode    = rfmmode_stop;
-					rfm_framesize = 6;
+					wireless_buf_ptr=0;
 					rfm_framepos=0;
 					RFM_INT_DIS();
 				    RFM_OFF();		// turn everything off
@@ -178,37 +175,7 @@ int __attribute__((naked)) main(void)
 			}
   			else if ((rfm_mode == rfmmode_rx) || (rfm_mode == rfmmode_rx_owf))
   			{
-  				if (rfm_framepos>=1) {
-                    if ((rfm_framepos >= (rfm_framebuf[0]&0x3f)) 
-                            || ((rfm_framebuf[0]&0x3f)>= RFM_FRAME_MAX)  // reject noise
-                            || (rfm_framepos >= RFM_FRAME_MAX)) {
-                        COM_dump_packet(rfm_framebuf, rfm_framepos);
-                        rfm_framepos=0;
-						rfm_mode = rfmmode_rx;
-                        RFM_INT_DIS(); // disable RFM interrupt
-                      	RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
-                        RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
-                        RFM_INT_EN(); // enable RFM interrupt
-                        if ((rfm_framebuf[0]&0x3f)>5) { 
-                          if (cmac_calc(rfm_framebuf+1,(rfm_framebuf[0]&0x3f)-5,NULL,true)) {
-                            COM_mac_ok();
-                            if (rfm_framebuf[0] == 0xc9) {
-                                //sync packet
-                                RFM_sync_tmo=10;
-                                rfm_mode = rfmmode_stop;
-                                RFM_OFF();
-                                RTC_s256=1;
-                                RTC_SetYear(rfm_framebuf[1]);
-                                RTC_SetMonth(rfm_framebuf[2]>>4);
-                                RTC_SetDay((rfm_framebuf[3]>>5)+((rfm_framebuf[2]<<3)&0x18));
-                    			RTC_SetHour(rfm_framebuf[3]&0x1f);
-                    			RTC_SetMinute(rfm_framebuf[4]>>1);
-                    			RTC_SetSecond((rfm_framebuf[4]&1)?30:00);
-                            }
-                          }
-                        }
-                    }
-                }
+  			    wirelessReceivePacket();
   			}
 		}
 		#endif
@@ -272,53 +239,17 @@ int __attribute__((naked)) main(void)
                 }
                 #if RFM
                     if (minute) {
-                        RFM_sync_tmo--;
-                        if (RFM_sync_tmo<=0) {
-                            if (RFM_sync_tmo==0) {
-                            		RFM_INT_DIS();
-                				    RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
-				                    RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
-                                    RFM_RX_ON();    //re-enable RX
-                					rfm_framepos=0;
-                					rfm_mode = rfmmode_rx;
-                				    RFM_INT_EN(); // enable RFM interrupt
-                            } else if (RFM_sync_tmo<-4) {
-            					RFM_INT_DIS();
-            				    RFM_OFF();		// turn everything off
-            				    CTL_error |= CTL_ERR_RFM_SYNC;
-                            } 
-                        }
+                        wirelesTimeSyncCheck();
                     }
     				if ((config.RFM_devaddr!=0)
-    				    && (RFM_sync_tmo>1)
+    				    && (time_sync_tmo>1)
                         && (RTC_GetSecond() == config.RFM_devaddr)) // collission protection: every HR20 shall send when the second counter is equal to it's own address.
-    				// if ((RFM_sync_tmo>1) && (config.RFM_devaddr!=0) && !(RTC_GetSecond() % 4) ) // for testing all 4 seconds ...
+    				// if ((time_sync_tmo>1) && (config.RFM_devaddr!=0) && !(RTC_GetSecond() % 4) ) // for testing all 4 seconds ...
     				{
-    					RFM_TX_ON_PRE();
-    
-    					rfm_framebuf[ 0] = 0xaa; // preamble
-    					rfm_framebuf[ 1] = 0xaa; // preamble
-    					rfm_framebuf[ 2] = 0x2d; // rfm fifo start pattern
-    					rfm_framebuf[ 3] = 0xd4; // rfm fifo start pattern
-    
-    					rfm_framebuf[ 4] = rfm_framesize-4+4;    // length
-    					rfm_framebuf[ 5] = config.RFM_devaddr;
-    
-                        encrypt_decrypt (rfm_framebuf+6, rfm_framesize-6);
-                        cmac_calc(rfm_framebuf+5,rfm_framesize-5,(uint8_t*)&RTC,false);
-                        RTC.pkt_cnt++;
-                        rfm_framesize+=4; //MAC
-    					rfm_framebuf[rfm_framesize++] = 0xaa; // dummy byte
-    					rfm_framebuf[rfm_framesize++] = 0xaa; // dummy byte
-    
-    					rfm_framepos  = 0;
-    					rfm_mode = rfmmode_tx;
-    					RFM_TX_ON();
-        			    RFM_SPI_SELECT; // set nSEL low: from this moment SDO indicate FFIT or RGIT
-                        RFM_INT_EN(); // enable RFM interrupt
+    				    wirelessSendPacket();
     				}
     				if ((config.RFM_devaddr!=0)
-    				    && (RFM_sync_tmo>1)
+    				    && (time_sync_tmo>1)
                         && ((RTC_GetSecond() == 59) || (RTC_GetSecond() == 29)))
                     {
                         RTC_timer_set(RTC_TIMER_RFM, RTC_TIMER_CALC(900));

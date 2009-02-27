@@ -85,7 +85,8 @@ com.c \
 watch.c \
 controller.c \
 rfm.c \
-cmac.c
+cmac.c \
+wireless.c
 
 
 # List C++ source files here. (C dependencies are automatically generated.)

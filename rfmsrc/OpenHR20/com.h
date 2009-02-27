@@ -49,9 +49,9 @@ void COM_debug_print_motor(int8_t dir, uint16_t m, uint8_t pwm);
 void COM_debug_print_temperature(uint16_t t);
 
 #if DEBUG_DUMP_RFM
-    void COM_dump_packet(uint8_t *d, uint8_t len);
-    void COM_mac_ok(void);
+    void COM_dump_packet(uint8_t *d, uint8_t len, bool mac_ok);
+    // void COM_mac_ok(void);
 #else 
-    #define COM_dump_packet(d,len) ()
-    #define COM_mac_ok() ()
+    #define COM_dump_packet(d,len, mac_ok);
+    // #define COM_mac_ok() ()
 #endif

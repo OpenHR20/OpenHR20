@@ -31,82 +31,10 @@
  * $Rev$
  */
 
-#include <avr/pgmspace.h>
 #include <string.h>
 #include "config.h"
 #include "../common/xtea.h"
-#include "eeprom.h"
-
-#warning "test only"
-
-uint8_t Keys[5*8]; // 40 bytes
-#define K_mac (Keys+0*8)
-#define K_enc (Keys+1*8)
-#define K1 (Keys+3*8)
-#define K2 (Keys+4*8)
-#define K_m (Keys+3*8)  /* share same position as K1 & K2 */
-// note: do not change order of keys in Keys array, it depend to crypto_init
-
-uint8_t Km_upper[8] PROGMEM = {
-    0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef
-};
-
-/* internal function for crypto_init */
-asm (
-    "left_roll:               \n"
-    "   ld r25,Y              \n"
-    "   lsl r25               \n"
-    "   ldd __tmp_reg__,Y+1   \n"
-    "   rol __tmp_reg__       \n"
-    "   std Z+1,__tmp_reg__   \n"
-    "   ldd __tmp_reg__,Y+2   \n"
-    "   rol __tmp_reg__       \n"
-    "   std Z+2,__tmp_reg__   \n"
-    "   ldd __tmp_reg__,Y+3   \n"
-    "   rol __tmp_reg__       \n"
-    "   std Z+3,__tmp_reg__   \n"
-    "   ldd __tmp_reg__,Y+4   \n"
-    "   rol __tmp_reg__       \n"
-    "   std Z+4,__tmp_reg__   \n"
-    "   ldd __tmp_reg__,Y+5   \n"
-    "   rol __tmp_reg__       \n"
-    "   std Z+5,__tmp_reg__   \n"
-    "   ldd __tmp_reg__,Y+6   \n"
-    "   rol __tmp_reg__       \n"
-    "   std Z+6,__tmp_reg__   \n"
-    "   ldd __tmp_reg__,Y+7   \n"
-    "   rol __tmp_reg__       \n"
-    "   std Z+7,__tmp_reg__   \n"
-    "   brcc left_roll_brcc   \n"
-    "   ori r25,1             \n"
-    "left_roll_brcc:          \n"
-    "   st Z,r25              \n"
-    "   ret "
-);
-void crypto_init(void) {
-    uint8_t i;
-    memcpy(K_m,config.security_key,8);
-    memcpy_P(K_m+8,Km_upper,sizeof(Km_upper)); 
-    for (i=0;i<3*8;i++) {
-        Keys[i]=0xc0+i;
-    }
-    xtea_enc(K_mac, K_mac, K_m); /* generate K_mac low 8 bytes */
-    xtea_enc(K_enc, K_enc, K_m); /* generate K_mac high 8 bytes  and K_enc low 8 bytes*/
-    xtea_enc(K_enc+8, K_enc+8, K_m); /* generate K_enc high 8 bytes */
-    for (i=0;i<8;i++) { // smaller&faster than memset
-        K1[i]=0;
-    }
-    xtea_enc(K1, K1, K_mac);
-    asm (
-    "   movw  R30,%A0   \n"
-    "   rcall left_roll \n" /* generate K1 */
-    "   ldi r30,lo8(" STR(K2) ") \n"
-    "   ldi r31,hi8(" STR(K2) ") \n"
-    "   rcall left_roll \n" /* generate K2 */
-    :: "y" (K1)
-    :"r25","r30","r31" 
-    );
-}
+#include "../common/wireless.h"
 
 bool cmac_calc (uint8_t* m, uint8_t bytes, uint8_t* data_prefix, bool check) {
 /*   reference: http://csrc.nist.gov/publications/nistpubs/800-38B/SP_800-38B.pdf
@@ -126,7 +54,6 @@ bool cmac_calc (uint8_t* m, uint8_t bytes, uint8_t* data_prefix, bool check) {
   
     uint8_t i,j;
     uint8_t buf[8];
-
     if (data_prefix==NULL) {
         for (i=0;i<8;buf[i++]=0) {;}
     } else {
@@ -165,18 +92,4 @@ bool cmac_calc (uint8_t* m, uint8_t bytes, uint8_t* data_prefix, bool check) {
         "r17", "r18", "r19", "r20", "r21", "r22", "r23", "r24" 
         ); 
     #endif
-}
-
-void encrypt_decrypt (uint8_t* p, uint8_t len) {
-    uint8_t i=0;
-    uint8_t buf[8];
-    for(;i<len;) {
-        xtea_enc(buf,&RTC,K_enc);
-        RTC.pkt_cnt++;
-        do {
-            p[i]^=buf[i&7];
-            i++;
-            if (i>=len) return; //done
-        } while ((i&7)!=0);
-    }
 }

@@ -48,6 +48,7 @@
 #include "eeprom.h"
 #include "../common/rtc.h"
 #include "../common/cmac.h"
+#include "../common/wireless.h"
 
 #if (RFM == 1)
 	#include "rfm_config.h"
@@ -127,6 +128,7 @@ int main(void)
 				    RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
 				    RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
                     RFM_RX_ON();    //re-enable RX
+                    wireless_buf_ptr=0;
 					rfm_framepos=0;
 					rfm_mode = rfmmode_rx;
 				    RFM_INT_EN(); // enable RFM interrupt
@@ -136,30 +138,9 @@ int main(void)
 			}
   			else if ((rfm_mode == rfmmode_rx) || (rfm_mode == rfmmode_rx_owf))
   			{
-  				if (rfm_framepos>=1) {
-					LED_on();
-                    if ((rfm_framepos >= rfm_framebuf[0]) 
-                            || (rfm_framebuf[0] >= RFM_FRAME_MAX)  // reject noise
-                            || (rfm_framepos >= RFM_FRAME_MAX)) {
-                        RFM_INT_DIS(); // disable RFM interrupt
-                        if (rfm_framepos>rfm_framebuf[0]) rfm_framepos=rfm_framebuf[0]; 
-                        if (rfm_framepos>=2+4) {
-                            bool mac_ok;
-                            RTC.pkt_cnt+= (rfm_framepos+7-2-4)/8;
-                            mac_ok = cmac_calc(rfm_framebuf+1,rfm_framepos-1-4,(uint8_t*)&RTC,true);
-                            RTC.pkt_cnt-= (rfm_framepos+7-2-4)/8;
-                            encrypt_decrypt (rfm_framebuf+2, rfm_framepos-2-4);
-                            RTC.pkt_cnt++;
-                            COM_dump_packet(rfm_framebuf, rfm_framepos,mac_ok);
-                        }
-                        rfm_framepos=0;
-						rfm_mode = rfmmode_rx;
-                        	RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
-	                        RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
-	                        RFM_INT_EN(); // enable RFM interrupt
-							LED_off();
-                    }
-                }
+  			   LED_on();
+  			   wirelessReceivePacket();
+  			   LED_off();
   			}
         }
 		#endif
@@ -168,35 +149,14 @@ int main(void)
             {
                 bool minute = RTC_AddOneSecond();
                 if (minute || RTC_GetSecond()==30) {
-					rfm_framesize = 5;
 					rfm_mode = rfmmode_stop;
-                    rfm_putchar(RTC_GetYearYY());
+					wireless_buf_ptr = 0;
+                    wireless_putchar(RTC_GetYearYY());
                     uint8_t d = RTC_GetDay(); 
-                    rfm_putchar((RTC_GetMonth()<<4) + (d>>3)); 
-                    rfm_putchar((d<<5) + RTC_GetHour());
-                    rfm_putchar((RTC_GetMinute()<<1) + ((RTC_GetSecond()==30)?1:0));
-                
-                    RFM_TX_ON_PRE();
-					rfm_framebuf[ 0] = 0xaa; // preamble
-					rfm_framebuf[ 1] = 0xaa; // preamble
-					rfm_framebuf[ 2] = 0x2d; // rfm fifo start pattern
-					rfm_framebuf[ 3] = 0xd4; // rfm fifo start pattern
-
-					rfm_framebuf[ 4] = (rfm_framesize-4+4) | 0xc0; // length (sync)
-
-					cmac_calc(rfm_framebuf+5,rfm_framesize-5,NULL,false);
-					
-					rfm_framesize+=4;
-
-					rfm_framebuf[rfm_framesize++] = 0xaa; // dummy byte
-					rfm_framebuf[rfm_framesize++] = 0xaa; // dummy byte
-
-					rfm_framepos  = 0;
-					rfm_mode    = rfmmode_tx;
-					RFM_TX_ON();
-    			    RFM_SPI_SELECT; // set nSEL low: from this moment SDO indicate FFIT or RGIT
-                    RFM_INT_EN(); // enable RFM interrupt
-
+                    wireless_putchar((RTC_GetMonth()<<4) + (d>>3)); 
+                    wireless_putchar((d<<5) + RTC_GetHour());
+                    wireless_putchar((RTC_GetMinute()<<1) + ((RTC_GetSecond()==30)?1:0));
+                    wirelessSendSync();
                     COM_print_datetime();
                 }
             }
