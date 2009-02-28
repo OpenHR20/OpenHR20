@@ -74,7 +74,8 @@ volatile uint8_t task;
  *******************************************************************************
  * main program
  ******************************************************************************/
-int main(void)
+int __attribute__ ((noreturn)) main(void)
+// __attribute__((noreturn)) mean that we not need prologue and epilogue for main()
 {
     //! initalization
     init();

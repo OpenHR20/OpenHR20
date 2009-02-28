@@ -89,8 +89,8 @@ uint8_t input_temp(uint8_t);
  *******************************************************************************
  * main program
  ******************************************************************************/
-int __attribute__((naked)) main(void)
-// __attribute__((naked)) mean that we not need prologue and epilogue for main()
+int __attribute__ ((noreturn)) main(void)
+// __attribute__((noreturn)) mean that we not need prologue and epilogue for main()
 {
     //! initalization
     init();

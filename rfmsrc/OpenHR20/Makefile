@@ -171,7 +171,13 @@ CFLAGS += -Wstrict-prototypes
 CFLAGS += -Wa,-adhlns=$(<:%.c=$(OBJDIR)/%.lst)
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 CFLAGS += $(CSTANDARD)
-
+#optimizations flags 
+# tip: see here http://www.tty1.net/blog/2008-04-29-avr-gcc-optimisations_en.html
+CFLAGS += -ffreestanding 
+CFLAGS += -Wl,--relax 
+#CFLAGS += --param inline-call-cost=2 
+#CFLAGS += -ffunction-sections
+CFLAGS += -fdata-sections
 
 #---------------- Compiler Options C++ ----------------
 #  -g*:          generate debugging information
@@ -271,7 +277,7 @@ LDFLAGS += $(EXTMEMOPTS)
 LDFLAGS += $(patsubst %,-L%,$(EXTRALIBDIRS))
 LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
 #LDFLAGS += -T linker_script.x
-
+#LDFLAGS += --relax
 
 
 #---------------- Programming Options (avrdude) ----------------
