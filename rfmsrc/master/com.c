@@ -392,42 +392,79 @@ void COM_commad_parse (void) {
  *  \note
  ******************************************************************************/
 static uint16_t seq=0;
-void COM_dump_packet(uint8_t *d, uint8_t len, bool mac_ok) {
-	uint8_t type;
+void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok) {
     print_decXX(RTC_GetSecond());
 	COM_putchar('.');
     print_decXX(RTC_s100);
     if (mac_ok && (len>=(2+4))) {
         print_s_p(PSTR(" PKT"));
-        len-=4; // mac is correct and not needed
-        type = d[2];
+        print_hexXXXX(seq++);
+        len-=6; // mac is correct and not needed
+        d+=2;
+        if (len==0) {
+            COM_putchar('\n');
+        	COM_flush();
+        	return;
+        }
     } else {
         print_s_p(PSTR(" ERR"));
-        type = 0;
-    }
-    print_hexXXXX(seq++);
-    COM_putchar(':');
-	switch (type) {
-        case 'D':
-            print_s_p(PSTR("D V:"));
-            print_decXX(d[8]);
-            print_s_p(PSTR(" I:"));
-            print_decXXXX(((uint16_t)d[3]<<8) | d[4]);
-            print_s_p(PSTR(" S:"));
-            print_decXXXX(calc_temp(d[7]));
-            print_s_p(PSTR(" B:"));
-            print_decXXXX(((uint16_t)d[5]<<8) | d[6]);
-            break;
-        default:
-            type=0;
-            break;
-    }
-    
-    if (type==0) { 
+        print_hexXXXX(seq++);
         while ((len--)>0) {
             COM_putchar(' ');
             print_hexXX(*(d++));
         }
+        COM_putchar('\n');
+    	COM_flush();
+    	return;
+    }
+    
+    COM_putchar(':');
+    while (len>0) {
+    	switch (d[0]) {
+            case 'D':
+                print_s_p(PSTR("D V:"));
+                print_decXX(d[6]);
+                print_s_p(PSTR(" I:"));
+                print_decXXXX(((uint16_t)d[1]<<8) | d[2]);
+                print_s_p(PSTR(" S:"));
+                print_decXXXX(calc_temp(d[5]));
+                print_s_p(PSTR(" B:"));
+                print_decXXXX(((uint16_t)d[3]<<8) | d[4]);
+                d+=7;
+                len-=7;
+                break;
+            case 'T':
+            case 'R':
+            case 'W':
+                COM_putchar(d[0]);
+                COM_putchar('[');
+                print_hexXX(d[1]);
+                COM_putchar(']');
+                COM_putchar('=');
+                print_hexXX(d[2]);
+                print_hexXX(d[3]);
+                d+=4;
+                len-=4;
+                break;                
+            case 'G':
+            case 'S':
+                COM_putchar(d[0]);
+                COM_putchar('[');
+                print_hexXX(d[1]);
+                COM_putchar(']');
+                COM_putchar('=');
+                print_hexXX(d[2]);
+                d+=3;
+                len-=3;
+                break;                
+            default:
+                while ((len--)>0) {
+                    COM_putchar(' ');
+                    print_hexXX(*(d++));
+                }
+                break;
+        }
+        COM_putchar('\n');
     }
     COM_putchar('\n');
 	COM_flush();

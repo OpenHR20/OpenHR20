@@ -39,7 +39,7 @@ void COM_rx_char_isr(char c);
 
 void COM_init(void);
 
-void COM_dump_packet(uint8_t *d, uint8_t len, bool mac_ok);
+void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok);
 
 void COM_print_datetime(void);
 
