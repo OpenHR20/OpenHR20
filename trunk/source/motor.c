@@ -170,18 +170,15 @@ bool MOTOR_Goto(uint8_t percent)
     if (MOTOR_calibration_step==0){
         // set stop position
         if (percent == 100) {
-            MOTOR_PosStop = MOTOR_PosMax + config.motor_hysteresis - config.motor_protection;
+            MOTOR_PosStop = MOTOR_PosMax + config.motor_hysteresis;
         } else if (percent == 0) {
-            MOTOR_PosStop = config.motor_protection-config.motor_hysteresis;
+            MOTOR_PosStop = -config.motor_hysteresis;
         } else {
             // MOTOR_PosMax>>2 and 100>>2 => overload protection
             #if (MOTOR_MAX_IMPULSES>>2)*(100>>2) > INT16_MAX
              #error OVERLOAD possible
             #endif
-            MOTOR_PosStop = (int16_t) 
-                (percent * 
-                    ((MOTOR_PosMax-config.motor_protection-config.motor_protection)>>2) / (100>>2)
-                ) + config.motor_protection;
+            MOTOR_PosStop = ((int16_t)percent * (MOTOR_PosMax>>2)) / (100>>2);
         }
         // switch motor on
         if (MOTOR_Dir==stop) {

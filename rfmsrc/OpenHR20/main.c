@@ -235,6 +235,7 @@ int __attribute__ ((noreturn)) main(void)
                     // every sunday 10:00AM
                     // TODO: improve this code!
                     // valve protection / CyCL
+                    sumError=0;
                     MOTOR_updateCalibration(0);
                 }
                 #if RFM

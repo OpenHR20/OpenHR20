@@ -44,14 +44,14 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
     /* 05 */ uint8_t PP_Factor;  //!< Proportional kvadratic tuning constant, multiplied with 256
     /* 06 */ uint8_t P_Factor;  //!< Proportional tuning constant, multiplied with 256
     /* 07 */ uint8_t I_Factor;  //!< Integral tuning constant, multiplied with 256
-    /* 08 */ uint8_t pid_hysteresis;  
+    /* 08 */ uint8_t temp_tolerance;  //!< tolerance of temperature in 1/100 degree to lazy integrator (improve stability)
     /* 09 */ uint8_t PID_interval; //!< PID_interval*5 = interval in seconds    
     /* 0a */ uint8_t valve_min; // valve position limiter min
-    /* 0b */ uint8_t valve_max; // valve position limiter max
-    /* 0c */ uint8_t motor_pwm_min;   //!< min PWM for motor 
-    /* 0d */ uint8_t motor_pwm_max;  //!< max PWM for motor
+    /* 0b */ uint8_t valve_center;  //!< default valve position for "zero - error" - improve stabilization after change temperature
+    /* 0c */ uint8_t valve_max; // valve position limiter max
+    /* 0d */ uint8_t motor_pwm_min;   //!< min PWM for motor 
+    /* 0e */ uint8_t motor_pwm_max;  //!< max PWM for motor
         /*! TODO: describe  motor_protection and motor_hysteresis better, picture wanted */
-    /* 0e */ uint8_t motor_protection;  //!< defines area for regulation valve as valve range - 2*motor_protection (1* on bottom 1* on top)
     /* 0f */ uint8_t motor_hysteresis; //!< additional impulses for 0 or 100% relative to area for regulation
     /* 10 */ uint8_t motor_end_detect_cal; //!< stop timer threshold in % to previous average 
     /* 11 */ uint8_t motor_end_detect_run; //!< stop timer threshold in % to previous average 
@@ -155,13 +155,13 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 05 */  {44,        44,         0,      255},   //!< PP_Factor;
   /* 06 */  {15,        15,         0,      255},   //!< P_Factor;
   /* 07 */  {3,          3,         0,      255},   //!< I_Factor;
-  /* 08 */  {120,       120,       20,      255},   //!< pid_hysteresis
+  /* 08 */  {50,        50,         0,      255},   //!< temp_tolerance
   /* 09 */  {240/5,     240/5,      20/5,   255},   //!< PID_interval*5 = interval in seconds;  min=20sec, max=21.25 minutes
   /* 0a */  {30,         30,        0,      100},   //!< valve_min
-  /* 0b */  {80,         80,        0,      100},   //!< valve_max
-  /* 0c */  {32,         32,        32,     255},   //!< min motor_pwm PWM setting
-  /* 0d */  {250,       250,        180,    255},   //!< max motor_pwm PWM setting
-  /* 0e */  {30,         30,        0,      200},   //!< motor_protection
+  /* 0b */  {55,         55,        0,      100},   //!< valve_center
+  /* 0c */  {80,         80,        0,      100},   //!< valve_max
+  /* 0d */  {32,         32,        32,     255},   //!< min motor_pwm PWM setting
+  /* 0e */  {250,       250,        180,    255},   //!< max motor_pwm PWM setting
   /* 0f */  {10,         10,        0,      200},   //!< additional impulses for 0 or 100%
   /* 10 */  {130,       130,      110,      250},   //!< motor_end_detect_cal; stop timer threshold in % to previous average 
   /* 11 */  {150,       150,      110,      250},   //!< motor_end_detect_run; stop timer threshold in % to previous average 

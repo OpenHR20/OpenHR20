@@ -126,6 +126,7 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
         //update now
         if (temp!=CTL_temp_wanted_last) {
             CTL_temp_wanted_last=temp;
+            sumError=0;
             goto UPDATE_NOW; // optimization
         }
         if (PID_update_timeout == 0) {
@@ -237,7 +238,12 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old
   // Calculate Iterm and limit integral runaway  
   {
     int16_t d = lastProcessValue - processValue;
-    if ((lastProcessValue!=0)&&(((d>0)&&(error16>0)) || ((d<0)&&(error16<0)))) {
+    if  ((lastProcessValue!=0)
+	&& (
+		((d==0) && (abs(error16)>config.temp_tolerance))
+	     || ((d>0)  && (error16>0)) 
+	     || ((d<0)  && (error16<0))
+	   )) {
         // update sumError if turn is wrong only 
         int16_t max = (int16_t)scalling_factor*50/config.P_Factor;
         if (error16 > max) {  // maximum sumError change + limiter
@@ -271,7 +277,7 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old
   pi_term += (int16_t)(config.I_Factor) * (int16_t)sumError; // maximum is (scalling_factor*50/I_Factor)*I_Factor
   // pi_term - > for overload limit: maximum is +- (3986367 + scalling_factor*50) = +-3999167
    
-  pi_term += 50*scalling_factor;
+  pi_term += (int16_t)(config.valve_center)*scalling_factor;
   if(pi_term > 100*scalling_factor){
     return config.valve_max;
   } else if(pi_term < 0){
@@ -281,13 +287,10 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old
   {
     int16_t pi_term16 = pi_term;
     
-    if (abs(pi_term16-((int16_t)(old_result)*scalling_factor))<config.pid_hysteresis) return old_result;
+    // ignore changes < 1%
+    if (abs(pi_term16-((int16_t)(old_result)*scalling_factor))<scalling_factor) return old_result;
     
-    #if (scalling_factor == 256)
-        pi_term16 >>=8; //= scalling_factor;
-    #else
-        pi_term16 /= scalling_factor;
-    #endif
+    pi_term16 >>=8; //= scalling_factor;
   
     if(pi_term16 > config.valve_max){
       return config.valve_max;
@@ -296,5 +299,5 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old
     }
     return((uint8_t)pi_term16);
   }
-
 }
+
