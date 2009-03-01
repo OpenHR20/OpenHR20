@@ -93,7 +93,7 @@ extern uint8_t EEPROM ee_layout;
 #define BOOT_ON2      (16*60+0x2000) //!<  16:00
 #define BOOT_OFF2     (21*60+0x1000) //!<  21:00
 
-#define EE_LAYOUT (0x04) //!< EEPROM layout version 
+#define EE_LAYOUT (0x05) //!< EEPROM layout version 
 
 #ifdef __EEPROM_C__
 // this is definition, not just declaration
