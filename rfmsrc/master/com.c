@@ -393,6 +393,8 @@ void COM_commad_parse (void) {
  ******************************************************************************/
 static uint16_t seq=0;
 void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok) {
+    uint8_t addr = d[1];
+    COM_putchar('@');
     print_decXX(RTC_GetSecond());
 	COM_putchar('.');
     print_decXX(RTC_s100);
@@ -401,11 +403,7 @@ void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok) {
         print_hexXXXX(seq++);
         len-=6; // mac is correct and not needed
         d+=2;
-        if (len==0) {
-            COM_putchar('\n');
-        	COM_flush();
-        	return;
-        }
+        COM_putchar('\n');
     } else {
         print_s_p(PSTR(" ERR"));
         print_hexXXXX(seq++);
@@ -418,8 +416,10 @@ void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok) {
     	return;
     }
     
-    COM_putchar(':');
     while (len>0) {
+        COM_putchar('>');
+        print_decXX(addr);
+        COM_putchar('>');
     	switch (d[0]) {
             case 'D':
                 print_s_p(PSTR("D V:"));
@@ -466,7 +466,6 @@ void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok) {
         }
         COM_putchar('\n');
     }
-    COM_putchar('\n');
 	COM_flush();
 }
 
