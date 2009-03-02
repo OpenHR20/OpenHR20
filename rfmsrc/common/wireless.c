@@ -130,6 +130,56 @@ static void encrypt_decrypt (uint8_t* p, uint8_t len) {
 
 /*!
  *******************************************************************************
+ *  wireless send Done
+ ******************************************************************************/
+void wirelessSendDone(void) {
+    rfm_mode    = rfmmode_stop;
+    wireless_buf_ptr=0;
+    rfm_framepos=0;
+    RFM_INT_DIS();
+
+    RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
+    RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
+    RFM_RX_ON();    //re-enable RX
+	rfm_mode = rfmmode_rx;
+    RFM_INT_EN(); // enable RFM interrupt
+
+    #if !defined(MASTER_CONFIG_H)
+        wirelessTimerCase = WL_TIMER_RX_TMO;
+        RTC_timer_set(RTC_TIMER_RFM, (uint8_t)(RTC_s256 + WL_TIMER_RX_TMO));    
+    #endif    
+}
+
+/*!
+ *******************************************************************************
+ *  wireless Timer
+ ******************************************************************************/
+void wirelessTimer(void) {
+#if !defined(MASTER_CONFIG_H)   
+    switch (wirelessTimerCase) {
+    case WL_TIMER_FIRST:
+        wirelessSendPacket();
+        break;
+    case WL_TIMER_SYNC:
+        RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
+        RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
+        RFM_RX_ON();
+        RFM_SPI_SELECT; // set nSEL low: from this moment SDO indicate FFIT or RGIT
+        RFM_INT_EN(); // enable RFM interrupt
+    	rfm_mode = rfmmode_rx;
+        break;
+    case WL_TIMER_RX_TMO:
+        rfm_mode    = rfmmode_stop;
+        RFM_OFF();
+        break;
+    }
+#endif
+    wirelessTimerCase = WL_TIMER_NONE;
+}
+wirelessTimerCase_t wirelessTimerCase=WL_TIMER_NONE;
+
+/*!
+ *******************************************************************************
  *  wireless send data packet
  ******************************************************************************/
 
@@ -222,7 +272,7 @@ void wirelessReceivePacket(void) {
                         time_sync_tmo=10;
                         rfm_mode = rfmmode_stop;
                         RFM_OFF();
-                        RTC_s256=10; 
+                        RTC_s256=2; 
                         RTC_SetYear(rfm_framebuf[1]);
                         RTC_SetMonth(rfm_framebuf[2]>>4);
                         RTC_SetDay((rfm_framebuf[3]>>5)+((rfm_framebuf[2]<<3)&0x18));

@@ -163,20 +163,13 @@ int __attribute__ ((noreturn)) main(void)
 
 			if (rfm_mode == rfmmode_tx_done)
 			{
-					rfm_mode    = rfmmode_stop;
-					wireless_buf_ptr=0;
-					rfm_framepos=0;
-					RFM_INT_DIS();
-				    RFM_OFF();		// turn everything off
-				    //RFM_WRITE(0);	// Clear TX-IRQ
-
-					// actually now its time to switch into listening
-					continue;
+                wirelessSendDone();
 			}
   			else if ((rfm_mode == rfmmode_rx) || (rfm_mode == rfmmode_rx_owf))
   			{
   			    wirelessReceivePacket();
   			}
+			continue; // on most case we have only 1 task, iprove time to sleep
 		}
 		#endif
 
@@ -247,13 +240,15 @@ int __attribute__ ((noreturn)) main(void)
                         && (RTC_GetSecond() == config.RFM_devaddr)) // collission protection: every HR20 shall send when the second counter is equal to it's own address.
     				// if ((time_sync_tmo>1) && (config.RFM_devaddr!=0) && !(RTC_GetSecond() % 4) ) // for testing all 4 seconds ...
     				{
-    				    wirelessSendPacket();
+                        wirelessTimerCase = WL_TIMER_FIRST;
+                        RTC_timer_set(RTC_TIMER_RFM, WLTIME_START);
     				}
     				if ((config.RFM_devaddr!=0)
     				    && (time_sync_tmo>1)
                         && ((RTC_GetSecond() == 59) || (RTC_GetSecond() == 29)))
                     {
-                        RTC_timer_set(RTC_TIMER_RFM, RTC_TIMER_CALC(900));
+                        wirelessTimerCase = WL_TIMER_SYNC;
+                        RTC_timer_set(RTC_TIMER_RFM, WLTIME_SYNC);
                     }
                 #endif
                 MOTOR_updateCalibration(mont_contact_pooling());
@@ -269,12 +264,7 @@ int __attribute__ ((noreturn)) main(void)
             if (RTC_timer_done&_BV(RTC_TIMER_RFM))
             {   
                 cli(); RTC_timer_done&=~_BV(RTC_TIMER_RFM); sei();
-                RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
-                RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
-                RFM_RX_ON();
-			    RFM_SPI_SELECT; // set nSEL low: from this moment SDO indicate FFIT or RGIT
-                RFM_INT_EN(); // enable RFM interrupt
-            	rfm_mode = rfmmode_rx;
+                wirelessTimer();
             }
 
             // do not use continue here (menu_auto_update_timeout==0)

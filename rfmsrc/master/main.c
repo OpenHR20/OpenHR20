@@ -124,18 +124,7 @@ int __attribute__ ((noreturn)) main(void)
   
 			if (rfm_mode == rfmmode_tx_done)
 			{
-					rfm_mode    = rfmmode_stop;
-					RFM_INT_DIS();
-				    RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
-				    RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
-                    RFM_RX_ON();    //re-enable RX
-                    wireless_buf_ptr=0;
-					rfm_framepos=0;
-					rfm_mode = rfmmode_rx;
-				    RFM_INT_EN(); // enable RFM interrupt
-
-					// actually now its time to switch into listening
-					continue;
+                wirelessSendDone();
 			}
   			else if ((rfm_mode == rfmmode_rx) || (rfm_mode == rfmmode_rx_owf))
   			{
@@ -143,6 +132,7 @@ int __attribute__ ((noreturn)) main(void)
   			   wirelessReceivePacket();
   			   LED_off();
   			}
+			continue; // on most case we have only 1 task, iprove time to sleep
         }
 		#endif
         if (task & TASK_RTC) {
@@ -163,7 +153,12 @@ int __attribute__ ((noreturn)) main(void)
             }
         }
 		if (task & TASK_TIMER) {
-  			task &= ~TASK_TIMER;
+		    task &= ~TASK_TIMER;
+            if (RTC_timer_done&_BV(RTC_TIMER_RFM))
+            {   
+                cli(); RTC_timer_done&=~_BV(RTC_TIMER_RFM); sei();
+                wirelessTimer();
+            }  			
         }
         // serial communication
 		if (task & TASK_COM) {

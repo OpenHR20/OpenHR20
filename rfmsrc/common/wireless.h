@@ -48,6 +48,8 @@ void wirelessReceivePacket(void);
 #else
     void wirelesTimeSyncCheck(void);
 #endif 
+void wirelessSendDone(void);
+void wirelessTimer(void);
 
 #if (RFM==1)
 void wireless_putchar(uint8_t ch);
@@ -58,3 +60,17 @@ void wireless_putchar(uint8_t ch);
 
 extern int8_t time_sync_tmo;
 extern uint8_t wireless_buf_ptr;
+
+#define WLTIME_SYNC (RTC_TIMER_CALC(950))  // prepare to receive timesync / slave only 
+#define WLTIME_START (RTC_TIMER_CALC(50)) // communication start
+#define WLTIME_TIMEOUT (RTC_TIMER_CALC(200)) // slave RX timeout
+#define WLTIME_STOP (RTC_TIMER_CALC(800)) // last possible communication
+
+typedef enum {
+    WL_TIMER_NONE,
+    WL_TIMER_FIRST,
+    WL_TIMER_RX_TMO,
+    WL_TIMER_SYNC // slave only
+} wirelessTimerCase_t;
+
+extern wirelessTimerCase_t wirelessTimerCase;
