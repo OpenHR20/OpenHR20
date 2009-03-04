@@ -150,6 +150,9 @@ int __attribute__ ((noreturn)) main(void)
                     wirelessSendSync();
                     COM_print_datetime();
                 }
+                if (minute) {
+                    COM_req_RTC();
+                }
             }
         }
 		if (task & TASK_TIMER) {

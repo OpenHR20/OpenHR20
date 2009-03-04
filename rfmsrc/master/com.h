@@ -43,4 +43,4 @@ void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok);
 
 void COM_print_datetime(void);
 
-void COM_mac_ok(void);
+void COM_req_RTC(void);

@@ -487,7 +487,7 @@ void COM_print_datetime() {
     COM_flush();
 }
 
-void COM_mac_ok(void) {
-    print_s_p(PSTR("MAC OK!\n"));
+void COM_req_RTC(void) {
+    print_s_p(PSTR("RTC?\n"));
 	COM_flush();
 }
