@@ -72,10 +72,10 @@ uint8_t RTC_DS;     //!< Daylightsaving Flag
 #endif
 
 // prototypes
-void    RTC_AddOneDay(void);        // add one day to actual date
-uint8_t RTC_DaysOfMonth(void);      // how many days in (RTC_MM, RTC_YY)
-void    RTC_SetDayOfWeek(void);     // calc day of week (RTC_DD, RTC_MM, RTC_YY)
-bool    RTC_IsLastSunday(void);     // check actual date if last sun in mar/oct
+static void    RTC_AddOneDay(void);        // add one day to actual date
+static uint8_t RTC_DaysOfMonth(void);      // how many days in (RTC_MM, RTC_YY)
+static void    RTC_SetDayOfWeek(void);     // calc day of week (RTC_DD, RTC_MM, RTC_YY)
+static bool    RTC_IsLastSunday(void);     // check actual date if last sun in mar/oct
 
     // year mod 100 = 0 is only every 400 years a leap year
     // we calculate only till the year 2255, so don't care
@@ -426,7 +426,7 @@ bool RTC_AddOneSecond(void)
  *       calculate overflows, regarding leapyear, etc.
  *
  ******************************************************************************/
-void RTC_AddOneDay(void)
+static void RTC_AddOneDay(void)
 {
     uint8_t dom;
     // How many day has actual month
@@ -455,7 +455,7 @@ void RTC_AddOneDay(void)
  *  \returns number of days for actual month (1-12) and year (0-255: 2000-2255)
  *
  ******************************************************************************/
-uint8_t RTC_DaysOfMonth()
+static uint8_t RTC_DaysOfMonth()
 {
     uint8_t dom = pgm_read_byte(&RTC_DayOfMonthTablePrgMem[RTC.MM-1]);
     if ((RTC.MM == 2)&&(!RTC_NoLeapyear()))
@@ -470,9 +470,9 @@ uint8_t RTC_DaysOfMonth()
  *  \returns \ref true if actual date is last sunday in march or october
  *
  ******************************************************************************/
-bool RTC_IsLastSunday(void)
+static bool RTC_IsLastSunday(void)
 {
-    if (RTC.DOW == 7){ // sunday ?
+    if (RTC.DOW != 7){ // sunday ?
         return 0;  // not sunday
     }
     // March or October ?
@@ -512,7 +512,7 @@ static const uint16_t daysInYear [12] PROGMEM= {
     31+28+31+30+31+30+31+31+30+31,
 	31+28+31+30+31+30+31+31+30+31+30};
 
-void RTC_SetDayOfWeek(void)
+static void RTC_SetDayOfWeek(void)
 {
     uint16_t day_of_year;
     uint16_t tmp_dow;
