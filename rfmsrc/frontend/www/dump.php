@@ -49,12 +49,13 @@ case 'debug_log':
     break;
 case 'log':    
     echo "<table border=2>\n";
-    echo "<tr><th>addr</th><th>time</th><th>mode</th><th>real</th><th>wanted</th><th>battery</th>";
+    echo "<tr><th>addr</th><th>time</th><th>mode</th><th>valve</th><th>real</th><th>wanted</th><th>battery</th>";
     echo "<th>error</th><th>window</th><th>force</th></tr>";
     while ($row = $result->fetch()) {
         echo "<td>".$row['addr']."</td>";
         echo "<td>".format_time($row['time'])."</td>";
         echo "<td>".$row['mode']."</td>";
+        echo "<td>".$row['valve']."</td>";
         echo "<td>".($row['real']/100)."</td>";
         echo "<td>".($row['wanted']/100)."</td>";
         echo "<td>".($row['battery']/1000)."</td>";
