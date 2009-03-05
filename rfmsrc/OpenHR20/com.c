@@ -325,6 +325,14 @@ void COM_print_debug(int8_t valve) {
 	COM_flush();
 #if (RFM==1)
     wireless_putchar('D');
+	wireless_putchar(
+           RTC_GetMinute() 
+        | ((mode_window())?0x40:0)
+        | ((CTL_mode_auto)?0x80:0));
+	wireless_putchar(
+           RTC_GetSecond()
+        | ((valve<0)?0x80:0));
+	wireless_putchar(CTL_error);
 	wireless_putchar(temp_average >> 8); // current temp
 	wireless_putchar(temp_average & 0xff);
 	wireless_putchar(bat_average >> 8); // current temp
@@ -545,7 +553,7 @@ void COM_debug_print_temperature(uint16_t t) {
 static uint16_t seq=0;
 void COM_dump_packet(uint8_t *d, uint8_t len, bool mac_ok) {
 	uint8_t type;
-    print_decXX(RTC_GetSecond());
+    print_decXX((task & TASK_RTC)?RTC_GetSecond()+1:RTC_GetSecond());
 	COM_putchar('.');
     print_hexXX(RTC_s256);
     if (mac_ok && (len>=(2+4))) {

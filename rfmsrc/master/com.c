@@ -417,21 +417,31 @@ void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok) {
     }
     
     while (len>0) {
-        COM_putchar('>');
+        COM_putchar('<');
         print_decXX(addr);
         COM_putchar('>');
     	switch (d[0]) {
             case 'D':
-                print_s_p(PSTR("D V:"));
-                print_decXX(d[6]);
-                print_s_p(PSTR(" I:"));
-                print_decXXXX(((uint16_t)d[1]<<8) | d[2]);
-                print_s_p(PSTR(" S:"));
-                print_decXXXX(calc_temp(d[5]));
-                print_s_p(PSTR(" B:"));
-                print_decXXXX(((uint16_t)d[3]<<8) | d[4]);
-                d+=7;
-                len-=7;
+                print_s_p(PSTR("D m"));
+                print_decXX(d[1]&0x3f);
+                print_s_p(PSTR(" s"));
+                print_decXX(d[2]&0x3f);
+                COM_putchar(' ');
+                COM_putchar(((d[1]&0x80)!=0)?'A':'M');
+                print_s_p(PSTR(" V"));
+                print_decXX(d[9]);
+                print_s_p(PSTR(" I"));
+                print_decXXXX(((uint16_t)d[4]<<8) | d[5]);
+                print_s_p(PSTR(" S"));
+                print_decXXXX(calc_temp(d[8]));
+                print_s_p(PSTR(" B"));
+                print_decXXXX(((uint16_t)d[6]<<8) | d[7]);
+                print_s_p(PSTR(" E"));
+                print_hexXX(d[3]);
+                if ((d[1]&0x40)!=0) print_s_p(PSTR(" W")); 
+                if ((d[2]&0x80)!=0) print_s_p(PSTR(" X")); 
+                d+=10;
+                len-=10;
                 break;
             case 'T':
             case 'R':
@@ -488,6 +498,17 @@ void COM_print_datetime() {
 }
 
 void COM_req_RTC(void) {
-    print_s_p(PSTR("RTC?\n"));
+    uint8_t s = RTC_GetSecond();
+    if (s==0) print_s_p(PSTR("RTC?\n"));
+    if (s>28) {
+    	COM_flush();
+    	return;
+    }
+    COM_putchar('<');
+    print_hexXX(s+1);
+    COM_putchar('>');
+    COM_putchar('?');
+    COM_putchar('0');
+    COM_putchar('\n');
 	COM_flush();
 }

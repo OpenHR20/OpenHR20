@@ -272,7 +272,7 @@ void wirelessReceivePacket(void) {
                         time_sync_tmo=10;
                         rfm_mode = rfmmode_stop;
                         RFM_OFF();
-                        RTC_s256=2; 
+                        RTC_s256=8; 
                         RTC_SetYear(rfm_framebuf[1]);
                         RTC_SetMonth(rfm_framebuf[2]>>4);
                         RTC_SetDay((rfm_framebuf[3]>>5)+((rfm_framebuf[2]<<3)&0x18));
