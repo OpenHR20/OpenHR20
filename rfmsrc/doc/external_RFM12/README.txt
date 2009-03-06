@@ -1,4 +1,5 @@
 Information for RFM12 wireless module at HR20
+External version outside HR20 on connector
 
 ***************************************
 * DO NOT USE IT WITH CURRENT SOFTWARE *
