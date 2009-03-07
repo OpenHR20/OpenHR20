@@ -7,6 +7,7 @@ function format_time($timestamp) {
 $db = new SQLiteDatabase("/usb/home/db.sqlite");
 
 $type = $_GET['type'];
+echo "<h1>$type dump</h1>\n";
 
 switch ($type) {
 
@@ -52,7 +53,7 @@ case 'log':
     echo "<tr><th>addr</th><th>time</th><th>mode</th><th>valve</th><th>real</th><th>wanted</th><th>battery</th>";
     echo "<th>error</th><th>window</th><th>force</th></tr>";
     while ($row = $result->fetch()) {
-        echo "<td>".$row['addr']."</td>";
+        echo "<tr><td>".$row['addr']."</td>";
         echo "<td>".format_time($row['time'])."</td>";
         echo "<td>".$row['mode']."</td>";
         echo "<td>".$row['valve']."</td>";
