@@ -71,8 +71,7 @@ $db->query("CREATE TABLE command_queue (
     id INTEGER PRIMARY KEY, 
     addr INTEGER,
     time INTEGER, 
-    weight INTEGER,
-    send BOOLEAN DEFAULT false,
+    send INTEGER DEFAULT 0,
     data char(20) )");
 
 $db->query("CREATE INDEX command_addr on command_queue (addr)");

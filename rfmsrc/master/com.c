@@ -278,7 +278,7 @@ static uint8_t com_hex[4];
  *	\note hex numbers use ONLY lowcase chars, upcase is reserved for commands
  *	
  ******************************************************************************/
-static char COM_hex_parse (uint8_t n) {
+static char COM_hex_parse (uint8_t n, bool n_test) {
 	uint8_t i;
 	for (i=0;i<n;i++) {
     	uint8_t c = COM_getchar()-'0';
@@ -293,6 +293,7 @@ static char COM_hex_parse (uint8_t n) {
     	   com_hex[i>>1]=(uint8_t)c<<4;
         }
     }
+    if (!n_test) return '\0';
 	{
 		char c;
     	if ((c=COM_getchar())!='\n') return c;
@@ -342,13 +343,13 @@ void COM_commad_parse (void) {
 			c='\0';
 			break;
 		case 'Y':
-			if (COM_hex_parse(3*2)!='\0') { break; }
+			if (COM_hex_parse(3*2,true)!='\0') { break; }
 			RTC_SetDate(com_hex[2],com_hex[1],com_hex[0]);
 			COM_print_debug(-1);
 			c='\0';
 			break;
 		case 'H':
-			if (COM_hex_parse(4*2)!='\0') { break; }
+			if (COM_hex_parse(4*2,true)!='\0') { break; }
 			RTC_SetHour(com_hex[0]);
 			RTC_SetMinute(com_hex[1]);
 			RTC_SetSecond(com_hex[2]);
@@ -359,9 +360,9 @@ void COM_commad_parse (void) {
 		case 'G':
 		case 'S':
 			if (c=='G') {
-				if (COM_hex_parse(1*2)!='\0') { break; }
+				if (COM_hex_parse(1*2,true)!='\0') { break; }
 			} else {
-				if (COM_hex_parse(2*2)!='\0') { break; }
+				if (COM_hex_parse(2*2,true)!='\0') { break; }
   				if (com_hex[0]<CONFIG_RAW_SIZE) {
   					config_raw[com_hex[0]]=(uint8_t)(com_hex[1]);
   					eeprom_config_save(com_hex[0]);
@@ -374,6 +375,26 @@ void COM_commad_parse (void) {
 			     print_hexXX(config_raw[com_hex[0]]);
 			}
 			break;
+		case '(':
+		    {
+    			if (COM_hex_parse(1*2,false)!='\0') { break; }
+    			uint8_t addr=com_hex[0];
+    			if (COM_getchar()!='-') { break; }
+    			if (COM_hex_parse(1,false)!='\0') { break; }
+    			uint8_t bank=com_hex[0]>>4;
+    			if (COM_getchar()!=')') { break; }
+    			uint8_t ch;
+    			while ((ch=COM_getchar())!='\n') {
+                    // todo add request to queue
+                }
+                { //just for test, delete it
+                    COM_putchar('<');
+                    print_hexXX(addr);
+                    COM_putchar('>');
+                    COM_putchar('X');
+                }
+            }
+            break;            		    
 		default:
 			c='\0';
 			break;
@@ -417,10 +438,16 @@ void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok) {
     }
     
     while (len>0) {
-        COM_putchar('<');
-        print_decXX(addr);
-        COM_putchar('>');
-    	switch (d[0]) {
+        if (d[0]&0x80) {
+            COM_putchar('<');
+            print_decXX(addr);
+            COM_putchar('>');
+        } else {
+            COM_putchar('(');
+            print_decXX(addr);
+            COM_putchar(')');
+        }
+    	switch (d[0]&0x7f) {
             case 'D':
                 print_s_p(PSTR("D m"));
                 print_decXX(d[1]&0x3f);
@@ -504,11 +531,10 @@ void COM_req_RTC(void) {
     	COM_flush();
     	return;
     }
-    COM_putchar('<');
+    COM_putchar('(');
     print_hexXX(s+1);
-    COM_putchar('>');
+    COM_putchar(')');
     COM_putchar('?');
-    COM_putchar('0');
     COM_putchar('\n');
 	COM_flush();
 }

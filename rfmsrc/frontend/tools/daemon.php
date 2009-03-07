@@ -1,24 +1,38 @@
 <?php
+function weights($char) {
+    $weights_table = array (
+        'D' => 10,
+        'S' => 4,
+        'W' => 4,
+        'G' => 2,
+        'R' => 2
+    );
+    if (isset($weights_table[$char]))
+        return $weights_table[$char];
+    else 
+        return 10;
+}
 
 $db = new SQLiteDatabase("/usb/home/db.sqlite");
 $db->query("PRAGMA synchronous=OFF");
-//$db->query("BEGIN TRANSACTION");
-//	$db->query("COMMIT");
-//	$db->query("BEGIN TRANSACTION");
 
 $fp=fsockopen("192.168.62.230",3531);
 //$fp=fopen("php://stdin","r"); 
+//$fp=fopen("/dev/ttyS1","w+"); 
 
 //while(($line=stream_get_line($fp,256,"\n"))!=FALSE) {
-while(($line=fgets($fp,65535))!==FALSE) { 
+while(($line=fgets($fp,256))!==FALSE) {
     $line=trim($line);
     $debug=true;
 
     $ts=microtime(true);
-    if ($line{0}=='<' && $line{3}=='>') {
-	$addr = hexdec(substr($line,1,2));
+    if ($line{0}=='(' && $line{3}==')') {
+	   $addr = hexdec(substr($line,1,2));
+    } else if ($line{0}=='<' && $line{3}=='>') {
+	   $addr = hexdec(substr($line,1,2));
+	   $db->query("DELETE FROM command_queue WHERE id=(SELECT id FROM command_queue WHERE addr=$addr AND send>0 ORDER BY send LIMIT 1)");
     } else {
-	$addr=0;
+	   $addr=0;
     }
     
     if ($line=="RTC?") {
@@ -29,7 +43,7 @@ while(($line=fgets($fp,65535))!==FALSE) {
 	    $items['minutes'],
 	    $items['seconds'],
 	    round($usec*100));
-	$date = sprintf("Y%02x%02x%02x\n",
+	    $date = sprintf("Y%02x%02x%02x\n",
 	    $items['year']-2000,
 	    $items['mon'],
 	    $items['mday']);
@@ -41,9 +55,29 @@ while(($line=fgets($fp,65535))!==FALSE) {
     } else {
 	if ($addr>0) {
 	  if ($line{4}=='?') {
-	    $buf=hexdec(substr($line,5));
-	    echo "data req addr $addr buffer $buf\n";
-	    $debug=false;
+	    echo "data req addr $addr\n";
+	    $db->query("BEGIN TRANSACTION");
+	    $result = $db->query("SELECT id,data FROM command_queue WHERE addr=$addr ORDER BY time LIMIT 20");
+	    $weight=0;
+	    $bank=0;
+	    $send=0;
+	    while ($row = $result->fetch()) {
+	       $cw = weights($row['data']{0});
+	       $weight += $cw;
+           weights($row['data']{0});
+	       if ($weight>10) {
+                if (++$bank>=3) break;
+                $weight=$cw;
+           }
+	       $r = sprintf("(%02x-%x)%s\n",$addr,$bank,$row['data']);
+	       fwrite($fp,$r);
+           echo $r;
+           $send++;
+           $db->query("UPDATE command_queue SET send=$send WHERE id=".$row['id']);
+        }
+	    $db->query("COMMIT");
+
+	    //$debug=false;
 	  } else if ($line{5}=='[' && $line{8}==']' && $line{9}=='=') {
 	    $idx=hexdec(substr($line,6,2));
 	    $value=hexdec(substr($line,10));
