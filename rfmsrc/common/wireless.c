@@ -40,7 +40,9 @@
 #include "../common/wireless.h"
 #include "../common/cmac.h"
 #include "com.h"
-#if !defined(MASTER_CONFIG_H)
+#if defined(MASTER_CONFIG_H)
+    #include "queue.h"
+#else
     #include "controller.h"
 #endif
 
@@ -250,6 +252,9 @@ void wirelessSendSync(void) {
 int8_t time_sync_tmo=0;
 #endif
 
+static uint8_t bank=0;
+static uint8_t bank_last_addr=0;
+
 /*!
  *******************************************************************************
  *  wireless receive data packet
@@ -290,6 +295,28 @@ void wirelessReceivePacket(void) {
                     encrypt_decrypt (rfm_framebuf+2, rfm_framepos-2-4);
                     RTC.pkt_cnt++;
                     COM_dump_packet(rfm_framebuf, rfm_framepos,mac_ok);
+                    uint8_t addr = RTC_GetSecond(); // it is bug I know \todo
+                    if (addr != bank_last_addr) {
+                        bank_last_addr = addr;
+                        bank=0;
+                    }
+                    if (mac_ok) {
+                        #if defined(MASTER_CONFIG_H)
+                        q_item_t * p;
+                        uint8_t skip=0;
+                        uint8_t i=0;
+                        while ((p=Q_get(addr+((bank)<<5), skip++))!=NULL) {
+                            for (i=0;i<=(*p).len;i++) {
+                                wireless_putchar((*p).data[i]);
+                            }
+                        }
+                        if (i!=0) {
+                            bank++;
+                            wirelessSendPacket();
+                            return;
+                        }
+                        #endif
+                    }
                 }
             }
             rfm_framepos=0;

@@ -77,7 +77,8 @@ rfm.c \
 rtc.c \
 cmac.c \
 eeprom.c \
-wireless.c
+wireless.c \
+queue.c
 
 
 # List C++ source files here. (C dependencies are automatically generated.)

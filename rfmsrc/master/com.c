@@ -34,6 +34,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <avr/wdt.h>
 
 
@@ -43,6 +44,7 @@
 #include "../common/rtc.h"
 #include "task.h"
 #include "eeprom.h"
+#include "queue.h"
 
 
 #define TX_BUFF_SIZE 128
@@ -383,16 +385,33 @@ void COM_commad_parse (void) {
     			if (COM_hex_parse(1,false)!='\0') { break; }
     			uint8_t bank=com_hex[0]>>4;
     			if (COM_getchar()!=')') { break; }
-    			uint8_t ch;
-    			while ((ch=COM_getchar())!='\n') {
-                    // todo add request to queue
+    			uint8_t ch=COM_getchar();
+    			uint8_t len=0;
+    			switch (ch) {
+                    case 'D':
+                        len=0;
+                        break;
+                    case 'M':
+                    case 'A':
+                    case 'T':
+                    case 'G':
+                    case 'R':
+                        len=1;
+                        break;
+                    case 'S':
+                        len=2;
+                        break;
+                    case 'W':
+                        len=3;
+                        break;
+                    default:
+                        break;
                 }
-                { //just for test, delete it
-                    COM_putchar('<');
-                    print_hexXX(addr);
-                    COM_putchar('>');
-                    COM_putchar('X');
-                }
+                if (COM_hex_parse(len*2,true)!='\0') { break; }
+                uint8_t * d = Q_push(len, addr+(bank<<5));
+                if (d==NULL) { break; }
+                d[0]=ch;
+                memcpy(d+1,com_hex,len);
             }
             break;            		    
 		default:

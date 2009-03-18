@@ -6,6 +6,9 @@ function format_time($timestamp) {
 
 $db = new SQLiteDatabase("/usb/home/db.sqlite");
 
+$limit = (int)($_GET['limit']);
+if ($limit<=0) $limit=50;
+
 $type = $_GET['type'];
 echo "<h1>$type dump</h1>\n";
 
@@ -25,7 +28,7 @@ case 'log':
 default:
 }
 
-$result = $db->query("SELECT * FROM $type$order");
+$result = $db->query("SELECT * FROM $type$order LIMIT $limit");
 
 switch ($type) {
 

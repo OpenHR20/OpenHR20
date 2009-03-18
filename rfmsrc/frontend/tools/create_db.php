@@ -1,6 +1,6 @@
 <?php
 
-unlink ("/usb/home/db.sqlite");
+//unlink ("/usb/home/db.sqlite");
 
 $db = new SQLiteDatabase("/usb/home/db.sqlite");
 
@@ -13,6 +13,7 @@ $db->query("CREATE TABLE debug_log (
     data CHAR(80))");
 
 $db->query("CREATE INDEX debug_addr on debug_log (addr)");
+$db->query("CREATE INDEX debug_time on debug_log (time)");
 
 
 // ************************************************************
