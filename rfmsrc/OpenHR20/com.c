@@ -275,7 +275,7 @@ static void print_version(uint8_t ch) {
  ******************************************************************************/
 void COM_init(void) {
 	print_version('V');
-	RS_Init(COM_BAUD_RATE);
+	RS_Init();
 	COM_flush();
 }
 
@@ -302,7 +302,7 @@ void COM_print_debug(int8_t valve) {
 	COM_putchar(':');
 	print_decXX(RTC_GetSecond());
 	COM_putchar(' ');
-	COM_putchar((CTL_mode_auto)?'A':'M');
+    COM_putchar((CTL_mode_auto)?(CTL_test_auto()?'A':'-'):'M');
 	print_s_p(PSTR(" V: "));
 	print_decXX( (valve>=0) ? valve : valve_wanted);
 	print_s_p(PSTR(" I: "));
@@ -333,15 +333,16 @@ void COM_print_debug(int8_t valve) {
 	COM_flush();
 #if (RFM==1)
     if (valve==-2)
-        wireless_putchar('D');
+        wireless_putchar('D'|0x80);
     else 
-    wireless_putchar('D'|0x80);
+        wireless_putchar('D');
 	wireless_putchar(
            RTC_GetMinute() 
-        | ((mode_window())?0x40:0)
+        | (CTL_test_auto()?0x40:0)
         | ((CTL_mode_auto)?0x80:0));
 	wireless_putchar(
            RTC_GetSecond()
+        | ((mode_window())?0x40:0)
         | ((valve<0)?0x80:0));
 	wireless_putchar(CTL_error);
 	wireless_putchar(temp_average >> 8); // current temp
@@ -659,14 +660,24 @@ void COM_dump_packet(uint8_t *d, uint8_t len, bool mac_ok) {
     }
     print_hexXXXX(seq++);
     COM_putchar(':');
+    bool dots=false;
+    if (len > 10) {
+      len=10; // debug output limitation
+      dots=true;
+    }
     while ((len--)>0) {
         COM_putchar(' ');
         print_hexXX(*(d++));
     }
+    if (dots) {
+      print_s_p(PSTR("..."));
+    }
     COM_putchar('\n');
 	COM_flush();
 }
+#endif 
 
+#if DEBUG_PRINT_ADDITIONAL_TIMESTAMPS
 void COM_print_time(uint8_t c) {
     print_decXX((task & TASK_RTC)?RTC_GetSecond()+1:RTC_GetSecond());
 	  COM_putchar('.');

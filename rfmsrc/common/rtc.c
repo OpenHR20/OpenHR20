@@ -566,11 +566,11 @@ bool RTC_SetDate(int8_t dd, int8_t mm, int8_t yy)
 }
 #endif
 
-static uint8_t RTC_timer_todo = 0;
+uint8_t RTC_timer_todo = 0;
 uint8_t RTC_timer_done = 0;
 static uint8_t RTC_timer_time[RTC_TIMERS];
 #if defined(MASTER_CONFIG_H)
-    static RTC_next_compare;
+    static uint8_t RTC_next_compare;
 #endif
 
 void RTC_timer_set(uint8_t timer_id, uint8_t time) {
@@ -694,12 +694,12 @@ void RTC_timer_set(uint8_t timer_id, uint8_t time) {
         if (++RTC_s100 >= 100) {
             task |= TASK_RTC;   // increment second and check Dow_Timer
             RTC_s100 = 0;
-            RTC_timer_done |= _BV(RTC_TIMER_OVF);
+            // RTC_timer_done |= _BV(RTC_TIMER_OVF);
         }
         if (RTC_timer_todo && (RTC_next_compare==RTC_s100)) {
             uint8_t i;
             for (i=1;i<=RTC_TIMERS;i++) {
-                if ((RTC_timer_todo&_BV(i)) && (TCNT2==RTC_timer_time[i-1])) { 
+                if ((RTC_timer_todo&_BV(i)) && (RTC_s100==RTC_timer_time[i-1])) { 
                    RTC_timer_done |= _BV(i);
                    RTC_timer_todo &= ~_BV(i);
                    task |= TASK_TIMER;   // increment second and check Dow_Timer

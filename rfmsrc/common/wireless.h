@@ -69,12 +69,14 @@ extern uint32_t wl_force_flags;
 #define WLTIME_TIMEOUT (RTC_TIMER_CALC(100)) // slave RX timeout
 #define WLTIME_SYNC_TIMEOUT (RTC_TIMER_CALC(150)) // slave RX timeout
 #define WLTIME_STOP (RTC_TIMER_CALC(800)) // last possible communication
+#define WLTIME_LED_TIMEOUT (RTC_TIMER_CALC(300)) // slave RX timeout
 
+#if !defined(MASTER_CONFIG_H)
 typedef enum {
     WL_TIMER_NONE,
     WL_TIMER_FIRST,
     WL_TIMER_RX_TMO,
     WL_TIMER_SYNC // slave only
 } wirelessTimerCase_t;
-
 extern wirelessTimerCase_t wirelessTimerCase;
+#endif

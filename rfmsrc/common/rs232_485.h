@@ -43,7 +43,7 @@
 		#define RS_enable_rx() (UCSRB |= _BV(RXEN) | _BV(RXCIE))
 	#endif
 	void RS_startSend(void);
-	void RS_Init(uint16_t baud);
+	void RS_Init(void);
 #else 
 	#define RS_need_clock() (0)
 #endif

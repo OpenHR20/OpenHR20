@@ -128,9 +128,7 @@ int __attribute__ ((noreturn)) main(void)
 			}
   			else if ((rfm_mode == rfmmode_rx) || (rfm_mode == rfmmode_rx_owf))
   			{
-  			   LED_on();
   			   wirelessReceivePacket();
-  			   LED_off();
   			}
 			continue; // on most case we have only 1 task, iprove time to sleep
         }
@@ -140,6 +138,17 @@ int __attribute__ ((noreturn)) main(void)
             {
                 wl_packet_bank=0;
                 bool minute = RTC_AddOneSecond();
+                if (RTC_GetSecond()<30) {
+                    Q_clean(RTC_GetSecond());
+                } else {
+                    if (wl_force_addr!=0) {
+                        if (wl_force_addr==0xff) {
+                            Q_clean(RTC_GetSecond()-30);
+                        } else {
+                            Q_clean(wl_force_addr | ((RTC_GetSecond()&1)?0:0x80)); 
+                        }
+                    }
+                }
                 if (minute || RTC_GetSecond()==30) {
 					rfm_mode = rfmmode_stop;
 					wireless_buf_ptr = 0;
@@ -155,7 +164,7 @@ int __attribute__ ((noreturn)) main(void)
                             wireless_putchar(((uint8_t*)&wl_force_flags)[2]);
                             wireless_putchar(((uint8_t*)&wl_force_flags)[3]);
                         } else {
-                            wireless_putchar(wl_force_addr);
+                            if (RTC_GetSecond()==30) wireless_putchar(wl_force_addr);
                         }
                     }
                     wirelessSendSync();

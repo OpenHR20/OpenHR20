@@ -86,6 +86,9 @@ void crypto_init(void) {
     :: "y" (K1)
     :"r26", "r27", "r30","r31" 
     );
+    #if defined(MASTER_CONFIG_H)
+        LED_off();
+    #endif
 }
 /* internal function for crypto_init */
 /* use loop inside - short/slow */
@@ -136,7 +139,9 @@ static void encrypt_decrypt (uint8_t* p, uint8_t len) {
  ******************************************************************************/
 void wirelessSendDone(void) {
     rfm_mode    = rfmmode_stop;
-    wireless_buf_ptr=0;
+    #if defined(MASTER_CONFIG_H)
+        wireless_buf_ptr=0;
+    #endif
     rfm_framepos=0;
     RFM_INT_DIS();
 
@@ -176,14 +181,21 @@ void wirelessTimer(void) {
         RTC_timer_set(RTC_TIMER_RFM, (uint8_t)(RTC_s256 + WLTIME_SYNC_TIMEOUT));    
         break;
     case WL_TIMER_RX_TMO:
-        rfm_mode    = rfmmode_stop;
-        RFM_OFF();
+        if (rfm_mode!= rfmmode_tx) {
+            rfm_mode    = rfmmode_stop;
+            RFM_OFF();
+        }
         break;
     }
-#endif
     wirelessTimerCase = WL_TIMER_NONE;
+#else
+    LED_off();
+#endif
 }
+
+#if !defined(MASTER_CONFIG_H)   
 wirelessTimerCase_t wirelessTimerCase=WL_TIMER_NONE;
+#endif 
 
 /*!
  *******************************************************************************
@@ -241,7 +253,7 @@ void wirelessSendSync(void) {
 	rfm_framebuf[ 2] = 0x2d; // rfm fifo start pattern
 	rfm_framebuf[ 3] = 0xd4; // rfm fifo start pattern
 
-	rfm_framebuf[ 4] = (wireless_buf_ptr+1+4) | 0xc0; // length (sync)
+	rfm_framebuf[ 4] = (wireless_buf_ptr+1+4) | 0x80; // length (sync)
 
 	memcpy(rfm_framebuf+5,wireless_framebuf,wireless_buf_ptr);
 
@@ -270,24 +282,28 @@ int8_t time_sync_tmo=0;
  ******************************************************************************/
 void wirelessReceivePacket(void) {
 	if (rfm_framepos>=1) {
-        if ((rfm_framepos >= (rfm_framebuf[0]&0x3f)) 
-                || ((rfm_framebuf[0]&0x3f)>= RFM_FRAME_MAX)  // reject noise
+        if ((rfm_framepos >= (rfm_framebuf[0]&0x7f)) 
+                || ((rfm_framebuf[0]&0x7f)>= RFM_FRAME_MAX)  // reject noise
                 || (rfm_framepos >= RFM_FRAME_MAX)) {
             RFM_INT_DIS(); // disable RFM interrupt
-            if (rfm_framepos>(rfm_framebuf[0]&0x3f)) rfm_framepos=(rfm_framebuf[0]&0x3f);
+            #if !defined(MASTER_CONFIG_H)
+                RTC_timer_destroy(WL_TIMER_RX_TMO);
+            #endif
+            if (rfm_framepos>(rfm_framebuf[0]&0x7f)) rfm_framepos=(rfm_framebuf[0]&0x7f);
+            
             if (rfm_framepos>=2+4) {
                 bool mac_ok;
                 #if ! defined(MASTER_CONFIG_H)
-                if ((rfm_framebuf[0]&0xc0) == 0xc0) {
+                if ((rfm_framebuf[0]&0x80) == 0x80) {
                 //sync packet
-                    mac_ok=cmac_calc(rfm_framebuf+1,(rfm_framebuf[0]&0x3f)-5,NULL,true);
+                    mac_ok=cmac_calc(rfm_framebuf+1,(rfm_framebuf[0]&0x7f)-5,NULL,true);
                     COM_dump_packet(rfm_framebuf, rfm_framepos,mac_ok);
                     if (mac_ok) {
                         rfm_mode = rfmmode_stop;
                         RFM_OFF();
-                        if (rfm_framebuf[0]==0xca) {
+                        if (rfm_framebuf[0]==0x8a) {
                             wl_force_addr=rfm_framebuf[5];
-                        } else if (rfm_framebuf[0]==0xcd) {
+                        } else if (rfm_framebuf[0]==0x8d) {
                             wl_force_addr=0xff;
                             memcpy(&wl_force_flags,rfm_framebuf+5,4);
                         } else wl_force_addr=0;
@@ -312,13 +328,16 @@ void wirelessReceivePacket(void) {
                     encrypt_decrypt (rfm_framebuf+2, rfm_framepos-2-4);
                     RTC.pkt_cnt++;
                     COM_dump_packet(rfm_framebuf, rfm_framepos,mac_ok);
-                    uint8_t addr = RTC_GetSecond(); // it is bug I know \todo
+                    uint8_t addr = rfm_framebuf[1];
+                    if ((RTC_GetSecond()>30) && ((RTC_GetSecond()&1)==0)) addr|=0x80;
                     if (mac_ok) {
                         #if defined(MASTER_CONFIG_H)
+                          LED_on();
+                          RTC_timer_set(RTC_TIMER_RFM, (uint8_t)(RTC_s100 + WLTIME_LED_TIMEOUT));    
                           q_item_t * p;
                           uint8_t skip=0;
                           uint8_t i=0;
-                          while ((p=Q_get(addr+((wl_packet_bank)<<5), skip++))!=NULL) {
+                          while ((p=Q_get(addr,wl_packet_bank, skip++))!=NULL) {
                               for (i=0;i<(*p).len;i++) {
                                   wireless_putchar((*p).data[i]);
                               }
@@ -327,6 +346,7 @@ void wirelessReceivePacket(void) {
                           wirelessSendPacket();
                           return;
                         #else
+                          wireless_buf_ptr=0;
                           if (rfm_framepos >6) {
                             COM_wireless_command_parse(rfm_framebuf+2, rfm_framepos-6);
                             wirelessSendPacket();

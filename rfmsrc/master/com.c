@@ -235,7 +235,7 @@ static void print_version(void) {
  ******************************************************************************/
 void COM_init(void) {
 	print_version();
-	RS_Init(COM_BAUD_RATE);
+	RS_Init();
 	COM_flush();
 }
 
@@ -421,7 +421,7 @@ void COM_commad_parse (void) {
                         break;
                 }
                 if (COM_hex_parse(len*2,true)!='\0') { break; }
-                uint8_t * d = Q_push(len+1, addr+(bank<<5));
+                uint8_t * d = Q_push(len+1, addr, bank);
                 if (d==NULL) { break; }
                 d[0]=ch;
                 memcpy(d+1,com_hex,len);
@@ -502,8 +502,11 @@ void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok) {
         switch (d[0]) {
             case 'V':
                 while ((len--)>0) {
-                    if (*(d++)=='\n') break;
-                    COM_putchar((*d)&0x7f);
+                    if (*d=='\n') {
+                        d++;
+                        break;
+                    }
+                    COM_putchar((*d++)&0x7f);
                 }
                 break;
             case 'D':
@@ -512,7 +515,7 @@ void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok) {
                 print_s_p(PSTR(" s"));
                 print_decXX(d[2]&0x3f);
                 COM_putchar(' ');
-                COM_putchar(((d[1]&0x80)!=0)?'A':'M');
+                COM_putchar(((d[1]&0x80)!=0)?((d[1]&0x40)?'A':'-'):'M');
                 print_s_p(PSTR(" V"));
                 print_decXX(d[9]);
                 print_s_p(PSTR(" I"));
@@ -523,7 +526,7 @@ void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok) {
                 print_decXXXX(((uint16_t)d[6]<<8) | d[7]);
                 print_s_p(PSTR(" E"));
                 print_hexXX(d[3]);
-                if ((d[1]&0x40)!=0) print_s_p(PSTR(" W")); 
+                if ((d[2]&0x40)!=0) print_s_p(PSTR(" W")); 
                 if ((d[2]&0x80)!=0) print_s_p(PSTR(" X")); 
                 d+=10;
                 len-=10;
@@ -585,20 +588,28 @@ void COM_print_datetime() {
 void COM_req_RTC(void) {
     uint8_t s = RTC_GetSecond();
     if (s==0) print_s_p(PSTR("RTC?\n"));
-    if ((s>=30) && (s<=58) && (wl_force_addr>0)) {
-        if (wl_force_addr == 0xff) {
-            s-=29;
-            if (((wl_force_flags>>s)&1) == 0) return;
-        } else {
-            s=wl_force_addr;
-        }
+    if ((s==29)||(s==59)) {
+        COM_putchar('N');
+        COM_putchar((s==59)?'0':'1');
+        COM_putchar('?');
+        COM_putchar('\n');
+        wl_force_addr=0;
+    	COM_flush();
+        return;
+    }
+    if (s>=30) {
+        if (wl_force_addr>0) {
+            if (wl_force_addr == 0xff) {
+                s-=29;
+                if (((wl_force_flags>>s)&1) == 0) return;
+            } else {
+                s=wl_force_addr;
+                if (RTC_GetSecond()&1) s|=0x80;
+            }
+        } else return;
         
     } else {
         s++;
-    }
-    if (s>28) {
-    	COM_flush();
-    	return;
     }
     COM_putchar('(');
     print_hexXX(s);
