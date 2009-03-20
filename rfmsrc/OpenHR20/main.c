@@ -237,8 +237,17 @@ int __attribute__ ((noreturn)) main(void)
                     }
     				if ((config.RFM_devaddr!=0)
     				    && (time_sync_tmo>1)
-                        && (RTC_GetSecond() == config.RFM_devaddr)) // collission protection: every HR20 shall send when the second counter is equal to it's own address.
-    				// if ((time_sync_tmo>1) && (config.RFM_devaddr!=0) && !(RTC_GetSecond() % 4) ) // for testing all 4 seconds ...
+                        && (
+                            (RTC_GetSecond() == config.RFM_devaddr) ||
+                            ((RTC_GetSecond()>30) && (
+                                (wl_force_addr==config.RFM_devaddr) ||
+                                (
+                                    (wl_force_addr==0xff) &&
+                                    (RTC_GetSecond()-30 == config.RFM_devaddr) &&
+                                    ((wl_force_flags>>config.RFM_devaddr)&1)
+                                )
+                            ))
+                        )) // collission protection: every HR20 shall send when the second counter is equal to it's own address.
     				{
                         wirelessTimerCase = WL_TIMER_FIRST;
                         RTC_timer_set(RTC_TIMER_RFM, WLTIME_START);

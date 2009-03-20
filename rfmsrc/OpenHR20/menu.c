@@ -475,6 +475,8 @@ void menu_view(bool update) {
                     LCD_PrintStringID(LCD_STRING_E3,LCD_MODE_ON);
                 } else if (CTL_error & CTL_ERR_BATT_WARNING) {
                     LCD_PrintStringID(LCD_STRING_BAtt,LCD_MODE_ON);
+                } else if (CTL_error & CTL_ERR_RFM_SYNC) {
+                    LCD_PrintStringID(LCD_STRING_E4,LCD_MODE_ON);
                 }
                 goto MENU_COMMON_STATUS; // optimization
             } else {

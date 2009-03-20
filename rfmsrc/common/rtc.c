@@ -666,6 +666,17 @@ void RTC_timer_set(uint8_t timer_id, uint8_t time) {
                 }
             }                
         }
+        uint8_t dif=255;
+        uint8_t i,next;
+        for (i=0;i<RTC_TIMERS;i++) {
+            if ((RTC_timer_todo&(2<<i))) {
+                if ((RTC_timer_time[i]-t2)<dif) {
+                    next = RTC_timer_time[i];
+                    dif = next-t2;
+                }
+            }
+        }
+        OCR2A = next;
         if (RTC_timer_todo==0) TIMSK2 &= ~(1<<OCIE2A);
     }
 #else
@@ -694,6 +705,17 @@ void RTC_timer_set(uint8_t timer_id, uint8_t time) {
                    task |= TASK_TIMER;   // increment second and check Dow_Timer
                 }
             }                
+            uint8_t dif=255;
+            uint8_t next;
+            for (i=0;i<RTC_TIMERS;i++) {
+                if ((RTC_timer_todo&(2<<i))) {
+                    if ((RTC_timer_time[i]-RTC_s100)<dif) {
+                        next = RTC_timer_time[i];
+                        dif = next-RTC_s100;
+                    }
+                }
+            }
+            RTC_next_compare = next;
         }
     }
 #endif 

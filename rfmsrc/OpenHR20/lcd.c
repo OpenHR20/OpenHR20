@@ -137,6 +137,7 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
       {11,10,38,38},    //!<  "BAtt"    LCD_STRING_BAtt
       {32,14, 2,32},    //!<  " E2 "    LCD_STRING_E2
       {32,14, 3,32},    //!<  " E3 "    LCD_STRING_E3
+      {32,14, 4,32},    //!<  " E4 "    LCD_STRING_E4
       {14,14,18,28},    //!<  "EEPr"    LCD_STRING_EEPr
   };
 #elif LANG==LANG_de
@@ -161,6 +162,7 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
       {11,10,38,38},    //!<  "BAtt"    LCD_STRING_BAtt
       {32,14, 2,32},    //!<  " E2 "    LCD_STRING_E2
       {32,14, 3,32},    //!<  " E3 "    LCD_STRING_E3
+      {32,14, 4,32},    //!<  " E4 "    LCD_STRING_E4
       {14,14,18,28},    //!<  "EEPr"    LCD_STRING_EEPr
   };
 #elif LANG==LANG_cs
@@ -185,6 +187,7 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
       {11,10,38,38},    //!<  "BAtt"    LCD_STRING_BAtt
       {32,14, 2,32},    //!<  " E2 "    LCD_STRING_E2
       {32,14, 3,32},    //!<  " E3 "    LCD_STRING_E3
+      {32,14, 4,32},    //!<  " E4 "    LCD_STRING_E4
       {14,14,18,28},    //!<  "EEPr"    LCD_STRING_EEPr
   };
 #endif

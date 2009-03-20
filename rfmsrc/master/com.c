@@ -42,12 +42,13 @@
 #include "com.h"
 #include "../common/rs232_485.h"
 #include "../common/rtc.h"
+#include "../common/wireless.h"
 #include "task.h"
 #include "eeprom.h"
 #include "queue.h"
 
 
-#define TX_BUFF_SIZE 128
+#define TX_BUFF_SIZE 200
 #define RX_BUFF_SIZE 32
 
 static char tx_buff[TX_BUFF_SIZE];
@@ -359,6 +360,17 @@ void COM_commad_parse (void) {
 			COM_print_debug(-1);
 			c='\0';
 			break;
+		case 'O':
+			if (COM_hex_parse(1*2,true)!='\0') { break; }
+			wl_force_addr=com_hex[0];
+            print_s_p(PSTR("OK"));
+			break;
+		case 'P':
+			if (COM_hex_parse(4*2,true)!='\0') { break; }
+			memcpy(&wl_force_flags,com_hex,4);
+			wl_force_addr=0xff;
+            print_s_p(PSTR("OK"));
+			break;
 		case 'G':
 		case 'S':
 			if (c=='G') {
@@ -399,6 +411,7 @@ void COM_commad_parse (void) {
                         len=1;
                         break;
                     case 'S':
+                    case 'B':
                         len=2;
                         break;
                     case 'W':
@@ -408,13 +421,24 @@ void COM_commad_parse (void) {
                         break;
                 }
                 if (COM_hex_parse(len*2,true)!='\0') { break; }
-                uint8_t * d = Q_push(len, addr+(bank<<5));
+                uint8_t * d = Q_push(len+1, addr+(bank<<5));
                 if (d==NULL) { break; }
                 d[0]=ch;
                 memcpy(d+1,com_hex,len);
+                print_s_p(PSTR("OK"));
             }
             break;            		    
-		default:
+		case 'B':
+			{
+				if (COM_hex_parse(2*2,true)!='\0') { break; }
+  				if ((com_hex[0]==0x13) && (com_hex[1]==0x24)) {
+                      cli();
+                      wdt_enable(WDTO_15MS); //wd on,15ms
+                      while(1); //loop till reset
+    			}
+			}
+			break;
+	  default:
 			c='\0';
 			break;
 		}
@@ -447,9 +471,17 @@ void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok) {
     } else {
         print_s_p(PSTR(" ERR"));
         print_hexXXXX(seq++);
+        bool dots=false;
+        if (len > 10) {
+          len=10; // debug output limitation
+          dots=true;
+        }
         while ((len--)>0) {
             COM_putchar(' ');
             print_hexXX(*(d++));
+        }
+        if (dots) {
+          print_s_p(PSTR("..."));
         }
         COM_putchar('\n');
     	COM_flush();
@@ -466,7 +498,14 @@ void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok) {
             print_decXX(addr);
             COM_putchar(')');
         }
-    	switch (d[0]&0x7f) {
+    	d[0]&=0x7f;
+        switch (d[0]) {
+            case 'V':
+                while ((len--)>0) {
+                    if (*(d++)=='\n') break;
+                    COM_putchar((*d)&0x7f);
+                }
+                break;
             case 'D':
                 print_s_p(PSTR("D m"));
                 print_decXX(d[1]&0x3f);
@@ -546,12 +585,23 @@ void COM_print_datetime() {
 void COM_req_RTC(void) {
     uint8_t s = RTC_GetSecond();
     if (s==0) print_s_p(PSTR("RTC?\n"));
+    if ((s>=30) && (s<=58) && (wl_force_addr>0)) {
+        if (wl_force_addr == 0xff) {
+            s-=29;
+            if (((wl_force_flags>>s)&1) == 0) return;
+        } else {
+            s=wl_force_addr;
+        }
+        
+    } else {
+        s++;
+    }
     if (s>28) {
     	COM_flush();
     	return;
     }
     COM_putchar('(');
-    print_hexXX(s+1);
+    print_hexXX(s);
     COM_putchar(')');
     COM_putchar('?');
     COM_putchar('\n');

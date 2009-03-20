@@ -138,6 +138,7 @@ int __attribute__ ((noreturn)) main(void)
         if (task & TASK_RTC) {
             task&=~TASK_RTC;
             {
+                wl_packet_bank=0;
                 bool minute = RTC_AddOneSecond();
                 if (minute || RTC_GetSecond()==30) {
 					rfm_mode = rfmmode_stop;
@@ -147,6 +148,16 @@ int __attribute__ ((noreturn)) main(void)
                     wireless_putchar((RTC_GetMonth()<<4) + (d>>3)); 
                     wireless_putchar((d<<5) + RTC_GetHour());
                     wireless_putchar((RTC_GetMinute()<<1) + ((RTC_GetSecond()==30)?1:0));
+                    if (wl_force_addr>0) {
+                        if (wl_force_addr==0xff) {
+                            wireless_putchar(((uint8_t*)&wl_force_flags)[0]);
+                            wireless_putchar(((uint8_t*)&wl_force_flags)[1]);
+                            wireless_putchar(((uint8_t*)&wl_force_flags)[2]);
+                            wireless_putchar(((uint8_t*)&wl_force_flags)[3]);
+                        } else {
+                            wireless_putchar(wl_force_addr);
+                        }
+                    }
                     wirelessSendSync();
                     COM_print_datetime();
                 }

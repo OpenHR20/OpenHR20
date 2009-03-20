@@ -143,12 +143,13 @@ void wirelessSendDone(void) {
     RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
     RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
     RFM_RX_ON();    //re-enable RX
-	rfm_mode = rfmmode_rx;
+    rfm_mode = rfmmode_rx;
     RFM_INT_EN(); // enable RFM interrupt
 
     #if !defined(MASTER_CONFIG_H)
         wirelessTimerCase = WL_TIMER_RX_TMO;
-        RTC_timer_set(RTC_TIMER_RFM, (uint8_t)(RTC_s256 + WL_TIMER_RX_TMO));    
+        RTC_timer_set(RTC_TIMER_RFM, (uint8_t)(RTC_s256 + WLTIME_TIMEOUT));    
+        COM_print_time('r');
     #endif    
 }
 
@@ -158,17 +159,21 @@ void wirelessSendDone(void) {
  ******************************************************************************/
 void wirelessTimer(void) {
 #if !defined(MASTER_CONFIG_H)   
+    COM_print_time('t');
     switch (wirelessTimerCase) {
     case WL_TIMER_FIRST:
         wirelessSendPacket();
         break;
     case WL_TIMER_SYNC:
+        wl_force_addr=0;
         RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
         RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
         RFM_RX_ON();
         RFM_SPI_SELECT; // set nSEL low: from this moment SDO indicate FFIT or RGIT
         RFM_INT_EN(); // enable RFM interrupt
-    	rfm_mode = rfmmode_rx;
+      	rfm_mode = rfmmode_rx;
+        wirelessTimerCase = WL_TIMER_RX_TMO;
+        RTC_timer_set(RTC_TIMER_RFM, (uint8_t)(RTC_s256 + WLTIME_SYNC_TIMEOUT));    
         break;
     case WL_TIMER_RX_TMO:
         rfm_mode    = rfmmode_stop;
@@ -216,12 +221,17 @@ void wirelessSendPacket(void) {
 	RFM_TX_ON();
     RFM_SPI_SELECT; // set nSEL low: from this moment SDO indicate FFIT or RGIT
     RFM_INT_EN(); // enable RFM interrupt
+#if !defined(MASTER_CONFIG_H)
+  COM_print_time('s');
+#endif
 }
 
 /*!
  *******************************************************************************
  *  wireless send SYNC packet
  ******************************************************************************/
+uint8_t wl_force_addr;
+uint32_t wl_force_flags;
 
 #if defined(MASTER_CONFIG_H)
 void wirelessSendSync(void) {
@@ -248,12 +258,11 @@ void wirelessSendSync(void) {
     RFM_SPI_SELECT; // set nSEL low: from this moment SDO indicate FFIT or RGIT
     RFM_INT_EN(); // enable RFM interrupt
 }
+
+uint8_t wl_packet_bank=0;
 #else
 int8_t time_sync_tmo=0;
 #endif
-
-static uint8_t bank=0;
-static uint8_t bank_last_addr=0;
 
 /*!
  *******************************************************************************
@@ -269,14 +278,20 @@ void wirelessReceivePacket(void) {
             if (rfm_framepos>=2+4) {
                 bool mac_ok;
                 #if ! defined(MASTER_CONFIG_H)
-                if (rfm_framebuf[0] == 0xc9) {
+                if ((rfm_framebuf[0]&0xc0) == 0xc0) {
                 //sync packet
                     mac_ok=cmac_calc(rfm_framebuf+1,(rfm_framebuf[0]&0x3f)-5,NULL,true);
                     COM_dump_packet(rfm_framebuf, rfm_framepos,mac_ok);
                     if (mac_ok) {
-                        time_sync_tmo=10;
                         rfm_mode = rfmmode_stop;
                         RFM_OFF();
+                        if (rfm_framebuf[0]==0xca) {
+                            wl_force_addr=rfm_framebuf[5];
+                        } else if (rfm_framebuf[0]==0xcd) {
+                            wl_force_addr=0xff;
+                            memcpy(&wl_force_flags,rfm_framebuf+5,4);
+                        } else wl_force_addr=0;
+                        time_sync_tmo=10;
                         RTC_s256=8; 
                         RTC_SetYear(rfm_framebuf[1]);
                         RTC_SetMonth(rfm_framebuf[2]>>4);
@@ -285,6 +300,8 @@ void wirelessReceivePacket(void) {
             			RTC_SetMinute(rfm_framebuf[4]>>1);
             			RTC_SetSecond((rfm_framebuf[4]&1)?30:00);
                         cli(); RTC_timer_done&=~_BV(RTC_TIMER_OVF); sei();
+                        rfm_framepos=0;
+                        return;
                         }
                 } else 
                 #endif
@@ -296,27 +313,27 @@ void wirelessReceivePacket(void) {
                     RTC.pkt_cnt++;
                     COM_dump_packet(rfm_framebuf, rfm_framepos,mac_ok);
                     uint8_t addr = RTC_GetSecond(); // it is bug I know \todo
-                    if (addr != bank_last_addr) {
-                        bank_last_addr = addr;
-                        bank=0;
-                    }
                     if (mac_ok) {
                         #if defined(MASTER_CONFIG_H)
-                        q_item_t * p;
-                        uint8_t skip=0;
-                        uint8_t i=0;
-                        while ((p=Q_get(addr+((bank)<<5), skip++))!=NULL) {
-                            for (i=0;i<=(*p).len;i++) {
-                                wireless_putchar((*p).data[i]);
-                            }
-                        }
-                        if (i!=0) {
-                            bank++;
+                          q_item_t * p;
+                          uint8_t skip=0;
+                          uint8_t i=0;
+                          while ((p=Q_get(addr+((wl_packet_bank)<<5), skip++))!=NULL) {
+                              for (i=0;i<(*p).len;i++) {
+                                  wireless_putchar((*p).data[i]);
+                              }
+                          }
+                          wl_packet_bank++;
+                          wirelessSendPacket();
+                          return;
+                        #else
+                          if (rfm_framepos >6) {
+                            COM_wireless_command_parse(rfm_framebuf+2, rfm_framepos-6);
                             wirelessSendPacket();
                             return;
-                        }
+                          }                          
                         #endif
-                    }
+                    } 
                 }
             }
             rfm_framepos=0;

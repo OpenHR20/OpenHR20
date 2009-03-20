@@ -44,14 +44,19 @@ void COM_init(void);
 void COM_print_debug(int8_t valve);
 
 void COM_commad_parse (void);
+#if RFM==1
+    void COM_wireless_command_parse (uint8_t * rfm_framebuf, uint8_t rfm_framepos);
+#endif
 
 void COM_debug_print_motor(int8_t dir, uint16_t m, uint8_t pwm);
 void COM_debug_print_temperature(uint16_t t);
 
 #if DEBUG_DUMP_RFM
     void COM_dump_packet(uint8_t *d, uint8_t len, bool mac_ok);
+    void COM_print_time(uint8_t c);
     // void COM_mac_ok(void);
 #else 
-    #define COM_dump_packet(d,len, mac_ok);
+    #define COM_dump_packet(d,len, mac_ok) ()
+    #define COM_print_time(c) ()
     // #define COM_mac_ok() ()
 #endif

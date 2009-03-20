@@ -45,6 +45,7 @@ void wirelessSendPacket(void);
 void wirelessReceivePacket(void);
 #if defined(MASTER_CONFIG_H)
     void wirelessSendSync(void);
+    extern uint8_t wl_packet_bank;
 #else
     void wirelesTimeSyncCheck(void);
 #endif 
@@ -60,10 +61,13 @@ void wireless_putchar(uint8_t ch);
 
 extern int8_t time_sync_tmo;
 extern uint8_t wireless_buf_ptr;
+extern uint8_t wl_force_addr;
+extern uint32_t wl_force_flags;
 
 #define WLTIME_SYNC (RTC_TIMER_CALC(950))  // prepare to receive timesync / slave only 
 #define WLTIME_START (RTC_TIMER_CALC(50)) // communication start
-#define WLTIME_TIMEOUT (RTC_TIMER_CALC(200)) // slave RX timeout
+#define WLTIME_TIMEOUT (RTC_TIMER_CALC(100)) // slave RX timeout
+#define WLTIME_SYNC_TIMEOUT (RTC_TIMER_CALC(150)) // slave RX timeout
 #define WLTIME_STOP (RTC_TIMER_CALC(800)) // last possible communication
 
 typedef enum {
