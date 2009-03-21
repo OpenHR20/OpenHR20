@@ -48,7 +48,7 @@
 #include "queue.h"
 
 
-#define TX_BUFF_SIZE 200
+#define TX_BUFF_SIZE 254
 #define RX_BUFF_SIZE 32
 
 static char tx_buff[TX_BUFF_SIZE];
@@ -58,6 +58,8 @@ static uint8_t tx_buff_in=0;
 static uint8_t tx_buff_out=0;
 static uint8_t rx_buff_in=0;
 static uint8_t rx_buff_out=0;
+
+extern uint8_t onsync;
 
 /*!
  *******************************************************************************
@@ -70,7 +72,19 @@ static void COM_putchar(char c) {
 	if ((tx_buff_in+1)%TX_BUFF_SIZE!=tx_buff_out) {
 		tx_buff[tx_buff_in++]=c;
 		tx_buff_in%=TX_BUFF_SIZE;
-	}
+	} else {
+	   // mark end on buffer owerflow to recognize this situation
+	   if (tx_buff_in==0) {
+            tx_buff[TX_BUFF_SIZE-2]='*';
+            tx_buff[TX_BUFF_SIZE-1]='\n';
+       } else if (tx_buff_in==1) {
+            tx_buff[TX_BUFF_SIZE-1]='*';
+            tx_buff[0]='\n';
+       } else {
+            tx_buff[tx_buff_in-2]='*';
+            tx_buff[tx_buff_in-1]='\n';
+       }
+    }
 	sei();
 }
 
@@ -317,6 +331,18 @@ static void print_idx(char t) {
     COM_putchar('=');
 }
 
+/*!
+ *******************************************************************************
+ *  \brief print incomplete packet mark
+ *
+ ******************************************************************************/
+static void print_incomplete_mark(int8_t len) {
+    COM_putchar('!');
+    print_hexXX(-len);
+    COM_putchar('!');
+    //COM_putchar('=');
+}
+
 
 
 
@@ -358,6 +384,7 @@ void COM_commad_parse (void) {
 			RTC_SetSecond(com_hex[2]);
 			RTC_SetSecond100(com_hex[3]);
 			COM_print_debug(-1);
+			onsync=255;
 			c='\0';
 			break;
 		case 'O':
@@ -491,17 +518,21 @@ void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok) {
     while (len>0) {
         if (d[0]&0x80) {
             COM_putchar('<');
-            print_decXX(addr);
+            print_hexXX(addr);
             COM_putchar('>');
         } else {
             COM_putchar('(');
-            print_decXX(addr);
+            print_hexXX(addr);
             COM_putchar(')');
         }
     	d[0]&=0x7f;
         switch (d[0]) {
             case 'V':
-                while ((len--)>0) {
+                while (1) {
+                    if ((--len)<0) {
+                        print_incomplete_mark(len);
+                        break;
+                    }
                     if (*d=='\n') {
                         d++;
                         break;
@@ -510,7 +541,13 @@ void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok) {
                 }
                 break;
             case 'D':
-                print_s_p(PSTR("D m"));
+                COM_putchar(d[0]);
+                len-=10;
+                if (len<0) {
+                    print_incomplete_mark(len);
+                    break;
+                }
+                print_s_p(PSTR(" m"));
                 print_decXX(d[1]&0x3f);
                 print_s_p(PSTR(" s"));
                 print_decXX(d[2]&0x3f);
@@ -529,12 +566,16 @@ void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok) {
                 if ((d[2]&0x40)!=0) print_s_p(PSTR(" W")); 
                 if ((d[2]&0x80)!=0) print_s_p(PSTR(" X")); 
                 d+=10;
-                len-=10;
                 break;
             case 'T':
             case 'R':
             case 'W':
                 COM_putchar(d[0]);
+                len-=4;
+                if (len<0) {
+                    print_incomplete_mark(len);
+                    break;
+                }
                 COM_putchar('[');
                 print_hexXX(d[1]);
                 COM_putchar(']');
@@ -542,18 +583,21 @@ void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok) {
                 print_hexXX(d[2]);
                 print_hexXX(d[3]);
                 d+=4;
-                len-=4;
                 break;                
             case 'G':
             case 'S':
                 COM_putchar(d[0]);
+                len-=3;
+                if (len<0) {
+                    print_incomplete_mark(len);
+                    break;
+                }
                 COM_putchar('[');
                 print_hexXX(d[1]);
                 COM_putchar(']');
                 COM_putchar('=');
                 print_hexXX(d[2]);
                 d+=3;
-                len-=3;
                 break;                
             default:
                 while ((len--)>0) {

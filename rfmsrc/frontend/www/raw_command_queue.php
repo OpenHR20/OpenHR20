@@ -12,6 +12,11 @@ if (isset($_GET['addr']) && isset($_GET['addr'])) {
     .time().','.(int)($_GET['addr']).',"'.$_GET['data'].'");');    
 }
 
+$delete_id=(int) ($_GET["delete_id"]);
+if ($delete_id>0) {
+    $db->query("DELETE FROM command_queue WHERE id=$delete_id");
+}
+
 $result = $db->query("SELECT * FROM command_queue ORDER BY time");
 
 echo '
@@ -27,11 +32,12 @@ echo '
 ';
 
 echo "<table border=2>\n";
-echo "<tr><th>addr</th><th>time</th><th>data</th><th>send</th></tr>";
+echo "<tr><th>addr</th><th>time</th><th>data</th><th>send</th><th></th></tr>";
 while ($row = $result->fetch()) {
     echo "<tr><td>".$row['addr']."</td>";
     echo "<td>".format_time($row['time'])."</td>";
     echo "<td>".$row['data']."</td>";
-    echo "<td>".$row['send']."</td></tr>";
+    echo "<td>".$row['send']."</td>";
+    echo '<td><a href="?delete_id='.$row['id'].'">delete</a></td></tr>';
 }
 echo "</table>\n";

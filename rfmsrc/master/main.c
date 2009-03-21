@@ -69,6 +69,7 @@ static inline void init(void);             // init the whole thing
 
 
 volatile uint8_t task;
+uint8_t onsync=0; // \todo comments, header
 
 /*!
  *******************************************************************************
@@ -149,7 +150,8 @@ int __attribute__ ((noreturn)) main(void)
                         }
                     }
                 }
-                if (minute || RTC_GetSecond()==30) {
+                if ((onsync)&&(minute || RTC_GetSecond()==30)) {
+                    onsync--;
 					rfm_mode = rfmmode_stop;
 					wireless_buf_ptr = 0;
                     wireless_putchar(RTC_GetYearYY());

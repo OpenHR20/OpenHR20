@@ -28,7 +28,14 @@ case 'log':
 default:
 }
 
-$result = $db->query("SELECT * FROM $type$order LIMIT $limit");
+if (isset($_GET['addr'])) {
+    $where= ' WHERE addr='. (int)($_GET['addr']);
+} else {
+    $where='';
+}
+
+
+$result = $db->query("SELECT * FROM $type$where$order LIMIT $limit");
 
 switch ($type) {
 

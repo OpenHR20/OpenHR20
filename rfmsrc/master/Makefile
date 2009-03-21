@@ -166,7 +166,7 @@ CFLAGS += $(CSTANDARD)
 #optimizations flags 
 # tip: see here http://www.tty1.net/blog/2008-04-29-avr-gcc-optimisations_en.html
 CFLAGS += -ffreestanding 
-CFLAGS += -Wl,--relax 
+#CFLAGS += -Wl,--relax 
 #CFLAGS += --param inline-call-cost=2 
 #CFLAGS += -ffunction-sections
 CFLAGS += -fdata-sections

@@ -286,9 +286,6 @@ void wirelessReceivePacket(void) {
                 || ((rfm_framebuf[0]&0x7f)>= RFM_FRAME_MAX)  // reject noise
                 || (rfm_framepos >= RFM_FRAME_MAX)) {
             RFM_INT_DIS(); // disable RFM interrupt
-            #if !defined(MASTER_CONFIG_H)
-                RTC_timer_destroy(WL_TIMER_RX_TMO);
-            #endif
             if (rfm_framepos>(rfm_framebuf[0]&0x7f)) rfm_framepos=(rfm_framebuf[0]&0x7f);
             
             if (rfm_framepos>=2+4) {
@@ -301,6 +298,7 @@ void wirelessReceivePacket(void) {
                     if (mac_ok) {
                         rfm_mode = rfmmode_stop;
                         RFM_OFF();
+                        RTC_timer_destroy(WL_TIMER_RX_TMO);
                         if (rfm_framebuf[0]==0x8a) {
                             wl_force_addr=rfm_framebuf[5];
                         } else if (rfm_framebuf[0]==0x8d) {
@@ -329,9 +327,10 @@ void wirelessReceivePacket(void) {
                     RTC.pkt_cnt++;
                     COM_dump_packet(rfm_framebuf, rfm_framepos,mac_ok);
                     uint8_t addr = rfm_framebuf[1];
-                    if ((RTC_GetSecond()>30) && ((RTC_GetSecond()&1)==0)) addr|=0x80;
-                    if (mac_ok) {
-                        #if defined(MASTER_CONFIG_H)
+                    if ((wl_force_addr==addr) && (RTC_GetSecond()>30) && ((RTC_GetSecond()&1)==0)) addr|=0x80;
+                    #if defined(MASTER_CONFIG_H)
+                        if ((wl_force_addr==addr) && (RTC_GetSecond()>30) && ((RTC_GetSecond()&1)==0)) addr|=0x80;
+                        if (mac_ok) {
                           LED_on();
                           RTC_timer_set(RTC_TIMER_RFM, (uint8_t)(RTC_s100 + WLTIME_LED_TIMEOUT));    
                           q_item_t * p;
@@ -345,27 +344,30 @@ void wirelessReceivePacket(void) {
                           wl_packet_bank++;
                           wirelessSendPacket();
                           return;
-                        #else
+                        }
+                    #else
+                        if (mac_ok && (rfm_framebuf[1]==0)) { // Accept commands from master only
                           wireless_buf_ptr=0;
+                          RTC_timer_destroy(WL_TIMER_RX_TMO);
                           if (rfm_framepos >6) {
                             COM_wireless_command_parse(rfm_framebuf+2, rfm_framepos-6);
                             wirelessSendPacket();
                             return;
-                          }                          
-                        #endif
-                    } 
+                          } else {                         
+                              rfm_framepos=0;
+                			  rfm_mode = rfmmode_stop;
+                              RFM_OFF();
+                              return;
+                          }
+                        }
+                    #endif
                 }
             }
             rfm_framepos=0;
-            #if 1 || defined(MASTER_CONFIG_H)
-			    rfm_mode = rfmmode_rx;
-              	RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
-                RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
-                RFM_INT_EN(); // enable RFM interrupt
-			#else
-			    rfm_mode = rfmmode_stop;
-                RFM_OFF();
-			#endif
+		    rfm_mode = rfmmode_rx;
+          	RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
+            RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
+            RFM_INT_EN(); // enable RFM interrupt
         }
     }
 }
