@@ -49,7 +49,7 @@
 
 
 #define TX_BUFF_SIZE 254
-#define RX_BUFF_SIZE 32
+#define RX_BUFF_SIZE 20
 
 static char tx_buff[TX_BUFF_SIZE];
 static char rx_buff[RX_BUFF_SIZE];
@@ -103,6 +103,7 @@ char COM_tx_char_isr(void) {
 	return c;
 }
 
+static volatile uint8_t COM_requests; 
 /*!
  *******************************************************************************
  *  \brief support for interrupt for receive bytes
@@ -120,6 +121,7 @@ void COM_rx_char_isr(char c) {
 		}
 		if (c=='\n') {
 			task |= TASK_COM;
+			COM_requests++;
 		}
 	}
 }
@@ -361,8 +363,9 @@ static void print_incomplete_mark(int8_t len) {
  ******************************************************************************/
 void COM_commad_parse (void) {
 	char c;
-	while ((c=COM_getchar())!='\0') {
-		switch(c) {
+	while (COM_requests) {
+		cli(); COM_requests--; sei();
+        switch(c=COM_getchar()) {
 		case 'V':
 			if (COM_getchar()=='\n') print_version();
 			c='\0';

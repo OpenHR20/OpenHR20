@@ -77,14 +77,6 @@ static void COM_putchar(char c) {
 	sei();
 }
 
-#if (RFM==1)
-static void super_COM_putchar(char c) {
-    COM_putchar(c&0x7f);
-    wireless_putchar(c);
-}
-#else
-#define super_COM_putchar(c) 
-#endif
 /*!
  *******************************************************************************
  *  \brief support for interrupt for transmit bytes
@@ -100,6 +92,7 @@ char COM_tx_char_isr(void) {
 	return c;
 }
 
+static volatile uint8_t COM_requests; 
 /*!
  *******************************************************************************
  *  \brief support for interrupt for receive bytes
@@ -117,6 +110,7 @@ void COM_rx_char_isr(char c) {
 		}
 		if (c=='\n') {
 			task |= TASK_COM;
+			COM_requests++;
 		}
 	}
 }
@@ -202,15 +196,6 @@ static void print_hexXX(uint8_t i) {
 	}	
 }
 
-#if (RFM==1)
-static void super_print_hexXX(uint8_t i) {
-    print_hexXX(i);
-    wireless_putchar(i);
-}
-#else
-#define super_print_hexXX(i) print_hexXX(i)
-#endif
-
 /*!
  *******************************************************************************
  *  \brief helper function print 4 digit dec number
@@ -221,18 +206,6 @@ static void print_hexXXXX(uint16_t i) {
 	print_hexXX(i>>8);
 	print_hexXX(i&0xff);
 }
-
-#if (RFM==1)
-static void super_print_hexXXXX(uint16_t i) {
-	print_hexXX(i>>8);
-	wireless_putchar(i>>8);
-	print_hexXX(i&0xff);
-	wireless_putchar(i&0xff);
-}
-#else
-#define super_print_hexXXXX(i) print_hexXXXX(i)
-#endif
-
 
 /*!
  *******************************************************************************
@@ -253,14 +226,14 @@ static void print_s_p(const char * s) {
  *
  *  \note
  ******************************************************************************/
-static void print_version(uint8_t ch) {
+static void print_version(bool sync) {
 	const char * s = (PSTR(VERSION_STRING "\n"));
-    super_COM_putchar(ch);
+    COM_putchar('V');
 	char c;
 	for (c = pgm_read_byte(s); c; ++s, c = pgm_read_byte(s)) {
       COM_putchar(c);
       #if RFM==1
-        wireless_putchar(c);
+        if (sync) wireless_putchar(sync,c);
       #endif
    	}
 }
@@ -274,7 +247,7 @@ static void print_version(uint8_t ch) {
  *  \note
  ******************************************************************************/
 void COM_init(void) {
-	print_version('V');
+	print_version(false);
 	RS_Init();
 	COM_flush();
 }
@@ -332,25 +305,23 @@ void COM_print_debug(int8_t valve) {
 	COM_putchar('\n');
 	COM_flush();
 #if (RFM==1)
-    if (valve==-2)
-        wireless_putchar('D'|0x80);
-    else 
-        wireless_putchar('D');
-	wireless_putchar(
+    bool sync = (valve==-2);
+    if (!sync) wireless_putchar(sync,'D');
+	wireless_putchar(sync,
            RTC_GetMinute() 
         | (CTL_test_auto()?0x40:0)
         | ((CTL_mode_auto)?0x80:0));
-	wireless_putchar(
+	wireless_putchar(sync,
            RTC_GetSecond()
         | ((mode_window())?0x40:0)
         | ((valve<0)?0x80:0));
-	wireless_putchar(CTL_error);
-	wireless_putchar(temp_average >> 8); // current temp
-	wireless_putchar(temp_average & 0xff);
-	wireless_putchar(bat_average >> 8); // current temp
-	wireless_putchar(bat_average & 0xff);
-	wireless_putchar(CTL_temp_wanted); // wanted temp
-	wireless_putchar((valve>=0) ? valve : valve_wanted); // valve pos
+	wireless_putchar(sync,CTL_error);
+	wireless_putchar(sync,temp_average >> 8); // current temp
+	wireless_putchar(sync,temp_average & 0xff);
+	wireless_putchar(sync,bat_average >> 8); // current temp
+	wireless_putchar(sync,bat_average & 0xff);
+	wireless_putchar(sync,CTL_temp_wanted); // wanted temp
+	wireless_putchar(sync,(valve>=0) ? valve : valve_wanted); // valve pos
 	rfm_start_tx();
 #endif
     
@@ -398,9 +369,9 @@ static char COM_hex_parse (uint8_t n) {
  *
  ******************************************************************************/
 static void print_idx(char t, uint8_t i) {
-    super_COM_putchar(t);
+    COM_putchar(t);
     COM_putchar('[');
-    super_print_hexXX(i);
+    print_hexXX(i);
     COM_putchar(']');
     COM_putchar('=');
 }
@@ -430,10 +401,11 @@ static void print_idx(char t, uint8_t i) {
  ******************************************************************************/
 void COM_commad_parse (void) {
 	char c;
-	while ((c=COM_getchar())!='\0') {
-		switch(c) {
+	while (COM_requests) {
+		cli(); COM_requests--; sei();
+        switch(c=COM_getchar()) {
 		case 'V':
-			if (COM_getchar()=='\n') print_version(c);
+			if (COM_getchar()=='\n') print_version(false);
 			c='\0';
 			break;
 		case 'D':
@@ -444,7 +416,7 @@ void COM_commad_parse (void) {
 			{
 				if (COM_hex_parse(1*2)!='\0') { break; }
                 print_idx(c,com_hex[0]);
-  				super_print_hexXXXX(watch(com_hex[0]));
+  				print_hexXXXX(watch(com_hex[0]));
 			}
 			break;
 		case 'G':
@@ -460,9 +432,9 @@ void COM_commad_parse (void) {
 			}
             print_idx(c,com_hex[0]);
 			if (com_hex[0]==0xff) {
-			     super_print_hexXX(EE_LAYOUT);
+			     print_hexXX(EE_LAYOUT);
             } else {
-			     super_print_hexXX(config_raw[com_hex[0]]);
+			     print_hexXX(config_raw[com_hex[0]]);
 			}
 			break;
 		case 'R':
@@ -479,7 +451,7 @@ void COM_commad_parse (void) {
 				CTL_update_temp_auto();
 			}
             print_idx(c,com_hex[0]);
-			super_print_hexXXXX(eeprom_timers_read_raw(
+			print_hexXXXX(eeprom_timers_read_raw(
                 timers_get_raw_index((com_hex[0]>>4),(com_hex[0]&0xf))));
 			break;
 		case 'Y':
@@ -533,6 +505,11 @@ void COM_commad_parse (void) {
 }
 
 #if RFM==1
+static COM_wireless_word(bool sync, uint16_t w) {
+    wireless_putchar(sync,w>>8);
+    wireless_putchar(sync,w&0xff); 
+}
+
 /*!
  *******************************************************************************
  *  \brief parse command from wireless
@@ -542,17 +519,19 @@ void COM_wireless_command_parse (uint8_t * rfm_framebuf, uint8_t rfm_framepos) {
     uint8_t pos=0;
     while (rfm_framepos>pos) {
 		uint8_t c=rfm_framebuf[pos++];
+		wireless_putchar(true,c|0x80);
         switch(c) {
 		case 'V':
-			print_version(c|0x80);
+			print_version(true);
 			break;
 		case 'D':
 			COM_print_debug(-2);
 			break;
 		case 'T':
-            print_idx(c|0x80,rfm_framebuf[pos]);
-  			super_print_hexXXXX(watch(rfm_framebuf[pos++]));
-			break;
+		    wireless_putchar(true,rfm_framebuf[pos]);
+  			COM_wireless_word(true,watch(rfm_framebuf[pos]));
+			pos++;
+            break;
 		case 'G':
 		case 'S':
 			if (c=='S') {
@@ -561,12 +540,14 @@ void COM_wireless_command_parse (uint8_t * rfm_framebuf, uint8_t rfm_framepos) {
   					eeprom_config_save(rfm_framebuf[pos]);
   				}
 			}
-            print_idx(c|0x80,rfm_framebuf[pos]);
+		    wireless_putchar(true,rfm_framebuf[pos]);
 			if (rfm_framebuf[pos]==0xff) {
-			     super_print_hexXX(EE_LAYOUT);
+			     wireless_putchar(true,EE_LAYOUT);
             } else {
-			     super_print_hexXX(config_raw[rfm_framebuf[pos]]);
+			     wireless_putchar(true,config_raw[rfm_framebuf[pos]]);
 			}
+			if (c=='S') pos++;
+			pos++;
 			break;
 		case 'R':
 		case 'W':
@@ -578,10 +559,12 @@ void COM_wireless_command_parse (uint8_t * rfm_framebuf, uint8_t rfm_framepos) {
                     (rfm_framebuf[pos+1])>>4);
 				CTL_update_temp_auto();
 			}
-            print_idx(c|0x80,rfm_framebuf[pos]);
-			super_print_hexXXXX(eeprom_timers_read_raw(
+		    wireless_putchar(true,rfm_framebuf[pos]);
+			COM_wireless_word(true,eeprom_timers_read_raw(
                 timers_get_raw_index((rfm_framebuf[pos]>>4),(rfm_framebuf[pos]&0xf))));
-			break;
+			if (c=='W') pos++;
+			pos++;
+            break;
 		case 'B':
 			{
   				if ((rfm_framebuf[pos]==0x13) && (rfm_framebuf[pos+1]==0x24)) {
@@ -605,9 +588,6 @@ void COM_wireless_command_parse (uint8_t * rfm_framebuf, uint8_t rfm_framepos) {
 		default:
 			break;
 		}
-		COM_putchar('\n');
-		COM_flush();
-		rfm_start_tx();
 	}
 }
 #endif

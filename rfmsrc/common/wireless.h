@@ -41,7 +41,6 @@ extern uint8_t Keys[5*8]; // 40 bytes
 // note: do not change order of keys in Keys array, it depend to crypto_init
 
 void crypto_init(void);
-void wirelessSendPacket(void);
 void wirelessReceivePacket(void);
 #if defined(MASTER_CONFIG_H)
     void wirelessSendSync(void);
@@ -53,9 +52,13 @@ void wirelessSendDone(void);
 void wirelessTimer(void);
 
 #if (RFM==1)
-void wireless_putchar(uint8_t ch);
+#if ! defined(MASTER_CONFIG_H)
+void wireless_putchar(bool sync, uint8_t ch);
 #else
-#define wireless_putchar(ch) 
+void wireless_putchar(uint8_t ch);
+#endif
+#else
+#define wireless_putchar(sync, ch) 
 #endif
 
 

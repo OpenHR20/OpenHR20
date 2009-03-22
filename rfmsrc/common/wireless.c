@@ -58,6 +58,17 @@ static uint8_t Km_upper[8] PROGMEM = {
     0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef
 };
 
+static uint8_t wl_header[4] PROGMEM = {
+    0xaa, 0xaa, 0x2d, 0xd4
+};
+
+#if defined(MASTER_CONFIG_H)
+static void wirelessSendPacket(void);
+#else
+static void wirelessSendPacket(bool cpy);
+#endif
+
+
 /*!
  *******************************************************************************
  *  init crypto keys
@@ -167,7 +178,7 @@ void wirelessTimer(void) {
     COM_print_time('t');
     switch (wirelessTimerCase) {
     case WL_TIMER_FIRST:
-        wirelessSendPacket();
+        wirelessSendPacket(true);
         break;
     case WL_TIMER_SYNC:
         wl_force_addr=0;
@@ -202,26 +213,29 @@ wirelessTimerCase_t wirelessTimerCase=WL_TIMER_NONE;
  *  wireless send data packet
  ******************************************************************************/
 
-void wirelessSendPacket(void) {
+#if defined(MASTER_CONFIG_H)
+static void wirelessSendPacket(void) {
+#else
+static void wirelessSendPacket(bool cpy) {
+#endif
 	RFM_TX_ON_PRE();
 
-	rfm_framebuf[ 0] = 0xaa; // preamble
-	rfm_framebuf[ 1] = 0xaa; // preamble
-	rfm_framebuf[ 2] = 0x2d; // rfm fifo start pattern
-	rfm_framebuf[ 3] = 0xd4; // rfm fifo start pattern
-    
-    rfm_framesize=wireless_buf_ptr+2+4;
+    memcpy_P(rfm_framebuf,wl_header,4);    
 
-	rfm_framebuf[ 4] = rfm_framesize;    // length
 #if defined(MASTER_CONFIG_H)
 	rfm_framebuf[ 5] = 0;
 #else
 	rfm_framebuf[ 5] = config.RFM_devaddr;
+	if (cpy)
 #endif
-	
-	memcpy(rfm_framebuf+6,wireless_framebuf,wireless_buf_ptr);
-
-    encrypt_decrypt (rfm_framebuf+6, wireless_buf_ptr);
+    {
+        rfm_framesize=wireless_buf_ptr+2+4;
+        memcpy(rfm_framebuf+6,wireless_framebuf,wireless_buf_ptr);
+    }
+    
+	rfm_framebuf[ 4] = rfm_framesize;    // length
+    
+    encrypt_decrypt (rfm_framebuf+6, rfm_framesize - 4-2);
     cmac_calc(rfm_framebuf+5,rfm_framesize-5,(uint8_t*)&RTC,false);
     RTC.pkt_cnt++;
     rfm_framesize+=4; //MAC
@@ -248,10 +262,7 @@ uint32_t wl_force_flags;
 #if defined(MASTER_CONFIG_H)
 void wirelessSendSync(void) {
     RFM_TX_ON_PRE();
-	rfm_framebuf[ 0] = 0xaa; // preamble
-	rfm_framebuf[ 1] = 0xaa; // preamble
-	rfm_framebuf[ 2] = 0x2d; // rfm fifo start pattern
-	rfm_framebuf[ 3] = 0xd4; // rfm fifo start pattern
+    memcpy_P(rfm_framebuf,wl_header,4);
 
 	rfm_framebuf[ 4] = (wireless_buf_ptr+1+4) | 0x80; // length (sync)
 
@@ -306,6 +317,7 @@ void wirelessReceivePacket(void) {
                             memcpy(&wl_force_flags,rfm_framebuf+5,4);
                         } else wl_force_addr=0;
                         time_sync_tmo=10;
+            		    CTL_error &= ~CTL_ERR_RFM_SYNC;
                         RTC_s256=8; 
                         RTC_SetYear(rfm_framebuf[1]);
                         RTC_SetMonth(rfm_framebuf[2]>>4);
@@ -350,8 +362,17 @@ void wirelessReceivePacket(void) {
                           wireless_buf_ptr=0;
                           RTC_timer_destroy(WL_TIMER_RX_TMO);
                           if (rfm_framepos >6) {
-                            COM_wireless_command_parse(rfm_framebuf+2, rfm_framepos-6);
-                            wirelessSendPacket();
+                            rfm_framesize=4+2;
+                            {
+                                // !! it need comments, hack
+                                uint8_t i;
+                                uint8_t j=RFM_FRAME_MAX-1;
+                                for (i=rfm_framepos-5;i>=2;i--) {
+                                    rfm_framebuf[j--] = rfm_framebuf[i];
+                                }
+                            }
+                            COM_wireless_command_parse(rfm_framebuf+RFM_FRAME_MAX+6-rfm_framepos, rfm_framepos-6);
+                            wirelessSendPacket(false);
                             return;
                           } else {                         
                               rfm_framepos=0;
@@ -380,7 +401,8 @@ void wirelessReceivePacket(void) {
 void wirelesTimeSyncCheck(void) {
     time_sync_tmo--;
     if (time_sync_tmo<=0) {
-        if (time_sync_tmo==0) {
+        if ((time_sync_tmo==0) || (time_sync_tmo<-30)) {
+                time_sync_tmo=0;
         		RFM_INT_DIS();
 			    RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
                 RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
@@ -397,12 +419,25 @@ void wirelesTimeSyncCheck(void) {
 }
 #endif
 
+#if ! defined(MASTER_CONFIG_H)
 /*!
  *******************************************************************************
- *  wireless put one byte
+ *  wireless put one byte into buffer
  ******************************************************************************/
+void wireless_putchar(bool sync, uint8_t b) {
+  if (sync) {
+    // synchronous buffer
+    if (rfm_framesize<RFM_FRAME_MAX-4-2) {
+        rfm_framebuf[rfm_framesize++] = b;
+    }
+  } else {
+#else
 void wireless_putchar(uint8_t b) {
+  {
+#endif
+    // asynchronous buffer
     if (wireless_buf_ptr<WIRELESS_BUF_MAX) {
         wireless_framebuf[wireless_buf_ptr++] = b;
     }
-}
+  }
+} 
