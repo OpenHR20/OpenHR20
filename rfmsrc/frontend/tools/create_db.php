@@ -76,6 +76,7 @@ $db->query("CREATE TABLE command_queue (
     data char(20) )");
 
 $db->query("CREATE INDEX command_addr on command_queue (addr)");
+$db->query("CREATE INDEX command_addr_time on command_queue (addr,time)");
 
 // ************************************************************
 

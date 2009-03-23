@@ -49,7 +49,7 @@
 
 
 #define TX_BUFF_SIZE 254
-#define RX_BUFF_SIZE 20
+#define RX_BUFF_SIZE 32
 
 static char tx_buff[TX_BUFF_SIZE];
 static char rx_buff[RX_BUFF_SIZE];
@@ -133,12 +133,16 @@ void COM_rx_char_isr(char c) {
  *  \note
  ******************************************************************************/
 static char COM_getchar(void) {
-	char c='\0';
+	char c;
 	cli();
 	if (rx_buff_in!=rx_buff_out) {
 		c=rx_buff[rx_buff_out++];
 		rx_buff_out%=RX_BUFF_SIZE;
-	}
+    	if (c=='\n') COM_requests--;
+	} else {
+    	COM_requests=0;
+        c='\0';
+    }
 	sei();
 	return c;
 }
@@ -364,7 +368,6 @@ static void print_incomplete_mark(int8_t len) {
 void COM_commad_parse (void) {
 	char c;
 	while (COM_requests) {
-		cli(); COM_requests--; sei();
         switch(c=COM_getchar()) {
 		case 'V':
 			if (COM_getchar()=='\n') print_version();
@@ -517,16 +520,21 @@ void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok) {
     	COM_flush();
     	return;
     }
+    if (len==0) {
+    	COM_flush();
+    	return;
+    } else {
+        COM_putchar('(');
+        print_hexXX(addr);
+        COM_putchar(')');
+        print_s_p(PSTR("{\n"));
+    }
     
     while (len>0) {
         if (d[0]&0x80) {
-            COM_putchar('<');
-            print_hexXX(addr);
-            COM_putchar('>');
+            COM_putchar('*');
         } else {
-            COM_putchar('(');
-            print_hexXX(addr);
-            COM_putchar(')');
+            COM_putchar('-');
         }
     	d[0]&=0x7f;
         switch (d[0]) {
@@ -611,6 +619,7 @@ void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok) {
         }
         COM_putchar('\n');
     }
+    print_s_p(PSTR("}\n"));
 	COM_flush();
 }
 

@@ -63,7 +63,7 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
     /* 0c */ uint8_t valve_max; // valve position limiter max
     /* 0d */ uint8_t motor_pwm_min;   //!< min PWM for motor 
     /* 0e */ uint8_t motor_pwm_max;  //!< max PWM for motor
-    /* 0f */ uint8_t motor_hysteresis; //!< additional impulses for 0 or 100% relative to area for regulation
+    /* 0f */ uint8_t unused;
     /* 10 */ uint8_t motor_end_detect_cal; //!< stop timer threshold in % to previous average 
     /* 11 */ uint8_t motor_end_detect_run; //!< stop timer threshold in % to previous average 
     /* 12 */ uint8_t motor_speed; //!< /8 
@@ -178,7 +178,7 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 0c */  {80,         80,        0,      100},   //!< valve_max
   /* 0d */  {32,         32,        32,     255},   //!< min motor_pwm PWM setting
   /* 0e */  {250,       250,        180,    255},   //!< max motor_pwm PWM setting
-  /* 0f */  {10,         10,        0,      200},   //!< additional impulses for 0 or 100%
+  /* 0f */  {0,           0,        0,        0},   //!< unused
   /* 10 */  {130,       130,      110,      250},   //!< motor_end_detect_cal; stop timer threshold in % to previous average 
   /* 11 */  {150,       150,      110,      250},   //!< motor_end_detect_run; stop timer threshold in % to previous average 
   /* 12 */  {176,       176,       10,      255},   //!< motor_speed

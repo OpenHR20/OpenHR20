@@ -21,6 +21,9 @@ $fp=fsockopen("192.168.62.230",3531);
 //$fp=fopen("/dev/ttyS1","w+"); 
 
 //while(($line=stream_get_line($fp,256,"\n"))!=FALSE) {
+
+$addr=-1;
+
 while(($line=fgets($fp,256))!==FALSE) {
     $line=trim($line);
     if ($line == "") continue; // ignore empty lines
@@ -29,11 +32,24 @@ while(($line=fgets($fp,256))!==FALSE) {
     $ts=microtime(true);
     if ($line{0}=='(' && $line{3}==')') {
 	   $addr = hexdec(substr($line,1,2));
-    } else if ($line{0}=='<' && $line{3}=='>') {
-	   $addr = hexdec(substr($line,1,2));
+	   $data = substr($line,4);
+       if ($line{4}=='{') {
+    	   if (!$trans) $db->query("BEGIN TRANSACTION");
+    	   $trans=true;
+       }
+
+    } else if ($line{0}=='*') {
 	   $db->query("DELETE FROM command_queue WHERE id=(SELECT id FROM command_queue WHERE addr=$addr AND send>0 ORDER BY send LIMIT 1)");
+	   $data = substr($line,1);
+    } else if ($line{0}=='-') {
+	   $data = substr($line,1);
+    } else if ($line=='}') { 
+        if ($trans) $db->query("COMMIT TRANSACTION");
+        $trans=false;
+ 	    $data = substr($line,1);
+        $addr=0;
     } else {
-	   $addr=0;
+        $addr=0;
     }
     
     if ($line=="RTC?") {
@@ -57,10 +73,10 @@ while(($line=fgets($fp,256))!==FALSE) {
             $addr = $row['addr'];
             if (($addr>0) && ($addr<30)) {
                 unset($v);
-                /*if (($line=="N1?")&&($row['c']>20)) {
+                if (($line=="N1?")&&($row['c']>20)) {
                     $v=sprintf("O%02x\n",$addr);
                     break;
-                }*/
+                }
                 $req[(int)$addr/8] += (int)pow(2,($addr%8));
             }
         }
@@ -70,14 +86,15 @@ while(($line=fgets($fp,256))!==FALSE) {
         $debug=false;
     } else {
     	if ($addr>0) {
-    	  if ($line{4}=='?') {
+    	  if ($data{0}=='?') {
     	    $debug=false;
     	    // echo "data req addr $addr\n";
     	    $db->query("BEGIN TRANSACTION");
-    	    $result = $db->query("SELECT id,data FROM command_queue WHERE addr=$addr ORDER BY time LIMIT 20");
+    	    $result = $db->query("SELECT id,data FROM command_queue WHERE addr=".($addr&0x7f)." ORDER BY time LIMIT 20");
     	    $weight=0;
     	    $bank=0;
     	    $send=0;
+    	    $q='';
     	    while ($row = $result->fetch()) {
     	       $cw = weights($row['data']{0});
     	       $weight += $cw;
@@ -87,18 +104,19 @@ while(($line=fgets($fp,256))!==FALSE) {
                     $weight=$cw;
                }
     	       $r = sprintf("(%02x-%x)%s\n",$addr,$bank,$row['data']);
-    	       fwrite($fp,$r);
+    	       $q.=$r;
                echo $r;
                $send++;
                $db->query("UPDATE command_queue SET send=$send WHERE id=".$row['id']);
             }
+            fwrite($fp,$q);
     	    $db->query("COMMIT");
     
     	    //$debug=false;
-    	  } else if ($line{5}=='[' && $line{8}==']' && $line{9}=='=') {
-    	    $idx=hexdec(substr($line,6,2));
-    	    $value=hexdec(substr($line,10));
-    	    switch ($line{4}) {
+    	  } else if ($data{1}=='[' && $data{4}==']' && $data{5}=='=') {
+    	    $idx=hexdec(substr($data,2,2));
+    	    $value=hexdec(substr($data,6));
+    	    switch ($data{0}) {
     	    case 'G':
     	    case 'S':
     		$table='eeprom';
@@ -120,11 +138,11 @@ while(($line=fgets($fp,256))!==FALSE) {
     	      if ($changes==0)
     	        $db->query("INSERT INTO $table (time,addr,idx,value) VALUES (".time().",$addr,$idx,$value)");
     	    }
-    	  } else if ($line{4}=='D' && $line{5}==' ') {
-    	    $items = split(' ',$line);
+    	  } else if ($data{0}=='D' && $data{1}==' ') {
+    	    $items = split(' ',$data);
     	    unset($items[0]);
     	    $t=0;
-    	    $data=array();
+    	    $st=array();
     	    foreach ($items as $item) {
                 switch ($item{0}) {
                     case 'm':
@@ -134,36 +152,39 @@ while(($line=fgets($fp,256))!==FALSE) {
                         $t+=(int)(substr($item,1));
                         break;
                     case 'A':
-                        $data['mode']='AUTO';
+                        $st['mode']='AUTO';
+                        break;
+                    case '-':
+                        $st['mode']='-';
                         break;
                     case 'M':
-                        $data['mode']='MANU';
+                        $st['mode']='MANU';
                         break;
                     case 'V':
-                        $data['valve']=(int)(substr($item,1));
+                        $st['valve']=(int)(substr($item,1));
                         break;
                     case 'I':
-                        $data['real']=(int)(substr($item,1));
+                        $st['real']=(int)(substr($item,1));
                         break;
                     case 'S':
-                        $data['wanted']=(int)(substr($item,1));
+                        $st['wanted']=(int)(substr($item,1));
                         break;
                     case 'B':
-                        $data['battery']=(int)(substr($item,1));
+                        $st['battery']=(int)(substr($item,1));
                         break;
                     case 'E':
-                        $data['error']=hexdec(substr($item,1));
+                        $st['error']=hexdec(substr($item,1));
                         break;
                     case 'W':
-                        $data['window']=1;
+                        $st['window']=1;
                         break;
                     case 'X':
-                        $data['force']=1;
+                        $st['force']=1;
                         break;
                 }
     	    }
             $vars=""; $val="";
-            foreach ($data as $k=>$v) {
+            foreach ($st as $k=>$v) {
                 $vars.=",".$k;
                 if (is_int($v)) $val.=",".$v;
                 else $val.=",'".$v."'";
@@ -179,7 +200,7 @@ while(($line=fgets($fp,256))!==FALSE) {
     
     if ($debug) { //debug log
     	echo $line."\n"; 
-	$db->query("INSERT INTO debug_log (time,addr,data) VALUES (".time().",$addr,\"$line\")");
-	//echo "         duration ".(microtime(true)-$ts)."\n";
+    	$db->query("INSERT INTO debug_log (time,addr,data) VALUES (".time().",$addr,\"$line\")");
     }
+	// echo "         duration ".(microtime(true)-$ts)."\n";
 } 

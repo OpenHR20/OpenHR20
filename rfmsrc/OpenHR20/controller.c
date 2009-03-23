@@ -133,7 +133,7 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
             UPDATE_NOW:
             PID_update_timeout = (config.PID_interval * 5); // new PID pooling
             if (temp>TEMP_MAX) {
-                valve = 100;
+                valve = config.valve_max;
             } else {
                 valve = (int16_t)pid_Controller(calc_temp(temp),temp_average,valve);
             }
