@@ -164,15 +164,15 @@ bool MOTOR_IsCalibrated(void)
  *
  * \note   works only if calibrated before
  ******************************************************************************/
-bool MOTOR_Goto(uint8_t percent)
+void MOTOR_Goto(uint8_t percent)
 {
     // works only if calibrated
     if (MOTOR_calibration_step==0){
         // set stop position
         if (percent == 100) {
-            MOTOR_PosStop = MOTOR_PosMax + config.motor_hysteresis;
+            MOTOR_PosStop = MOTOR_PosMax;
         } else if (percent == 0) {
-            MOTOR_PosStop = -config.motor_hysteresis;
+            MOTOR_PosStop = 0;
         } else {
             // MOTOR_PosMax>>2 and 100>>2 => overload protection
             #if (MOTOR_MAX_IMPULSES>>2)*(100>>2) > INT16_MAX
@@ -433,8 +433,8 @@ ISR (PCINT0_vect){
  * \note Timer0 is only active if the motor is running
  ******************************************************************************/
 ISR (TIMER0_OVF_vect){
-    motor_diag_cnt++;
     if ( motor_timer > 0) {
+        motor_diag_cnt++;
         motor_timer--;
         {
             uint16_t e = eye_timer; // optimization for volatile variable 

@@ -122,12 +122,16 @@ void COM_rx_char_isr(char c) {
  *  \note
  ******************************************************************************/
 static char COM_getchar(void) {
-	char c='\0';
+	char c;
 	cli();
 	if (rx_buff_in!=rx_buff_out) {
 		c=rx_buff[rx_buff_out++];
 		rx_buff_out%=RX_BUFF_SIZE;
-	}
+    	if (c=='\n') COM_requests--;
+	} else {
+    	COM_requests=0;
+        c='\0';
+    }
 	sei();
 	return c;
 }
@@ -376,7 +380,6 @@ static void print_idx(char t) {
 void COM_commad_parse (void) {
 	char c;
 	while (COM_requests) {
-		cli(); COM_requests--; sei();
         switch(c=COM_getchar()) {
 		case 'V':
 			if (COM_getchar()=='\n') print_version();
