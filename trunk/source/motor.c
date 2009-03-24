@@ -419,6 +419,7 @@ ISR (PCINT0_vect){
                 if (longest_low_eye > (config.motor_eye_low<<1)) {
                     MOTOR_PosAct+=MOTOR_Dir;
                     motor_diag = motor_diag_cnt;
+                    longest_low_eye=0;
                     motor_diag_cnt=0;
                     last_eye_change=0;
                     task|=TASK_MOTOR_PULSE;
