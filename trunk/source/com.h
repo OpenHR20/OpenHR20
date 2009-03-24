@@ -45,3 +45,4 @@ void COM_commad_parse (void);
 void COM_debug_print_motor(int8_t dir, uint16_t m, uint8_t pwm);
 void COM_debug_print_temperature(uint16_t t);
 
+void COM_putchar(char c);

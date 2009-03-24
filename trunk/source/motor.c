@@ -70,19 +70,15 @@ volatile uint16_t motor_diag = 0;
 static volatile uint16_t motor_diag_cnt = 0;
 
 static volatile uint16_t motor_max_time_for_impulse;
-static volatile uint16_t motor_eye_noise_protection;
-static uint32_t motor_diag_sum;
-uint16_t motor_diag_count;
 
 static volatile uint16_t motor_timer = 0;
 
+static volatile uint16_t last_eye_change = 0;
+static volatile uint16_t longest_low_eye = 0;
 
 static void MOTOR_Control(motor_dir_t); // control H-bridge of motor
 
 static uint8_t MOTOR_wait_for_new_calibration = 5;
-
-// eye_timer is noise canceler for eye input / improve accuracy
-static volatile uint16_t eye_timer=0; 
 
 /*!
  *******************************************************************************
@@ -190,14 +186,12 @@ void MOTOR_Goto(uint8_t percent)
                 MOTOR_Control(open);
             }
         }
-        return true;
-    } else {
-        return false;
     }
 }
 
 static motor_dir_t MOTOR_LastDir=stop;
 static uint8_t motor_diag_ignore=MOTOR_IGNORE_IMPULSES;
+static uint8_t pine_last=0;
 
 /*!
  *******************************************************************************
@@ -223,12 +217,22 @@ static void MOTOR_Control(motor_dir_t direction) {
 #ifdef THERMOTRONIC
         PCMSK0 &= ~(1<<PCINT1);                         // disable interrupt
         MOTOR_HR20_PE3_P |= (1<<MOTOR_HR20_PE3);       // deactivate photo eye
+            #if DEBUG_PRINT_MOTOR
+#ifdef THERMOTRONIC
+                COM_putchar((PINE & _BV(PE1))?'Y':'y');
+#else
+                COM_putchar((PINE & _BV(PE4))?'Y':'y');
+#endif
+            #endif
 		MOTOR_H_BRIDGE_stop();
         // stop pwm signal
         TCCR0A = 0;
 #else
         PCMSK0 &= ~(1<<PCINT4);                         // disable interrupt
         MOTOR_HR20_PE3_P &= ~(1<<MOTOR_HR20_PE3);       // deactivate photo eye
+            #if DEBUG_PRINT_MOTOR
+                COM_putchar((PINE & _BV(PE4))?'Y':'y');
+            #endif
 		MOTOR_H_BRIDGE_stop();
         // stop pwm signal
         TCCR0A = (1<<WGM00) | (1<<WGM01); // 0b 0000 0011
@@ -237,7 +241,7 @@ static void MOTOR_Control(motor_dir_t direction) {
     } else {                                            // motor on
         if (MOTOR_Dir != direction){
             if (MOTOR_Dir != MOTOR_LastDir) {
-                motor_diag_sum=0; motor_diag_count = 0; motor_diag_cnt=0;
+                motor_diag_cnt=0; last_eye_change=0; longest_low_eye = 0;
                 motor_diag_ignore = MOTOR_IGNORE_IMPULSES;
                 MOTOR_Dir = MOTOR_LastDir;
             }
@@ -248,14 +252,16 @@ static void MOTOR_Control(motor_dir_t direction) {
                       (((MOTOR_calibration_step == 0))?   
                             (uint16_t)config.motor_end_detect_run
                             :(uint16_t)config.motor_end_detect_cal) / 100)<<3;
-            motor_eye_noise_protection = ((uint16_t)config.motor_speed <<3) 
-                            * (uint16_t)config.motor_eye_noise_protect /100;
             motor_timer = motor_max_time_for_impulse<<2; // *4 (for motor start-up)
-            eye_timer = motor_eye_noise_protection<<2;
             TIFR0 = (1<<TOV0);
             TCNT0 = 0;
             TIMSK0 = (1<<TOIE0); //enable interrupt from timer0 overflow
-            // PCMSK0 |= (1<<PCINT1);  // enable interrupt from eye
+            pine_last=PINE;
+#ifdef THERMOTRONIC
+            PCMSK0 |= (1<<PCINT1); // enable interrupt from eye
+#else
+            PCMSK0 |= (1<<PCINT4); // enable interrupt from eye
+#endif
             OCR0A = config.motor_pwm_max;
             if ( direction == close) {
                 // set pins of H-Bridge
@@ -276,6 +282,13 @@ static void MOTOR_Control(motor_dir_t direction) {
                 TCCR0A=(1<<WGM00)|(1<<WGM01)|(1<<COM0A1)|(1<<COM0A0)|(1<<CS00);
 #endif
             }
+            #if DEBUG_PRINT_MOTOR
+#ifdef THERMOTRONIC
+                COM_putchar((PINE & _BV(PE1))?'X':'x');
+#else
+                COM_putchar((PINE & _BV(PE4))?'X':'x');
+#endif
+            #endif
 		}
     }
 }
@@ -290,8 +303,6 @@ static void MOTOR_Control(motor_dir_t direction) {
 void MOTOR_timer_pulse(void) {
     if (motor_diag <= MOTOR_MAX_VALID_TIMER) {
         if (motor_diag_ignore == 0) {  
-			motor_diag_sum += motor_diag;
-			motor_diag_count++;
             {
                 int16_t chg = ((int16_t)((motor_diag+4)>>3)- (int16_t)config.motor_speed)
                         *config.motor_speed_ctl_gain/100;
@@ -326,12 +337,12 @@ void MOTOR_timer_pulse(void) {
 void MOTOR_timer_stop(void) {
 	motor_dir_t d = MOTOR_Dir;
     MOTOR_Control(stop);
-    if (eye_timer == 0xffff) { // normal stop on wanted position 
+    if (motor_timer>0) { // normal stop on wanted position 
             if (MOTOR_calibration_step != 0) {
                 MOTOR_calibration_step = -1;     // calibration error
 		        CTL_error |=  CTL_ERR_MOTOR;
             }
-	} else { // stop after motor eye timeout
+	} else { // stop on timeout
         if (d == open) { // stopped on end
             {
                 int16_t a = MOTOR_PosAct; // volatile variable optimization
@@ -374,14 +385,10 @@ void MOTOR_timer_stop(void) {
         MOTOR_calibration_step = -1;     // calibration error
         CTL_error |=  CTL_ERR_MOTOR;
     } 
-    #if DEBUG_PRINT_MOTOR
-        COM_debug_print_motor(stop, motor_diag, OCR0A);
-    #endif
 }
 
 // interrupts: 
 
-static uint8_t pine_last=0;
 /*!
  *******************************************************************************
  * Pinchange Interupt INT0
@@ -401,26 +408,45 @@ ISR (PCINT0_vect){
     // motor eye
     // count only on HIGH impulses
 #ifdef THERMOTRONIC
-    if ((PCMSK0 & (1<<PCINT1)) && ((pine & ~pine_last & (1<<PE1)) != 0)) {
+    if ((PCMSK0 & (1<<PCINT1)) && (((pine ^ pine_last) & (1<<PE1)) != 0)) {
 #else
-    if ((PCMSK0 & (1<<PCINT4)) && ((pine & ~pine_last & (1<<PE4)) != 0)) {
+    if ((PCMSK0 & (1<<PCINT4)) && (((pine ^ pine_last) & (1<<PE4)) != 0)) {
 #endif
-        MOTOR_PosAct+=MOTOR_Dir;
-        motor_diag = motor_diag_cnt;
-        motor_diag_cnt=0;
-        task|=TASK_MOTOR_PULSE;
+        uint16_t dur = motor_diag_cnt - last_eye_change;
+        last_eye_change = motor_diag_cnt;
+        if ((pine & _BV(PE4))==0) {
+            if (dur > (config.motor_eye_high<<1)) {
+                if (longest_low_eye > (config.motor_eye_low<<1)) {
+                    MOTOR_PosAct+=MOTOR_Dir;
+                    motor_diag = motor_diag_cnt;
+                    motor_diag_cnt=0;
+                    last_eye_change=0;
+                    task|=TASK_MOTOR_PULSE;
+                    if (MOTOR_PosAct == MOTOR_PosStop) {
+                        // motor fast STOP
+                        MOTOR_H_BRIDGE_stop();
+                        // complete STOP will be done later
 #ifdef THERMOTRONIC
-        PCMSK0 &= ~(1<<PCINT1); // disable eye interrupt
+                		TCCR0A = 0;//tvossi (1<<WGM00) | (1<<WGM01); // 0b 0000 0011
+                        task|=(TASK_MOTOR_STOP);
+                        PCMSK0 &= ~(1<<PCINT1); // disable eye interrupt
 #else
-        PCMSK0 &= ~(1<<PCINT4); // disable eye interrupt
+                		TCCR0A = (1<<WGM00) | (1<<WGM01); // 0b 0000 0011
+                        task|=(TASK_MOTOR_STOP);
+                        PCMSK0 &= ~(1<<PCINT4); // disable eye interrupt
 #endif
-        if (MOTOR_PosAct == MOTOR_PosStop) {
-            // motor will be stopped after MOTOR_RUN_OVERLOAD time
-            eye_timer = 0xffff;
-            motor_timer = motor_eye_noise_protection; // STOP timeout
+                        TIMSK0 = 0; // disable timmer 1 interrupt 
+                    } else {
+                        motor_timer = motor_max_time_for_impulse;
+                    }
+                } else {
+                    #if DEBUG_PRINT_MOTOR
+                        COM_putchar('~');
+                    #endif
+                }
+            }
         } else {
-            eye_timer = motor_eye_noise_protection; // in timer0 overflow ticks
-            motor_timer = motor_max_time_for_impulse;
+            if (dur > longest_low_eye) longest_low_eye=dur;
         }
     }
 	pine_last=pine;
@@ -436,19 +462,6 @@ ISR (TIMER0_OVF_vect){
     if ( motor_timer > 0) {
         motor_diag_cnt++;
         motor_timer--;
-        {
-            uint16_t e = eye_timer; // optimization for volatile variable 
-            if (e>0)  {
-                if (e != 0xffff) eye_timer=e-1;      
-            } else {
-                pine_last = 0;
-#ifdef THERMOTRONIC
-                PCMSK0 |= (1<<PCINT1); // enable eye interrupt
-#else
-                PCMSK0 |= (1<<PCINT4); // enable eye interrupt
-#endif
-            }
-        }
     } else {
         motor_diag = motor_diag_cnt;
         // motor fast STOP
@@ -463,6 +476,7 @@ ISR (TIMER0_OVF_vect){
         task|=(TASK_MOTOR_STOP);
         PCMSK0 &= ~(1<<PCINT4); // disable eye interrupt
 #endif
+        TIMSK0 = 0; // disable timmer 1 interrupt 
 
     }
 }

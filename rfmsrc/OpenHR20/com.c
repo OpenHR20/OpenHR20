@@ -68,7 +68,7 @@ static uint8_t rx_buff_out=0;
  *
  *  \note
  ******************************************************************************/
-static void COM_putchar(char c) {
+void COM_putchar(char c) {
 	cli();
 	if ((tx_buff_in+1)%TX_BUFF_SIZE!=tx_buff_out) {
 		tx_buff[tx_buff_in++]=c;

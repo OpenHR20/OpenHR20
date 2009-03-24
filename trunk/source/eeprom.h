@@ -51,14 +51,13 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
     /* 0c */ uint8_t valve_max; // valve position limiter max
     /* 0d */ uint8_t motor_pwm_min;   //!< min PWM for motor 
     /* 0e */ uint8_t motor_pwm_max;  //!< max PWM for motor
-        /*! TODO: describe  motor_protection and motor_hysteresis better, picture wanted */
-    /* 0f */ uint8_t unused;
-    /* 10 */ uint8_t motor_end_detect_cal; //!< stop timer threshold in % to previous average 
-    /* 11 */ uint8_t motor_end_detect_run; //!< stop timer threshold in % to previous average 
-    /* 12 */ uint8_t motor_speed; //!< /8 
-    /* 13 */ uint8_t motor_speed_ctl_gain;
-    /* 14 */ uint8_t motor_pwm_max_step;
-    /* 15 */ uint8_t motor_eye_noise_protect; //!< motor eye noise protection in % of previous average 
+    /* 0f */ uint8_t motor_eye_low;  //!< min signal lenght to accept low level (multiplied by 2)
+    /* 10 */ uint8_t motor_eye_high; //!< min signal lenght to accept high level (multiplied by 2)
+    /* 11 */ uint8_t motor_end_detect_cal; //!< stop timer threshold in % to previous average 
+    /* 12 */ uint8_t motor_end_detect_run; //!< stop timer threshold in % to previous average 
+    /* 13 */ uint8_t motor_speed; //!< /8 
+    /* 14 */ uint8_t motor_speed_ctl_gain;
+    /* 15 */ uint8_t motor_pwm_max_step;
     /* 16 */ uint8_t MOTOR_ManuCalibration_L;
     /* 17 */ uint8_t MOTOR_ManuCalibration_H;
     /* 18 */ uint8_t temp_cal_table0; //!< temperature calibration table
@@ -93,7 +92,7 @@ extern uint8_t EEPROM ee_layout;
 #define BOOT_ON2      (16*60+0x2000) //!<  16:00
 #define BOOT_OFF2     (21*60+0x1000) //!<  21:00
 
-#define EE_LAYOUT (0x05) //!< EEPROM layout version 
+#define EE_LAYOUT (0x06) //!< EEPROM layout version 
 
 #ifdef __EEPROM_C__
 // this is definition, not just declaration
@@ -162,13 +161,13 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 0c */  {80,         80,        0,      100},   //!< valve_max
   /* 0d */  {32,         32,        32,     255},   //!< min motor_pwm PWM setting
   /* 0e */  {250,       250,        180,    255},   //!< max motor_pwm PWM setting
-  /* 0f */  {0,           0,        0,        0},   //!< unused
-  /* 10 */  {130,       130,      110,      250},   //!< motor_end_detect_cal; stop timer threshold in % to previous average 
-  /* 11 */  {150,       150,      110,      250},   //!< motor_end_detect_run; stop timer threshold in % to previous average 
-  /* 12 */  {176,       176,       10,      255},   //!< motor_speed
-  /* 13 */  {50,         50,       10,      200},   //!< motor_speed_ctl_gain
-  /* 14 */  {10,         10,        1,       64},   //!< motor_pwm_max_step             
-  /* 15 */  {40,         40,       10,       90},   //!< motor_eye_noise_protect; motor eye noise protection in % of previous average 
+  /* 0f */  {100,       100,        1,      255},   //!< motor_eye_low
+  /* 10 */  {25,         25,        1,      255},   //!< motor_eye_high
+  /* 11 */  {130,       130,      110,      250},   //!< motor_end_detect_cal; stop timer threshold in % to previous average 
+  /* 12 */  {150,       150,      110,      250},   //!< motor_end_detect_run; stop timer threshold in % to previous average 
+  /* 13 */  {176,       176,       10,      255},   //!< motor_speed
+  /* 14 */  {50,         50,       10,      200},   //!< motor_speed_ctl_gain
+  /* 15 */  {10,         10,        1,       64},   //!< motor_pwm_max_step             
   /* 16 */  {255,       255,        0,      255},   //!< manual calibration L
   /* 17 */  {255,       255,        0,      255},   //!< manual calibration H
 #ifdef THERMOTRONIC
