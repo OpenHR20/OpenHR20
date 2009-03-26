@@ -565,7 +565,7 @@ void COM_wireless_command_parse (uint8_t * rfm_framebuf, uint8_t rfm_framepos) {
 		    wireless_putchar(true,rfm_framebuf[pos]);
 			COM_wireless_word(true,eeprom_timers_read_raw(
                 timers_get_raw_index((rfm_framebuf[pos]>>4),(rfm_framebuf[pos]&0xf))));
-			if (c=='W') pos++;
+			if (c=='W') pos+=2;
 			pos++;
             break;
 		case 'B':

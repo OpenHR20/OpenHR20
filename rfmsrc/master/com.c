@@ -380,7 +380,7 @@ void COM_commad_parse (void) {
 		case 'Y':
 			if (COM_hex_parse(3*2,true)!='\0') { break; }
 			RTC_SetDate(com_hex[2],com_hex[1],com_hex[0]);
-			COM_print_debug(-1);
+            print_s_p(PSTR("OK"));
 			c='\0';
 			break;
 		case 'H':
@@ -389,8 +389,8 @@ void COM_commad_parse (void) {
 			RTC_SetMinute(com_hex[1]);
 			RTC_SetSecond(com_hex[2]);
 			RTC_SetSecond100(com_hex[3]);
-			COM_print_debug(-1);
 			onsync=255;
+            print_s_p(PSTR("OK"));
 			c='\0';
 			break;
 		case 'O':
