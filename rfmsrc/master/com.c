@@ -381,7 +381,6 @@ void COM_commad_parse (void) {
 			if (COM_hex_parse(3*2,true)!='\0') { break; }
 			RTC_SetDate(com_hex[2],com_hex[1],com_hex[0]);
             print_s_p(PSTR("OK"));
-			c='\0';
 			break;
 		case 'H':
 			if (COM_hex_parse(4*2,true)!='\0') { break; }
@@ -391,7 +390,6 @@ void COM_commad_parse (void) {
 			RTC_SetSecond100(com_hex[3]);
 			onsync=255;
             print_s_p(PSTR("OK"));
-			c='\0';
 			break;
 		case 'O':
 			if (COM_hex_parse(1*2,true)!='\0') { break; }
@@ -552,6 +550,7 @@ void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok) {
                 }
                 break;
             case 'D':
+            case 'A':
                 COM_putchar(d[0]);
                 len-=10;
                 if (len<0) {

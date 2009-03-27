@@ -1,11 +1,15 @@
 <?php
+
+// NOTE: this file is hudge dirty hack, will be rewriteln
+
 function weights($char) {
     $weights_table = array (
         'D' => 10,
         'S' => 4,
         'W' => 4,
         'G' => 2,
-        'R' => 2
+        'R' => 2,
+	'T' => 2
     );
     if (isset($weights_table[$char]))
         return $weights_table[$char];
@@ -16,9 +20,9 @@ function weights($char) {
 $db = new SQLiteDatabase("/usb/home/db.sqlite");
 $db->query("PRAGMA synchronous=OFF");
 
-$fp=fsockopen("192.168.62.230",3531);
+//$fp=fsockopen("192.168.62.230",3531);
 //$fp=fopen("php://stdin","r"); 
-//$fp=fopen("/dev/ttyS1","w+"); 
+$fp=fopen("/dev/ttyS1","w+"); 
 
 //while(($line=stream_get_line($fp,256,"\n"))!=FALSE) {
 
@@ -62,7 +66,7 @@ while(($line=fgets($fp,256))!==FALSE) {
     	echo $time ." ". $date;
     	fwrite($fp,$time); fwrite($fp,$date);
     	$debug=false;
-    } else if ($line=="OK") {
+    } else if (($line=="OK") || (($line{0}=='d') && ($line{2}==' '))) {
         $debug=false;
     } else if (($line=="N0?") || ($line=="N1?")) {
         $result = $db->query("SELECT addr,count(*) AS c FROM command_queue GROUP BY addr ORDER BY c DESC");
@@ -138,7 +142,7 @@ while(($line=fgets($fp,256))!==FALSE) {
     	      if ($changes==0)
     	        $db->query("INSERT INTO $table (time,addr,idx,value) VALUES (".time().",$addr,$idx,$value)");
     	    }
-    	  } else if ($data{0}=='D' && $data{1}==' ') {
+    	  } else if (($data{0}=='D'||$data{0}=='A') && $data{1}==' ') {
     	    $items = split(' ',$data);
     	    unset($items[0]);
     	    $t=0;
