@@ -142,7 +142,12 @@ while(($line=fgets($fp,256))!==FALSE) {
     	      if ($changes==0)
     	        $db->query("INSERT INTO $table (time,addr,idx,value) VALUES (".time().",$addr,$idx,$value)");
     	    }
-    	  } else if (($data{0}=='D'||$data{0}=='A') && $data{1}==' ') {
+    	  } else if ($data{0}=='V') {
+    	      $db->query("UPDATE versions SET time=".time().",data='$data' WHERE addr=$addr");
+    	      $changes=$db->changes();
+    	      if ($changes==0)
+    	        $db->query("INSERT INTO versions (addr,time,data) VALUES ($addr,".time().",'$data')");
+	  } else if (($data{0}=='D'||$data{0}=='A') && $data{1}==' ') {
     	    $items = split(' ',$data);
     	    unset($items[0]);
     	    $t=0;

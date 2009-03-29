@@ -68,3 +68,7 @@ $db = new SQLiteDatabase("/usb/home/db.sqlite");
       'Den',
       '+++'
   );
+
+  $refresh_value=15; // refresh time for command queue pending wait 
+
+  $chart_hours = 12; // chart contain values from last 12 hours

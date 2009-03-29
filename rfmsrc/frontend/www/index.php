@@ -3,6 +3,8 @@ $ts=microtime(true);
 include "config.php";
 include "common.php";
 
+$refresh=false;
+
 // controller part
   { // common
     $addr = (int) $_GET['addr'];
@@ -44,8 +46,15 @@ include "common.php";
       if ($row['cnt']>0) {
 	// header('Location: http://'.$_SERVER['HTTP_HOST']."/?page=queue&addr=$addr");
 	// It need absolute address (RFC) but it can't work with tunnels
-	header("Location: /?page=queue&addr=$addr");
-	exit;
+	//header("Location: /?page=queue&addr=$addr");
+	//exit;
+	if (isset($contend2)) $contend=$contend2;
+	else {
+	  include "contend/queue.php";
+	  $contend = new contend_queue($addr);
+	}
+	$contend->warning=true;
+	$refresh=true;
       }
     }
   }
@@ -58,7 +67,10 @@ echo '<?xml version="1.0" encoding="UTF-8"?>
 <head>
 <title>Heating</title>  <meta http-equiv="content-language" content="en" />
 ';
-if ($page=='queue') echo '<meta http-equiv="Refresh" content="15; URL='."/?page=queue&addr=$addr>\n";
+if ($refresh) {
+  if ($page=='queue') echo '<meta http-equiv="Refresh" content="'.$refresh_value.'; URL='."/?page=queue&addr=$addr\" />\n";
+  else echo '<meta http-equiv="Refresh" content="'.$refresh_value.'; URL='.$_SERVER["REQUEST_URI"]."\" />\n";
+}
 echo '<meta http-equiv="content-type" content="text/html; charset=utf-8" />
   <style media="screen" type="text/css"> @import url(';
 

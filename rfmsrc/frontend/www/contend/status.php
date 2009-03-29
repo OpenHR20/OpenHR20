@@ -54,8 +54,9 @@ class contend_status extends contend {
   }  
   
   public function view() {
-    global $db,$room_name;
+    global $db,$room_name,$chart_hours;
     if ($this->addr > 0) {
+      echo ('<div><a href="?page=queue&read_info=1&addr='.$this->addr.'">Make refresh requests for all values</a></div>');
       $result = $db->query("SELECT * FROM log WHERE addr=$this->addr ORDER BY time DESC LIMIT 1");
 
       if ($row = $result->fetch()) {
@@ -78,8 +79,15 @@ class contend_status extends contend {
 	echo '<input type="reset" value="Reset">';
 	echo '<input type="submit" value="Submit">';
 	echo "</form>";
-	
       }
+      echo "<div><img src=\"http://192.168.62.254/chart.php?addr=$this->addr&real=1&wanted=1&valve=1&hours=$chart_hours\" \></div>";
+      echo '<div><span style="color: red;">Real temperature</span> <span style="color: green;">Wanted temperature</span> <span style="color: blue;">Valve position</span></div>';
+      $result = $db->query("SELECT * FROM versions WHERE addr=$this->addr LIMIT 1");
+      if ($row = $result->fetch()) {
+	echo "<div>SW version: ".$row['data']."</div>";
+	echo "<div>SW version last update: ".format_time($row['time'])."</div>";
+      }
+
     } else {
 //	this SELECT is teoreticaly best practice, but unaceptable slow
 //      $result = $db->query("SELECT * FROM log WHERE id IN (SELECT min(id) from log GROUP BY addr) ORDER BY addr");

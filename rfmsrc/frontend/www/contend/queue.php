@@ -1,6 +1,8 @@
 <?php
 
 class contend_queue extends contend {
+  public $warning=false;
+  
   public function add_to_queue ($r) {
       global $db,$_GET;
       if($r==null) return;
@@ -47,18 +49,31 @@ class contend_queue extends contend {
 	    $cmd[] = sprintf ("T%02x",$i);
 	}	
       }
-      
+
+      if ($_GET['read_info']==1) {
+	$cmd[] = "D";
+	$cmd[] = "V";
+      }
+
       return $cmd;
   }
 
   public function view() {
-    global $db;
+    global $db,$refresh_value;
     if ($this->addr>0) 
       $result = $db->query("SELECT count(*) AS cnt FROM command_queue WHERE addr=$this->addr");
     else
       $result = $db->query("SELECT count(*) AS cnt FROM command_queue");
     $row = $result->fetch();
-    echo '<h1>volume of waiting commands</h1>';
-    echo "<div>".$row['cnt']."</div>";
+    if ($row['cnt']>0) {
+      echo '<h1>waiting commands: ';
+      echo $row['cnt']."</h1>";
+    } else {
+      echo '<h1>No waiting commands</h1>';
+    }
+    if ($this->warning) {
+      echo "<div><strong class=\"warning\">This page can't be displayed during command pending.</strong></div>";
+      echo "<div>Automatic refresh every $refresh_value second.</div>";
+    }
   }
 }

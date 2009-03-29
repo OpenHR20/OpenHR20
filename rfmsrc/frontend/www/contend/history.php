@@ -17,11 +17,10 @@ class contend_history extends contend {
     echo " <a href=\"?page=history&addr=$this->addr&offset=".($offset+50)."&limit=$limit\">next $limit</a>";
 
     echo "<table>\n";
-    echo "<tr><th>addr</th><th>time</th><th>mode</th><th>valve</th><th>real</th><th>wanted</th><th>battery</th>";
+    echo "<tr><th>time</th><th>mode</th><th>valve</th><th>real</th><th>wanted</th><th>battery</th>";
     echo "<th>error</th><th>window</th><th>force</th></tr>";
     while ($row = $result->fetch()) {
-	echo "<tr><td>".$row['addr']."</td>";
-	echo "<td>".format_time($row['time'])."</td>";
+	echo "<tr><td>".format_time($row['time'])."</td>";
 	echo "<td>".$row['mode']."</td>";
 	echo "<td>".$row['valve']."</td>";
 	echo "<td>".($row['real']/100)."</td>";

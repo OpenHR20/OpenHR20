@@ -82,3 +82,7 @@ $db->query("CREATE INDEX command_time_addr on command_queue (time,addr)");
 
 // ************************************************************
 
+$db->query("CREATE TABLE versions (
+    addr INTEGER PRIMARY KEY, 
+    time INTEGER,
+    data char(80))");
