@@ -80,7 +80,7 @@ class contend_status extends contend {
 	echo '<input type="submit" value="Submit">';
 	echo "</form>";
       }
-      echo "<div><img src=\"http://192.168.62.254/chart.php?addr=$this->addr&real=1&wanted=1&valve=1&hours=$chart_hours\" \></div>";
+      echo "<div><img src=\"/chart.php?addr=$this->addr&real=1&wanted=1&valve=1&hours=$chart_hours\" \></div>";
       echo '<div><span style="color: red;">Real temperature</span> <span style="color: green;">Wanted temperature</span> <span style="color: blue;">Valve position</span></div>';
       $result = $db->query("SELECT * FROM versions WHERE addr=$this->addr LIMIT 1");
       if ($row = $result->fetch()) {
