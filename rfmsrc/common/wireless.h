@@ -64,7 +64,8 @@ void wireless_putchar(uint8_t ch);
 
 extern int8_t time_sync_tmo;
 extern uint8_t wireless_buf_ptr;
-extern uint8_t wl_force_addr;
+extern uint8_t wl_force_addr1;
+extern uint8_t wl_force_addr2;
 extern uint32_t wl_force_flags;
 
 #define WLTIME_SYNC (RTC_TIMER_CALC(950))  // prepare to receive timesync / slave only 

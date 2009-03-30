@@ -62,7 +62,7 @@ volatile int16_t MOTOR_PosAct=0;      //!< actual position
 int16_t MOTOR_PosMax=0;      /*!< position if complete open (100%) <BR>
                                           0 if not calibrated */
 static volatile int16_t MOTOR_PosStop;     //!< stop at this position
-static volatile motor_dir_t MOTOR_Dir;          //!< actual direction
+volatile motor_dir_t MOTOR_Dir;          //!< actual direction
 // bool MOTOR_Mounted;         //!< mountstatus true: if valve is mounted
 int8_t MOTOR_calibration_step=-2; // not calibrated
 volatile uint16_t motor_diag = 0;

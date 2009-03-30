@@ -69,19 +69,21 @@ while(($line=fgets($fp,256))!==FALSE) {
     } else if (($line=="OK") || (($line{0}=='d') && ($line{2}==' '))) {
         $debug=false;
     } else if (($line=="N0?") || ($line=="N1?")) {
-        $result = $db->query("SELECT addr,count(*) AS c FROM command_queue GROUP BY addr ORDER BY c DESC");
-        // $result = $db->query("SELECT addr,count(*) AS c FROM command_queue WHERE send=0 GROUP BY addr ORDER BY c DESC");
+        $result = $db->query("SELECT addr,count(*) AS c FROM command_queue GROUP BY addr ORDER BY c");
+        // $result = $db->query("SELECT addr,count(*) AS c FROM command_queue WHERE send=0 GROUP BY addr ORDER BY c");
     	$req = array(0,0,0,0);
-    	$v = "O00\n";
+    	$v = "O0000\n";
+	$pr = 0;
         while ($row = $result->fetch()) {
             $addr = $row['addr'];
             if (($addr>0) && ($addr<30)) {
                 unset($v);
                 if (($line=="N1?")&&($row['c']>20)) {
-                    $v=sprintf("O%02x\n",$addr);
-                    break;
+                    $v=sprintf("O%02x%02x\n",$addr,$pr);
+		    $pr=$addr;
+                    continue;
                 }
-                $req[(int)$addr/8] += (int)pow(2,($addr%8));
+                $req[(int)$addr/8] |= (int)pow(2,($addr%8));
             }
         }
         if (!isset($v)) $v = sprintf("P%02x%02x%02x%02x\n",$req[0],$req[1],$req[2],$req[3]);

@@ -82,13 +82,14 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
     /* 1f */ uint8_t timer_mode; //!< =0 only one program, =1 programs for weekdays
     /* 20 */ uint8_t bat_warning_thld; //!< treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
     /* 21 */ uint8_t bat_low_thld; //!< threshold for battery low [unit 0.02V]=[unit 0.01V per cell]
-    /* 22 */ uint8_t window_open_thld; //!< threshold for window open/close detection unit is 0.1C
+    /* 22 */ uint8_t window_open_close_thld; //!< threshold for window open/close detection unit is 0.1C
     /* 23 */ uint8_t window_open_noise_filter;
     /* 24 */ uint8_t window_close_noise_filter;
+    /* 25 */ uint8_t allow_ADC_during_motor;
 #if (RFM==1)
-	/* 25 */ uint8_t RFM_devaddr; //!< HR20's own device address in RFM radio networking. =0 mean disable radio
-	/* 26...2d */ uint8_t security_key[8]; //!< key for encrypted radio messasges
-    /* 2e unused */ 
+	/* 26 */ uint8_t RFM_devaddr; //!< HR20's own device address in RFM radio networking. =0 mean disable radio
+	/* 27...2e */ uint8_t security_key[8]; //!< key for encrypted radio messasges
+    /* 2f unused */ 
 #endif
 
 } config_t;
@@ -109,7 +110,7 @@ extern uint8_t EEPROM ee_layout;
 #define BOOT_ON2      (16*60+0x2000) //!<  16:00
 #define BOOT_OFF2     (21*60+0x1000) //!<  21:00
 
-#define EE_LAYOUT (0xE1) //!< EEPROM layout version (Experimental 1) 
+#define EE_LAYOUT (0xE2) //!< EEPROM layout version (Experimental 1) 
 
 #ifdef __EEPROM_C__
 // this is definition, not just declaration
@@ -197,19 +198,20 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 1f */  {0,           0,        0,        1},   //!< timer_mode; =0 only one program, =1 programs for weekdays 
   /* 20 */  {120,       120,       80,      160},   //!< bat_warning_thld; treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
   /* 21 */  {100,       100,       80,      160},   //!< bat_low_thld; treshold for battery low [unit 0.02V]=[unit 0.01V per cell]
-  /* 22 */  {32,         32,        7,      255},   //!< uint8_t window_open_thld; reshold for window open/close detection unit is 0.01C
+  /* 22 */  {32,         32,        7,      255},   //!< window_open_close_thld; reshold for window open/close detection unit is 0.01C
   /* 23 */  {5,           5,        2,       60},   //!< window_open_noise_filter
   /* 24 */  {15,         15,        2,      255},   //!< window_close_noise_filter
+  /* 25 */  {1,           1,        0,        1},   //!< allow_ADC_during_motor
 #if (RFM==1)
-  /* 25 */  {RFM_DEVICE_ADDRESS, RFM_DEVICE_ADDRESS, 0, 29}, //!< RFM_devaddr: HR20's own device address in RFM radio networking.
-  /* 26 */  {SECURITY_KEY_0, SECURITY_KEY_0, 0x00, 0xff},   //!< security_key[0] for encrypted radio messasges
-  /* 27 */  {SECURITY_KEY_1, SECURITY_KEY_1, 0x00, 0xff},   //!< security_key[1] for encrypted radio messasges
-  /* 28 */  {SECURITY_KEY_2, SECURITY_KEY_2, 0x00, 0xff},   //!< security_key[2] for encrypted radio messasges
-  /* 29 */  {SECURITY_KEY_3, SECURITY_KEY_3, 0x00, 0xff},   //!< security_key[3] for encrypted radio messasges
-  /* 29 */  {SECURITY_KEY_4, SECURITY_KEY_4, 0x00, 0xff},   //!< security_key[4] for encrypted radio messasges
-  /* 29 */  {SECURITY_KEY_5, SECURITY_KEY_5, 0x00, 0xff},   //!< security_key[5] for encrypted radio messasges
-  /* 29 */  {SECURITY_KEY_6, SECURITY_KEY_6, 0x00, 0xff},   //!< security_key[6] for encrypted radio messasges
-  /* 29 */  {SECURITY_KEY_7, SECURITY_KEY_7, 0x00, 0xff},   //!< security_key[7] for encrypted radio messasges
+  /* 26 */  {RFM_DEVICE_ADDRESS, RFM_DEVICE_ADDRESS, 0, 29}, //!< RFM_devaddr: HR20's own device address in RFM radio networking.
+  /* 27 */  {SECURITY_KEY_0, SECURITY_KEY_0, 0x00, 0xff},   //!< security_key[0] for encrypted radio messasges
+  /* 28 */  {SECURITY_KEY_1, SECURITY_KEY_1, 0x00, 0xff},   //!< security_key[1] for encrypted radio messasges
+  /* 29 */  {SECURITY_KEY_2, SECURITY_KEY_2, 0x00, 0xff},   //!< security_key[2] for encrypted radio messasges
+  /* 2a */  {SECURITY_KEY_3, SECURITY_KEY_3, 0x00, 0xff},   //!< security_key[3] for encrypted radio messasges
+  /* 2b */  {SECURITY_KEY_4, SECURITY_KEY_4, 0x00, 0xff},   //!< security_key[4] for encrypted radio messasges
+  /* 2c */  {SECURITY_KEY_5, SECURITY_KEY_5, 0x00, 0xff},   //!< security_key[5] for encrypted radio messasges
+  /* 2d */  {SECURITY_KEY_6, SECURITY_KEY_6, 0x00, 0xff},   //!< security_key[6] for encrypted radio messasges
+  /* 2e */  {SECURITY_KEY_7, SECURITY_KEY_7, 0x00, 0xff},   //!< security_key[7] for encrypted radio messasges
 #endif
 };
 #endif //__EEPROM_C__

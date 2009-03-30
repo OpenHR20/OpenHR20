@@ -317,8 +317,7 @@ void COM_print_debug(int8_t valve) {
         | ((CTL_mode_auto)?0x80:0));
 	wireless_putchar(sync,
            RTC_GetSecond()
-        | ((mode_window())?0x40:0)
-        | ((valve<0)?0x80:0));
+        | ((mode_window())?0x40:0));
 	wireless_putchar(sync,CTL_error);
 	wireless_putchar(sync,temp_average >> 8); // current temp
 	wireless_putchar(sync,temp_average & 0xff);

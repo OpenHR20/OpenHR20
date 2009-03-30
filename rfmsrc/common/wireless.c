@@ -181,7 +181,8 @@ void wirelessTimer(void) {
         wirelessSendPacket(true);
         break;
     case WL_TIMER_SYNC:
-        wl_force_addr=0;
+        wl_force_addr1=0;
+        wl_force_addr2=0;
         RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
         RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
         RFM_RX_ON();
@@ -256,7 +257,8 @@ static void wirelessSendPacket(bool cpy) {
  *******************************************************************************
  *  wireless send SYNC packet
  ******************************************************************************/
-uint8_t wl_force_addr;
+uint8_t wl_force_addr1;
+uint8_t wl_force_addr2;
 uint32_t wl_force_flags;
 
 #if defined(MASTER_CONFIG_H)
@@ -310,12 +312,17 @@ void wirelessReceivePacket(void) {
                         rfm_mode = rfmmode_stop;
                         RFM_OFF();
                         RTC_timer_destroy(WL_TIMER_RX_TMO);
-                        if (rfm_framebuf[0]==0x8a) {
-                            wl_force_addr=rfm_framebuf[5];
+                        if (rfm_framebuf[0]==0x8b) {
+                            wl_force_addr1=rfm_framebuf[5];
+                            wl_force_addr2=rfm_framebuf[6];
                         } else if (rfm_framebuf[0]==0x8d) {
-                            wl_force_addr=0xff;
+                            wl_force_addr1=0xff;
+                            wl_force_addr2=0xff;
                             memcpy(&wl_force_flags,rfm_framebuf+5,4);
-                        } else wl_force_addr=0;
+                        } else {
+                            wl_force_addr1=0; 
+                            wl_force_addr2=0;
+                        }
                         time_sync_tmo=10;
             		    CTL_error &= ~CTL_ERR_RFM_SYNC;
                         RTC_s256=8; 
@@ -339,9 +346,7 @@ void wirelessReceivePacket(void) {
                     RTC.pkt_cnt++;
                     COM_dump_packet(rfm_framebuf, rfm_framepos,mac_ok);
                     uint8_t addr = rfm_framebuf[1];
-                    if ((wl_force_addr==addr) && (RTC_GetSecond()>30) && ((RTC_GetSecond()&1)==0)) addr|=0x80;
                     #if defined(MASTER_CONFIG_H)
-                        if ((wl_force_addr==addr) && (RTC_GetSecond()>30) && ((RTC_GetSecond()&1)==0)) addr|=0x80;
                         if (mac_ok) {
                           LED_on();
                           RTC_timer_set(RTC_TIMER_RFM, (uint8_t)(RTC_s100 + WLTIME_LED_TIMEOUT));    

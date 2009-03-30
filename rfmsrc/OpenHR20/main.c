@@ -240,9 +240,15 @@ int __attribute__ ((noreturn)) main(void)
                         && (
                             ((RTC_GetSecond() == config.RFM_devaddr) && (wireless_buf_ptr)) ||
                             (
-                                ((RTC_GetSecond()>30) && (wl_force_addr==config.RFM_devaddr)) ||
                                 (
-                                    (wl_force_addr==0xff) &&
+                                    (RTC_GetSecond()>30) &&
+                                    ( 
+                                        (RTC_GetSecond()&1)?
+                                        (wl_force_addr1==config.RFM_devaddr):
+                                        (wl_force_addr2==config.RFM_devaddr)
+                                    )
+                                ) || (
+                                    (wl_force_addr1==0xff) &&
                                     (RTC_GetSecond()%30 == config.RFM_devaddr) &&
                                     ((wl_force_flags>>config.RFM_devaddr)&1)
                                 )
@@ -263,7 +269,7 @@ int __attribute__ ((noreturn)) main(void)
                 MOTOR_updateCalibration(mont_contact_pooling());
                 MOTOR_Goto(valve_wanted);
                 task_keyboard_long_press_detect();
-                start_task_ADC();
+                if ((MOTOR_Dir==stop) || (config.allow_ADC_during_motor)) start_task_ADC();
                 if (menu_auto_update_timeout>=0) {
                     menu_auto_update_timeout--;
                 }

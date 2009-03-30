@@ -392,14 +392,15 @@ void COM_commad_parse (void) {
             print_s_p(PSTR("OK"));
 			break;
 		case 'O':
-			if (COM_hex_parse(1*2,true)!='\0') { break; }
-			wl_force_addr=com_hex[0];
+			if (COM_hex_parse(2*2,true)!='\0') { break; }
+			wl_force_addr1=com_hex[0];
+			wl_force_addr2=com_hex[1];
             print_s_p(PSTR("OK"));
 			break;
 		case 'P':
 			if (COM_hex_parse(4*2,true)!='\0') { break; }
 			memcpy(&wl_force_flags,com_hex,4);
-			wl_force_addr=0xff;
+			wl_force_addr1=0xff;
             print_s_p(PSTR("OK"));
 			break;
 		case 'G':
@@ -648,18 +649,19 @@ void COM_req_RTC(void) {
         COM_putchar((s==59)?'0':'1');
         COM_putchar('?');
         COM_putchar('\n');
-        wl_force_addr=0;
+        wl_force_addr1=0;
+        wl_force_addr2=0;
     	COM_flush();
         return;
     }
     if (s>=30) {
-        if (wl_force_addr>0) {
-            if (wl_force_addr == 0xff) {
+        if (wl_force_addr1>0) {
+            if (wl_force_addr1 == 0xff) {
                 s-=29;
                 if (((wl_force_flags>>s)&1) == 0) return;
             } else {
-                s=wl_force_addr;
-                if (RTC_GetSecond()&1) s|=0x80;
+                if (RTC_GetSecond()&1) s=wl_force_addr2;
+                else s=wl_force_addr1;
             }
         } else return;
         
