@@ -70,10 +70,10 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
     /* 1f */ uint8_t timer_mode; //!< =0 only one program, =1 programs for weekdays
     /* 20 */ uint8_t bat_warning_thld; //!< treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
     /* 21 */ uint8_t bat_low_thld; //!< threshold for battery low [unit 0.02V]=[unit 0.01V per cell]
-    /* 22 */ uint8_t window_open_thld; //!< threshold for window open/close detection unit is 0.1C
+    /* 22 */ uint8_t window_open_close_thld; //!< threshold for window open/close detection unit is 0.1C
     /* 23 */ uint8_t window_open_noise_filter;
     /* 24 */ uint8_t window_close_noise_filter;
-
+    /* 25 */ uint8_t allow_ADC_during_motor;
 } config_t;
 
 extern config_t config;
@@ -92,7 +92,7 @@ extern uint8_t EEPROM ee_layout;
 #define BOOT_ON2      (16*60+0x2000) //!<  16:00
 #define BOOT_OFF2     (21*60+0x1000) //!<  21:00
 
-#define EE_LAYOUT (0x06) //!< EEPROM layout version 
+#define EE_LAYOUT (0x07) //!< EEPROM layout version 
 
 #ifdef __EEPROM_C__
 // this is definition, not just declaration
@@ -190,9 +190,10 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 1f */  {0,           0,        0,        1},   //!< timer_mode; =0 only one program, =1 programs for weekdays 
   /* 20 */  {120,       120,       80,      160},   //!< bat_warning_thld; treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
   /* 21 */  {100,       100,       80,      160},   //!< bat_low_thld; treshold for battery low [unit 0.02V]=[unit 0.01V per cell]
-  /* 22 */  {32,         32,        7,      255},   //!< uint8_t window_open_thld; reshold for window open/close detection unit is 0.01C
+  /* 22 */  {32,         32,        7,      255},   //!< window_open_close_thld; reshold for window open/close detection unit is 0.01C
   /* 23 */  {5,           5,        2,       60},   //!< window_open_noise_filter
   /* 24 */  {15,         15,        2,      255},   //!< window_close_noise_filter
+  /* 25 */  {1,           1,        0,        1},   //!< allow_ADC_during_motor
 };
 
 

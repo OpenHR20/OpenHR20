@@ -201,7 +201,7 @@ int main(void)
             MOTOR_updateCalibration(mont_contact_pooling());
             MOTOR_Goto(valve_wanted);
             task_keyboard_long_press_detect();
-            start_task_ADC();
+            if ((MOTOR_Dir==stop) || (config.allow_ADC_during_motor)) start_task_ADC();
             if (menu_auto_update_timeout>=0) {
                 menu_auto_update_timeout--;
             }

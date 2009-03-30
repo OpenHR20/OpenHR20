@@ -87,7 +87,7 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
      */ 
     if (CTL_mode_window<config.window_open_noise_filter) {
         /* window open detection */
-        if (-temp_difference > config.window_open_thld) {
+        if (-temp_difference > config.window_open_close_thld) {
             CTL_mode_window++;
             if (mode_window()) { 
                 PID_force_update=0;
@@ -100,13 +100,11 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
         /* window close detection */
         if (CTL_open_window_timeout > 0) {
             CTL_open_window_timeout--; 
-            if ( temp_difference >= 0 ) {
-                if (temp_difference>0) {
-                    CTL_mode_window++;
-                    if (CTL_mode_window >= (config.window_open_noise_filter+config.window_close_noise_filter)) {
-                        PID_force_update = 0;
-                        CTL_mode_window = 0;    
-                    }
+            if ( temp_difference > config.window_open_close_thld ) {
+                CTL_mode_window++;
+                if (CTL_mode_window >= (config.window_open_noise_filter+config.window_close_noise_filter)) {
+                    PID_force_update = 0;
+                    CTL_mode_window = 0;    
                 }
             } else {
                 CTL_mode_window = config.window_open_noise_filter;
