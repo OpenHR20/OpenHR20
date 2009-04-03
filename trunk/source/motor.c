@@ -414,7 +414,11 @@ ISR (PCINT0_vect){
 #endif
         uint16_t dur = motor_diag_cnt - last_eye_change;
         last_eye_change = motor_diag_cnt;
+#ifdef THERMOTRONIC
+        if ((pine & _BV(PE1))==0) {
+#else
         if ((pine & _BV(PE4))==0) {
+#endif
             if (dur > (config.motor_eye_high<<1)) {
                 if (longest_low_eye > (config.motor_eye_low<<1)) {
                     MOTOR_PosAct+=MOTOR_Dir;
