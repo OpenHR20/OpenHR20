@@ -48,7 +48,7 @@ uint8_t CTL_temp_wanted=0;   // actual desired temperature
 uint8_t CTL_temp_wanted_last=0xff;   // desired temperature value used for last PID control
 uint8_t CTL_temp_auto=0;   // actual desired temperature by timer
 bool CTL_mode_auto=true;   // actual desired temperature by timer
-uint8_t CTL_mode_window = 0; // open window
+bool CTL_mode_window = false; // open window
 uint16_t CTL_open_window_timeout;
 
 static uint16_t PID_update_timeout=16;   // timer to next PID controler action/first is 16 sec after statup 
@@ -57,6 +57,34 @@ int8_t PID_force_update=16;      // signed value, val<0 means disable force upda
 static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old_result);
 
 uint8_t CTL_error=0;
+
+static void CTL_window_detection(void) {
+    uint8_t i = (ring_buf_temp_avgs_pos+AVGS_BUFFER_LEN
+        -((CTL_mode_window)?config.window_close_detection_time:config.window_open_detection_time)
+        )%AVGS_BUFFER_LEN;
+    int16_t min = 10000;
+    int16_t max = 0;
+    while (1) {
+        int16_t x = ring_buf_temp_avgs[i];
+        if (x!=0) { // startup condition
+            if (x<min) min = x;
+            if (x>max) max = x;
+        }
+        if (i==ring_buf_temp_avgs_pos) break;
+        i=(i+1)%AVGS_BUFFER_LEN;
+    }
+    if ((temp_average-min) > (int16_t) config.window_close_detection_diff) {
+        if (CTL_mode_window) {
+            CTL_mode_window=false;
+            PID_force_update = 0; 
+        }  
+    } else {
+        if (!CTL_mode_window && ((max-temp_average) > (int16_t) config.window_open_detection_diff)) {
+            CTL_mode_window=true;
+            PID_force_update = 0; 
+        }
+    }
+}
 
 /*!
  *******************************************************************************
@@ -81,37 +109,7 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
         }
     }
     
-    /* window open detection 
-     * use difference of current temperature and 1 minute old tempereature
-     * for status change condition must be true twice / noise protection
-     */ 
-    if (CTL_mode_window<config.window_open_noise_filter) {
-        /* window open detection */
-        if (-temp_difference > config.window_open_close_thld) {
-            CTL_mode_window++;
-            if (mode_window()) { 
-                PID_force_update=0;
-                CTL_open_window_timeout = CTL_OPEN_WINDOW_TIMEOUT;
-            }
-        } else {
-            CTL_mode_window = 0;
-        }        
-    } else { 
-        /* window close detection */
-        if (CTL_open_window_timeout > 0) {
-            CTL_open_window_timeout--; 
-            if ( temp_difference > config.window_open_close_thld ) {
-                CTL_mode_window++;
-                if (CTL_mode_window >= (config.window_open_noise_filter+config.window_close_noise_filter)) {
-                    PID_force_update = 0;
-                    CTL_mode_window = 0;    
-                }
-            } else {
-                CTL_mode_window = config.window_open_noise_filter;
-            }
-        }
-    }  
-
+    CTL_window_detection();
     if (PID_update_timeout>0) PID_update_timeout--;
     if (PID_force_update>0) PID_force_update--;
     if ((PID_update_timeout == 0)||(PID_force_update==0)) {
@@ -133,7 +131,7 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
             if (temp>TEMP_MAX) {
                 valve = config.valve_max;
             } else {
-                valve = (int16_t)pid_Controller(calc_temp(temp),temp_average,valve);
+                valve = pid_Controller(calc_temp(temp),temp_average,valve);
             }
         } 
         PID_force_update = -1;
@@ -167,7 +165,7 @@ void CTL_temp_change_inc (int8_t ch) {
 	} else if (CTL_temp_wanted>TEMP_MAX+1) {
 		CTL_temp_wanted= TEMP_MAX+1; 
 	}    
-	CTL_mode_window = 0;
+	CTL_mode_window = false;
     PID_force_update = 10; 
 }
 
@@ -198,7 +196,7 @@ void CTL_change_mode(int8_t m) {
     if (CTL_mode_auto && (m != CTL_CHANGE_MODE_REWOKE)) {
         CTL_temp_wanted=(CTL_temp_auto=RTC_ActualTimerTemperature(false));
     }
-    CTL_mode_window = 0;
+    CTL_mode_window = false;
 }
 
 //! Last process value, used to find derivative of process value.

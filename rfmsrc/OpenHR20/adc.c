@@ -65,21 +65,23 @@ volatile uint8_t sleep_with_ADC=0;
  * used for calculate 1 minute difference
  ******************************************************************************/
 	
-#define BUFFER_LEN 60
 #define AVERAGE_LEN 15
-#if (BUFFER_LEN<AVERAGE_LEN)
-	#error AVERAGE_LEN len must be less than BUFFER_LEN
-#endif
-static int16_t ring_buf [2][BUFFER_LEN];
+
+static int16_t ring_buf[2][AVERAGE_LEN];
+int16_t ring_buf_temp_avgs [AVGS_BUFFER_LEN];
+uint8_t ring_buf_temp_avgs_pos;
 static uint8_t ring_pos=0;
 static uint8_t ring_used=1; 
 static int32_t ring_sum [2] = {0,0};
 int16_t ring_average [2] = {0,0};
-int16_t ring_difference [2] = {0,0};
 
 static void shift_ring(void) {
-	ring_pos = (ring_pos+1) % BUFFER_LEN;
-	if (ring_used<BUFFER_LEN) {
+	ring_pos = (ring_pos+1) % AVERAGE_LEN;
+	if (ring_pos==0) {
+        ring_buf_temp_avgs[ring_buf_temp_avgs_pos]=temp_average;
+        ring_buf_temp_avgs_pos = (ring_buf_temp_avgs_pos+1)%AVGS_BUFFER_LEN;
+    }
+	if (ring_used<AVERAGE_LEN) {
 		ring_used++;
 	}
 }
@@ -88,15 +90,11 @@ static void update_ring(uint8_t type, int16_t value) {
 
 	ring_sum[type]+=value;
 	if (ring_used>=AVERAGE_LEN) {
-		ring_sum[type]-=ring_buf[type][(ring_pos+BUFFER_LEN-AVERAGE_LEN) % BUFFER_LEN];
-	}
-	if (ring_used>=BUFFER_LEN) {
-		ring_difference[type] = value - ring_buf[type][ring_pos];
+		ring_sum[type]-=ring_buf[type][ring_pos];
 	}
 		
 	ring_buf[type][ring_pos]=value;
-	ring_average[type] = (int16_t) (ring_sum[type]
-		/(int32_t)((ring_used>=AVERAGE_LEN)?AVERAGE_LEN:ring_used));
+	ring_average[type] = (int16_t) (ring_sum[type]/(int32_t)(AVERAGE_LEN));
 }
 
 

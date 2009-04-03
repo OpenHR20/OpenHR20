@@ -63,10 +63,9 @@ In this file we define only configuration parameters, for example what kind of c
 
 // our Version
 #define REVHIGH  0  //! Revision number high
-#define REVLOW   03 //! Revision number low
+#define REVLOW   04 //! Revision number low
 #define VERSION_N (0xE000 + REVLOW + (REVHIGH<<8)) //! Version as HEX value F0.92 (E for Experimental)
 
-#define DEVICE_ADDRESS 0x02 //! Individual Device Adress for each HR20 for addressing in Networks (e.g. RFM Radio)
 
 #ifndef REVISION
  #define REVISION "$Rev$"
@@ -92,7 +91,7 @@ In this file we define only configuration parameters, for example what kind of c
 
 #if (RFM == 1)
 	#define RFM12 1 // just a synonym
-	#define RFM_DEVICE_ADDRESS 0x04
+	#define RFM_DEVICE_ADDRESS 0x00
 
 	#if (RFM_WIRE_MARIOJTAG == 1)
 		#define DISABLE_JTAG 1 //!< define DISABLE_JTAG if your RFM's connection uses any JTAG pins
@@ -135,7 +134,7 @@ In this file we define only configuration parameters, for example what kind of c
 
 
 /* revision remarks
- ****************
+ *****************
  */ 
 
 

@@ -47,8 +47,8 @@
 #define BAT_RING_TYPE 0
 #define temp_average (ring_average[TEMP_RING_TYPE])
 #define bat_average (ring_average[BAT_RING_TYPE])
-#define temp_difference (ring_difference[TEMP_RING_TYPE])
-#define bat_difference (ring_difference[BAT_RING_TYPE])
+#define AVGS_BUFFER_LEN (4*8) // 4 per minute * 8
+
 
 #define TEMP_CAL_OFFSET 256 // offset of calibration points [ADC units]
 #define TEMP_CAL_STEP 500 // step between 2 calibration points [1/100�C]
@@ -72,5 +72,7 @@ void start_task_ADC(void);
 extern volatile uint8_t sleep_with_ADC;
 extern int16_t ring_average[];
 extern int16_t ring_difference[];
+extern int16_t ring_buf_temp_avgs [AVGS_BUFFER_LEN];
+extern uint8_t ring_buf_temp_avgs_pos;
 
 

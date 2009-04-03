@@ -295,7 +295,6 @@ int __attribute__ ((noreturn)) main(void)
 	       LCD_Update(); // TODO: move it, it is wrong place
 		}
     } //End Main loop
-	return 0;
 }
 
 
