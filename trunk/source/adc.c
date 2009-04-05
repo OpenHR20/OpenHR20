@@ -54,7 +54,7 @@
 
 // vars
 static uint8_t state_ADC;
-volatile uint8_t sleep_with_ADC=0;
+uint8_t sleep_with_ADC=0;
 
 
 /*!
@@ -216,7 +216,8 @@ void start_task_ADC(void) {
 	ADMUX = ADC_UB_MUX | (1<<REFS0);
 	sleep_with_ADC=1;
 }
-
+#define ADC_TOLERANCE 1
+static int16_t dummy_adc=0;
 /*!
  *******************************************************************************
  * ADC task
@@ -232,7 +233,7 @@ uint8_t task_ADC(void) {
 		sleep_with_ADC=1;
 		break;
 	case 3: //step 3
-		update_ring(BAT_RING_TYPE,ADC_Get_Bat_Voltage((uint16_t)ADCL | ((uint16_t)ADCH << 8)));
+		update_ring(BAT_RING_TYPE,ADC_Get_Bat_Voltage(ADCW));
 
 	    // activate voltage divider
 	    ADC_ACT_TEMP_P |= (1<<ADC_ACT_TEMP);
@@ -240,11 +241,19 @@ uint8_t task_ADC(void) {
 		sleep_with_ADC=1;
 		break;
 	case 4: //step 4
+        dummy_adc = ADCW;
 	    sleep_with_ADC=1;
 	    break;
 	case 5: //step 5
         {
-            int16_t t = ADC_Convert_To_Degree((uint16_t)ADCL | ((uint16_t)ADCH << 8));
+            int16_t ad = ADCW;
+            if ((ad>dummy_adc+ADC_TOLERANCE)||(ad<dummy_adc-ADC_TOLERANCE)) { 
+                // adc noise protection, repeat measure
+                dummy_adc=ad;
+                state_ADC=4;
+                break;
+            }
+            int16_t t = ADC_Convert_To_Degree(ad);
             update_ring(TEMP_RING_TYPE,t);
             #if DEBUG_PRINT_MEASURE
                 COM_debug_print_temperature(t);
@@ -269,31 +278,19 @@ uint8_t task_ADC(void) {
 /*!
  *******************************************************************************
  * ADC Interrupt
- *
- * \note not implemented at this time, to be more accurate use sleepmode and irq
- *
  ******************************************************************************/
 
 #if ! TASK_IS_SFR
 // not optimized
 ISR (ADC_vect) {
 	task|=TASK_ADC;
-	sleep_with_ADC=0;
 }
 #else
 // optimized
 ISR_NAKED ISR (ADC_vect) {
     /* note: __zero_reg__ is not used, It can be reused on some other user assembler code */ 
     asm volatile(
-        "__my_zero_reg__ = 16" /* non standard, but with push and pop we can use it */ "\t\n"    
-        /* prologue */
-        "	push __my_zero_reg__" "\t\n"
-        "	ldi __my_zero_reg__,0" /* this is longer than clr but not touch flags in SREG */ "\t\n"
-        /* prologue end  */ 
         "	sbi %0,%1" "\t\n"
-        "	sts sleep_with_ADC,__my_zero_reg__" "\t\n"
-        /* epilogue */
-        "	pop __my_zero_reg__" "\t\n"
         "	reti" "\t\n"
         /* epilogue end */
         ::"I" (_SFR_IO_ADDR(task)) , "I" (TASK_ADC_BIT)
