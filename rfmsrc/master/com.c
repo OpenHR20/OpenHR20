@@ -48,14 +48,23 @@
 #include "queue.h"
 
 
-#define TX_BUFF_SIZE 254
-#define RX_BUFF_SIZE 32
+#if defined(_AVR_IOM32_H_)
+    #define TX_BUFF_SIZE 512
+#else 
+    #define TX_BUFF_SIZE 256
+#endif
+#define RX_BUFF_SIZE 64
 
 static char tx_buff[TX_BUFF_SIZE];
 static char rx_buff[RX_BUFF_SIZE];
 
-static uint8_t tx_buff_in=0;
-static uint8_t tx_buff_out=0;
+#if (TX_BUFF_SIZE>256)
+    static uint16_t tx_buff_in=0;
+    static uint16_t tx_buff_out=0;
+#else
+    static uint8_t tx_buff_in=0;
+    static uint8_t tx_buff_out=0;
+#endif
 static uint8_t rx_buff_in=0;
 static uint8_t rx_buff_out=0;
 
@@ -552,6 +561,7 @@ void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok) {
                 break;
             case 'D':
             case 'A':
+            case 'M':
                 COM_putchar(d[0]);
                 len-=10;
                 if (len<0) {

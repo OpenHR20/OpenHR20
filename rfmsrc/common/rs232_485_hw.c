@@ -1,7 +1,7 @@
 /*
  *  Open HR20
  *
- *  target:     ATmega169 in Honnywell Rondostat HR20E / ATmega8
+ *  target:     ATmega169 in Honnywell Rondostat HR20E / ATmega32
  *
  *  compiler:   WinAVR-20071221
  *              avr-libc 1.6.0
@@ -56,20 +56,20 @@
 ISR(USART0_RX_vect)
 #elif defined(_AVR_IOM169_H_)
 ISR(USART0_RX_vect)
-#elif defined(_AVR_IOM16_H_)
+#elif defined(_AVR_IOM16_H_) || defined(_AVR_IOM32_H_)
 ISR(USART_RXC_vect)
 #endif
 {
 	#ifdef _AVR_IOM169P_H_
 		COM_rx_char_isr(UDR0);	// Add char to input buffer
 		UCSR0B &= ~(_BV(RXEN0)|_BV(RXCIE0)); // disable receive
-	#elif defined(_AVR_IOM169_H_) || defined(_AVR_IOM16_H_)
+	#elif defined(_AVR_IOM169_H_) || defined(_AVR_IOM16_H_) || defined(_AVR_IOM32_H_)
 		COM_rx_char_isr(UDR);	// Add char to input buffer
 		#if !defined(MASTER_CONFIG_H)
 			UCSRB &= ~(_BV(RXEN)|_BV(RXCIE)); // disable receive
 		#endif
 	#endif
-	#if !defined(_AVR_IOM16_H_)
+	#if !defined(_AVR_IOM16_H_) && !defined(_AVR_IOM32_H_)
     PCMSK0 |= (1<<PCINT0); // activate interrupt
   #endif
 }
@@ -84,7 +84,7 @@ ISR(USART_RXC_vect)
  ******************************************************************************/
 #ifdef _AVR_IOM169P_H_
 ISR(USART0_UDRE_vect)
-#elif defined(_AVR_IOM169_H_) || defined(_AVR_IOM16_H_)
+#elif defined(_AVR_IOM169_H_) || defined(_AVR_IOM16_H_)  || defined(_AVR_IOM32_H_)
 ISR(USART_UDRE_vect)
 #endif
 {
@@ -93,7 +93,7 @@ ISR(USART_UDRE_vect)
 	{
 		#ifdef _AVR_IOM169P_H_
 			UDR0 = c;
-		#elif defined(_AVR_IOM169_H_) || defined(_AVR_IOM16_H_)
+		#elif defined(_AVR_IOM169_H_) || defined(_AVR_IOM16_H_) || defined(_AVR_IOM32_H_)
 			UDR = c;
 		#endif
 	}
@@ -103,7 +103,7 @@ ISR(USART_UDRE_vect)
 			UCSR0B &= ~(_BV(UDRIE0));
 			UCSR0A |= _BV(TXC0); // clear interrupt flag
 			UCSR0B |= (_BV(TXCIE0));
-		#elif defined(_AVR_IOM169_H_) || defined(_AVR_IOM16_H_)
+		#elif defined(_AVR_IOM169_H_) || defined(_AVR_IOM16_H_) || defined(_AVR_IOM32_H_)
 			UCSRB &= ~(_BV(UDRIE));
 			UCSRA |= _BV(TXC); // clear interrupt flag
 			UCSRB |= (_BV(TXCIE));
@@ -121,7 +121,7 @@ ISR(USART_UDRE_vect)
 ISR(USART0_TX_vect)
 #elif defined(_AVR_IOM169_H_)
 ISR(USART0_TX_vect)
-#elif defined(_AVR_IOM16_H_)
+#elif defined(_AVR_IOM16_H_) || defined(_AVR_IOM32_H_)
 ISR(USART_TXC_vect)
 #endif
 {
@@ -131,7 +131,7 @@ ISR(USART_TXC_vect)
 	#endif
 	#ifdef _AVR_IOM169P_H_
 		UCSR0B &= ~(_BV(TXCIE0)|_BV(TXEN0));
-	#elif defined(_AVR_IOM169_H_) || defined(_AVR_IOM16_H_)
+	#elif defined(_AVR_IOM169_H_) || defined(_AVR_IOM16_H_) || defined(_AVR_IOM32_H_)
 		UCSRB &= ~(_BV(TXCIE)|_BV(TXEN));
 	#endif
 }
@@ -155,11 +155,11 @@ void RS_Init(void)
 		UBRR0H = (unsigned char)(ubrr_val>>8);
 		UBRR0L = (unsigned char)(ubrr_val & 0xFF);
 		UCSR0C = (_BV(UCSZ00) | _BV(UCSZ01));     // Asynchron 8N1 
-	#elif defined(_AVR_IOM169_H_) || defined(_AVR_IOM16_H_)
+	#elif defined(_AVR_IOM169_H_) || defined(_AVR_IOM16_H_) || defined(_AVR_IOM32_H_)
 		UCSRA = _BV(U2X);
 		UBRRH = (unsigned char)(ubrr_val>>8);
 		UBRRL = (unsigned char)(ubrr_val & 0xFF);
-		#if defined(_AVR_IOM16_H_)
+		#if defined(_AVR_IOM16_H_) || defined(_AVR_IOM32_H_)
             UCSRC = (1<<URSEL) | (_BV(UCSZ0) | _BV(UCSZ1));     // Asynchron 8N1
             #if defined(MASTER_CONFIG_H)
 			  UCSRB = _BV(RXCIE) | _BV(RXEN);
@@ -170,7 +170,7 @@ void RS_Init(void)
 	#else
 		#error 'your CPU is not supported !'
 	#endif
-	#if !defined(_AVR_IOM16_H_)
+	#if !defined(_AVR_IOM16_H_) && !defined(_AVR_IOM32_H_)
     PCMSK0 |= (1<<PCINT0); // activate interrupt
   #endif
 }
@@ -197,7 +197,7 @@ void RS_startSend(void)
 			UCSR0B |= _BV(UDRIE0) | _BV(TXEN0);
 			// UDR0 = COM_tx_char_isr(); // done in interrupt
 		}
-	#elif defined(_AVR_IOM169_H_) || defined(_AVR_IOM16_H_)
+	#elif defined(_AVR_IOM169_H_) || defined(_AVR_IOM16_H_) || defined(_AVR_IOM32_H_)
 		if ((UCSRB & _BV(UDRIE))==0) {
 			UCSRB &= ~(_BV(TXCIE));
 			UCSRA |= _BV(TXC); // clear interrupt flag

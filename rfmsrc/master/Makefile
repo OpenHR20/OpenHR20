@@ -46,7 +46,7 @@
 #           command line parameters for "avr-size" on Linux and Windows.
 
 # MCU name
-MCU = atmega16
+MCU = atmega32
 
 # Processor frequency.
 #     This will define a symbol, F_CPU, in all source code files equal to the 
