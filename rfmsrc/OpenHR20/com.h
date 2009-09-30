@@ -55,7 +55,7 @@ void COM_debug_print_temperature(uint16_t t);
     void COM_dump_packet(uint8_t *d, uint8_t len, bool mac_ok);
     // void COM_mac_ok(void);
 #else 
-    #define COM_dump_packet(d,len, mac_ok) ()
+    #define COM_dump_packet(d, len, mac_ok)
     // #define COM_mac_ok() ()
 #endif
 #if DEBUG_PRINT_ADDITIONAL_TIMESTAMPS

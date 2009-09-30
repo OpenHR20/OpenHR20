@@ -68,12 +68,20 @@ extern uint8_t wl_force_addr1;
 extern uint8_t wl_force_addr2;
 extern uint32_t wl_force_flags;
 
-#define WLTIME_SYNC (RTC_TIMER_CALC(950))  // prepare to receive timesync / slave only 
-#define WLTIME_START (RTC_TIMER_CALC(50)) // communication start
-#define WLTIME_TIMEOUT (RTC_TIMER_CALC(100)) // slave RX timeout
-#define WLTIME_SYNC_TIMEOUT (RTC_TIMER_CALC(150)) // slave RX timeout
-#define WLTIME_STOP (RTC_TIMER_CALC(800)) // last possible communication
-#define WLTIME_LED_TIMEOUT (RTC_TIMER_CALC(300)) // slave RX timeout
+#if !defined(MASTER_CONFIG_H)
+#define WLTIME_SYNC (0xfe)  // prepare to receive timesync / slave only 
+#define WLTIME_START (RTC_TIMER_CALC(10)) // communication start
+#define WLTIME_TIMEOUT (RTC_TIMER_CALC(80)) // slave RX timeout
+#define WLTIME_SYNC_TIMEOUT (RTC_TIMER_CALC(20)) // slave RX timeout
+#define WLTIME_STOP (RTC_TIMER_CALC(900)) // last possible communication
+#endif
+#define WLTIME_LED_TIMEOUT (RTC_TIMER_CALC(300)) // packet blink time
+
+/* this allow to ignore defined sync packets
+ * it is allowed only if last received sync not contain any communication request
+ */  
+#define WL_SKIP_SYNC 3
+extern uint8_t wl_skip_sync;
 
 #if !defined(MASTER_CONFIG_H)
 typedef enum {

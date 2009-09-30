@@ -1,6 +1,9 @@
 <?php
 
+
 // NOTE: this file is hudge dirty hack, will be rewriteln
+
+$maxDebugLines = 1000;
 
 function weights($char) {
     $weights_table = array (
@@ -96,7 +99,7 @@ while(($line=fgets($fp,256))!==FALSE) {
     	    $debug=false;
     	    // echo "data req addr $addr\n";
     	    $db->query("BEGIN TRANSACTION");
-    	    $result = $db->query("SELECT id,data FROM command_queue WHERE addr=".($addr&0x7f)." ORDER BY time LIMIT 20");
+    	    $result = $db->query("SELECT id,data FROM command_queue WHERE addr=".($addr&0x7f)." ORDER BY time LIMIT 25");
     	    $weight=0;
     	    $bank=0;
     	    $send=0;
@@ -106,7 +109,7 @@ while(($line=fgets($fp,256))!==FALSE) {
     	       $weight += $cw;
                weights($row['data']{0});
     	       if ($weight>10) {
-                    if (++$bank>=3) break;
+                    if (++$bank>=7) break;
                     $weight=$cw;
                }
     	       $r = sprintf("(%02x-%x)%s\n",$addr,$bank,$row['data']);
@@ -212,6 +215,8 @@ while(($line=fgets($fp,256))!==FALSE) {
     if ($debug) { //debug log
     	echo $line."\n"; 
     	$db->query("INSERT INTO debug_log (time,addr,data) VALUES (".time().",$addr,\"$line\")");
+	$deleteThld = $db->lastInsertRowid()-$maxDebugLines;
+	$db->query("DELETE FROM debug_log WHERE id<$deleteThld");	
     }
 	// echo "         duration ".(microtime(true)-$ts)."\n";
 } 

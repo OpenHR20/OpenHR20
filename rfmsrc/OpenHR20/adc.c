@@ -91,10 +91,9 @@ static void update_ring(uint8_t type, int16_t value) {
 	ring_sum[type]+=value;
 	if (ring_used>=AVERAGE_LEN) {
 		ring_sum[type]-=ring_buf[type][ring_pos];
+		ring_average[type] = (int16_t) (ring_sum[type]/(int32_t)(AVERAGE_LEN));
 	}
-		
 	ring_buf[type][ring_pos]=value;
-	ring_average[type] = (int16_t) (ring_sum[type]/(int32_t)(AVERAGE_LEN));
 }
 
 

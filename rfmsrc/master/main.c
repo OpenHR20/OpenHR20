@@ -160,17 +160,15 @@ int __attribute__ ((noreturn)) main(void)
                     wireless_putchar((RTC_GetMonth()<<4) + (d>>3)); 
                     wireless_putchar((d<<5) + RTC_GetHour());
                     wireless_putchar((RTC_GetMinute()<<1) + ((RTC_GetSecond()==30)?1:0));
-                    if (wl_force_addr1>0) {
+                    if (wl_force_addr1!=0xfe) {
                         if (wl_force_addr1==0xff) {
                             wireless_putchar(((uint8_t*)&wl_force_flags)[0]);
                             wireless_putchar(((uint8_t*)&wl_force_flags)[1]);
                             wireless_putchar(((uint8_t*)&wl_force_flags)[2]);
                             wireless_putchar(((uint8_t*)&wl_force_flags)[3]);
                         } else {
-                            if (RTC_GetSecond()==30) {
-                                wireless_putchar(wl_force_addr1);
-                                wireless_putchar(wl_force_addr2);
-                            }
+                            wireless_putchar(wl_force_addr1);
+                            wireless_putchar(wl_force_addr2);
                         }
                     }
                     wirelessSendSync();

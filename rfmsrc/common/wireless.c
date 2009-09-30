@@ -198,6 +198,8 @@ void wirelessTimer(void) {
             RFM_OFF();
         }
         break;
+	default:
+		break;
     }
     wirelessTimerCase = WL_TIMER_NONE;
 #else
@@ -286,7 +288,10 @@ void wirelessSendSync(void) {
 
 uint8_t wl_packet_bank=0;
 #else
-int8_t time_sync_tmo=0;
+	int8_t time_sync_tmo=0;
+	#if (WL_SKIP_SYNC)
+		uint8_t wl_skip_sync=0;
+	#endif
 #endif
 
 /*!
@@ -312,17 +317,19 @@ void wirelessReceivePacket(void) {
                         rfm_mode = rfmmode_stop;
                         RFM_OFF();
                         RTC_timer_destroy(WL_TIMER_RX_TMO);
+
                         if (rfm_framebuf[0]==0x8b) {
                             wl_force_addr1=rfm_framebuf[5];
                             wl_force_addr2=rfm_framebuf[6];
                         } else if (rfm_framebuf[0]==0x8d) {
                             wl_force_addr1=0xff;
-                            wl_force_addr2=0xff;
+                            // wl_force_addr2=0xff;
                             memcpy(&wl_force_flags,rfm_framebuf+5,4);
                         } else {
-                            wl_force_addr1=0; 
-                            wl_force_addr2=0;
-                        }
+							#if (WL_SKIP_SYNC)
+								wl_skip_sync=WL_SKIP_SYNC;
+							#endif
+						}
                         time_sync_tmo=10;
             		    CTL_error &= ~CTL_ERR_RFM_SYNC;
                         RTC_s256=8; 
@@ -345,8 +352,8 @@ void wirelessReceivePacket(void) {
                     encrypt_decrypt (rfm_framebuf+2, rfm_framepos-2-4);
                     RTC.pkt_cnt++;
                     COM_dump_packet(rfm_framebuf, rfm_framepos,mac_ok);
-                    uint8_t addr = rfm_framebuf[1];
                     #if defined(MASTER_CONFIG_H)
+						uint8_t addr = rfm_framebuf[1];
                         if (mac_ok) {
                           LED_on();
                           RTC_timer_set(RTC_TIMER_RFM, (uint8_t)(RTC_s100 + WLTIME_LED_TIMEOUT));    

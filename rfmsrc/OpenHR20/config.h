@@ -58,12 +58,14 @@ In this file we define only configuration parameters, for example what kind of c
 //#define LANG LANG_de
 //#define LANG LANG_cs
 
+#define BATT_ERROR_REVERSIBLE 0
+
 #define _STR(x) #x
 #define STR(x) _STR(x)
 
 // our Version
 #define REVHIGH  0  //! Revision number high
-#define REVLOW   04 //! Revision number low
+#define REVLOW   05 //! Revision number low
 #define VERSION_N (0xE000 + REVLOW + (REVHIGH<<8)) //! Version as HEX value F0.92 (E for Experimental)
 
 

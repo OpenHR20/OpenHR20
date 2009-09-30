@@ -72,3 +72,8 @@ $db = new SQLiteDatabase("/usb/home/db.sqlite");
   $refresh_value=15; // refresh time for command queue pending wait 
 
   $chart_hours = 12; // chart contain values from last 12 hours
+
+  $warnig_age = 12*60; // maximum data age for warning
+
+  $error_age = 60*60; // maximum data age for error
+  

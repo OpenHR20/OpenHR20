@@ -42,6 +42,18 @@ table, th, td, tr {
   border-spacing: 0px;
 }
 
+td.ok {
+  background-color: green;
+}
+
+td.warning {
+  background-color: yellow;
+}
+
+td.error {
+  background-color: red;
+}
+
 th {
   background-color: yellow;
 }

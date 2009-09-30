@@ -224,7 +224,11 @@ int __attribute__ ((noreturn)) main(void)
                 cli(); RTC_timer_done&=~_BV(RTC_TIMER_OVF); sei();
                 bool minute = RTC_AddOneSecond();
                 valve_wanted = CTL_update(minute,valve_wanted);
-                if (minute && (RTC_GetDayOfWeek()==6) && (RTC_GetHour()==10) && (RTC_GetMinute()==0)) {
+                if (minute
+				&& ((CTL_error &  (CTL_ERR_BATT_LOW | CTL_ERR_BATT_WARNING)) == 0)
+			    && (RTC_GetDayOfWeek()==6)
+				&& (RTC_GetHour()==10) 
+				&& (RTC_GetMinute()==0)) {
                     // every sunday 10:00AM
                     // TODO: improve this code!
                     // valve protection / CyCL
@@ -262,8 +266,15 @@ int __attribute__ ((noreturn)) main(void)
     				    && (time_sync_tmo>1)
                         && ((RTC_GetSecond() == 59) || (RTC_GetSecond() == 29)))
                     {
-                        wirelessTimerCase = WL_TIMER_SYNC;
-                        RTC_timer_set(RTC_TIMER_RFM, WLTIME_SYNC);
+						#if (WL_SKIP_SYNC)
+							if (wl_skip_sync!=0) {
+								wl_skip_sync--;
+							} else 
+						#endif
+							{
+								wirelessTimerCase = WL_TIMER_SYNC;
+                        		RTC_timer_set(RTC_TIMER_RFM, WLTIME_SYNC);
+							}
                     }
                 #endif
                 MOTOR_updateCalibration(mont_contact_pooling());

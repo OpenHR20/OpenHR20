@@ -138,16 +138,22 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
         COM_print_debug(valve);
     }
     // batt error detection
-    if (bat_average < 20*(uint16_t)config.bat_low_thld) {
-        CTL_error |=  CTL_ERR_BATT_LOW | CTL_ERR_BATT_WARNING;
-    } else {
-        if (bat_average < 20*(uint16_t)config.bat_warning_thld) {
-            CTL_error |=  CTL_ERR_BATT_WARNING;
-            CTL_error &= ~CTL_ERR_BATT_LOW;
-        } else {
-            CTL_error &= ~(CTL_ERR_BATT_WARNING|CTL_ERR_BATT_LOW);
-        }
-    }
+    if (bat_average) { 
+		if (bat_average < 20*(uint16_t)config.bat_low_thld) {
+    	    CTL_error |=  CTL_ERR_BATT_LOW | CTL_ERR_BATT_WARNING;
+	    } else {
+	        if (bat_average < 20*(uint16_t)config.bat_warning_thld) {
+	            CTL_error |=  CTL_ERR_BATT_WARNING;
+				#if (BATT_ERROR_REVERSIBLE)
+	            	CTL_error &= ~CTL_ERR_BATT_LOW;
+				#endif
+	        } else {
+				#if (BATT_ERROR_REVERSIBLE)
+	            	CTL_error &= ~(CTL_ERR_BATT_WARNING|CTL_ERR_BATT_LOW);
+				#endif
+	        }
+	    }
+	}
     
     return valve;
 }

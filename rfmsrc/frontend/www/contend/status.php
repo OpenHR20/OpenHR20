@@ -100,17 +100,26 @@ class contend_status extends contend {
 	  $result = $db->query("SELECT * FROM log WHERE addr=$k ORDER BY time DESC LIMIT 1");
 	  echo "<tr><td><a href=\"?page=status&amp;addr=$k\">$v</a></td>";
 	  if ($row = $result->fetch()) {
-	    echo "<td>".format_time($row['time'])."</td><td>";
+	    $age=time()-$row['time'];
+	    /* if ($age > $GLOBALS['error_age']) {
+        $age_t=' class="error"';
+      } else if ($age > $GLOBALS['warning_age']) {
+        $age_t=' class="warning"';
+      }  else {
+        $age_t='';
+        // $age_t=' class="ok"';
+      } */
+	    echo "<td$age_t>".format_time($row['time'])."</td><td>";
 	    echo   '<input type="radio" name="auto_mode_'.$k.'" value="AUTO"'.(($row['mode']=='AUTO')?' checked="checked"':'').'> AUTO<br />';
 	    echo   '<input type="radio" name="auto_mode_'.$k.'" value="MANU"'.(($row['mode']=='MANU')?' checked="checked"':'').'> MANU';
 	    echo "</td><td>".$row['valve']."</td>";
 	    echo "<td>".($row['real']/100)."&deg;C</td>";
 	    echo '<td><input type="text" name="w_temp_'.$k.'" maxlength="5" size="6" value="'.($row['wanted']/100).'" /></td>';
 	    echo "<td>".($row['battery']/1000)."V</td>";
-	    echo "<td>".$row['error']."</td>";
+	    echo "<td".(($row['error'])?' class="error"':'').">".$row['error']."</td>";
 	    echo "<td>".(($row['window'])?"open":"close")."</td>";
 	  } else {
-	    echo "<td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>";
+	    echo '<td class="error">NA</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>';
 	  }
 	  echo "</tr>";
 	}
