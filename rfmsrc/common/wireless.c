@@ -49,9 +49,17 @@
 
 uint8_t Keys[5*8]; // 40 bytes
 
-#define WIRELESS_BUF_MAX (RFM_FRAME_MAX-(4+4+2))
+#define WIRELESS_BUF_MAX (RFM_FRAME_MAX-(4+2+4))
 
 static uint8_t wireless_framebuf[WIRELESS_BUF_MAX];
+/* buffer structure:
+ * 4 bytes preamble
+ * 2 bytes header
+ * x bytes data
+ * 4 bytes signature
+ * not realy in buffer, 2 bytes virtual dummy
+ */
+      
 uint8_t wireless_buf_ptr=0;
 
 static uint8_t Km_upper[8] PROGMEM = {
@@ -241,9 +249,9 @@ static void wirelessSendPacket(bool cpy) {
     encrypt_decrypt (rfm_framebuf+6, rfm_framesize - 4-2);
     cmac_calc(rfm_framebuf+5,rfm_framesize-5,(uint8_t*)&RTC,false);
     RTC.pkt_cnt++;
-    rfm_framesize+=4; //MAC
-	rfm_framebuf[rfm_framesize++] = 0xaa; // dummy byte
-	rfm_framebuf[rfm_framesize++] = 0xaa; // dummy byte
+    rfm_framesize+=4+2; //4 MAC + 2 dummy
+	// rfm_framebuf[rfm_framesize++] = 0xaa; // dummy byte is not significant
+	// rfm_framebuf[rfm_framesize++] = 0xaa; // dummy byte is not significant
 
 	rfm_framepos  = 0;
 	rfm_mode = rfmmode_tx;
@@ -274,10 +282,10 @@ void wirelessSendSync(void) {
 
 	cmac_calc(rfm_framebuf+5,wireless_buf_ptr,NULL,false);
 	
-	rfm_framesize=wireless_buf_ptr+4+1+4;
+	rfm_framesize=wireless_buf_ptr+4+1+4+2; // 4 preamble 1 length 4 signature 2 dummy
 
-	rfm_framebuf[rfm_framesize++] = 0xaa; // dummy byte
-	rfm_framebuf[rfm_framesize++] = 0xaa; // dummy byte
+	// rfm_framebuf[rfm_framesize++] = 0xaa; // dummy byte is not significant
+	// rfm_framebuf[rfm_framesize++] = 0xaa; // dummy byte is not significant
 
 	rfm_framepos  = 0;
 	rfm_mode    = rfmmode_tx;
@@ -432,12 +440,13 @@ void wirelesTimeSyncCheck(void) {
 #endif
 
 #if ! defined(MASTER_CONFIG_H)
+bool wireless_async = false;
 /*!
  *******************************************************************************
  *  wireless put one byte into buffer
  ******************************************************************************/
-void wireless_putchar(bool sync, uint8_t b) {
-  if (sync) {
+void wireless_putchar(uint8_t b) {
+  if (! wireless_async) {
     // synchronous buffer
     if (rfm_framesize<RFM_FRAME_MAX-4-2) {
         rfm_framebuf[rfm_framesize++] = b;

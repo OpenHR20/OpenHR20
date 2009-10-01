@@ -237,7 +237,7 @@ static void print_version(bool sync) {
 	for (c = pgm_read_byte(s); c; ++s, c = pgm_read_byte(s)) {
       COM_putchar(c);
       #if RFM==1
-        if (sync) wireless_putchar(sync,c);
+        if (sync) wireless_putchar(c);
       #endif
    	}
 }
@@ -310,21 +310,25 @@ void COM_print_debug(int8_t valve) {
 	COM_flush();
 #if (RFM==1)
     bool sync = (valve==-2);
-    if (!sync) wireless_putchar(sync,'D');
-	wireless_putchar(sync,
+    if (!sync) {
+        wireless_async=true;
+        wireless_putchar('D');
+    }
+	wireless_putchar(
            RTC_GetMinute() 
         | (CTL_test_auto()?0x40:0)
         | ((CTL_mode_auto)?0x80:0));
-	wireless_putchar(sync,
+	wireless_putchar(
            RTC_GetSecond()
         | ((mode_window())?0x40:0));
-	wireless_putchar(sync,CTL_error);
-	wireless_putchar(sync,temp_average >> 8); // current temp
-	wireless_putchar(sync,temp_average & 0xff);
-	wireless_putchar(sync,bat_average >> 8); // current temp
-	wireless_putchar(sync,bat_average & 0xff);
-	wireless_putchar(sync,CTL_temp_wanted); // wanted temp
-	wireless_putchar(sync,(valve>=0) ? valve : valve_wanted); // valve pos
+	wireless_putchar(CTL_error);
+	wireless_putchar(temp_average >> 8); // current temp
+	wireless_putchar(temp_average & 0xff);
+	wireless_putchar(bat_average >> 8); // current temp
+	wireless_putchar(bat_average & 0xff);
+	wireless_putchar(CTL_temp_wanted); // wanted temp
+	wireless_putchar((valve>=0) ? valve : valve_wanted); // valve pos
+	wireless_async=false;
 	rfm_start_tx();
 #endif
     
@@ -507,9 +511,9 @@ void COM_commad_parse (void) {
 }
 
 #if RFM==1
-static COM_wireless_word(bool sync, uint16_t w) {
-    wireless_putchar(sync,w>>8);
-    wireless_putchar(sync,w&0xff); 
+static void COM_wireless_word(uint16_t w) {
+    wireless_putchar(w>>8);
+    wireless_putchar(w&0xff); 
 }
 
 /*!
@@ -521,7 +525,7 @@ void COM_wireless_command_parse (uint8_t * rfm_framebuf, uint8_t rfm_framepos) {
     uint8_t pos=0;
     while (rfm_framepos>pos) {
 		uint8_t c=rfm_framebuf[pos++];
-		wireless_putchar(true,c|0x80);
+		wireless_putchar(c|0x80);
         switch(c) {
 		case 'V':
 			print_version(true);
@@ -530,8 +534,8 @@ void COM_wireless_command_parse (uint8_t * rfm_framebuf, uint8_t rfm_framepos) {
 			COM_print_debug(-2);
 			break;
 		case 'T':
-		    wireless_putchar(true,rfm_framebuf[pos]);
-  			COM_wireless_word(true,watch(rfm_framebuf[pos]));
+		    wireless_putchar(rfm_framebuf[pos]);
+  			COM_wireless_word(watch(rfm_framebuf[pos]));
 			pos++;
             break;
 		case 'G':
@@ -542,11 +546,11 @@ void COM_wireless_command_parse (uint8_t * rfm_framebuf, uint8_t rfm_framepos) {
   					eeprom_config_save(rfm_framebuf[pos]);
   				}
 			}
-		    wireless_putchar(true,rfm_framebuf[pos]);
+		    wireless_putchar(rfm_framebuf[pos]);
 			if (rfm_framebuf[pos]==0xff) {
-			     wireless_putchar(true,EE_LAYOUT);
+			     wireless_putchar(EE_LAYOUT);
             } else {
-			     wireless_putchar(true,config_raw[rfm_framebuf[pos]]);
+			     wireless_putchar(config_raw[rfm_framebuf[pos]]);
 			}
 			if (c=='S') pos++;
 			pos++;
@@ -561,8 +565,8 @@ void COM_wireless_command_parse (uint8_t * rfm_framebuf, uint8_t rfm_framepos) {
                     (rfm_framebuf[pos+1])>>4);
 				CTL_update_temp_auto();
 			}
-		    wireless_putchar(true,rfm_framebuf[pos]);
-			COM_wireless_word(true,eeprom_timers_read_raw(
+		    wireless_putchar(rfm_framebuf[pos]);
+			COM_wireless_word(eeprom_timers_read_raw(
                 timers_get_raw_index((rfm_framebuf[pos]>>4),(rfm_framebuf[pos]&0xf))));
 			if (c=='W') pos+=2;
 			pos++;

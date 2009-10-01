@@ -72,25 +72,25 @@ OBJDIR = obj
 
 
 # List C source files here. (C dependencies are automatically generated.)
-SRC = main.c \
-adc.c \
-lcd.c \
-rtc.c \
-motor.c \
-eeprom.c \
-keyboard.c \
-menu.c \
-rs232_485_hw.c \
-com.c \
-watch.c \
-controller.c \
-rfm.c \
-cmac.c \
-wireless.c
+# order of this files have effect on code size (relaxing), therefore it divided to 2 parts
+SRC =  \
+    motor.c \
+    controller.c \
+    rs232_485_hw.c \
+    watch.c \
+    com.c \
+    wireless.c \
+    rfm.c \
+    cmac.c \
 
-
-# List C++ source files here. (C dependencies are automatically generated.)
-CPPSRC = 
+SRC_B =  \
+    rtc.c \
+    main.c \
+    keyboard.c \
+    adc.c \
+    eeprom.c \
+    menu.c \
+    lcd.c \
 
 
 # List Assembler source files here.
@@ -139,13 +139,6 @@ CDEFS = -DF_CPU=$(F_CPU)UL
 ADEFS = -DF_CPU=$(F_CPU)
 
 
-# Place -D or -U options here for C++ sources
-CPPDEFS = -DF_CPU=$(F_CPU)UL
-#CPPDEFS += -D__STDC_LIMIT_MACROS
-#CPPDEFS += -D__STDC_CONSTANT_MACROS
-
-
-
 #---------------- Compiler Options C ----------------
 #  -g*:          generate debugging information
 #  -O*:          optimization level
@@ -178,33 +171,6 @@ CFLAGS += -Wl,--relax
 #CFLAGS += --param inline-call-cost=2 
 #CFLAGS += -ffunction-sections
 CFLAGS += -fdata-sections
-
-#---------------- Compiler Options C++ ----------------
-#  -g*:          generate debugging information
-#  -O*:          optimization level
-#  -f...:        tuning, see GCC manual and avr-libc documentation
-#  -Wall...:     warning level
-#  -Wa,...:      tell GCC to pass this to the assembler.
-#    -adhlns...: create assembler listing
-CPPFLAGS = -g$(DEBUG)
-CPPFLAGS += $(CPPDEFS)
-CPPFLAGS += -O$(OPT)
-CPPFLAGS += -funsigned-char
-CPPFLAGS += -funsigned-bitfields
-CPPFLAGS += -fpack-struct
-CPPFLAGS += -fshort-enums
-CPPFLAGS += -fno-exceptions
-CPPFLAGS += -Wall
-CFLAGS += -Wundef
-#CPPFLAGS += -mshort-calls
-#CPPFLAGS += -fno-unit-at-a-time
-#CPPFLAGS += -Wstrict-prototypes
-#CPPFLAGS += -Wunreachable-code
-#CPPFLAGS += -Wsign-compare
-CPPFLAGS += -Wa,-adhlns=$(<:%.cpp=$(OBJDIR)/%.lst)
-CPPFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
-#CPPFLAGS += $(CSTANDARD)
-
 
 #---------------- Assembler Options ----------------
 #  -Wa,...:   tell GCC to pass this to the assembler.
@@ -278,6 +244,7 @@ LDFLAGS += $(patsubst %,-L%,$(EXTRALIBDIRS))
 LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
 #LDFLAGS += -T linker_script.x
 #LDFLAGS += --relax
+#LDFLAGS += --combine -fwhole-program
 
 
 #---------------- Programming Options (avrdude) ----------------
@@ -381,7 +348,6 @@ MSG_EXTENDED_LISTING = Creating Extended Listing:
 MSG_SYMBOL_TABLE = Creating Symbol Table:
 MSG_LINKING = Linking:
 MSG_COMPILING = Compiling C:
-MSG_COMPILING_CPP = Compiling C++:
 MSG_ASSEMBLING = Assembling:
 MSG_CLEANING = Cleaning project:
 MSG_CREATING_LIBRARY = Creating library:
@@ -390,10 +356,10 @@ MSG_CREATING_LIBRARY = Creating library:
 
 
 # Define all object files.
-OBJ = $(SRC:%.c=$(OBJDIR)/%.o) $(CPPSRC:%.cpp=$(OBJDIR)/%.o) $(ASRC:%.S=$(OBJDIR)/%.o) 
+OBJ = $(SRC:%.c=$(OBJDIR)/%.o) $(ASRC:%.S=$(OBJDIR)/%.o) $(SRC_B:%.c=$(OBJDIR)/%.o) 
 
 # Define all listing files.
-LST = $(SRC:%.c=$(OBJDIR)/%.lst) $(CPPSRC:%.cpp=$(OBJDIR)/%.lst) $(ASRC:%.S=$(OBJDIR)/%.lst) 
+LST = $(SRC:%.c=$(OBJDIR)/%.lst) $(ASRC:%.S=$(OBJDIR)/%.lst) $(SRC_B:%.c=$(OBJDIR)/%.lst)
 
 
 # Compiler flags to generate dependency files.
@@ -403,7 +369,6 @@ GENDEPFLAGS = -MMD -MP -MF .dep/$(@F).d
 # Combine all necessary flags and optional flags.
 # Add target processor to flags.
 ALL_CFLAGS = -mmcu=$(MCU) -I. $(CFLAGS) $(GENDEPFLAGS)
-ALL_CPPFLAGS = -mmcu=$(MCU) -I. -x c++ $(CPPFLAGS) $(GENDEPFLAGS)
 ALL_ASFLAGS = -mmcu=$(MCU) -I. -x assembler-with-cpp $(ASFLAGS)
 
 
@@ -584,21 +549,9 @@ $(OBJDIR)/%.o : %.c
 	$(CC) -c $(ALL_CFLAGS) $< -o $@ 
 
 
-# Compile: create object files from C++ source files.
-$(OBJDIR)/%.o : %.cpp
-	@echo
-	@echo $(MSG_COMPILING_CPP) $<
-	$(CC) -c $(ALL_CPPFLAGS) $< -o $@ 
-
-
 # Compile: create assembler files from C source files.
 %.s : %.c
 	$(CC) -S $(ALL_CFLAGS) $< -o $@
-
-
-# Compile: create assembler files from C++ source files.
-%.s : %.cpp
-	$(CC) -S $(ALL_CPPFLAGS) $< -o $@
 
 
 # Assemble: create object files from assembler source files.
@@ -632,6 +585,11 @@ clean_list :
 	$(REMOVE) $(SRC:.c=.s)
 	$(REMOVE) $(SRC:.c=.d)
 	$(REMOVE) $(SRC:.c=.i)
+	$(REMOVE) $(SRC_B:%.c=$(OBJDIR)/%.o)
+	$(REMOVE) $(SRC_B:%.c=$(OBJDIR)/%.lst)
+	$(REMOVE) $(SRC_B:.c=.s)
+	$(REMOVE) $(SRC_B:.c=.d)
+	$(REMOVE) $(SRC_B:.c=.i)
 	$(REMOVEDIR) .dep
 
 

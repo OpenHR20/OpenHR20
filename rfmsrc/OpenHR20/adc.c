@@ -83,7 +83,7 @@ static void shift_ring(void) {
     }
 	if (ring_used<AVERAGE_LEN) {
 		ring_used++;
-	}
+	} 
 }
 
 static void update_ring(uint8_t type, int16_t value) {

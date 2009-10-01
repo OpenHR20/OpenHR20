@@ -46,17 +46,14 @@ void wirelessReceivePacket(void);
     void wirelessSendSync(void);
     extern uint8_t wl_packet_bank;
 #else
+    extern bool wireless_async;
     void wirelesTimeSyncCheck(void);
 #endif 
 void wirelessSendDone(void);
 void wirelessTimer(void);
 
 #if (RFM==1)
-#if ! defined(MASTER_CONFIG_H)
-void wireless_putchar(bool sync, uint8_t ch);
-#else
 void wireless_putchar(uint8_t ch);
-#endif
 #else
 #define wireless_putchar(sync, ch) 
 #endif
@@ -69,10 +66,10 @@ extern uint8_t wl_force_addr2;
 extern uint32_t wl_force_flags;
 
 #if !defined(MASTER_CONFIG_H)
-#define WLTIME_SYNC (0xfe)  // prepare to receive timesync / slave only 
-#define WLTIME_START (RTC_TIMER_CALC(10)) // communication start
+#define WLTIME_SYNC (0xfd)  // prepare to receive timesync / slave only 
+#define WLTIME_START (RTC_TIMER_CALC(50)) // communication start
 #define WLTIME_TIMEOUT (RTC_TIMER_CALC(80)) // slave RX timeout
-#define WLTIME_SYNC_TIMEOUT (RTC_TIMER_CALC(20)) // slave RX timeout
+#define WLTIME_SYNC_TIMEOUT (RTC_TIMER_CALC(50)) // slave RX timeout
 #define WLTIME_STOP (RTC_TIMER_CALC(900)) // last possible communication
 #endif
 #define WLTIME_LED_TIMEOUT (RTC_TIMER_CALC(300)) // packet blink time
