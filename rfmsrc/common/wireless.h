@@ -69,7 +69,7 @@ extern uint32_t wl_force_flags;
 #define WLTIME_SYNC (0xfd)  // prepare to receive timesync / slave only 
 #define WLTIME_START (RTC_TIMER_CALC(50)) // communication start
 #define WLTIME_TIMEOUT (RTC_TIMER_CALC(80)) // slave RX timeout
-#define WLTIME_SYNC_TIMEOUT (RTC_TIMER_CALC(50)) // slave RX timeout
+#define WLTIME_SYNC_TIMEOUT (RTC_TIMER_CALC(25)) // slave RX timeout
 #define WLTIME_STOP (RTC_TIMER_CALC(900)) // last possible communication
 #endif
 #define WLTIME_LED_TIMEOUT (RTC_TIMER_CALC(300)) // packet blink time

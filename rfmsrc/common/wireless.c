@@ -228,6 +228,7 @@ wirelessTimerCase_t wirelessTimerCase=WL_TIMER_NONE;
 static void wirelessSendPacket(void) {
 #else
 static void wirelessSendPacket(bool cpy) {
+  COM_print_time('S');
 #endif
 	RFM_TX_ON_PRE();
 
@@ -302,15 +303,28 @@ uint8_t wl_packet_bank=0;
 	#endif
 #endif
 
+#if DEBUG_PRINT_ADDITIONAL_TIMESTAMPS
+	static bool debug_R_send=false;
+#endif
 /*!
  *******************************************************************************
  *  wireless receive data packet
  ******************************************************************************/
 void wirelessReceivePacket(void) {
+	#if DEBUG_PRINT_ADDITIONAL_TIMESTAMPS
+		if (!debug_R_send) {
+			COM_print_time('R');
+			debug_R_send=true;
+		}
+	#endif
 	if (rfm_framepos>=1) {
         if ((rfm_framepos >= (rfm_framebuf[0]&0x7f)) 
                 || ((rfm_framebuf[0]&0x7f)>= RFM_FRAME_MAX)  // reject noise
                 || (rfm_framepos >= RFM_FRAME_MAX)) {
+			#if DEBUG_PRINT_ADDITIONAL_TIMESTAMPS
+				debug_R_send=false;
+			#endif
+		
             RFM_INT_DIS(); // disable RFM interrupt
             if (rfm_framepos>(rfm_framebuf[0]&0x7f)) rfm_framepos=(rfm_framebuf[0]&0x7f);
             
@@ -340,7 +354,7 @@ void wirelessReceivePacket(void) {
 						}
                         time_sync_tmo=10;
             		    CTL_error &= ~CTL_ERR_RFM_SYNC;
-                        RTC_s256=8; 
+                        RTC_s256=2; 
                         RTC_SetYear(rfm_framebuf[1]);
                         RTC_SetMonth(rfm_framebuf[2]>>4);
                         RTC_SetDay((rfm_framebuf[3]>>5)+((rfm_framebuf[2]<<3)&0x18));

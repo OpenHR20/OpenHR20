@@ -59,5 +59,5 @@
 #if RFM
     #define DEBUG_DUMP_RFM DEBUG_MODE
 #else 
-    #define DEBUG_DUMP_RFM
+    #define DEBUG_DUMP_RFM 0
 #endif
