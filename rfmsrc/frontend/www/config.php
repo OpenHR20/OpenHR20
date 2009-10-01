@@ -14,7 +14,6 @@ $db = new SQLiteDatabase("/usb/home/db.sqlite");
     0x15 => 'room 5'
   ); */
   $room_name = array (
-    0x04 => 'test',
     0x11 => 'decak',
     0x12 => 'obyvak',
     0x13 => 'loznice',
@@ -73,7 +72,7 @@ $db = new SQLiteDatabase("/usb/home/db.sqlite");
 
   $chart_hours = 12; // chart contain values from last 12 hours
 
-  $warnig_age = 12*60; // maximum data age for warning
+  $warning_age = 8*60; // maximum data age for warning
 
-  $error_age = 60*60; // maximum data age for error
+  $error_age = 20*60; // maximum data age for error
   

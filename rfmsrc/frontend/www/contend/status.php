@@ -101,14 +101,14 @@ class contend_status extends contend {
 	  echo "<tr><td><a href=\"?page=status&amp;addr=$k\">$v</a></td>";
 	  if ($row = $result->fetch()) {
 	    $age=time()-$row['time'];
-	    /* if ($age > $GLOBALS['error_age']) {
+	    if ($age > $GLOBALS['error_age']) {
         $age_t=' class="error"';
       } else if ($age > $GLOBALS['warning_age']) {
         $age_t=' class="warning"';
       }  else {
         $age_t='';
         // $age_t=' class="ok"';
-      } */
+      }
 	    echo "<td$age_t>".format_time($row['time'])."</td><td>";
 	    echo   '<input type="radio" name="auto_mode_'.$k.'" value="AUTO"'.(($row['mode']=='AUTO')?' checked="checked"':'').'> AUTO<br />';
 	    echo   '<input type="radio" name="auto_mode_'.$k.'" value="MANU"'.(($row['mode']=='MANU')?' checked="checked"':'').'> MANU';
