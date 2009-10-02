@@ -61,7 +61,7 @@ void COM_debug_print_temperature(uint16_t t);
 #if DEBUG_PRINT_ADDITIONAL_TIMESTAMPS
     void COM_print_time(uint8_t c);
 #else
-    #define COM_print_time(c) ()
+    #define COM_print_time(c)
 #endif
 
 void COM_putchar(char c);

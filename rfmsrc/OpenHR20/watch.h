@@ -35,5 +35,5 @@
 
 uint16_t watch(uint8_t addr);
 
-#define WATCH_N (0x0c+1)
+#define WATCH_N (10)
 

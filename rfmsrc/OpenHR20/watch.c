@@ -64,27 +64,13 @@ static uint16_t watch_map[WATCH_N] PROGMEM = {
 uint16_t watch(uint8_t addr) {
 	uint16_t p;
 
-	if (addr >= 18) // watch some SRAM variables
-	{
-		switch (addr)
-		{
-			case 18: return 0;
-			case 19: return 0;
-			case 20: return 0;
-			case 21: return 0;
-			case 22: return 0;
-			case 23: return 0xff;
-			default: return 0;
-		}
-	}
-
-	if (addr >= sizeof(watch_map)/2) return 0;
+	if (addr >= WATCH_N) return 0;
 
 	p=pgm_read_word(&watch_map[addr]);
 	if ((p&B_MASK)==B16) { // 16 bit value
 		return *((uint16_t *)(p & ~B_MASK));
 	} else { // 8 bit value
-		return (uint16_t)(*((uint8_t *)(p & ~B_MASK)));
+		return (uint16_t)(*((uint8_t *)(p)));
 	}
 }
 
