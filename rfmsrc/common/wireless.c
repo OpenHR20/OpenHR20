@@ -157,12 +157,12 @@ static void encrypt_decrypt (uint8_t* p, uint8_t len) {
  *  wireless send Done
  ******************************************************************************/
 void wirelessSendDone(void) {
+    RFM_INT_DIS();
     rfm_mode    = rfmmode_stop;
     #if defined(MASTER_CONFIG_H)
         wireless_buf_ptr=0;
     #endif
     rfm_framepos=0;
-    RFM_INT_DIS();
 
     RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
     RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
@@ -189,6 +189,7 @@ void wirelessTimer(void) {
         wirelessSendPacket(true);
         break;
     case WL_TIMER_SYNC:
+        RFM_INT_DIS();
         wl_force_addr1=0;
         wl_force_addr2=0;
         RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
@@ -202,6 +203,7 @@ void wirelessTimer(void) {
         break;
     case WL_TIMER_RX_TMO:
         if (rfm_mode!= rfmmode_tx) {
+            RFM_INT_DIS();
             rfm_mode    = rfmmode_stop;
             RFM_OFF();
         }
@@ -230,6 +232,7 @@ static void wirelessSendPacket(void) {
 static void wirelessSendPacket(bool cpy) {
   COM_print_time('S');
 #endif
+    RFM_INT_DIS();
 	RFM_TX_ON_PRE();
 
     memcpy_P(rfm_framebuf,wl_header,4);    
@@ -274,13 +277,13 @@ uint32_t wl_force_flags;
 
 #if defined(MASTER_CONFIG_H)
 void wirelessSendSync(void) {
+    RFM_INT_DIS();
     RFM_TX_ON_PRE();
     memcpy_P(rfm_framebuf,wl_header,4);
 
 	rfm_framebuf[ 4] = (wireless_buf_ptr+1+4) | 0x80; // length (sync)
 
 	memcpy(rfm_framebuf+5,wireless_framebuf,wireless_buf_ptr);
-
 	cmac_calc(rfm_framebuf+5,wireless_buf_ptr,NULL,false);
 	
 	rfm_framesize=wireless_buf_ptr+4+1+4+2; // 4 preamble 1 length 4 signature 2 dummy
