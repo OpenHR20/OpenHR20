@@ -123,7 +123,17 @@ class contend_status extends contend {
         $bat_c = ''; 
       }
 	    echo "<td$bat_c>".($row['battery']/1000)."V</td>";
-	    echo "<td".(($row['error'])?' class="error"':'').">".$row['error']."</td>";
+	    echo "<td".((($row['error'])&$GLOBALS['error_show'])?' class="error"':'').">";
+	      $errs=0;
+        foreach ($GLOBALS['error_mask'] as $k=>$v) {
+          if ($v & $row['error']) {
+            if ($errs) echo "<br />";
+            echo $k; 
+            $errs++;
+          } 
+        }
+      echo "</td>";
+	    
 	    echo "<td>".(($row['window'])?"open":"close")."</td>";
 	  } else {
 	    echo '<td class="error">NA</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>';
