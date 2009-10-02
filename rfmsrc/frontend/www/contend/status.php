@@ -1,4 +1,5 @@
 <?php
+include_once "error.php";
 
 class contend_status extends contend {
   public $protect = true;
@@ -70,7 +71,6 @@ class contend_status extends contend {
 	echo "<div>Real temperature: ".($row['real']/100)."&deg;C</div>";
 	echo "<div>Wanted temperature: ";
 	echo   '<input type="text" name="w_temp" maxlength="5" size="6" value="'.($row['wanted']/100).'" />&deg;C';
-
 	echo '</div>';
 	echo "<div>Battery: ".($row['battery']/1000)."V</div>";
 	if ($row['error']) echo "<div>error:".$row['error']."</div>";
@@ -115,7 +115,14 @@ class contend_status extends contend {
 	    echo "</td><td>".$row['valve']."</td>";
 	    echo "<td>".($row['real']/100)."&deg;C</td>";
 	    echo '<td><input type="text" name="w_temp_'.$k.'" maxlength="5" size="6" value="'.($row['wanted']/100).'" /></td>';
-	    echo "<td>".($row['battery']/1000)."V</td>";
+      if ($GLOBALS['error_mask']['BAT_E'] & $row['error']) {
+        $bat_c = ' class="error"'; 
+      } else if ($GLOBALS['error_mask']['BAT_W'] & $row['error']) {
+        $bat_c = ' class="warning"'; 
+      } else {
+        $bat_c = ''; 
+      }
+	    echo "<td$bat_c>".($row['battery']/1000)."V</td>";
 	    echo "<td".(($row['error'])?' class="error"':'').">".$row['error']."</td>";
 	    echo "<td>".(($row['window'])?"open":"close")."</td>";
 	  } else {
