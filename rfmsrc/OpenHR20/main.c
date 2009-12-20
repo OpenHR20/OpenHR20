@@ -238,6 +238,12 @@ int __attribute__ ((noreturn)) main(void)
                 #if RFM
                     if (minute) {
                         wirelesTimeSyncCheck();
+                        if (CTL_mode_window) {
+                            CTL_mode_window--;
+                            if (CTL_mode_window==0) {
+                                PID_force_update = 0;
+                            }
+                        }
                     }
     				if ((config.RFM_devaddr!=0)
     				    && (time_sync_tmo>1)
@@ -287,12 +293,13 @@ int __attribute__ ((noreturn)) main(void)
                 menu_view(false); // TODO: move it, it is wrong place
                 LCD_Update(); // TODO: move it, it is wrong place
             }
-            if (RTC_timer_done&_BV(RTC_TIMER_RFM))
-            {   
-                cli(); RTC_timer_done&=~_BV(RTC_TIMER_RFM); sei();
-                wirelessTimer();
-            }
-
+            #if RFM
+              if (RTC_timer_done&_BV(RTC_TIMER_RFM))
+              {   
+                  cli(); RTC_timer_done&=~_BV(RTC_TIMER_RFM); sei();
+                  wirelessTimer();
+              }
+            #endif
             // do not use continue here (menu_auto_update_timeout==0)
         }
 
@@ -388,7 +395,9 @@ static inline void init(void)
 
     eeprom_config_init((~PINB & (KBI_PROG | KBI_C | KBI_AUTO))==(KBI_PROG | KBI_C | KBI_AUTO));
 
+#if RFM
 	crypto_init();
+#endif
 
     //! Initialize the motor
     MOTOR_Init();

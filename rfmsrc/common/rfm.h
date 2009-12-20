@@ -35,7 +35,7 @@
  */
 
 #pragma once // multi-iclude prevention. gcc knows this pragma
-
+#if RFM
 
 #define RFM_SPI_16(OUTVAL)			rfm_spi16(OUTVAL) //<! a function that gets a uint16_t (clocked out value) and returns a uint16_t (clocked in value)
 
@@ -161,6 +161,9 @@
                                 RFM_POWER_MANAGEMENT_EBB | \
                                 RFM_POWER_MANAGEMENT_ES | \
                                 RFM_POWER_MANAGEMENT_EX )
+#ifndef RFM_PERMANENT_CLK
+    #error RFM_PERMANENT_CLK must be defined to 0 or 1
+#endif
 #if RFM_PERMANENT_CLK
     #define RFM_OFF()      RFM_SPI_16( \
                                 RFM_POWER_MANAGEMENT_EX )
@@ -486,3 +489,4 @@ extern rfm_mode_t rfm_mode;
 
 #define rfm_start_tx() (1) 
 // (rfm_mode=rfmmode_start_tx)
+#endif // RFM

@@ -91,3 +91,4 @@ extern volatile uint16_t motor_diag;
 extern int8_t MOTOR_calibration_step;
 extern uint16_t motor_diag_count;
 extern volatile motor_dir_t MOTOR_Dir;          //!< actual direction
+extern volatile uint32_t MOTOR_counter;         //!< count volume of motor pulses for dianostic

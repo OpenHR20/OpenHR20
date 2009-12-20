@@ -87,7 +87,9 @@ In this file we define only configuration parameters, for example what kind of c
 #define DEFAULT_TEMPERATURE 2000 
 
 
-#define RFM 1 //!< define RFM to 1 if you want to have support for the RFM Radio Moodule in the Code
+#ifndef RFM
+    #define RFM 1 //!< define RFM to 1 if you want to have support for the RFM Radio Moodule in the Code
+#endif
 #define RFM_WIRE_MARIOJTAG 0 //!< define that if you want to wire your RFM to external JTAG pins
 #define RFM_WIRE_JD_INTERNAL 1 //!< define that if you want to wire your RFM to free internal pins
 

@@ -86,11 +86,12 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
     /* 23 */ uint8_t window_close_detection_diff; //!< threshold for window close detection unit is 0.1C
     /* 24 */ uint8_t window_open_detection_time;
     /* 25 */ uint8_t window_close_detection_time;
-    /* 26 */ uint8_t allow_ADC_during_motor;
+    /* 26 */ uint8_t window_open_timeout;           //!< maximum time for window open state [minutes]
+    /* 27 */ uint8_t allow_ADC_during_motor;
 #if (RFM==1)
-	/* 27 */ uint8_t RFM_devaddr; //!< HR20's own device address in RFM radio networking. =0 mean disable radio
-	/* 28...2f */ uint8_t security_key[8]; //!< key for encrypted radio messasges
-    /* 30 unused */ 
+	/* 28 */ uint8_t RFM_devaddr; //!< HR20's own device address in RFM radio networking. =0 mean disable radio
+	/* 29...30 */ uint8_t security_key[8]; //!< key for encrypted radio messasges
+    /* 31 unused */ 
 #endif
 
 } config_t;
@@ -111,7 +112,7 @@ extern uint8_t EEPROM ee_layout;
 #define BOOT_ON2      (16*60+0x2000) //!<  16:00
 #define BOOT_OFF2     (21*60+0x1000) //!<  21:00
 
-#define EE_LAYOUT (0xE3) //!< EEPROM layout version (Experimental 1) 
+#define EE_LAYOUT (0xE4) //!< EEPROM layout version (Experimental 4) 
 
 #ifdef __EEPROM_C__
 // this is definition, not just declaration
@@ -203,17 +204,18 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 23 */  {50,         50,        7,      255},   //!< window_close_detection_diff; reshold for window open/close detection unit is 0.01C
   /* 24 */  {8,           8,  1, AVGS_BUFFER_LEN},  //!< window_open_detection_time unit 15sec = 1/4min
   /* 25 */  {8,           8,  1, AVGS_BUFFER_LEN},  //!< window_close_detection_time unit 15sec = 1/4min
-  /* 26 */  {1,           1,        0,        1},   //!< allow_ADC_during_motor
+  /* 26 */  {90,         90,        2,      255},   //!< window_open_timeout
+  /* 27 */  {1,           1,        0,        1},   //!< allow_ADC_during_motor
 #if (RFM==1)
-  /* 27 */  {RFM_DEVICE_ADDRESS, RFM_DEVICE_ADDRESS, 0, 29}, //!< RFM_devaddr: HR20's own device address in RFM radio networking.
-  /* 28 */  {SECURITY_KEY_0, SECURITY_KEY_0, 0x00, 0xff},   //!< security_key[0] for encrypted radio messasges
-  /* 29 */  {SECURITY_KEY_1, SECURITY_KEY_1, 0x00, 0xff},   //!< security_key[1] for encrypted radio messasges
-  /* 2a */  {SECURITY_KEY_2, SECURITY_KEY_2, 0x00, 0xff},   //!< security_key[2] for encrypted radio messasges
-  /* 2b */  {SECURITY_KEY_3, SECURITY_KEY_3, 0x00, 0xff},   //!< security_key[3] for encrypted radio messasges
-  /* 2c */  {SECURITY_KEY_4, SECURITY_KEY_4, 0x00, 0xff},   //!< security_key[4] for encrypted radio messasges
-  /* 2d */  {SECURITY_KEY_5, SECURITY_KEY_5, 0x00, 0xff},   //!< security_key[5] for encrypted radio messasges
-  /* 2e */  {SECURITY_KEY_6, SECURITY_KEY_6, 0x00, 0xff},   //!< security_key[6] for encrypted radio messasges
-  /* 2f */  {SECURITY_KEY_7, SECURITY_KEY_7, 0x00, 0xff},   //!< security_key[7] for encrypted radio messasges
+  /* 28 */  {RFM_DEVICE_ADDRESS, RFM_DEVICE_ADDRESS, 0, 29}, //!< RFM_devaddr: HR20's own device address in RFM radio networking.
+  /* 29 */  {SECURITY_KEY_0, SECURITY_KEY_0, 0x00, 0xff},   //!< security_key[0] for encrypted radio messasges
+  /* 2a */  {SECURITY_KEY_1, SECURITY_KEY_1, 0x00, 0xff},   //!< security_key[1] for encrypted radio messasges
+  /* 2b */  {SECURITY_KEY_2, SECURITY_KEY_2, 0x00, 0xff},   //!< security_key[2] for encrypted radio messasges
+  /* 2c */  {SECURITY_KEY_3, SECURITY_KEY_3, 0x00, 0xff},   //!< security_key[3] for encrypted radio messasges
+  /* 2d */  {SECURITY_KEY_4, SECURITY_KEY_4, 0x00, 0xff},   //!< security_key[4] for encrypted radio messasges
+  /* 2e */  {SECURITY_KEY_5, SECURITY_KEY_5, 0x00, 0xff},   //!< security_key[5] for encrypted radio messasges
+  /* 2f */  {SECURITY_KEY_6, SECURITY_KEY_6, 0x00, 0xff},   //!< security_key[6] for encrypted radio messasges
+  /* 30 */  {SECURITY_KEY_7, SECURITY_KEY_7, 0x00, 0xff},   //!< security_key[7] for encrypted radio messasges
 #endif
 };
 #endif //__EEPROM_C__

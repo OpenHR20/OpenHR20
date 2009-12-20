@@ -48,7 +48,7 @@ uint8_t CTL_temp_wanted=0;   // actual desired temperature
 uint8_t CTL_temp_wanted_last=0xff;   // desired temperature value used for last PID control
 uint8_t CTL_temp_auto=0;   // actual desired temperature by timer
 bool CTL_mode_auto=true;   // actual desired temperature by timer
-bool CTL_mode_window = false; // open window
+uint8_t CTL_mode_window = 0; // open window (0=closed, >0 open-timmer)
 uint16_t CTL_open_window_timeout;
 
 static uint16_t PID_update_timeout=16;   // timer to next PID controler action/first is 16 sec after statup 
@@ -75,12 +75,12 @@ static void CTL_window_detection(void) {
     }
     if ((temp_average-min) > (int16_t) config.window_close_detection_diff) {
         if (CTL_mode_window) {
-            CTL_mode_window=false;
+            CTL_mode_window=0;
             PID_force_update = 0; 
         }  
     } else {
         if (!CTL_mode_window && ((max-temp_average) > (int16_t) config.window_open_detection_diff)) {
-            CTL_mode_window=true;
+            CTL_mode_window=config.window_open_timeout;
             PID_force_update = 0; 
         }
     }

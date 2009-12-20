@@ -36,6 +36,8 @@
 #include "../common/xtea.h"
 #include "../common/wireless.h"
 
+#if RFM
+
 bool cmac_calc (uint8_t* m, uint8_t bytes, uint8_t* data_prefix, bool check) {
 /*   reference: http://csrc.nist.gov/publications/nistpubs/800-38B/SP_800-38B.pdf
  *   1.Let Mlen = message length in bits
@@ -93,3 +95,6 @@ bool cmac_calc (uint8_t* m, uint8_t bytes, uint8_t* data_prefix, bool check) {
         ); 
     #endif
 }
+
+#endif // RFM
+            

@@ -55,7 +55,7 @@ void wirelessTimer(void);
 #if (RFM==1)
 void wireless_putchar(uint8_t ch);
 #else
-#define wireless_putchar(sync, ch) 
+#define wireless_putchar(ch) 
 #endif
 
 

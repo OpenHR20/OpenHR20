@@ -149,6 +149,7 @@ ADEFS = -DF_CPU=$(F_CPU)
 CFLAGS = -g$(DEBUG)
 CFLAGS += $(CDEFS)
 CFLAGS += $(REV)
+CFLAGS += $(RFM)
 CFLAGS += -O$(OPT)
 CFLAGS += -funsigned-char
 CFLAGS += -funsigned-bitfields

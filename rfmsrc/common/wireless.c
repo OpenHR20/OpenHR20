@@ -46,6 +46,7 @@
     #include "controller.h"
 #endif
 
+#if RFM
 
 uint8_t Keys[5*8]; // 40 bytes
 
@@ -479,3 +480,5 @@ void wireless_putchar(uint8_t b) {
     }
   }
 } 
+
+#endif // RFM
