@@ -198,6 +198,7 @@ void wirelessTimer(void) {
         RFM_RX_ON();
         RFM_SPI_SELECT; // set nSEL low: from this moment SDO indicate FFIT or RGIT
         RFM_INT_EN(); // enable RFM interrupt
+        rfm_framepos=0;
       	rfm_mode = rfmmode_rx;
         wirelessTimerCase = WL_TIMER_RX_TMO;
         RTC_timer_set(RTC_TIMER_RFM, (uint8_t)(RTC_s256 + WLTIME_SYNC_TIMEOUT));    
@@ -377,7 +378,6 @@ void wirelessReceivePacket(void) {
             			RTC_SetMinute(rfm_framebuf[4]>>1);
             			RTC_SetSecond((rfm_framebuf[4]&1)?30:00);
                         cli(); RTC_timer_done&=~_BV(RTC_TIMER_OVF); sei();
-                        rfm_framepos=0;
                         return;
                     }
                 } else 
@@ -410,6 +410,11 @@ void wirelessReceivePacket(void) {
                         if (mac_ok && (rfm_framebuf[1]==0)) { // Accept commands from master only
                           wireless_buf_ptr=0;
                           RTC_timer_destroy(WL_TIMER_RX_TMO);
+                          if (rfm_framepos==4+2) { // empty packet don't need reply
+                            rfm_mode = rfmmode_stop;
+                            RFM_OFF();
+                            return;
+                          }
                           rfm_framesize=4+2;
                           {
                               // !! hack

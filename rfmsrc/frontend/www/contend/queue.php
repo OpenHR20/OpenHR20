@@ -38,14 +38,14 @@ class contend_queue extends contend {
 
       if ($_GET['read_eeprom']==1) {
 	$cmd[] = "Gff";
-	for ($i=0; $i<0x2e; $i++) {
+	for ($i=0; $i<0x31; $i++) {
 	    $cmd[] = sprintf ("G%02x",$i);
 	}
       }
 
       if ($_GET['read_trace']==1) {
 	$cmd[] = "Tff";
-	for ($i=0; $i<=9; $i++) {
+	for ($i=0; $i<=11; $i++) {
 	    $cmd[] = sprintf ("T%02x",$i);
 	}	
       }
