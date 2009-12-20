@@ -65,7 +65,7 @@ In this file we define only configuration parameters, for example what kind of c
 
 // our Version
 #define REVHIGH  0  //! Revision number high
-#define REVLOW   05 //! Revision number low
+#define REVLOW   06 //! Revision number low
 #define VERSION_N (0xE000 + REVLOW + (REVHIGH<<8)) //! Version as HEX value F0.92 (E for Experimental)
 
 

@@ -68,7 +68,7 @@
 #define RFM_NIRQ_BITPOS		2
 */
 
-#define RFM_PERMANENT_CLK 1
+#define RFM_CLK_OUTPUT 1
 
 void INT2_vect(void);
 

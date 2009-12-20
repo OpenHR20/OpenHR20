@@ -93,7 +93,7 @@
 	#define RFM_SDO_PCINT		PCINT6
 #endif
 
-#define RFM_PERMANENT_CLK 0
+#define RFM_CLK_OUTPUT 0
 
 void PCINT0_vect(void);
 

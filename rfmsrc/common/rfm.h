@@ -149,26 +149,41 @@
 #define RFM_POWER_MANAGEMENT_EW  0x8202 // Enable wake-up timer
 #define RFM_POWER_MANAGEMENT_DC  0x8201 // Disable clock output of CLK pin
 
-#define RFM_TX_ON_PRE()    RFM_SPI_16( \
+#ifndef RFM_CLK_OUTPUT
+    #error RFM_CLK_OUTPUT must be defined to 0 or 1
+#endif
+#if RFM_CLK_OUTPUT
+    #define RFM_TX_ON_PRE() RFM_SPI_16( \
                                 RFM_POWER_MANAGEMENT_ES | \
                                 RFM_POWER_MANAGEMENT_EX )    
-#define RFM_TX_ON()        RFM_SPI_16( \
+    #define RFM_TX_ON()     RFM_SPI_16( \
                                 RFM_POWER_MANAGEMENT_ET | \
                                 RFM_POWER_MANAGEMENT_ES | \
                                 RFM_POWER_MANAGEMENT_EX )    
-#define RFM_RX_ON()        RFM_SPI_16( \
+    #define RFM_RX_ON()     RFM_SPI_16( \
                                 RFM_POWER_MANAGEMENT_ER | \
                                 RFM_POWER_MANAGEMENT_EBB | \
                                 RFM_POWER_MANAGEMENT_ES | \
                                 RFM_POWER_MANAGEMENT_EX )
-#ifndef RFM_PERMANENT_CLK
-    #error RFM_PERMANENT_CLK must be defined to 0 or 1
-#endif
-#if RFM_PERMANENT_CLK
-    #define RFM_OFF()      RFM_SPI_16( \
+    #define RFM_OFF()       RFM_SPI_16( \
                                 RFM_POWER_MANAGEMENT_EX )
 #else
-    #define RFM_OFF()      RFM_SPI_16(RFM_POWER_MANAGEMENT)
+    #define RFM_TX_ON_PRE() RFM_SPI_16( \               
+                                RFM_POWER_MANAGEMENT_DC | \
+                                RFM_POWER_MANAGEMENT_ES | \
+                                RFM_POWER_MANAGEMENT_EX )    
+    #define RFM_TX_ON()     RFM_SPI_16( \
+                                RFM_POWER_MANAGEMENT_DC | \
+                                RFM_POWER_MANAGEMENT_ET | \
+                                RFM_POWER_MANAGEMENT_ES | \
+                                RFM_POWER_MANAGEMENT_EX )    
+    #define RFM_RX_ON()     RFM_SPI_16( \
+                                RFM_POWER_MANAGEMENT_DC  | \
+                                RFM_POWER_MANAGEMENT_ER | \
+                                RFM_POWER_MANAGEMENT_EBB | \
+                                RFM_POWER_MANAGEMENT_ES | \
+                                RFM_POWER_MANAGEMENT_EX )
+    #define RFM_OFF()       RFM_SPI_16(RFM_POWER_MANAGEMENT_DC)
 #endif
 ///////////////////////////////////////////////////////////////////////////////
 //

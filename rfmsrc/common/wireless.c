@@ -322,9 +322,20 @@ void wirelessReceivePacket(void) {
 		}
 	#endif
 	if (rfm_framepos>=1) {
-        if ((rfm_framepos >= (rfm_framebuf[0]&0x7f)) 
-                || ((rfm_framebuf[0]&0x7f)>= RFM_FRAME_MAX)  // reject noise
+	    if (((rfm_framebuf[0]&0x7f)>= RFM_FRAME_MAX)  // reject noise
+	            || ((rfm_framebuf[0]&0x7f)<4+2)
                 || (rfm_framepos >= RFM_FRAME_MAX)) {
+                // reject invalid data
+			#if DEBUG_PRINT_ADDITIONAL_TIMESTAMPS
+				debug_R_send=false;
+    			COM_putchar('\n');
+	            COM_flush();
+			#endif
+			rfm_framepos=0;
+			return; // !!! return !!!
+		}
+                
+        if (rfm_framepos >= (rfm_framebuf[0]&0x7f)) { 
 			#if DEBUG_PRINT_ADDITIONAL_TIMESTAMPS
 				debug_R_send=false;
 			#endif
@@ -332,7 +343,7 @@ void wirelessReceivePacket(void) {
             RFM_INT_DIS(); // disable RFM interrupt
             if (rfm_framepos>(rfm_framebuf[0]&0x7f)) rfm_framepos=(rfm_framebuf[0]&0x7f);
             
-            if (rfm_framepos>=2+4) {
+            {
                 bool mac_ok;
                 #if ! defined(MASTER_CONFIG_H)
                 if ((rfm_framebuf[0]&0x80) == 0x80) {
@@ -368,7 +379,7 @@ void wirelessReceivePacket(void) {
                         cli(); RTC_timer_done&=~_BV(RTC_TIMER_OVF); sei();
                         rfm_framepos=0;
                         return;
-                        }
+                    }
                 } else 
                 #endif
                 {
@@ -399,25 +410,19 @@ void wirelessReceivePacket(void) {
                         if (mac_ok && (rfm_framebuf[1]==0)) { // Accept commands from master only
                           wireless_buf_ptr=0;
                           RTC_timer_destroy(WL_TIMER_RX_TMO);
-                          if (rfm_framepos >6) {
-                            rfm_framesize=4+2;
-                            {
-                                // !! it need comments, hack
-                                uint8_t i;
-                                uint8_t j=RFM_FRAME_MAX-1;
-                                for (i=rfm_framepos-5;i>=2;i--) {
-                                    rfm_framebuf[j--] = rfm_framebuf[i];
-                                }
-                            }
-                            COM_wireless_command_parse(rfm_framebuf+RFM_FRAME_MAX+6-rfm_framepos, rfm_framepos-6);
-                            wirelessSendPacket(false);
-                            return;
-                          } else {                         
-                              rfm_framepos=0;
-                			  rfm_mode = rfmmode_stop;
-                              RFM_OFF();
-                              return;
+                          rfm_framesize=4+2;
+                          {
+                              // !! hack
+                              // move input to top of buffer, begining of buffer will be used for output
+                              uint8_t i;
+                              uint8_t j=RFM_FRAME_MAX-1;
+                              for (i=rfm_framepos-5;i>=2;i--) {
+                                  rfm_framebuf[j--] = rfm_framebuf[i];
+                              }
                           }
+                          COM_wireless_command_parse(rfm_framebuf+RFM_FRAME_MAX+6-rfm_framepos, rfm_framepos-6);
+                          wirelessSendPacket(false);
+                          return;
                         }
                     #endif
                 }

@@ -360,14 +360,14 @@ static inline void init(void)
 
 #if (RFM_WIRE_MARIOJTAG == 1)
     DDRE  = (1<<PE3)|                  (1<<PE1); // ACTLIGHTEYE | TXD
-	PORTE =                   (1<<PE2)|(1<<PE1)|(1<<PE0); // RFMSDO(pullup) | TXD | RXD
+	PORTE =                            (1<<PE1)|(1<<PE0); // TXD | RXD
 	//PORTE =                            (1<<PE1)|(1<<PE0); // TXD | RXD
 	DDRF  =          (1<<PF6)|(1<<PF5)|(1<<PF4)|(1<<PF3); // RFMSDI | RFMNSEL | RFMSCK | ACTTEMPSENS
     PORTF = (1<<PF7)|         (1<<PF5); // JTAGTDI | RFMNSEL;
 
 #elif (RFM_WIRE_JD_INTERNAL == 1)
     DDRE  = (1<<PE3)|(1<<PE2)|(1<<PE1);  // PE3  activate lighteye
-	PORTE = (1<<PE6)|(1<<PE1)|(1<<PE0);  // RFMSDO(pullup) | TXD | RXD(pullup)
+	PORTE = (1<<PE1)|(1<<PE0);  // TXD | RXD(pullup)
     DDRF  = (1<<PF0)|(1<<PF1)|(1<<PF3);  // RFMSDI | RFMSCK | PF3  activate tempsensor
     PORTF = 0xf0;
     PORTA = (1<<PA3); // RFMnSEL
