@@ -138,7 +138,8 @@ int __attribute__ ((noreturn)) main(void)
             task&=~TASK_RTC;
             {
                 wl_packet_bank=0;
-                bool minute = RTC_AddOneSecond();
+                RTC_AddOneSecond();
+                bool minute=(RTC_GetSecond()==0);
                 if (RTC_GetSecond()<30) {
                     Q_clean(RTC_GetSecond());
                 } else {

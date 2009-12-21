@@ -377,7 +377,7 @@ void wirelessReceivePacket(void) {
             			RTC_SetHour(rfm_framebuf[3]&0x1f);
             			RTC_SetMinute(rfm_framebuf[4]>>1);
             			RTC_SetSecond((rfm_framebuf[4]&1)?30:00);
-                        cli(); RTC_timer_done&=~_BV(RTC_TIMER_OVF); sei();
+                        cli(); RTC_timer_done&=~_BV(RTC_TIMER_RTC); sei();
                         return;
                     }
                 } else 

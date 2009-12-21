@@ -47,7 +47,8 @@
 #define	HAS_CALIBRATE_RCO     0
 
 //! RTC high precision timers
-#define RTC_TIMER_OVF 0 // 
+#define RTC_TIMER_OVF 0 //
+#define RTC_TIMER_RTC 7 //
 #if defined(MASTER_CONFIG_H)
     #if (RFM==1)
         #define RTC_TIMER_RFM 1
@@ -138,7 +139,7 @@ bool RTC_DowTimerSet(rtc_dow_t, uint8_t, uint16_t, timermode_t timermode); // se
 uint16_t RTC_DowTimerGet(rtc_dow_t dow, uint8_t slot, timermode_t *timermode);
 uint8_t RTC_ActualTimerTemperature(bool exact);
 int32_t RTC_DowTimerGetHourBar(uint8_t dow);
-bool RTC_AddOneSecond(void);
+void RTC_AddOneSecond(void);
 
 extern uint8_t RTC_timer_done;
 extern uint8_t RTC_timer_todo;

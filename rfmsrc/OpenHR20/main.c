@@ -219,10 +219,14 @@ int __attribute__ ((noreturn)) main(void)
 
         if (task & TASK_RTC) {
             task&=~TASK_RTC;
-            if (RTC_timer_done&_BV(RTC_TIMER_OVF))
+            if (RTC_timer_done&_BV(RTC_TIMER_RTC))
             {   
-                cli(); RTC_timer_done&=~_BV(RTC_TIMER_OVF); sei();
-                bool minute = RTC_AddOneSecond();
+                RTC_AddOneSecond();
+            }
+            if (RTC_timer_done&(_BV(RTC_TIMER_OVF)|_BV(RTC_TIMER_RTC)))
+            {   
+                cli(); RTC_timer_done&=~(_BV(RTC_TIMER_OVF)|_BV(RTC_TIMER_RTC)); sei();
+                bool minute=(RTC_GetSecond()==0);
                 valve_wanted = CTL_update(minute,valve_wanted);
                 if (minute) {
                     if (((CTL_error &  (CTL_ERR_BATT_LOW | CTL_ERR_BATT_WARNING)) == 0)

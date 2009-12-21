@@ -63,7 +63,9 @@ int16_t MOTOR_PosMax=0;      /*!< position if complete open (100%) <BR>
                                           0 if not calibrated */
 static volatile int16_t MOTOR_PosStop;     //!< stop at this position
 volatile motor_dir_t MOTOR_Dir;          //!< actual direction
-volatile uint32_t MOTOR_counter;         //!< count volume of motor pulses for dianostic
+#if DEBUG_MOTOR_COUNTER
+    uint32_t MOTOR_counter;         //!< count volume of motor pulses for dianostic
+#endif
 // bool MOTOR_Mounted;         //!< mountstatus true: if valve is mounted
 int8_t MOTOR_calibration_step=-2; // not calib$rated
 volatile uint16_t motor_diag = 0;
@@ -382,7 +384,9 @@ ISR (PCINT0_vect){
             if (dur > (config.motor_eye_high<<1)) {
                 if (longest_low_eye > (config.motor_eye_low<<1)) {
                     MOTOR_PosAct+=MOTOR_Dir;
-                    MOTOR_counter++;
+                    #if DEBUG_MOTOR_COUNTER
+                        MOTOR_counter++;
+                    #endif
                     motor_diag = motor_diag_cnt;
                     longest_low_eye=0;
                     motor_diag_cnt=0;

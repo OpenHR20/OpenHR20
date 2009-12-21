@@ -168,7 +168,7 @@
     #define RFM_OFF()       RFM_SPI_16( \
                                 RFM_POWER_MANAGEMENT_EX )
 #else
-    #define RFM_TX_ON_PRE() RFM_SPI_16( \               
+    #define RFM_TX_ON_PRE() RFM_SPI_16( \
                                 RFM_POWER_MANAGEMENT_DC | \
                                 RFM_POWER_MANAGEMENT_ES | \
                                 RFM_POWER_MANAGEMENT_EX )    

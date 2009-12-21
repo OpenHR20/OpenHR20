@@ -377,7 +377,7 @@ uint8_t RTC_ActualTimerTemperature(bool exact) {
  *
  *  \returns true if minutes changed, false otherwise  
  ******************************************************************************/
-bool RTC_AddOneSecond(void)
+void RTC_AddOneSecond(void)
 {
 #ifdef RTC_TICKS
     RTC_Ticks++;          // overflow every 136 Years
@@ -411,9 +411,7 @@ bool RTC_AddOneSecond(void)
                 }
 			}
         }
-        return true;
  	}
- 	return false;
 }
 
 
@@ -614,7 +612,7 @@ void RTC_timer_set(uint8_t timer_id, uint8_t time) {
     // not optimized
     ISR(TIMER2_OVF_vect) {
         task |= TASK_RTC;   // increment second and check Dow_Timer
-        RTC_timer_done |= _BV(RTC_TIMER_OVF);
+        RTC_timer_done |= _BV(RTC_TIMER_OVF) | _BV(RTC_TIMER_RTC);
     }
     #else
     // optimized
@@ -636,7 +634,7 @@ void RTC_timer_set(uint8_t timer_id, uint8_t time) {
             "	pop __my_tmp_reg__" "\n"
             "	reti" "\n"
             /* epilogue end */
-            ::"I" (_SFR_IO_ADDR(task)) , "I" (TASK_RTC_BIT), "I" (_BV(RTC_TIMER_OVF))
+            ::"I" (_SFR_IO_ADDR(task)) , "I" (TASK_RTC_BIT), "M" (_BV(RTC_TIMER_OVF)|_BV(RTC_TIMER_RTC))
         );
     }
     #endif 

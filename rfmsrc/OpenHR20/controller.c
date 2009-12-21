@@ -133,9 +133,9 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
             } else {
                 valve = pid_Controller(calc_temp(temp),temp_average,valve);
             }
+            COM_print_debug(valve);
         } 
-        PID_force_update = -1;
-        COM_print_debug(valve);
+        PID_force_update = -1; // invalid value = not used
     }
     // batt error detection
     if (bat_average) { 
