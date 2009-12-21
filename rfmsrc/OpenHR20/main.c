@@ -224,27 +224,28 @@ int __attribute__ ((noreturn)) main(void)
                 cli(); RTC_timer_done&=~_BV(RTC_TIMER_OVF); sei();
                 bool minute = RTC_AddOneSecond();
                 valve_wanted = CTL_update(minute,valve_wanted);
-                if (minute
-				&& ((CTL_error &  (CTL_ERR_BATT_LOW | CTL_ERR_BATT_WARNING)) == 0)
-			    && (RTC_GetDayOfWeek()==6)
-				&& (RTC_GetHour()==10) 
-				&& (RTC_GetMinute()==0)) {
-                    // every sunday 10:00AM
-                    // TODO: improve this code!
-                    // valve protection / CyCL
-                    sumError=0;
-                    MOTOR_updateCalibration(0);
-                }
-                #if RFM
-                    if (minute) {
-                        wirelesTimeSyncCheck();
-                        if (CTL_mode_window) {
-                            CTL_mode_window--;
-                            if (CTL_mode_window==0) {
-                                PID_force_update = 0;
-                            }
+                if (minute) {
+                    if (((CTL_error &  (CTL_ERR_BATT_LOW | CTL_ERR_BATT_WARNING)) == 0)
+    			        && (RTC_GetDayOfWeek()==6)
+    				    && (RTC_GetHour()==10) 
+    				    && (RTC_GetMinute()==0)) {
+                        // every sunday 10:00AM
+                        // TODO: improve this code!
+                        // valve protection / CyCL
+                        sumError=0;
+                        MOTOR_updateCalibration(0);
+                    }
+                    if (CTL_mode_window!=0) {
+                        CTL_mode_window--;
+                        if (CTL_mode_window==0) {
+                            PID_force_update = 0;
                         }
                     }
+                    #if RFM
+                        wirelesTimeSyncCheck();
+                    #endif
+                }
+                #if RFM
     				if ((config.RFM_devaddr!=0)
     				    && (time_sync_tmo>1)
                         && (

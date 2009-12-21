@@ -60,7 +60,7 @@ uint8_t CTL_error=0;
 
 static void CTL_window_detection(void) {
     uint8_t i = (ring_buf_temp_avgs_pos+AVGS_BUFFER_LEN
-        -((CTL_mode_window)?config.window_close_detection_time:config.window_open_detection_time)
+        -((CTL_mode_window!=0)?config.window_close_detection_time:config.window_open_detection_time)
         )%AVGS_BUFFER_LEN;
     int16_t min = 10000;
     int16_t max = 0;
@@ -74,12 +74,12 @@ static void CTL_window_detection(void) {
         i=(i+1)%AVGS_BUFFER_LEN;
     }
     if ((temp_average-min) > (int16_t) config.window_close_detection_diff) {
-        if (CTL_mode_window) {
+        if (CTL_mode_window!=0) {
             CTL_mode_window=0;
             PID_force_update = 0; 
         }  
     } else {
-        if (!CTL_mode_window && ((max-temp_average) > (int16_t) config.window_open_detection_diff)) {
+        if ((CTL_mode_window==0) && ((max-temp_average) > (int16_t) config.window_open_detection_diff)) {
             CTL_mode_window=config.window_open_timeout;
             PID_force_update = 0; 
         }
@@ -171,7 +171,7 @@ void CTL_temp_change_inc (int8_t ch) {
 	} else if (CTL_temp_wanted>TEMP_MAX+1) {
 		CTL_temp_wanted= TEMP_MAX+1; 
 	}    
-	CTL_mode_window = false;
+	CTL_mode_window = 0;
     PID_force_update = 10; 
 }
 
@@ -202,7 +202,7 @@ void CTL_change_mode(int8_t m) {
     if (CTL_mode_auto && (m != CTL_CHANGE_MODE_REWOKE)) {
         CTL_temp_wanted=(CTL_temp_auto=RTC_ActualTimerTemperature(false));
     }
-    CTL_mode_window = false;
+    CTL_mode_window = 0;
 }
 
 //! Last process value, used to find derivative of process value.
