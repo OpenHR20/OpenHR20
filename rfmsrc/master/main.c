@@ -40,6 +40,7 @@
 #include <avr/sleep.h>
 #include <avr/version.h>
 #include <string.h>
+#include <avr/wdt.h>
 
 // HR20 Project includes
 #include "config.h"
@@ -94,6 +95,7 @@ int __attribute__ ((noreturn)) main(void)
 
 	rfm_framebuf[ 5] = 0; // DEBUG !!!!!!!!!
 
+    wdt_enable(WDTO_2S);
 
 	// We should do the following once here to have valid data from the start
 
@@ -143,6 +145,7 @@ int __attribute__ ((noreturn)) main(void)
                 if (RTC_GetSecond()<30) {
                     Q_clean(RTC_GetSecond());
                 } else {
+                    wdt_reset();  // spare WDT reset (notmaly it is in send data interrupt)
                     if (wl_force_addr1!=0) {
                         if (wl_force_addr1==0xff) {
                             Q_clean(RTC_GetSecond()-30);
@@ -236,6 +239,20 @@ static inline void init(void)
     eeprom_config_init(false);
     
    	crypto_init();
+}
+
+
+/* see to wdt.h for following function */
+//uint8_t mcusr_mirror _attribute_ ((section (".noinit")));
+
+void get_mcusr(void) \
+  __attribute__((naked)) \
+  __attribute__((section(".init3")));
+void get_mcusr(void)
+{
+//  mcusr_mirror = MCUSR;
+  MCUSR = 0;
+  wdt_disable();
 }
 
 /*!

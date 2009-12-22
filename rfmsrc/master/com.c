@@ -104,7 +104,8 @@ static void COM_putchar(char c) {
  *  \note
  ******************************************************************************/
 char COM_tx_char_isr(void) {
-	char c='\0';
+	wdt_reset();
+    char c='\0';
 	if (tx_buff_in!=tx_buff_out) {
 		c=tx_buff[tx_buff_out++];
 		tx_buff_out%=TX_BUFF_SIZE;
