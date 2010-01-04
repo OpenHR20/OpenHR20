@@ -285,7 +285,7 @@ void COM_print_debug(int8_t valve) {
 	print_s_p(PSTR(" I: "));
 	print_decXXXX(temp_average);
 	print_s_p(PSTR(" S: "));
-	if (CTL_temp_wanted_last>TEMP_MAX) {
+	if (CTL_temp_wanted_last>TEMP_MAX+1) {
 		print_s_p(PSTR("BOOT"));
 	} else {
 		print_decXXXX(calc_temp(CTL_temp_wanted_last));

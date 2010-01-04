@@ -49,6 +49,13 @@
 int16_t MOTOR_PosMax;
 
 
+#if DEBUG_MOTOR_COUNTER
+    #define WATCH_LAYOUT 0x81
+#else
+    #define WATCH_LAYOUT 0x01
+#endif
+
+
 static uint16_t watch_map[WATCH_N] PROGMEM = {
     /* 00 */ ((uint16_t) &temp_average) + B16, // temperature 
     /* 01 */ ((uint16_t) &bat_average) + B16,  // battery 
@@ -57,19 +64,20 @@ static uint16_t watch_map[WATCH_N] PROGMEM = {
 	/* 04 */ ((uint16_t) &CTL_temp_wanted_last) +B8,
 	/* 05 */ ((uint16_t) &CTL_temp_auto) +B8,
 	/* 06 */ ((uint16_t) &CTL_mode_auto) +B8,
-	/* 07 */ ((uint16_t) &motor_diag) + B16,
-	/* 08 */ ((uint16_t) &MOTOR_PosMax) + B16,
-	/* 09 */ ((uint16_t) &MOTOR_PosAct) + B16,
+	/* 07 */ ((uint16_t) &CTL_mode_window) + B8,
+	/* 08 */ ((uint16_t) &motor_diag) + B16,
+	/* 09 */ ((uint16_t) &MOTOR_PosMax) + B16,
+	/* 0a */ ((uint16_t) &MOTOR_PosAct) + B16,
 #if DEBUG_MOTOR_COUNTER
-	/* 0a */ ((uint16_t) &MOTOR_counter) + B16,
-	/* 0b */ ((uint16_t) &MOTOR_counter)+ 2 + B16,
+	/* 0b */ ((uint16_t) &MOTOR_counter) + B16,
+	/* 0c */ ((uint16_t) &MOTOR_counter)+ 2 + B16,
 #endif
 };
 
 uint16_t watch(uint8_t addr) {
 	uint16_t p;
 
-	if (addr >= WATCH_N) return 0;
+	if (addr >= WATCH_N) return WATCH_LAYOUT;
 
 	p=pgm_read_word(&watch_map[addr]);
 	if ((p&B_MASK)==B16) { // 16 bit value

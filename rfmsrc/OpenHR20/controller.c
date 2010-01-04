@@ -133,8 +133,8 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
             } else {
                 valve = pid_Controller(calc_temp(temp),temp_average,valve);
             }
-            COM_print_debug(valve);
         } 
+        COM_print_debug(valve);
         PID_force_update = -1; // invalid value = not used
     }
     // batt error detection
@@ -175,8 +175,7 @@ void CTL_temp_change_inc (int8_t ch) {
     PID_force_update = 10; 
 }
 
-static uint8_t menu_temp_rewoke1;
-static uint8_t menu_temp_rewoke2;
+static uint8_t menu_temp_rewoke;
 /*!
  *******************************************************************************
  *  Change controller mode
@@ -185,14 +184,12 @@ static uint8_t menu_temp_rewoke2;
 void CTL_change_mode(int8_t m) {
     if (m == CTL_CHANGE_MODE) {
         // change
-  		menu_temp_rewoke1=CTL_temp_wanted;
-  		menu_temp_rewoke2=CTL_temp_auto; 
+  		menu_temp_rewoke=CTL_temp_auto; 
         CTL_mode_auto=!CTL_mode_auto;
         PID_force_update = 10; 
     } else if (m == CTL_CHANGE_MODE_REWOKE) {
         //rewoke
-  		CTL_temp_wanted=menu_temp_rewoke1;
-  		CTL_temp_auto=menu_temp_rewoke2;
+  		CTL_temp_auto=menu_temp_rewoke;
         CTL_mode_auto=!CTL_mode_auto;
         PID_force_update = 10; 
     } else {
@@ -200,7 +197,7 @@ void CTL_change_mode(int8_t m) {
         PID_force_update = 0; 
     }
     if (CTL_mode_auto && (m != CTL_CHANGE_MODE_REWOKE)) {
-        CTL_temp_wanted=(CTL_temp_auto=RTC_ActualTimerTemperature(false));
+        CTL_temp_auto=0;  //refresh wanted temperature in next step
     }
     CTL_mode_window = 0;
 }
