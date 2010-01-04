@@ -40,6 +40,7 @@
 #include "controller.h"
 #include "motor.h"
 #include "watch.h"
+#include "debug.h"
 
 #define B8 0x0000
 #define B16 0x8000
