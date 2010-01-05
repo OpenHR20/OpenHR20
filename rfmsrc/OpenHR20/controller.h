@@ -51,6 +51,7 @@ void CTL_temp_change_inc (int8_t ch);
 
 #define CTL_CHANGE_MODE        -1
 #define CTL_CHANGE_MODE_REWOKE -2
+#define CTL_CLOSE_WINDOW_FORCE -3
 void CTL_change_mode(int8_t dif);
 
 #define CTL_OPEN_WINDOW_TIMEOUT (30*60) //30 minutes

@@ -193,7 +193,7 @@ void CTL_change_mode(int8_t m) {
         CTL_mode_auto=!CTL_mode_auto;
         PID_force_update = 10; 
     } else {
-        CTL_mode_auto=m;
+        if (m >= 0) CTL_mode_auto=m;
         PID_force_update = 0; 
     }
     if (CTL_mode_auto && (m != CTL_CHANGE_MODE_REWOKE)) {

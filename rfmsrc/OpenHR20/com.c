@@ -403,7 +403,7 @@ static void print_idx(char t, uint8_t i) {
  *  \note   Yyymmdd\n - set, year yy, month mm, day dd; HEX values!!!
  *  \note   Hhhmmss\n - set, hour hh, minute mm, second ss; HEX values!!!
  *  \note   Axx\n - set wanted temperature [unit 0.5C]
- *  \note   Mxx\n - set mode to 0=manu 1=auto
+ *  \note   Mxx\n - set mode and close window (00=manu 01=auto fd=nochange/close window only)
  *	
  ******************************************************************************/
 void COM_commad_parse (void) {

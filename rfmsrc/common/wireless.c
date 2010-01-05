@@ -44,6 +44,7 @@
     #include "queue.h"
 #else
     #include "controller.h"
+    #include "task.h"
 #endif
 
 #if RFM
@@ -369,6 +370,11 @@ void wirelessReceivePacket(void) {
 							#endif
 						}
                         time_sync_tmo=10;
+                        if (RTC_s256>0x80) {
+                            // round to upper number compencastion
+                            cli(); RTC_timer_done|=_BV(RTC_TIMER_OVF); sei();
+                            task&=~TASK_RTC;
+                        }
             		    CTL_error &= ~CTL_ERR_RFM_SYNC;
                         RTC_s256=2; 
                         RTC_SetYear(rfm_framebuf[1]);
@@ -377,7 +383,7 @@ void wirelessReceivePacket(void) {
             			RTC_SetHour(rfm_framebuf[3]&0x1f);
             			RTC_SetMinute(rfm_framebuf[4]>>1);
             			RTC_SetSecond((rfm_framebuf[4]&1)?30:00);
-                        cli(); RTC_timer_done&=~_BV(RTC_TIMER_RTC); sei();
+                        cli(); RTC_timer_done&=~_BV(RTC_TIMER_RTC); sei();  // do not add one second
                         return;
                     }
                 } else 
