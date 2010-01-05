@@ -373,7 +373,7 @@ void wirelessReceivePacket(void) {
                         if (RTC_s256>0x80) {
                             // round to upper number compencastion
                             cli(); RTC_timer_done|=_BV(RTC_TIMER_OVF); sei();
-                            task&=~TASK_RTC;
+                            task|=TASK_RTC;
                         }
             		    CTL_error &= ~CTL_ERR_RFM_SYNC;
                         RTC_s256=2; 
