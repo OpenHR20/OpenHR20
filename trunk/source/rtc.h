@@ -100,6 +100,9 @@ uint8_t RTC_ActualTimerTemperature(bool exact);
 int32_t RTC_DowTimerGetHourBar(uint8_t dow);
 bool RTC_AddOneSecond(void);
 
+#define TCCR2A_INIT ((1<<CS22) | (1<<CS20))     // select precaler: 32.768 kHz / 128 =
+                                        // => 1 sec between each overflow
+
 #if	HAS_CALIBRATE_RCO
 void calibrate_rco(void);
 #endif

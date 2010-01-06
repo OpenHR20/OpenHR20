@@ -127,7 +127,10 @@ int __attribute__ ((noreturn)) main(void)
     for (;;){        
 		// go to sleep with ADC conversion start
 		asm volatile ("cli");
-		if (! task) {
+		if (
+          ! task &&
+          ((ASSR & (_BV(OCR2UB)|_BV(TCN2UB)|_BV(TCR2UB))) == 0) // ATmega169 datasheet chapter 17.8.1
+            ) {
   			// nothing to do, go to sleep
             if(timer0_need_clock() || RS_need_clock()) {
 			    SMCR = (0<<SM1)|(0<<SM0)|(1<<SE); // Idle mode
@@ -151,6 +154,7 @@ int __attribute__ ((noreturn)) main(void)
 			asm volatile ("nop");
 			DEBUG_AFTER_SLEEP(); 
 			SMCR = (1<<SM1)|(1<<SM0)|(0<<SE); // Power-save mode
+			TCCR2A |= TCCR2A_INIT; // If the time between wake-up and reentering sleep mode is less than one TOSC1 cycle, the interrupt will not occur
 		} else {
 			asm volatile ("sei");
 		}

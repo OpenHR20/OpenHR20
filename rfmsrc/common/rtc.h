@@ -66,6 +66,8 @@
         #define RTC_TIMERS 1
     #endif
     #define RTC_TIMER_CALC(t) ((uint8_t)((t*256L)/1000L))
+    #define TCCR2A_INIT ((1<<CS22) | (1<<CS20))     // select precaler: 32.768 kHz / 128 =
+                                        // => 1 sec between each overflow
 #endif
 
 /*****************************************************************************

@@ -174,6 +174,7 @@ void wirelessSendDone(void) {
 
     #if !defined(MASTER_CONFIG_H)
         wirelessTimerCase = WL_TIMER_RX_TMO;
+        while (ASSR & (_BV(TCR2UB))) {;}
         RTC_timer_set(RTC_TIMER_RFM, (uint8_t)(RTC_s256 + WLTIME_TIMEOUT));    
         COM_print_time('r');
     #endif    
@@ -202,6 +203,7 @@ void wirelessTimer(void) {
         rfm_framepos=0;
       	rfm_mode = rfmmode_rx;
         wirelessTimerCase = WL_TIMER_RX_TMO;
+        while (ASSR & (_BV(TCR2UB))) {;}
         RTC_timer_set(RTC_TIMER_RFM, (uint8_t)(RTC_s256 + WLTIME_SYNC_TIMEOUT));    
         break;
     case WL_TIMER_RX_TMO:
@@ -370,13 +372,32 @@ void wirelessReceivePacket(void) {
 							#endif
 						}
                         time_sync_tmo=10;
+                        while (ASSR & (_BV(TCR2UB))) {
+                            ;
+                            /*
+                              Reading of the TCNT2 Register shortly after wake-up from Power-save may give an incorrect
+                              result. Since TCNT2 is clocked on the asynchronous TOSC clock, reading TCNT2 must be
+                              done through a register synchronized to the internal I/O clock domain. Synchronization takes
+                              place for every rising TOSC1 edge.
+                            */
+                        }
                         if (RTC_s256>0x80) {
                             // round to upper number compencastion
+                            RTC_s256=4;
                             cli(); RTC_timer_done|=_BV(RTC_TIMER_OVF); sei();
                             task|=TASK_RTC;
+                            while (ASSR & (_BV(TCN2UB))) {
+                                ;
+                                // wait for clock sync
+                                // it can take 2*1/32768 sec = 61us
+                                // ATmega169 datasheet chapter 17.8.1
+                            } 
+                                
+                        } else {
+                            RTC_s256=2;
                         }
             		    CTL_error &= ~CTL_ERR_RFM_SYNC;
-                        RTC_s256=2; 
+                        GTCCR=_BV(PSR2); 
                         RTC_SetYear(rfm_framebuf[1]);
                         RTC_SetMonth(rfm_framebuf[2]>>4);
                         RTC_SetDay((rfm_framebuf[3]>>5)+((rfm_framebuf[2]<<3)&0x18));

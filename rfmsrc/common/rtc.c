@@ -107,7 +107,7 @@ void RTC_Init(void)
         TIMSK2 &= ~(1<<TOIE2);              // disable OCIE2A and TOIE2
         ASSR = (1<<AS2);                    // Timer2 asynchronous operation
         TCNT2 = 0;                          // clear TCNT2A
-        TCCR2A |= (1<<CS22) | (1<<CS20);    // select precaler: 32.768 kHz / 128 =
+        TCCR2A |= TCCR2A_INIT;    // select precaler: 32.768 kHz / 128 =
                                             // => 1 sec between each overflow
     	
     	// wait for TCN2UB and TCR2UB to be cleared
@@ -590,7 +590,10 @@ void RTC_timer_set(uint8_t timer_id, uint8_t time) {
     #if defined(MASTER_CONFIG_H)
         RTC_next_compare = next;
     #else
-        OCR2A = next;
+        if (OCR2A != next) {
+            while (ASSR & (1<<OCR2UB)) {;} // ATmega169 datasheet chapter 17.8.1
+            OCR2A = next;
+        }
     #endif
     sei();
     #if ! defined(MASTER_CONFIG_H)
@@ -674,7 +677,11 @@ void RTC_timer_set(uint8_t timer_id, uint8_t time) {
                 }
             }
         }
-        OCR2A = next;
+        if (OCR2A != next) {
+            // while (ASSR & (1<<OCR2UB)) {;} // ATmega169 datasheet chapter 17.8.1
+            // waiting is not needed, it not allow timer state machine
+            OCR2A = next;
+        }
         if (RTC_timer_todo==0) TIMSK2 &= ~(1<<OCIE2A);
     }
 #else

@@ -97,8 +97,7 @@ void RTC_Init(void)
     TIMSK2 &= ~(1<<TOIE2);              // disable OCIE2A and TOIE2
     ASSR = (1<<AS2);                    // Timer2 asynchronous operation
     TCNT2 = 0;                          // clear TCNT2A
-    TCCR2A |= (1<<CS22) | (1<<CS20);    // select precaler: 32.768 kHz / 128 =
-                                        // => 1 sec between each overflow
+    TCCR2A |= TCCR2A_INIT;
 	
 	// wait for TCN2UB and TCR2UB to be cleared
     while((ASSR & 0x01) | (ASSR & 0x04));   
