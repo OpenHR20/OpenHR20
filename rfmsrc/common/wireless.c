@@ -386,18 +386,16 @@ void wirelessReceivePacket(void) {
                             RTC_s256=4;
                             cli(); RTC_timer_done|=_BV(RTC_TIMER_OVF); sei();
                             task|=TASK_RTC;
-                            while (ASSR & (_BV(TCN2UB))) {
-                                ;
-                                // wait for clock sync
-                                // it can take 2*1/32768 sec = 61us
-                                // ATmega169 datasheet chapter 17.8.1
-                            } 
-                                
-                        } else {
-                            RTC_s256=2;
                         }
-            		    CTL_error &= ~CTL_ERR_RFM_SYNC;
                         GTCCR=_BV(PSR2); 
+                        RTC_s256=10;
+                        while (ASSR & (_BV(TCN2UB))) {
+                            ;
+                            // wait for clock sync
+                            // it can take 2*1/32768 sec = 61us
+                            // ATmega169 datasheet chapter 17.8.1
+                        } 
+            		    CTL_error &= ~CTL_ERR_RFM_SYNC;
                         RTC_SetYear(rfm_framebuf[1]);
                         RTC_SetMonth(rfm_framebuf[2]>>4);
                         RTC_SetDay((rfm_framebuf[3]>>5)+((rfm_framebuf[2]<<3)&0x18));
