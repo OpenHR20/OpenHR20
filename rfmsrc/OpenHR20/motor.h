@@ -37,9 +37,12 @@
 *   Macros
 *****************************************************************************/
 
+
+#define MOTOR_eye_enable() PORTE |= _BV(PE3); // activate photo eye
+#define MOTOR_eye_disable() PORTE &= ~_BV(PE3); // deactivate photo eye
+#define MOTOR_eye_test() (PORTE & _BV(PE3))
+
 // How is the H-Bridge connected to the AVR?
-#define MOTOR_HR20_PE3     PE3     //!< HR20: pin to activate photo eye
-#define MOTOR_HR20_PE3_P   PORTE   //!< HR20: port to activate photo eye
 
 static inline void MOTOR_H_BRIDGE_open(void) {
    PORTG  =  (1<<PG4);   // PG3 LOW, PG4 HIGH
@@ -54,13 +57,21 @@ static inline void MOTOR_H_BRIDGE_stop(void) {
    PORTB &= ~(1<<PB7);   // PB7 LOW
 }
 
+#define MOTOR_run_test() ((PORTG & ((1<<PG3)|(1<<PG4)))!=0)
 
 //! How many photoeye impulses maximal form one endposition to the other. <BR>
 //! The value measured on a HR20 are 737 to 740 = so more than 1000 should
 //! never occure if it is mounted
 #define	MOTOR_MAX_IMPULSES 1000
 #define	MOTOR_MIN_IMPULSES 100
-#define MOTOR_MAX_VALID_TIMER 20000
+
+/* MOTOR_MAX_VALID_TIMER
+ *  Minimum is 1024  (not recomended)
+ *  Max is 65236 
+ *  value/15625 = time [seconds] 
+ */ 
+#define MOTOR_MAX_VALID_TIMER 20000  
+
 #define MOTOR_IGNORE_IMPULSES       2
 #define DEFAULT_motor_max_time_for_impulse 3072
 #define DEFAULT_motor_eye_noise_protection 120
@@ -78,7 +89,7 @@ typedef enum {
 *****************************************************************************/
 #define MOTOR_Init(void) (MOTOR_updateCalibration(1)) // Init motor control
 void MOTOR_Goto(uint8_t);                     // Goto position in percent
-bool MOTOR_IsCalibrated(void);                // is motor successful calibrated?
+#define MOTOR_IsCalibrated() (MOTOR_calibration_step==0)  // is motor successful calibrated?
 void MOTOR_updateCalibration(uint8_t cal_type);            // reset the calibration 
 uint8_t MOTOR_GetPosPercent(void);  // get percental position of motor (0-100%)
 void MOTOR_timer_stop(void);
@@ -90,5 +101,7 @@ extern volatile int16_t MOTOR_PosAct;
 extern volatile uint16_t motor_diag;
 extern int8_t MOTOR_calibration_step;
 extern uint16_t motor_diag_count;
-extern volatile motor_dir_t MOTOR_Dir;          //!< actual direction
+extern motor_dir_t MOTOR_Dir;          //!< actual direction
+extern volatile uint8_t MOTOR_PosOvershoot;
 extern uint32_t MOTOR_counter;         //!< count volume of motor pulses for dianostic
+

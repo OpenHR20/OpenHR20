@@ -62,7 +62,8 @@ volatile int16_t MOTOR_PosAct=0;      //!< actual position
 int16_t MOTOR_PosMax=0;      /*!< position if complete open (100%) <BR>
                                           0 if not calibrated */
 static volatile int16_t MOTOR_PosStop;     //!< stop at this position
-volatile motor_dir_t MOTOR_Dir;          //!< actual direction
+motor_dir_t MOTOR_Dir;          //!< actual direction for drive motor
+static volatile motor_dir_t MOTOR_Dir_Counter;  //!< actual direction for count pulses
 #if DEBUG_MOTOR_COUNTER
     uint32_t MOTOR_counter;         //!< count volume of motor pulses for dianostic
 #endif
@@ -136,24 +137,14 @@ void MOTOR_updateCalibration(uint8_t cal_type)
  ******************************************************************************/
 uint8_t MOTOR_GetPosPercent(void)
 {
-    if ((MOTOR_PosMax > 10) && (MOTOR_calibration_step==0)){
+    if (MOTOR_IsCalibrated()){
         return (uint8_t) ( (MOTOR_PosAct * 10) / (MOTOR_PosMax/10) );
     } else {
         return 255;
     }
 }
 
-/*!
- *******************************************************************************
- * \returns
- *   - true:  calibration finished succesfully
- *   - false: motor is not calibrated 
- ******************************************************************************/
-bool MOTOR_IsCalibrated(void)
-{
-    return ((MOTOR_PosMax != 0) && (MOTOR_calibration_step==0));
-}
-
+volatile uint8_t MOTOR_PosOvershoot=0; // detected motor overshoot 
 
 /*!
  *******************************************************************************
@@ -167,7 +158,7 @@ bool MOTOR_IsCalibrated(void)
 void MOTOR_Goto(uint8_t percent)
 {
     // works only if calibrated
-    if (MOTOR_calibration_step==0){
+    if (MOTOR_IsCalibrated() && !MOTOR_eye_test()){
         // set stop position
         if (percent == 100) {
             MOTOR_PosStop = MOTOR_PosMax;
@@ -176,24 +167,36 @@ void MOTOR_Goto(uint8_t percent)
         } else {
             // MOTOR_PosMax>>2 and 100>>2 => overload protection
             #if (MOTOR_MAX_IMPULSES>>2)*(100>>2) > INT16_MAX
-             #error OVERLOAD possible
+             #error variable OVERLOAD possible
             #endif
             MOTOR_PosStop = ((int16_t)percent * (MOTOR_PosMax>>2)) / (100>>2);
         }
         // switch motor on
-        if (MOTOR_Dir==stop) {
+        {
             int16_t a=MOTOR_PosAct; // volatile variable optimization
             int16_t s=MOTOR_PosStop; // volatile variable optimization
-            if (a > s){
+            if (a > s+MOTOR_PosOvershoot){
                 MOTOR_Control(close);
-            } else if (a < s){
+            } else if (a < s-MOTOR_PosOvershoot){
                 MOTOR_Control(open);
             }
         }
     }
 }
 
-static motor_dir_t MOTOR_LastDir=stop;
+/*!
+ *******************************************************************************
+ * Set PWM for motor with range check
+ *
+ * \note called by TASK_MOTOR_PULSE event
+ *
+ ******************************************************************************/
+static void MOTOR_pwm_set(int16_t pwm) {
+    if (pwm>config.motor_pwm_max) OCR0A = config.motor_pwm_max;
+    else if (pwm<config.motor_pwm_min) OCR0A = config.motor_pwm_min;
+    else OCR0A = (uint8_t)pwm;
+}
+
 static uint8_t motor_diag_ignore=MOTOR_IGNORE_IMPULSES;
 static uint8_t pine_last=0;
 
@@ -216,38 +219,31 @@ static uint8_t pine_last=0;
  ******************************************************************************/
 static void MOTOR_Control(motor_dir_t direction) {
     if (direction == stop){                             // motor off
-        // photo eye
-        TIMSK0 = 0;                                     // disable interrupt
-        PCMSK0 &= ~(1<<PCINT4);                         // disable interrupt
-            #if DEBUG_PRINT_MOTOR
+            #if (DEBUG_PRINT_MOTOR>1)
                 COM_putchar((PINE & _BV(PE4))?'Y':'y');
             #endif
-        MOTOR_HR20_PE3_P &= ~(1<<MOTOR_HR20_PE3);       // deactivate photo eye
         MOTOR_H_BRIDGE_stop();
-        // stop pwm signal
-        TCCR0A = (1<<WGM00) | (1<<WGM01); // 0b 0000 0011
         MOTOR_Dir = stop;
     } else {                                            // motor on
         if (MOTOR_Dir != direction){
-            if (MOTOR_Dir != MOTOR_LastDir) {
-                motor_diag_cnt=0; last_eye_change=0; longest_low_eye = 0;
-                motor_diag_ignore = MOTOR_IGNORE_IMPULSES;
-                MOTOR_Dir = MOTOR_LastDir;
-            }
-            MOTOR_Dir = direction;
-            // photo eye
-            MOTOR_HR20_PE3_P |= (1<<MOTOR_HR20_PE3);    // activate photo eye
+            MOTOR_eye_enable();
+            motor_diag_cnt=0; last_eye_change=0; longest_low_eye = 0; 
+            motor_diag_ignore = MOTOR_IGNORE_IMPULSES;
+            MOTOR_Dir_Counter = (MOTOR_Dir = direction);
             motor_max_time_for_impulse = ((uint16_t)config.motor_speed *
-                      (((MOTOR_calibration_step == 0))?   
+                      ((MOTOR_IsCalibrated())?   
                             (uint16_t)config.motor_end_detect_run
                             :(uint16_t)config.motor_end_detect_cal) / 100)<<3;
             motor_timer = motor_max_time_for_impulse<<2; // *4 (for motor start-up)
-            TIFR0 = (1<<TOV0);
+            TIFR0 = (1<<TOV0); // clean interrupt flag
             TCNT0 = 0;
             TIMSK0 = (1<<TOIE0); //enable interrupt from timer0 overflow
             pine_last=PINE;
             PCMSK0 |= (1<<PCINT4);  // enable interrupt from eye
-            OCR0A = config.motor_pwm_max;
+            {
+                // pwm startup battery voltage compensation
+                MOTOR_pwm_set((int16_t)(((uint16_t)config.motor_pwm_max * 256) / ((bat_average)/(2600/256))));
+            }
             if ( direction == close) {
                 // set pins of H-Bridge
                 MOTOR_H_BRIDGE_close();
@@ -258,7 +254,7 @@ static void MOTOR_Control(motor_dir_t direction) {
                 MOTOR_H_BRIDGE_open();
                 TCCR0A=(1<<WGM00)|(1<<WGM01)|(1<<COM0A1)|(1<<COM0A0)|(1<<CS00);
             }
-            #if DEBUG_PRINT_MOTOR
+            #if (DEBUG_PRINT_MOTOR>1)
                 COM_putchar((PINE & _BV(PE4))?'X':'x');
             #endif
         }
@@ -273,26 +269,18 @@ static void MOTOR_Control(motor_dir_t direction) {
  *
  ******************************************************************************/
 void MOTOR_timer_pulse(void) {
-    if (motor_diag <= MOTOR_MAX_VALID_TIMER) {
-        if (motor_diag_ignore == 0) {  
-            {
-                int16_t chg = ((int16_t)((motor_diag+4)>>3)- (int16_t)config.motor_speed)
-                        *config.motor_speed_ctl_gain/100;
-                if (chg > config.motor_pwm_max_step) { chg=config.motor_pwm_max_step; }
-                else if (chg < -config.motor_pwm_max_step) chg=-config.motor_pwm_max_step;
-                {
-                    int16_t pwm = OCR0A;
-                    pwm += chg;
-                    if (pwm > config.motor_pwm_max) { pwm=config.motor_pwm_max; }
-                    else if (pwm < config.motor_pwm_min) { pwm=config.motor_pwm_min; }
-                    OCR0A = pwm;
-                }
-            }
-        } else {
-           motor_diag_ignore--;
-        }       
-    } 
-
+    if (motor_diag_ignore == 0) {  
+        {
+            int16_t chg = (((int16_t)((motor_diag+4)>>3)- (int16_t)config.motor_speed)
+                    *config.motor_speed_ctl_gain)/100;
+            if (chg > config.motor_pwm_max_step) { chg=config.motor_pwm_max_step; }
+            else if (chg < -config.motor_pwm_max_step) chg=-config.motor_pwm_max_step;
+            MOTOR_pwm_set(OCR0A + chg);
+        }
+    } else {
+       motor_diag_ignore--;
+    }       
+  
     #if DEBUG_PRINT_MOTOR
         COM_debug_print_motor(MOTOR_Dir, motor_diag, OCR0A);
     #endif
@@ -383,7 +371,8 @@ ISR (PCINT0_vect){
         if ((pine & _BV(PE4))==0) {
             if (dur > (config.motor_eye_high<<1)) {
                 if (longest_low_eye > (config.motor_eye_low<<1)) {
-                    MOTOR_PosAct+=MOTOR_Dir;
+                    MOTOR_PosAct+=MOTOR_Dir_Counter;
+                    if (!MOTOR_run_test()) MOTOR_PosOvershoot++;
                     #if DEBUG_MOTOR_COUNTER
                         MOTOR_counter++;
                     #endif
@@ -394,17 +383,14 @@ ISR (PCINT0_vect){
                     task|=TASK_MOTOR_PULSE;
                     if (MOTOR_PosAct == MOTOR_PosStop) {
                         // motor fast STOP
+                        MOTOR_PosOvershoot=0;
                         MOTOR_H_BRIDGE_stop();
-                        // complete STOP will be done later
-                            TCCR0A = (1<<WGM00) | (1<<WGM01); // 0b 0000 0011
                         task|=(TASK_MOTOR_STOP);
-                        PCMSK0 &= ~(1<<PCINT4); // disable eye interrupt
-                        TIMSK0 = 0; // disable timmer 1 interrupt 
                     } else {
                         motor_timer = motor_max_time_for_impulse;
                     }
                 } else {
-                    #if DEBUG_PRINT_MOTOR
+                    #if (DEBUG_PRINT_MOTOR>1)
                         COM_putchar('~');
                     #endif
                 }
@@ -449,21 +435,31 @@ ISR (PCINT0_vect){
 /*! 
  *******************************************************************************
  * Timer0 overflow interupt
- * runs at 15,625 kHz (variant 1953.125)
+ * runs at 15.625 kHz , see too TCCR0A setting in MOTOR_Control()
  * \note Timer0 is only active if the motor is running
  ******************************************************************************/
 ISR (TIMER0_OVF_vect){
-    if ( motor_timer > 0) {
-        motor_diag_cnt++;
-        motor_timer--;
-    } else {
-        motor_diag = motor_diag_cnt;
-        // motor fast STOP
-        MOTOR_H_BRIDGE_stop();
-        // complete STOP will be done later
-            TCCR0A = (1<<WGM00) | (1<<WGM01); // 0b 0000 0011
-        task|=(TASK_MOTOR_STOP);
+    motor_diag_cnt++;
+    if ((uint8_t)(motor_diag_cnt>>8) >= config.motor_close_eye_timeout) {
+        // stop pwm signal and Timer0
+        TCCR0A = (1<<WGM00) | (1<<WGM01); // 0b 0000 0011
         PCMSK0 &= ~(1<<PCINT4); // disable eye interrupt
         TIMSK0 = 0; // disable timmer 1 interrupt 
+
+        // photo eye
+        MOTOR_eye_disable();
+        task&=~(TASK_MOTOR_PULSE); // just ensurance
+        MOTOR_H_BRIDGE_stop(); // ensurance that motor is stop 
+    } else {
+        if ( motor_timer > 0) {
+            motor_timer--;
+        } else {
+            if (MOTOR_run_test()) {
+                motor_diag = motor_diag_cnt;
+                // motor fast STOP
+                task|=(TASK_MOTOR_STOP);
+                MOTOR_H_BRIDGE_stop();
+            }
+        }
     }
 }

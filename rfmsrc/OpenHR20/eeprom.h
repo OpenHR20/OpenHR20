@@ -65,33 +65,34 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
     /* 0e */ uint8_t motor_pwm_max;  //!< max PWM for motor
     /* 0f */ uint8_t motor_eye_low;  //!< min signal lenght to accept low level (multiplied by 2)
     /* 10 */ uint8_t motor_eye_high; //!< min signal lenght to accept high level (multiplied by 2)
-    /* 11 */ uint8_t motor_end_detect_cal; //!< stop timer threshold in % to previous average 
-    /* 12 */ uint8_t motor_end_detect_run; //!< stop timer threshold in % to previous average 
-    /* 13 */ uint8_t motor_speed; //!< /8 
-    /* 14 */ uint8_t motor_speed_ctl_gain;
-    /* 15 */ uint8_t motor_pwm_max_step;
-    /* 16 */ uint8_t MOTOR_ManuCalibration_L;
-    /* 17 */ uint8_t MOTOR_ManuCalibration_H;
-    /* 18 */ uint8_t temp_cal_table0; //!< temperature calibration table
-    /* 19 */ uint8_t temp_cal_table1; //!< temperature calibration table
-    /* 1a */ uint8_t temp_cal_table2; //!< temperature calibration table
-    /* 1b */ uint8_t temp_cal_table3; //!< temperature calibration table
-    /* 1c */ uint8_t temp_cal_table4; //!< temperature calibration table
-    /* 1d */ uint8_t temp_cal_table5; //!< temperature calibration table
-    /* 1e */ uint8_t temp_cal_table6; //!< temperature calibration table
-    /* 1f */ uint8_t timer_mode; //!< =0 only one program, =1 programs for weekdays
-    /* 20 */ uint8_t bat_warning_thld; //!< treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
-    /* 21 */ uint8_t bat_low_thld; //!< threshold for battery low [unit 0.02V]=[unit 0.01V per cell]
-    /* 22 */ uint8_t window_open_detection_diff; //!< threshold for window open detection unit is 0.1C
-    /* 23 */ uint8_t window_close_detection_diff; //!< threshold for window close detection unit is 0.1C
-    /* 24 */ uint8_t window_open_detection_time;
-    /* 25 */ uint8_t window_close_detection_time;
-    /* 26 */ uint8_t window_open_timeout;           //!< maximum time for window open state [minutes]
-    /* 27 */ uint8_t allow_ADC_during_motor;
+    /* 11 */ uint8_t motor_close_eye_timeout; //!<time from last pulse to disable eye [1/61sec]
+    /* 12 */ uint8_t motor_end_detect_cal; //!< stop timer threshold in % to previous average 
+    /* 13 */ uint8_t motor_end_detect_run; //!< stop timer threshold in % to previous average 
+    /* 14 */ uint8_t motor_speed; //!< /8 
+    /* 15 */ uint8_t motor_speed_ctl_gain;
+    /* 16 */ uint8_t motor_pwm_max_step;
+    /* 17 */ uint8_t MOTOR_ManuCalibration_L;
+    /* 18 */ uint8_t MOTOR_ManuCalibration_H;
+    /* 19 */ uint8_t temp_cal_table0; //!< temperature calibration table
+    /* 1a */ uint8_t temp_cal_table1; //!< temperature calibration table
+    /* 1b */ uint8_t temp_cal_table2; //!< temperature calibration table
+    /* 1c */ uint8_t temp_cal_table3; //!< temperature calibration table
+    /* 1d */ uint8_t temp_cal_table4; //!< temperature calibration table
+    /* 1e */ uint8_t temp_cal_table5; //!< temperature calibration table
+    /* 1f */ uint8_t temp_cal_table6; //!< temperature calibration table
+    /* 20 */ uint8_t timer_mode; //!< =0 only one program, =1 programs for weekdays
+    /* 21 */ uint8_t bat_warning_thld; //!< treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
+    /* 22 */ uint8_t bat_low_thld; //!< threshold for battery low [unit 0.02V]=[unit 0.01V per cell]
+    /* 23 */ uint8_t window_open_detection_diff; //!< threshold for window open detection unit is 0.1C
+    /* 24 */ uint8_t window_close_detection_diff; //!< threshold for window close detection unit is 0.1C
+    /* 25 */ uint8_t window_open_detection_time;
+    /* 26 */ uint8_t window_close_detection_time;
+    /* 27 */ uint8_t window_open_timeout;           //!< maximum time for window open state [minutes]
+    /* 28 */ uint8_t allow_ADC_during_motor;
 #if (RFM==1)
-	/* 28 */ uint8_t RFM_devaddr; //!< HR20's own device address in RFM radio networking. =0 mean disable radio
-	/* 29...30 */ uint8_t security_key[8]; //!< key for encrypted radio messasges
-    /* 31 unused */ 
+	/* 29 */ uint8_t RFM_devaddr; //!< HR20's own device address in RFM radio networking. =0 mean disable radio
+	/* 2a...31 */ uint8_t security_key[8]; //!< key for encrypted radio messasges
+    /* 32 unused */ 
 #endif
 
 } config_t;
@@ -112,7 +113,7 @@ extern uint8_t EEPROM ee_layout;
 #define BOOT_ON2      (16*60+0x2000) //!<  16:00
 #define BOOT_OFF2     (21*60+0x1000) //!<  21:00
 
-#define EE_LAYOUT (0xE4) //!< EEPROM layout version (Experimental 4) 
+#define EE_LAYOUT (0xE5) //!< EEPROM layout version (Experimental 5) 
 
 #ifdef __EEPROM_C__
 // this is definition, not just declaration
@@ -180,42 +181,43 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 0b */  {55,         55,        0,      100},   //!< valve_center
   /* 0c */  {80,         80,        0,      100},   //!< valve_max
   /* 0d */  {32,         32,        32,     255},   //!< min motor_pwm PWM setting
-  /* 0e */  {250,       250,        180,    255},   //!< max motor_pwm PWM setting
+  /* 0e */  {250,       250,        50,     255},   //!< max motor_pwm PWM setting
   /* 0f */  {100,       100,        1,      255},   //!< motor_eye_low
   /* 10 */  {25,         25,        1,      255},   //!< motor_eye_high
-  /* 11 */  {130,       130,      110,      250},   //!< motor_end_detect_cal; stop timer threshold in % to previous average 
-  /* 12 */  {150,       150,      110,      250},   //!< motor_end_detect_run; stop timer threshold in % to previous average 
-  /* 13 */  {176,       176,       10,      255},   //!< motor_speed
-  /* 14 */  {50,         50,       10,      200},   //!< motor_speed_ctl_gain
-  /* 15 */  {10,         10,        1,       64},   //!< motor_pwm_max_step             
-  /* 16 */  {255,       255,        0,      255},   //!< manual calibration L
-  /* 17 */  {255,       255,        0,      255},   //!< manual calibration H
-  /* 18 */  {295-TEMP_CAL_OFFSET,295-TEMP_CAL_OFFSET, 0,        255},   //!< value for 35C => 295 temperature calibration table 
-  /* 19 */  {340-295,340-295,      16,      255},   //!< value for 30C => 340 temperature calibration table
-  /* 1a */  {397-340,397-340,      16,      255},   //!< value for 25C => 397 temperature calibration table
-  /* 1b */  {472-397,472-397,      16,      255},   //!< value for 20C => 472 temperature calibration table
-  /* 1c */  {549-472,549-472,      16,      255},   //!< value for 15C => 549 temperature calibration table
-  /* 1d */  {614-549,614-549,      16,      255},   //!< value for 10C => 614 temperature calibration table
-  /* 1e */  {675-614,675-614,      16,      255},   //!< value for 05C => 675 temperature calibration table
-  /* 1f */  {0,           0,        0,        1},   //!< timer_mode; =0 only one program, =1 programs for weekdays 
-  /* 20 */  {120,       120,       80,      160},   //!< bat_warning_thld; treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
-  /* 21 */  {100,       100,       80,      160},   //!< bat_low_thld; treshold for battery low [unit 0.02V]=[unit 0.01V per cell]
-  /* 22 */  {50,         50,        7,      255},   //!< window_open_detection_diff; reshold for window open/close detection unit is 0.01C
-  /* 23 */  {50,         50,        7,      255},   //!< window_close_detection_diff; reshold for window open/close detection unit is 0.01C
-  /* 24 */  {8,           8,  1, AVGS_BUFFER_LEN},  //!< window_open_detection_time unit 15sec = 1/4min
-  /* 25 */  {8,           8,  1, AVGS_BUFFER_LEN},  //!< window_close_detection_time unit 15sec = 1/4min
-  /* 26 */  {90,         90,        2,      255},   //!< window_open_timeout
-  /* 27 */  {1,           1,        0,        1},   //!< allow_ADC_during_motor
+  /* 11 */  {78,         78,        5,      255},   //!< motor_close_eye_timeout; time from last pulse to disable eye [1/61sec]
+  /* 12 */  {130,       130,      110,      250},   //!< motor_end_detect_cal; stop timer threshold in % to previous average 
+  /* 13 */  {150,       150,      110,      250},   //!< motor_end_detect_run; stop timer threshold in % to previous average 
+  /* 14 */  {176,       176,       10,      255},   //!< motor_speed
+  /* 15 */  {50,         50,       10,      200},   //!< motor_speed_ctl_gain
+  /* 16 */  {10,         10,        1,       64},   //!< motor_pwm_max_step             
+  /* 17 */  {255,       255,        0,      255},   //!< manual calibration L
+  /* 18 */  {255,       255,        0,      255},   //!< manual calibration H
+  /* 19 */  {295-TEMP_CAL_OFFSET,295-TEMP_CAL_OFFSET, 0,        255},   //!< value for 35C => 295 temperature calibration table 
+  /* 1a */  {340-295,340-295,      16,      255},   //!< value for 30C => 340 temperature calibration table
+  /* 1b */  {397-340,397-340,      16,      255},   //!< value for 25C => 397 temperature calibration table
+  /* 1c */  {472-397,472-397,      16,      255},   //!< value for 20C => 472 temperature calibration table
+  /* 1d */  {549-472,549-472,      16,      255},   //!< value for 15C => 549 temperature calibration table
+  /* 1e */  {614-549,614-549,      16,      255},   //!< value for 10C => 614 temperature calibration table
+  /* 1f */  {675-614,675-614,      16,      255},   //!< value for 05C => 675 temperature calibration table
+  /* 20 */  {0,           0,        0,        1},   //!< timer_mode; =0 only one program, =1 programs for weekdays 
+  /* 21 */  {120,       120,       80,      160},   //!< bat_warning_thld; treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
+  /* 22 */  {100,       100,       80,      160},   //!< bat_low_thld; treshold for battery low [unit 0.02V]=[unit 0.01V per cell]
+  /* 23 */  {50,         50,        7,      255},   //!< window_open_detection_diff; reshold for window open/close detection unit is 0.01C
+  /* 24 */  {50,         50,        7,      255},   //!< window_close_detection_diff; reshold for window open/close detection unit is 0.01C
+  /* 25 */  {8,           8,  1, AVGS_BUFFER_LEN},  //!< window_open_detection_time unit 15sec = 1/4min
+  /* 26 */  {8,           8,  1, AVGS_BUFFER_LEN},  //!< window_close_detection_time unit 15sec = 1/4min
+  /* 27 */  {90,         90,        2,      255},   //!< window_open_timeout
+  /* 28 */  {1,           1,        0,        1},   //!< allow_ADC_during_motor
 #if (RFM==1)
-  /* 28 */  {RFM_DEVICE_ADDRESS, RFM_DEVICE_ADDRESS, 0, 29}, //!< RFM_devaddr: HR20's own device address in RFM radio networking.
-  /* 29 */  {SECURITY_KEY_0, SECURITY_KEY_0, 0x00, 0xff},   //!< security_key[0] for encrypted radio messasges
-  /* 2a */  {SECURITY_KEY_1, SECURITY_KEY_1, 0x00, 0xff},   //!< security_key[1] for encrypted radio messasges
-  /* 2b */  {SECURITY_KEY_2, SECURITY_KEY_2, 0x00, 0xff},   //!< security_key[2] for encrypted radio messasges
-  /* 2c */  {SECURITY_KEY_3, SECURITY_KEY_3, 0x00, 0xff},   //!< security_key[3] for encrypted radio messasges
-  /* 2d */  {SECURITY_KEY_4, SECURITY_KEY_4, 0x00, 0xff},   //!< security_key[4] for encrypted radio messasges
-  /* 2e */  {SECURITY_KEY_5, SECURITY_KEY_5, 0x00, 0xff},   //!< security_key[5] for encrypted radio messasges
-  /* 2f */  {SECURITY_KEY_6, SECURITY_KEY_6, 0x00, 0xff},   //!< security_key[6] for encrypted radio messasges
-  /* 30 */  {SECURITY_KEY_7, SECURITY_KEY_7, 0x00, 0xff},   //!< security_key[7] for encrypted radio messasges
+  /* 29 */  {RFM_DEVICE_ADDRESS, RFM_DEVICE_ADDRESS, 0, 29}, //!< RFM_devaddr: HR20's own device address in RFM radio networking.
+  /* 2a */  {SECURITY_KEY_0, SECURITY_KEY_0, 0x00, 0xff},   //!< security_key[0] for encrypted radio messasges
+  /* 2b */  {SECURITY_KEY_1, SECURITY_KEY_1, 0x00, 0xff},   //!< security_key[1] for encrypted radio messasges
+  /* 2c */  {SECURITY_KEY_2, SECURITY_KEY_2, 0x00, 0xff},   //!< security_key[2] for encrypted radio messasges
+  /* 2d */  {SECURITY_KEY_3, SECURITY_KEY_3, 0x00, 0xff},   //!< security_key[3] for encrypted radio messasges
+  /* 2e */  {SECURITY_KEY_4, SECURITY_KEY_4, 0x00, 0xff},   //!< security_key[4] for encrypted radio messasges
+  /* 2f */  {SECURITY_KEY_5, SECURITY_KEY_5, 0x00, 0xff},   //!< security_key[5] for encrypted radio messasges
+  /* 30 */  {SECURITY_KEY_6, SECURITY_KEY_6, 0x00, 0xff},   //!< security_key[6] for encrypted radio messasges
+  /* 31 */  {SECURITY_KEY_7, SECURITY_KEY_7, 0x00, 0xff},   //!< security_key[7] for encrypted radio messasges
 #endif
 };
 #endif //__EEPROM_C__
