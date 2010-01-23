@@ -173,7 +173,7 @@ int __attribute__ ((noreturn)) main(void)
   			{
   			    wirelessReceivePacket();
   			}
-			continue; // on most case we have only 1 task, iprove time to sleep
+			continue; // on most case we have only 1 task, improve time to sleep
 		}
 		#endif
 
@@ -181,7 +181,7 @@ int __attribute__ ((noreturn)) main(void)
 		if (task & TASK_LCD) {
 			task&=~TASK_LCD;
 			task_lcd_update();
-			continue; // on most case we have only 1 task, iprove time to sleep
+			continue; // on most case we have only 1 task, improve time to sleep
 		}
 
 		if (task & TASK_ADC) {
@@ -189,31 +189,22 @@ int __attribute__ ((noreturn)) main(void)
 			if (task_ADC()==0) {
                 // ADC is done
             }
-			continue; // on most case we have only 1 task, iprove time to sleep
+			continue; // on most case we have only 1 task, improve time to sleep
 		}
 		
         // communication
 		if (task & TASK_COM) {
 			task&=~TASK_COM;
 			COM_commad_parse();
-			continue; // on most case we have only 1 task, iprove time to sleep
+			continue; // on most case we have only 1 task, improve time to sleep
 		}
 
         // motor stop
         if (task & TASK_MOTOR_STOP) {
             task&=~TASK_MOTOR_STOP;
             MOTOR_timer_stop();
-			continue; // on most case we have only 1 task, iprove time to sleep
+			continue; // on most case we have only 1 task, improve time to sleep
         }
-
-        // update motor possition
-        if (task & TASK_MOTOR_PULSE) {
-            task&=~TASK_MOTOR_PULSE;
-            MOTOR_updateCalibration(mont_contact_pooling());
-            MOTOR_timer_pulse();
-			continue; // on most case we have only 1 task, iprove time to sleep
-        }
-
 
 		//! check keyboard and set keyboards events
 		if (task & TASK_KB) {
@@ -322,11 +313,25 @@ int __attribute__ ((noreturn)) main(void)
            } 
            menu_view(update); // TODO: move it, it is wrong place
 	       LCD_Update(); // TODO: move it, it is wrong place
+			continue; // on most case we have only 1 task, improve time to sleep
 		}
+
+        // update motor PWM
+        if (task & TASK_MOTOR_PULSE) {
+            task&=~TASK_MOTOR_PULSE;
+            MOTOR_updateCalibration(mont_contact_pooling());
+            MOTOR_timer_pulse();
+        }
     } //End Main loop
 }
 
-
+// default fuses for ELF file
+FUSES = 
+{
+    .low = (CKSEL0 & CKSEL2 & CKSEL3 & SUT0 & CKDIV8),  //0x62
+    .high = (BOOTSZ0 & BOOTSZ1 & EESAVE & SPIEN & JTAGEN),
+    .extended = (BODLEVEL0),
+};
 
 /*!
  *******************************************************************************

@@ -65,7 +65,7 @@ In this file we define only configuration parameters, for example what kind of c
 
 // our Version
 #define REVHIGH  0  //! Revision number high
-#define REVLOW   8  //! Revision number low
+#define REVLOW   9  //! Revision number low
 #define VERSION_N (0xE000 + REVLOW + (REVHIGH<<8)) //! Version as HEX value F0.92 (E for Experimental)
 
 
@@ -118,8 +118,8 @@ In this file we define only configuration parameters, for example what kind of c
 
 // Some default Values
 #define BOOT_DD         1  //!< Boot-Up date: day
-#define BOOT_MM        12  //!< Boot-Up date: month
-#define BOOT_YY         8  //!< Boot-Up date: year
+#define BOOT_MM         1  //!< Boot-Up date: month
+#define BOOT_YY        10  //!< Boot-Up date: year
 #define BOOT_hh        12  //!< Boot-Up time: hour
 #define BOOT_mm        00  //!< Boot-Up time: minutes
 

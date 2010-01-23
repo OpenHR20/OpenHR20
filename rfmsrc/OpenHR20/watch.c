@@ -50,9 +50,9 @@ int16_t MOTOR_PosMax;
 
 
 #if DEBUG_MOTOR_COUNTER
-    #define WATCH_LAYOUT 0x81
+    #define WATCH_LAYOUT 0x82
 #else
-    #define WATCH_LAYOUT 0x01
+    #define WATCH_LAYOUT 0x02
 #endif
 
 

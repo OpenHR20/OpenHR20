@@ -394,11 +394,13 @@ void COM_commad_parse (void) {
 			break;
 		case 'H':
 			if (COM_hex_parse(4*2,true)!='\0') { break; }
+            cli();
 			RTC_SetHour(com_hex[0]);
 			RTC_SetMinute(com_hex[1]);
 			RTC_SetSecond(com_hex[2]);
 			RTC_SetSecond100(com_hex[3]);
 			onsync=255;
+			sei();
             print_s_p(PSTR("OK"));
 			break;
 		case 'O':
