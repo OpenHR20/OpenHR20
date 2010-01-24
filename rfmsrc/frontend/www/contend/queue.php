@@ -45,7 +45,7 @@ class contend_queue extends contend {
 
       if ($_GET['read_trace']==1) {
 	$cmd[] = "Tff";
-	for ($i=0; $i<=0x0c; $i++) {
+	for ($i=0; $i<=0x0d; $i++) {
 	    $cmd[] = sprintf ("T%02x",$i);
 	}	
       }
