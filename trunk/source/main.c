@@ -141,7 +141,6 @@ int main(void)
 			asm volatile ("nop");
 			DEBUG_AFTER_SLEEP(); 
 			SMCR = (1<<SM1)|(1<<SM0)|(0<<SE); // Power-save mode
-			TCCR2A |= TCCR2A_INIT; // If the time between wake-up and reentering sleep mode is less than one TOSC1 cycle, the interrupt will not occur
 		} else {
 			asm volatile ("sei");
 		}

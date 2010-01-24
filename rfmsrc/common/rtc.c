@@ -611,11 +611,15 @@ void RTC_timer_set(uint8_t timer_id, uint8_t time) {
      *  - add one second to internal clock
      *
      ******************************************************************************/
-    #if ! TASK_IS_SFR
+    #if !TASK_IS_SFR || DEBUG_PRINT_RTC_TICKS
     // not optimized
     ISR(TIMER2_OVF_vect) {
         task |= TASK_RTC;   // increment second and check Dow_Timer
         RTC_timer_done |= _BV(RTC_TIMER_OVF) | _BV(RTC_TIMER_RTC);
+        #if (DEBUG_PRINT_RTC_TICKS)
+            COM_putchar('|');
+        #endif
+        timer2_update=true;
     }
     #else
     // optimized
@@ -631,6 +635,8 @@ void RTC_timer_set(uint8_t timer_id, uint8_t time) {
             "   lds __my_tmp_reg__,RTC_timer_done" "\n"
             "	ori __my_tmp_reg__,%2" "\n"
             "   sts RTC_timer_done,__my_tmp_reg__" "\n"
+            "   ldi __my_tmp_reg__,1" "\n"
+            "   sts timer2_update,__my_tmp_reg__" "\n"
             /* epilogue */
             "	pop __my_tmp_reg__" "\n"
             "   out __SREG__,__my_tmp_reg__" "\n"
@@ -653,7 +659,11 @@ void RTC_timer_set(uint8_t timer_id, uint8_t time) {
      ******************************************************************************/
     ISR(TIMER2_COMP_vect) {
 		uint8_t t2=TCNT2-1;
+		timer2_update=true;
         task |= TASK_RTC;
+        #if (DEBUG_PRINT_RTC_TICKS)
+            COM_putchar('%');
+        #endif
         if ((RTC_timer_todo&_BV(RTC_TIMER_KB)) && (t2==RTC_timer_time[RTC_TIMER_KB-1])) { 
             kb_timeout=true;   // keyboard noise cancelation
             RTC_timer_todo &= ~_BV(RTC_TIMER_KB);

@@ -142,7 +142,7 @@ static char COM_getchar(void) {
  *
  *  \note
  ******************************************************************************/
-static void COM_flush (void) {
+void COM_flush (void) {
 	if (tx_buff_in!=tx_buff_out) {
 		#if (defined COM_RS232) || (defined COM_RS485)
 			RS_startSend();

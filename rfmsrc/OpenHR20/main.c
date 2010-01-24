@@ -79,6 +79,8 @@ void callback_settemp(uint8_t);            // called from RTC to set new reftemp
 void setautomode(bool);                    // activate/deactivate automode
 uint8_t input_temp(uint8_t);
 
+volatile bool timer2_update=false;
+
 // Check AVR LibC Version >= 1.6.0
 #if __AVR_LIBC_VERSION__ < 10600UL
 #warning "avr-libc >= version 1.6.0 recommended"
@@ -127,7 +129,12 @@ int __attribute__ ((noreturn)) main(void)
     for (;;){        
 		// go to sleep with ADC conversion start
 		asm volatile ("cli");
-		if (
+		if (timer2_update && ((ASSR & _BV(TCR2UB)) == 0)) {
+		  if ((ASSR & (_BV(OCR2UB)|_BV(TCN2UB)|_BV(TCR2UB))) == 0) {
+		      TCCR2A |= TCCR2A_INIT;
+		      timer2_update=false;
+		  }
+        } else if ( 
           ! task &&
           ((ASSR & (_BV(OCR2UB)|_BV(TCN2UB)|_BV(TCR2UB))) == 0) // ATmega169 datasheet chapter 17.8.1
             ) {
@@ -154,7 +161,6 @@ int __attribute__ ((noreturn)) main(void)
 			asm volatile ("nop");
 			DEBUG_AFTER_SLEEP(); 
 			SMCR = (1<<SM1)|(1<<SM0)|(0<<SE); // Power-save mode
-			TCCR2A |= TCCR2A_INIT; // If the time between wake-up and reentering sleep mode is less than one TOSC1 cycle, the interrupt will not occur
 		} else {
 			asm volatile ("sei");
 		}
@@ -221,6 +227,10 @@ int __attribute__ ((noreturn)) main(void)
             if (RTC_timer_done&(_BV(RTC_TIMER_OVF)|_BV(RTC_TIMER_RTC)))
             {   
                 cli(); RTC_timer_done&=~(_BV(RTC_TIMER_OVF)|_BV(RTC_TIMER_RTC)); sei();
+                #if (DEBUG_PRINT_RTC_TICKS)
+                    COM_putchar('*');
+                    COM_flush();
+                #endif
                 bool minute=(RTC_GetSecond()==0);
                 valve_wanted = CTL_update(minute,valve_wanted);
                 if (minute) {

@@ -65,3 +65,4 @@ void COM_debug_print_temperature(uint16_t t);
 #endif
 
 void COM_putchar(char c);
+void COM_flush (void);

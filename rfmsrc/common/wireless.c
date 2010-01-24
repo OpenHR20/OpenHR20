@@ -371,7 +371,7 @@ void wirelessReceivePacket(void) {
 								wl_skip_sync=WL_SKIP_SYNC;
 							#endif
 						}
-                        time_sync_tmo=10;
+                        time_sync_tmo=20;
                         while (ASSR & (_BV(TCR2UB))) {
                             ;
                             /*
