@@ -111,7 +111,7 @@ void RTC_Init(void)
                                             // => 1 sec between each overflow
     	
     	// wait for TCN2UB and TCR2UB to be cleared
-        while((ASSR & 0x01) | (ASSR & 0x04));   
+        while((ASSR & (_BV(TCN2UB)|_BV(TCR2UB))) != 0);
     
         TIFR2 = 0xFF;                       // clear interrupt-flags
         TIMSK2 |= (1<<TOIE2);               // enable Timer2 overflow interrupt
