@@ -20,12 +20,12 @@ function weights($char) {
         return 10;
 }
 
-$db = new SQLiteDatabase("/usb/home/db.sqlite");
+$db = new SQLiteDatabase("/home/db.sqlite");
 $db->query("PRAGMA synchronous=OFF");
 
 //$fp=fsockopen("192.168.62.230",3531);
 //$fp=fopen("php://stdin","r"); 
-$fp=fopen("/dev/ttyS1","w+"); 
+$fp=fopen("/dev/tts/1","w+"); 
 
 //while(($line=stream_get_line($fp,256,"\n"))!=FALSE) {
 
@@ -36,6 +36,7 @@ while(($line=fgets($fp,256))!==FALSE) {
     if ($line == "") continue; // ignore empty lines
     $debug=true;
 
+	$force=false;
     $ts=microtime(true);
     if ($line{0}=='(' && $line{3}==')') {
 	   $addr = hexdec(substr($line,1,2));
@@ -47,7 +48,8 @@ while(($line=fgets($fp,256))!==FALSE) {
 
     } else if ($line{0}=='*') {
 	   $db->query("DELETE FROM command_queue WHERE id=(SELECT id FROM command_queue WHERE addr=$addr AND send>0 ORDER BY send LIMIT 1)");
-	   $data = substr($line,1);
+	   $force=true;
+       $data = substr($line,1);
     } else if ($line{0}=='-') {
 	   $data = substr($line,1);
     } else if ($line=='}') { 
@@ -196,6 +198,7 @@ while(($line=fgets($fp,256))!==FALSE) {
                         $st['force']=1;
                         break;
                 }
+                if ($force) $st['force']=1;
     	    }
             $vars=""; $val="";
             foreach ($st as $k=>$v) {
