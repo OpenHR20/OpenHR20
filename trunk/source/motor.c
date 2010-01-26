@@ -406,7 +406,7 @@ ISR (PCINT0_vect){
 		}
 	#endif
     // motor eye
-    // count only on HIGH impulses
+    // count  HIGH impulses for HR20 and LOW Pulses for THERMOTRONIC
 #ifdef THERMOTRONIC
     if ((PCMSK0 & (1<<PCINT1)) && (((pine ^ pine_last) & (1<<PE1)) != 0)) {
 #else
@@ -415,7 +415,7 @@ ISR (PCINT0_vect){
         uint16_t dur = motor_diag_cnt - last_eye_change;
         last_eye_change = motor_diag_cnt;
 #ifdef THERMOTRONIC
-        if ((pine & _BV(PE1))==0) {
+        if ((pine & _BV(PE1))!=0) {
 #else
         if ((pine & _BV(PE4))==0) {
 #endif
