@@ -40,6 +40,7 @@
 #include <avr/pgmspace.h>
 #include <avr/sleep.h>
 #include <avr/version.h>
+#include <avr/fuse.h>
 
 // HR20 Project includes
 #include "config.h"
@@ -108,8 +109,9 @@ int __attribute__ ((noreturn)) main(void)
         task_lcd_update();
         for(;;) {;}  //fatal error, stop startup
     }
-
+#if THERMOTRONIC != 1
 	COM_init();
+#endif
     #if RFM
         // enable persistent RX for initial sync
         RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
@@ -336,6 +338,7 @@ int __attribute__ ((noreturn)) main(void)
 }
 
 // default fuses for ELF file
+
 FUSES = 
 {
     .low = (CKSEL0 & CKSEL2 & CKSEL3 & SUT0 & CKDIV8),  //0x62
@@ -381,8 +384,12 @@ static inline void init(void)
 
     //! enable pullup on all inputs (keys and m_wheel)
     //! ATTENTION: PB0 & PB6 is input, but we will select it only for read
+#if THERMOTRONIC==1
+	PORTB = (1<<PB0)|(1<<PB1)|(1<<PB2)|(0<<PB4)|(0<<PB5);
+#else
     PORTB = (0<<PB0)|(1<<PB1)|(1<<PB2)|(1<<PB3)|(0<<PB6);
-    DDRB  = (1<<PB0)|(1<<PB4)|(1<<PB7)|(1<<PB6); // PB4, PB7 Motor out
+    DDRB = (1<<PB0)|(1<<PB4)|(1<<PB7)|(1<<PB6); // PB4, PB7 Motor out
+#endif
 
 #if (RFM_WIRE_MARIOJTAG == 1)
     DDRE  = (1<<PE3)|                  (1<<PE1); // ACTLIGHTEYE | TXD
@@ -399,7 +406,13 @@ static inline void init(void)
     PORTA = (1<<PA3); // RFMnSEL
     DDRA = (1<<PA3); // RFMnSEL
     
-#else
+#elif THERMOTRONIC	//Thermotronic without RFM
+	DDRE|=(1<<PE3); 
+	PORTE|=(1<<PE3);
+    DDRF = (1<<PF2); // PF2  activate tempsensor
+    PORTF = 0xf5;
+
+#else //HR20 without RFM
     DDRE = (1<<PE3)|(1<<PE2)|(1<<PE1);  // PE3  activate lighteye
     PORTE = 0x03;
     DDRF = (1<<PF3);          // PF3  activate tempsensor
@@ -410,8 +423,14 @@ static inline void init(void)
     //!     PCINT0 for lighteye (motor monitor) is activated in motor.c using
     //!     mask register PCMSK0: PCMSK0=(1<<PCINT4) and PCMSK0&=~(1<<PCINT4)
 
+#if THERMOTRONIC==1
+	PCMSK0=(1<<PCINT1);
+    //! PCMSK1 for keyactions
+    PCMSK1 = (1<<PCINT9)|(1<<PCINT10)|(1<<PCINT8)|(1<<PCINT12);
+#else
     //! PCMSK1 for keyactions
     PCMSK1 = (1<<PCINT9)|(1<<PCINT10)|(1<<PCINT11)|(1<<PCINT13);
+#endif
 
     //! activate PCINT0 + PCINT1
     EIMSK = (1<<PCIE1)|(1<<PCIE0);

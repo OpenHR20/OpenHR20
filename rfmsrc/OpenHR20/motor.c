@@ -220,7 +220,11 @@ static uint8_t pine_last=0;
 static void MOTOR_Control(motor_dir_t direction) {
     if (direction == stop){                             // motor off
             #if (DEBUG_PRINT_MOTOR>1)
+#if THERMOTRONIC==1
+                COM_putchar((PINE & _BV(PE1))?'Y':'y');
+#else
                 COM_putchar((PINE & _BV(PE4))?'Y':'y');
+#endif
             #endif
         MOTOR_H_BRIDGE_stop();
         MOTOR_Dir = stop;
@@ -239,7 +243,11 @@ static void MOTOR_Control(motor_dir_t direction) {
             TCNT0 = 0;
             TIMSK0 = (1<<TOIE0); //enable interrupt from timer0 overflow
             pine_last=PINE;
+#if THERMOTRONIC==1
+            PCMSK0 |= (1<<PCINT1); // enable interrupt from eye
+#else
             PCMSK0 |= (1<<PCINT4);  // enable interrupt from eye
+#endif
             {
                 // pwm startup battery voltage compensation
                 MOTOR_pwm_set((int16_t)(((uint16_t)config.motor_pwm_max * 256) / ((bat_average)/(2600/256))));
@@ -247,15 +255,28 @@ static void MOTOR_Control(motor_dir_t direction) {
             if ( direction == close) {
                 // set pins of H-Bridge
                 MOTOR_H_BRIDGE_close();
+#if THERMOTRONIC==1
+				TCCR0A = (1<<CS00); //start timer (no PWM)
+#else
+                // set PWM non inverting mode
                 TCCR0A = (1<<WGM00) | (1<<WGM01) | (1<<COM0A1) | (1<<CS00);
+#endif
             // close
             } else {
                 // set pins of H-Bridge
-                MOTOR_H_BRIDGE_open();
+				MOTOR_H_BRIDGE_open();
+#if THERMOTRONIC==1
+				TCCR0A = (1<<CS00); //start timer (no PWM)
+#else
                 TCCR0A=(1<<WGM00)|(1<<WGM01)|(1<<COM0A1)|(1<<COM0A0)|(1<<CS00);
+#endif
             }
             #if (DEBUG_PRINT_MOTOR>1)
+#if THERMOTRONIC==1
+                COM_putchar((PINE & _BV(PE1))?'X':'x');
+#else
                 COM_putchar((PINE & _BV(PE4))?'X':'x');
+#endif
             #endif
         }
     }
@@ -365,10 +386,19 @@ ISR (PCINT0_vect){
         }
     #endif
     // motor eye
+    // count  HIGH impulses for HR20 and LOW Pulses for THERMOTRONIC
+#if THERMOTRONIC==1
+    if ((PCMSK0 & (1<<PCINT1)) && (((pine ^ pine_last) & (1<<PE1)) != 0)) {
+#else
     if ((PCMSK0 & (1<<PCINT4)) && (((pine ^ pine_last) & (1<<PE4)) != 0)) {
+#endif
         uint16_t dur = motor_diag_cnt - last_eye_change;
         last_eye_change = motor_diag_cnt;
+#if THERMOTRONIC==1
+        if ((pine & _BV(PE1))!=0) {
+#else
         if ((pine & _BV(PE4))==0) {
+#endif
             if (dur > (config.motor_eye_high<<1)) {
                 if (longest_low_eye > (config.motor_eye_low<<1)) {
                     MOTOR_PosAct+=MOTOR_Dir_Counter;
@@ -442,8 +472,13 @@ ISR (TIMER0_OVF_vect){
     motor_diag_cnt++;
     if ((uint8_t)(motor_diag_cnt>>8) >= config.motor_close_eye_timeout) {
         // stop pwm signal and Timer0
-        TCCR0A = (1<<WGM00) | (1<<WGM01); // 0b 0000 0011
+#if THERMOTRONIC==1
+		TCCR0A = 0;//no pwm
+        PCMSK0 &= ~(1<<PCINT1); // disable eye interrupt
+#else
+		TCCR0A = (1<<WGM00) | (1<<WGM01); // 0b 0000 0011
         PCMSK0 &= ~(1<<PCINT4); // disable eye interrupt
+#endif
         TIMSK0 = 0; // disable timmer 1 interrupt 
 
         // photo eye

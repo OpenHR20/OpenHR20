@@ -192,6 +192,15 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 16 */  {10,         10,        1,       64},   //!< motor_pwm_max_step             
   /* 17 */  {255,       255,        0,      255},   //!< manual calibration L
   /* 18 */  {255,       255,        0,      255},   //!< manual calibration H
+#if THERMOTRONIC==1
+  /* 19 */  {605-TEMP_CAL_OFFSET,605-TEMP_CAL_OFFSET, 0,        255},   //!< value for 35C => 605 temperature calibration table 
+  /* 1a */  {645-605,645-605,      16,      255},   //!< value for 30C => 645 temperature calibration table
+  /* 1b */  {685-645,685-645,      16,      255},   //!< value for 25C => 685 temperature calibration table
+  /* 1c */  {825-685,825-685,      16,      255},   //!< value for 20C => 825 temperature calibration table
+  /* 1d */  {865-825,865-825,      16,      255},   //!< value for 15C => 865 temperature calibration table
+  /* 1e */  {905-865,905-865,      16,      255},   //!< value for 10C => 905 temperature calibration table
+  /* 1f */  {945-905,945-905,      16,      255},   //!< value for 05C => 945 temperature calibration table
+#else
   /* 19 */  {295-TEMP_CAL_OFFSET,295-TEMP_CAL_OFFSET, 0,        255},   //!< value for 35C => 295 temperature calibration table 
   /* 1a */  {340-295,340-295,      16,      255},   //!< value for 30C => 340 temperature calibration table
   /* 1b */  {397-340,397-340,      16,      255},   //!< value for 25C => 397 temperature calibration table
@@ -199,6 +208,7 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 1d */  {549-472,549-472,      16,      255},   //!< value for 15C => 549 temperature calibration table
   /* 1e */  {614-549,614-549,      16,      255},   //!< value for 10C => 614 temperature calibration table
   /* 1f */  {675-614,675-614,      16,      255},   //!< value for 05C => 675 temperature calibration table
+#endif
   /* 20 */  {0,           0,        0,        1},   //!< timer_mode; =0 only one program, =1 programs for weekdays 
   /* 21 */  {120,       120,       80,      160},   //!< bat_warning_thld; treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
   /* 22 */  {100,       100,       80,      160},   //!< bat_low_thld; treshold for battery low [unit 0.02V]=[unit 0.01V per cell]

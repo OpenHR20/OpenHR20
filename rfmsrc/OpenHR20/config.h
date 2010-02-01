@@ -74,8 +74,10 @@ In this file we define only configuration parameters, for example what kind of c
 #endif 
 #define VERSION_STRING  ":OpenHR20rfm E" STR(REVHIGH) "." STR(REVLOW) " " __DATE__ " " __TIME__ " " REVISION
 
+
 // Parameters for the COMM-Port
 #define COM_BAUD_RATE 9600
+#if THERMOTRONIC!=1 //No serialport implementet yet
 // Note we should only enable of of the following at one time
 /* we support RS232 */
 #define COM_RS232 1
@@ -83,15 +85,17 @@ In this file we define only configuration parameters, for example what kind of c
 /* #define COM_RS485  */
 /* Our default Adress, if not set or invalid */
 /* #define COM_DEF_ADR 1 */
+#endif
 
 #define DEFAULT_TEMPERATURE 2000 
 
-
+#if (THERMOTRONIC!=1)//THERMOTRONIC with RFM12 not implemented
 #ifndef RFM
     #define RFM 1 //!< define RFM to 1 if you want to have support for the RFM Radio Moodule in the Code
 #endif
 #define RFM_WIRE_MARIOJTAG 0 //!< define that if you want to wire your RFM to external JTAG pins
 #define RFM_WIRE_JD_INTERNAL 1 //!< define that if you want to wire your RFM to free internal pins
+#endif
 
 #if (RFM == 1)
 	#define RFM12 1 // just a synonym

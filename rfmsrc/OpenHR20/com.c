@@ -146,7 +146,8 @@ void COM_flush (void) {
 	if (tx_buff_in!=tx_buff_out) {
 		#if (defined COM_RS232) || (defined COM_RS485)
 			RS_startSend();
-		#else 
+		#elif THERMOTRONIC	//UART for THERMOTRONIC not implemented
+		#else
 			#error "need todo"
 		#endif
 	}
@@ -252,7 +253,9 @@ static void print_version(bool sync) {
  ******************************************************************************/
 void COM_init(void) {
 	print_version(false);
+#if (THERMOTRONIC!=1)
 	RS_Init();
+#endif
 	COM_flush();
 }
 

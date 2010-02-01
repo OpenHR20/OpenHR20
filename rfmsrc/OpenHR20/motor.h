@@ -46,15 +46,21 @@
 
 static inline void MOTOR_H_BRIDGE_open(void) {
    PORTG  =  (1<<PG4);   // PG3 LOW, PG4 HIGH
+#if THERMOTRONIC!=1   //not needed (no enable-Pin for motor) 
    PORTB |=  (1<<PB7);   // PB7 HIGH
+#endif
 }
 static inline void MOTOR_H_BRIDGE_close(void) {
    PORTG  =  (1<<PG3);   // PG3 HIGH, PG4 LOW
+#if THERMOTRONIC!=1   //not needed (no enable-Pin for motor) 
    PORTB &= ~(1<<PB7);   // PB7 LOW
+#endif
 }
 static inline void MOTOR_H_BRIDGE_stop(void) {
    PORTG  =  0;          // PG3 LOW, PG4 LOW
+#if THERMOTRONIC!=1   //not needed (no enable-Pin for motor) 
    PORTB &= ~(1<<PB7);   // PB7 LOW
+#endif
 }
 
 #define MOTOR_run_test() ((PORTG & ((1<<PG3)|(1<<PG4)))!=0)
@@ -62,9 +68,13 @@ static inline void MOTOR_H_BRIDGE_stop(void) {
 //! How many photoeye impulses maximal form one endposition to the other. <BR>
 //! The value measured on a HR20 are 737 to 740 = so more than 1000 should
 //! never occure if it is mounted
+#if THERMOTRONIC==1
+#define	MOTOR_MAX_IMPULSES 500
+#define	MOTOR_MIN_IMPULSES 50
+#else
 #define	MOTOR_MAX_IMPULSES 1000
 #define	MOTOR_MIN_IMPULSES 100
-
+#endif
 /* MOTOR_MAX_VALID_TIMER
  *  Minimum is 1024  (not recomended)
  *  Max is 65236 

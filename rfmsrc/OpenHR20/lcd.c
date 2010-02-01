@@ -197,8 +197,13 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
 // Look-up table to adress element F for one Position. ( 32 : 10 )
 uint8_t LCD_FieldOffsetTablePrgMem[] PROGMEM =
 {
+#if THERMOTRONIC==1
+    39,    //!<  Field 0
+    35,    //!<  Field 1              
+#else
     40,    //!<  Field 0
     36,    //!<  Field 1              
+#endif
     31,    //!<  Field 2
     27     //!<  Field 3
 };

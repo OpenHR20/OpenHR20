@@ -45,16 +45,18 @@
 # 5.4.2008: Dario Carluccio
 #           command line parameters for "avr-size" on Linux and Windows.
 
+# HW = THERMOTRONIC
+HW = HONEYWELL 
+
 # MCU name
-MCU = atmega169p
+ifeq ($(HW),THERMOTRONIC)
+    MCU = atmega169
+	F_CPU = 1000000
+else
+    MCU = atmega169p
+	F_CPU = 4000000
+endif    
 
-
-# Processor frequency.
-#     This will define a symbol, F_CPU, in all source code files equal to the 
-#     processor frequency. You can then use this symbol in your source code to 
-#     calculate timings. Do NOT tack on a 'UL' at the end, this will be done
-#     automatically to create a 32-bit value in your source code.
-F_CPU = 4000000
 
 
 # Output format. (can be srec, ihex, binary)
@@ -172,6 +174,10 @@ CFLAGS += -Wl,--relax
 #CFLAGS += --param inline-call-cost=2 
 #CFLAGS += -ffunction-sections
 CFLAGS += -fdata-sections
+
+ifeq ($(HW),THERMOTRONIC)
+    CFLAGS += -DTHERMOTRONIC=1
+endif
 
 #---------------- Assembler Options ----------------
 #  -Wa,...:   tell GCC to pass this to the assembler.
