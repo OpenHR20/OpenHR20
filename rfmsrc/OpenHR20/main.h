@@ -67,6 +67,4 @@ extern bool mode_auto;
 #define power_up_ADC() (PRR = (1<<PRTIM1)|(1<<PRSPI))  
 #define power_down_ADC() (PRR = (1<<PRTIM1)|(1<<PRSPI)|(1<<PRADC))  
 
-extern volatile bool timer2_update;
-
 #endif /* MAIN_H */

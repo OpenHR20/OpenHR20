@@ -80,8 +80,6 @@ void callback_settemp(uint8_t);            // called from RTC to set new reftemp
 void setautomode(bool);                    // activate/deactivate automode
 uint8_t input_temp(uint8_t);
 
-volatile bool timer2_update=false;
-
 // Check AVR LibC Version >= 1.6.0
 #if __AVR_LIBC_VERSION__ < 10600UL
 #warning "avr-libc >= version 1.6.0 recommended"
@@ -131,12 +129,7 @@ int __attribute__ ((noreturn)) main(void)
     for (;;){        
 		// go to sleep with ADC conversion start
 		asm volatile ("cli");
-		if (timer2_update && ((ASSR & _BV(TCR2UB)) == 0)) {
-		  if ((ASSR & (_BV(OCR2UB)|_BV(TCN2UB)|_BV(TCR2UB))) == 0) {
-		      TCCR2A |= TCCR2A_INIT;
-		      timer2_update=false;
-		  }
-        } else if ( 
+        if ( 
           ! task &&
           ((ASSR & (_BV(OCR2UB)|_BV(TCN2UB)|_BV(TCR2UB))) == 0) // ATmega169 datasheet chapter 17.8.1
             ) {
