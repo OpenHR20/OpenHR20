@@ -334,9 +334,9 @@ int __attribute__ ((noreturn)) main(void)
 
 FUSES = 
 {
-    .low = (CKSEL0 & CKSEL2 & CKSEL3 & SUT0 & CKDIV8),  //0x62
-    .high = (BOOTSZ0 & BOOTSZ1 & EESAVE & SPIEN & JTAGEN),
-    .extended = (BODLEVEL0),
+    .low = (uint8_t)(CKSEL0 & CKSEL2 & CKSEL3 & SUT0 & CKDIV8),  //0x62
+    .high = (uint8_t)(BOOTSZ0 & BOOTSZ1 & EESAVE & SPIEN & JTAGEN),
+    .extended = (uint8_t)(BODLEVEL0),
 };
 
 /*!

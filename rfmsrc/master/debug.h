@@ -24,25 +24,15 @@
  */
 
 /*!
- * \file       com.h
- * \brief      communication layer
+ * \file       debug.h
+ * \brief      debug options for project
  * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>
- * \date       $Date$
- * $Rev$
+ * \date       $Date: 2010-02-01 12:53:27 +0100 (Po, 01 úno 2010) $
+ * $Rev: 273 $
  */
 
 #pragma once
+#include "config.h"
 
-char COM_tx_char_isr(void);
-
-void COM_rx_char_isr(char c);
-
-void COM_init(void);
-
-void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok);
-
-void COM_print_datetime(void);
-
-void COM_req_RTC(void);
-
-void COM_commad_parse (void);
+#define DEBUG_MODE 0
+#define DEBUG_PRINT_ADDITIONAL_TIMESTAMPS DEBUG_MODE

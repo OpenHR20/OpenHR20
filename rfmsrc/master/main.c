@@ -47,6 +47,7 @@
 #include "com.h"
 #include "task.h"
 #include "eeprom.h"
+#include "queue.h"
 #include "../common/rtc.h"
 #include "../common/cmac.h"
 #include "../common/wireless.h"
@@ -203,7 +204,6 @@ int __attribute__ ((noreturn)) main(void)
 
 
     } //End Main loop
-	return 0;
 }
 
 

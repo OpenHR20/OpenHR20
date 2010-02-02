@@ -573,6 +573,7 @@ static uint8_t RTC_timer_time[RTC_TIMERS];
 
 void RTC_timer_set(uint8_t timer_id, uint8_t time) {
     uint8_t t2,i,next,dif;
+    // next is uninitialized, it is correct
     
     cli();
     RTC_timer_todo |= _BV(timer_id);
@@ -581,7 +582,7 @@ void RTC_timer_set(uint8_t timer_id, uint8_t time) {
     dif=255;
     for (i=0;i<RTC_TIMERS;i++) {
         if ((RTC_timer_todo&(2<<i))) {
-            if ((RTC_timer_time[i]-t2)<dif) {
+            if ((RTC_timer_time[i]-t2)<=dif) {
                 next = RTC_timer_time[i];
                 dif = next-t2;
             }
@@ -674,10 +675,10 @@ void RTC_timer_set(uint8_t timer_id, uint8_t time) {
             }                
         }
         uint8_t dif=255;
-        uint8_t i,next;
+        uint8_t i,next;  // next is uninitialized, it is correct
         for (i=0;i<RTC_TIMERS;i++) {
             if ((RTC_timer_todo&(2<<i))) {
-                if ((RTC_timer_time[i]-t2)<dif) {
+                if ((RTC_timer_time[i]-t2)<=dif) {
                     next = RTC_timer_time[i];
                     dif = next-t2;
                 }

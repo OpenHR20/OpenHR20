@@ -40,6 +40,7 @@
 #include "../common/wireless.h"
 #include "../common/cmac.h"
 #include "com.h"
+#include "debug.h"
 #if defined(MASTER_CONFIG_H)
     #include "queue.h"
 #else

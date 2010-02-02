@@ -65,7 +65,7 @@ In this file we define only configuration parameters, for example what kind of c
 
 // our Version
 #define REVHIGH  0  //! Revision number high
-#define REVLOW   0x10  //! Revision number low
+#define REVLOW   10  //! Revision number low
 #define VERSION_N (0xE000 + REVLOW + (REVHIGH<<8)) //! Version as HEX value F0.92 (E for Experimental)
 
 
@@ -89,15 +89,24 @@ In this file we define only configuration parameters, for example what kind of c
 
 #define DEFAULT_TEMPERATURE 2000 
 
-#if (THERMOTRONIC!=1)//THERMOTRONIC with RFM12 not implemented
-#ifndef RFM
-    #define RFM 1 //!< define RFM to 1 if you want to have support for the RFM Radio Moodule in the Code
-#endif
-#define RFM_WIRE_MARIOJTAG 0 //!< define that if you want to wire your RFM to external JTAG pins
-#define RFM_WIRE_JD_INTERNAL 1 //!< define that if you want to wire your RFM to free internal pins
+#if THERMOTRONIC
+    #ifdef RFM
+        #if RFM
+            #error "THERMOTRONIC with RFM12 not implemented"
+        #endif
+    #else 
+        #define RFM 0
+    #endif
+#else
+    #ifndef RFM
+        #define RFM 1 //!< define RFM to 1 if you want to have support for the RFM Radio Moodule in the Code
+    #endif
 #endif
 
 #if (RFM == 1)
+    #define RFM_WIRE_MARIOJTAG 0 //!< define that if you want to wire your RFM to external JTAG pins
+    #define RFM_WIRE_JD_INTERNAL 1 //!< define that if you want to wire your RFM to free internal pins
+
 	#define RFM12 1 // just a synonym
 	#define RFM_DEVICE_ADDRESS 0x00
 
