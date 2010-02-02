@@ -108,7 +108,8 @@ void crypto_init(void) {
     :"r26", "r27", "r30","r31" 
     );
     #if defined(MASTER_CONFIG_H)
-        LED_off();
+        LED_RX_off();
+        LED_sync_off();
     #endif
 }
 /* internal function for crypto_init */
@@ -217,10 +218,15 @@ void wirelessTimer(void) {
 		break;
     }
     wirelessTimerCase = WL_TIMER_NONE;
-#else
-    LED_off();
-#endif
 }
+#else
+    LED_RX_off();
+}
+
+void wirelessTimer2(void) {
+    LED_sync_off();
+}
+#endif
 
 #if !defined(MASTER_CONFIG_H)   
 wirelessTimerCase_t wirelessTimerCase=WL_TIMER_NONE;
@@ -282,6 +288,8 @@ uint32_t wl_force_flags;
 
 #if defined(MASTER_CONFIG_H)
 void wirelessSendSync(void) {
+    LED_sync_on();
+    RTC_timer_set(RTC_TIMER_RFM2, (uint8_t)(RTC_s100 + WLTIME_LED_TIMEOUT));    
     RFM_INT_DIS();
     RFM_TX_ON_PRE();
     memcpy_P(rfm_framebuf,wl_header,4);
@@ -417,7 +425,7 @@ void wirelessReceivePacket(void) {
                     #if defined(MASTER_CONFIG_H)
 						uint8_t addr = rfm_framebuf[1];
                         if (mac_ok) {
-                          LED_on();
+                          LED_RX_on();
                           RTC_timer_set(RTC_TIMER_RFM, (uint8_t)(RTC_s100 + WLTIME_LED_TIMEOUT));    
                           q_item_t * p;
                           uint8_t skip=0;

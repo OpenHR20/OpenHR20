@@ -1,7 +1,7 @@
 /*
  *  Open HR20 - RFM12 master
  *
- *  target:     ATmega16 @ 10 MHz in Honnywell Rondostat HR20E master
+ *  target:     ATmega32 @ 10 MHz in Honnywell Rondostat HR20E master
  *
  *  compiler:    WinAVR-20071221
  *              avr-libc 1.6.0
@@ -188,6 +188,11 @@ int __attribute__ ((noreturn)) main(void)
                 cli(); RTC_timer_done&=~_BV(RTC_TIMER_RFM); sei();
                 wirelessTimer();
             }  			
+            if (RTC_timer_done&_BV(RTC_TIMER_RFM2))
+            {   
+                cli(); RTC_timer_done&=~_BV(RTC_TIMER_RFM2); sei();
+                wirelessTimer2();
+            }  			
         }
         // serial communication
 		if (task & TASK_COM) {
@@ -221,13 +226,14 @@ static inline void init(void)
     //! Disable Analog Comparator (power save)
     ACSR = (1<<ACD);
 
-    PORTB = (0<<PB0)|(1<<PB1)|(1<<PB2)|(1<<PB3)|(0<<PB6);
-    DDRB  = (1<<PB4)|(1<<PB5)|(1<<PB7);
-	
-	DDRD = _BV(PD1) | _BV(PD6);
-	PORTD = 0xff;
+	DDRA = _BV(PA2);	//Green LED for Sync
+    DDRB = _BV(PB4)|_BV(PB5)|_BV(PB7);
+    DDRC = 0;
+	DDRD = _BV(PD1) | _BV(PD7);
 	PORTA = 0xff;
-	PORTB = 0xff; 
+	PORTB = ~_BV(PB2); 
+	PORTC = 0xff; 
+	PORTD = 0xff;
 	
 	RTC_Init();
 
@@ -254,6 +260,14 @@ void get_mcusr(void)
   MCUSR = 0;
   wdt_disable();
 }
+
+// default fuses for ELF file
+
+FUSES = 
+{
+    .low = 0xA0,
+    .high = 0x91,
+};
 
 /*!
  *******************************************************************************

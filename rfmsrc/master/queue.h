@@ -1,7 +1,7 @@
 /*
  *  Open HR20 - RFM12 master
  *
- *  target:     ATmega16 @ 10 MHz in Honnywell Rondostat HR20E master
+ *  target:     ATmega32 @ 10 MHz in Honnywell Rondostat HR20E master
  *
  *  compiler:    WinAVR-20071221
  *              avr-libc 1.6.0

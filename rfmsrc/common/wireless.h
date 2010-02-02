@@ -45,6 +45,7 @@ void wirelessReceivePacket(void);
 #if defined(MASTER_CONFIG_H)
     void wirelessSendSync(void);
     extern uint8_t wl_packet_bank;
+    void wirelessTimer2(void);
 #else
     extern bool wireless_async;
     void wirelesTimeSyncCheck(void);

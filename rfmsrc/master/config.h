@@ -1,7 +1,7 @@
 /*
  *  Open HR20
  *
- *  target:     ATmega169 @ 4 MHz in Honnywell Rondostat HR20E
+ *  target:     ATmega32 @ 10 MHz in Honnywell Rondostat HR20E
  *
  *  compiler:    WinAVR-20071221
  *              avr-libc 1.6.0
@@ -48,6 +48,7 @@ In this file we define only configuration parameters, for example what kind of c
 #include <avr/pgmspace.h>
 #include <avr/sleep.h>
 #include <avr/version.h>
+#include <avr/fuse.h>
 
 
 #define LANG_uni 1
@@ -64,7 +65,7 @@ In this file we define only configuration parameters, for example what kind of c
 #ifndef REVISION
  #define REVISION "$Rev$"
 #endif 
-#define VERSION_STRING  "V: OpenHR20 master SW version 0.01 build " __DATE__ " " __TIME__ " " REVISION
+#define VERSION_STRING  "V: OpenHR20 master SW version 0.02 build " __DATE__ " " __TIME__ " " REVISION
 
 // Parameters for the COMM-Port
 #define COM_BAUD_RATE 38400
@@ -77,8 +78,11 @@ In this file we define only configuration parameters, for example what kind of c
 /* #define COM_DEF_ADR 1 */
 
 
-#define LED_on() (PORTD |= _BV(PD6))
-#define LED_off() (PORTD &= ~_BV(PD6))
+#define LED_RX_on() (PORTD |= _BV(PD7))
+#define LED_RX_off() (PORTD &= ~_BV(PD7))
+
+#define LED_sync_on()	(PORTA |= _BV(PA2))
+#define LED_sync_off()  (PORTA &= ~_BV(PA2))
 
 #define RFM 1 //!< define RFM to 1 if you want to have support for the RFM Radio Moodule in the Code
 

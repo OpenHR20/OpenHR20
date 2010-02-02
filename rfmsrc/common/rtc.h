@@ -52,7 +52,8 @@
 #if defined(MASTER_CONFIG_H)
     #if (RFM==1)
         #define RTC_TIMER_RFM 1
-        #define RTC_TIMERS 1
+        #define RTC_TIMER_RFM2 2
+        #define RTC_TIMERS 2
     #else
         #define RTC_TIMERS 0
     #endif    
