@@ -41,7 +41,7 @@ In this file we define only configuration parameters, for example what kind of c
 #ifndef CONFIG_H
 #define CONFIG_H
 
-// AVR LibC includes 
+// AVR LibC includes
 #include <stdint.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -64,14 +64,14 @@ In this file we define only configuration parameters, for example what kind of c
 #define STR(x) _STR(x)
 
 // our Version
-#define REVHIGH  0  //! Revision number high
-#define REVLOW   10  //! Revision number low
-#define VERSION_N (0xE000 + REVLOW + (REVHIGH<<8)) //! Version as HEX value F0.92 (E for Experimental)
+#define REVHIGH  1  //! Revision number high
+#define REVLOW   0  //! Revision number low
+#define VERSION_N (0x0000 + REVLOW + (REVHIGH<<8)) //! Version as HEX value F0.92 (E for Experimental)
 
 
 #ifndef REVISION
  #define REVISION "$Rev$"
-#endif 
+#endif
 #define VERSION_STRING  ":OpenHR20rfm E" STR(REVHIGH) "." STR(REVLOW) " " __DATE__ " " __TIME__ " " REVISION
 
 
@@ -87,14 +87,18 @@ In this file we define only configuration parameters, for example what kind of c
 /* #define COM_DEF_ADR 1 */
 #endif
 
-#define DEFAULT_TEMPERATURE 2000 
+#define DEFAULT_TEMPERATURE 2000
+
+#ifndef HW_WINDOW_DETECTION
+	#define HW_WINDOW_DETECTION 0
+#endif
 
 #if THERMOTRONIC
     #ifdef RFM
         #if RFM
             #error "THERMOTRONIC with RFM12 not implemented"
         #endif
-    #else 
+    #else
         #define RFM 0
     #endif
 #else
@@ -104,14 +108,23 @@ In this file we define only configuration parameters, for example what kind of c
 #endif
 
 #if (RFM == 1)
-    #define RFM_WIRE_MARIOJTAG 0 //!< define that if you want to wire your RFM to external JTAG pins
-    #define RFM_WIRE_JD_INTERNAL 1 //!< define that if you want to wire your RFM to free internal pins
+	#ifndef RFM_WIRE_MARIOJTAG 
+		#define RFM_WIRE_MARIOJTAG 0 //!< define that if you want to wire your RFM to external JTAG pins
+	#endif
+    #if RFM_WIRE_MARIOJTAG
+		#define RFM_WIRE_JD_INTERNAL 0 //!< define that if you want to wire your RFM to free internal pins
+	#else 
+		#define RFM_WIRE_JD_INTERNAL 1 //!< define that if you want to wire your RFM to free internal pins
+	#endif
 
 	#define RFM12 1 // just a synonym
 	#define RFM_DEVICE_ADDRESS 0x00
 
 	#if (RFM_WIRE_MARIOJTAG == 1)
 		#define DISABLE_JTAG 1 //!< define DISABLE_JTAG if your RFM's connection uses any JTAG pins
+		#if (HW_WINDOW_DETECTION)
+			#error HW_WINDOW_DETECTION is not compatible with RFM_WIRE_MARIOJTAG
+		#endif
 	#endif
 	#define SECURITY_KEY_0		0x01
 	#define SECURITY_KEY_1		0x23
@@ -152,7 +165,7 @@ In this file we define only configuration parameters, for example what kind of c
 
 /* revision remarks
  *************************
- */ 
+ */
 
 
 // some handy macros

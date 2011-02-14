@@ -32,7 +32,7 @@
  * $Rev$
  */
 
-// AVR LibC includes 
+// AVR LibC includes
 #include <stdint.h>
 #include <string.h>
 #include <avr/io.h>
@@ -71,7 +71,7 @@
 // global Vars for default values: temperatures and speed
 uint8_t valve_wanted=0;
 
-// prototypes 
+// prototypes
 int main(void);                            // main with main loop
 static inline void init(void);                           // init the whole thing
 void load_defauls(void);                   // load default values
@@ -95,12 +95,12 @@ int __attribute__ ((noreturn)) main(void)
 		{
     //! initalization
     init();
-    
+
 	task=0;
 
     //! Enable interrupts
     sei();
-    
+
     /* check EEPROM layout */
     if (EEPROM_read((uint16_t)&ee_layout)!=EE_LAYOUT) {
         LCD_PrintStringID(LCD_STRING_EEPr,LCD_MODE_ON);
@@ -121,15 +121,15 @@ int __attribute__ ((noreturn)) main(void)
 
 	// We should do the following once here to have valid data from the start
 
-		
+
     /*!
     ****************************************************************************
     * main loop
     ***************************************************************************/
-    for (;;){        
+    for (;;){
 		// go to sleep with ADC conversion start
 		asm volatile ("cli");
-        if ( 
+        if (
           ! task &&
           ((ASSR & (_BV(OCR2UB)|_BV(TCN2UB)|_BV(TCR2UB))) == 0) // ATmega169 datasheet chapter 17.8.1
             ) {
@@ -154,7 +154,7 @@ int __attribute__ ((noreturn)) main(void)
 			asm volatile ("sei");	//  sequence from ATMEL datasheet chapter 6.8.
 			asm volatile ("sleep");
 			asm volatile ("nop");
-			DEBUG_AFTER_SLEEP(); 
+			DEBUG_AFTER_SLEEP();
 			SMCR = (1<<SM1)|(1<<SM0)|(0<<SE); // Power-save mode
 		} else {
 			asm volatile ("sei");
@@ -164,7 +164,6 @@ int __attribute__ ((noreturn)) main(void)
 		  // RFM12
 		  if (task & TASK_RFM) {
 			task &= ~TASK_RFM;
-			// PORTE |= (1<<PE2);
 
 			if (rfm_mode == rfmmode_tx_done)
 			{
@@ -192,7 +191,7 @@ int __attribute__ ((noreturn)) main(void)
             }
 			continue; // on most case we have only 1 task, improve time to sleep
 		}
-		
+
         // communication
 		if (task & TASK_COM) {
 			task&=~TASK_COM;
@@ -216,11 +215,11 @@ int __attribute__ ((noreturn)) main(void)
         if (task & TASK_RTC) {
             task&=~TASK_RTC;
             if (RTC_timer_done&_BV(RTC_TIMER_RTC))
-            {   
+            {
                 RTC_AddOneSecond();
             }
             if (RTC_timer_done&(_BV(RTC_TIMER_OVF)|_BV(RTC_TIMER_RTC)))
-            {   
+            {
                 cli(); RTC_timer_done&=~(_BV(RTC_TIMER_OVF)|_BV(RTC_TIMER_RTC)); sei();
                 #if (DEBUG_PRINT_RTC_TICKS)
                     COM_putchar('*');
@@ -231,7 +230,7 @@ int __attribute__ ((noreturn)) main(void)
                 if (minute) {
                     if (((CTL_error &  (CTL_ERR_BATT_LOW | CTL_ERR_BATT_WARNING)) == 0)
     			        && (RTC_GetDayOfWeek()==6)
-    				    && (RTC_GetHour()==10) 
+    				    && (RTC_GetHour()==10)
     				    && (RTC_GetMinute()==0)) {
                         // every sunday 10:00AM
                         // TODO: improve this code!
@@ -239,12 +238,14 @@ int __attribute__ ((noreturn)) main(void)
                         sumError=0;
                         MOTOR_updateCalibration(0);
                     }
-                    if (CTL_mode_window!=0) {
-                        CTL_mode_window--;
-                        if (CTL_mode_window==0) {
-                            PID_force_update = 0;
-                        }
-                    }
+					#if (! HW_WINDOW_DETECTION)
+                    	if (CTL_mode_window!=0) {
+                        	CTL_mode_window--;
+                        	if (CTL_mode_window==0) {
+                           		PID_force_update = 0;
+                        	}
+                    	}
+					#endif
                     #if RFM
                         wirelesTimeSyncCheck();
                     #endif
@@ -257,7 +258,7 @@ int __attribute__ ((noreturn)) main(void)
                             (
                                 (
                                     (RTC_GetSecond()>30) &&
-                                    ( 
+                                    (
                                         (RTC_GetSecond()&1)?
                                         (wl_force_addr1==config.RFM_devaddr):
                                         (wl_force_addr2==config.RFM_devaddr)
@@ -280,7 +281,7 @@ int __attribute__ ((noreturn)) main(void)
 						#if (WL_SKIP_SYNC)
 							if (wl_skip_sync!=0) {
 								wl_skip_sync--;
-							} else 
+							} else
 						#endif
 							{
 								wirelessTimerCase = WL_TIMER_SYNC;
@@ -302,7 +303,7 @@ int __attribute__ ((noreturn)) main(void)
             }
             #if RFM
               if (RTC_timer_done&_BV(RTC_TIMER_RFM))
-              {   
+              {
                   cli(); RTC_timer_done&=~_BV(RTC_TIMER_RFM); sei();
                   wirelessTimer();
               }
@@ -315,7 +316,7 @@ int __attribute__ ((noreturn)) main(void)
            bool update = menu_controller(false);
            if (update) {
                menu_controller(true); // menu updated, call it again
-           } 
+           }
            menu_view(update); // TODO: move it, it is wrong place
 	       LCD_Update(); // TODO: move it, it is wrong place
 			continue; // on most case we have only 1 task, improve time to sleep
@@ -332,12 +333,21 @@ int __attribute__ ((noreturn)) main(void)
 
 // default fuses for ELF file
 
-FUSES = 
+#ifdef FUSE_BOOTSZ0
+FUSES =
+{
+    .low = (uint8_t)(FUSE_CKSEL0 & FUSE_CKSEL2 & FUSE_CKSEL3 & FUSE_SUT0 & FUSE_CKDIV8),  //0x62
+    .high = (uint8_t)(FUSE_BOOTSZ0 & FUSE_BOOTSZ1 & FUSE_EESAVE & FUSE_SPIEN & FUSE_JTAGEN),
+    .extended = (uint8_t)(FUSE_BODLEVEL0),
+};
+#else
+FUSES =
 {
     .low = (uint8_t)(CKSEL0 & CKSEL2 & CKSEL3 & SUT0 & CKDIV8),  //0x62
     .high = (uint8_t)(BOOTSZ0 & BOOTSZ1 & EESAVE & SPIEN & JTAGEN),
     .extended = (uint8_t)(BODLEVEL0),
 };
+#endif
 
 /*!
  *******************************************************************************
@@ -392,22 +402,22 @@ static inline void init(void)
     PORTF = (1<<PF7)|         (1<<PF5); // JTAGTDI | RFMNSEL;
 
 #elif (RFM_WIRE_JD_INTERNAL == 1)
-    DDRE  = (1<<PE3)|(1<<PE2)|(1<<PE1);  // PE3  activate lighteye
-	PORTE = (1<<PE1)|(1<<PE0);  // TXD | RXD(pullup)
+    DDRE  = (1<<PE3)|(1<<PE1);  // PE3  activate lighteye
+	PORTE = (1<<PE2)|(1<<PE1)|(1<<PE0);  // TXD | RXD(pullup)
     DDRF  = (1<<PF0)|(1<<PF1)|(1<<PF3);  // RFMSDI | RFMSCK | PF3  activate tempsensor
     PORTF = 0xf0;
     PORTA = (1<<PA3); // RFMnSEL
     DDRA = (1<<PA3); // RFMnSEL
-    
+
 #elif THERMOTRONIC	//Thermotronic without RFM
-	DDRE|=(1<<PE3); 
+	DDRE|=(1<<PE3);
 	PORTE|=(1<<PE3);
     DDRF = (1<<PF2); // PF2  activate tempsensor
     PORTF = 0xf5;
 
 #else //HR20 without RFM
-    DDRE = (1<<PE3)|(1<<PE2)|(1<<PE1);  // PE3  activate lighteye
-    PORTE = 0x03;
+    DDRE = (1<<PE3)|(1<<PE1);  // PE3  activate lighteye
+    PORTE = (1<<PE2)|(1<<PE1)|(1<<PE0); // PE2 | TXD | RXD(pullup);
     DDRF = (1<<PF3);          // PF3  activate tempsensor
     PORTF = 0xf3;
 #endif
@@ -431,7 +441,8 @@ static inline void init(void)
     //! Initialize the RTC
     RTC_Init();
 
-    eeprom_config_init((~PINB & (KBI_PROG | KBI_C | KBI_AUTO))==(KBI_PROG | KBI_C | KBI_AUTO));
+	// press all keys on boot reload default eeprom values
+    eeprom_config_init((PINB & (KBI_PROG | KBI_C | KBI_AUTO))==0);
 
 #if RFM
 	crypto_init();
@@ -447,7 +458,7 @@ static inline void init(void)
 	RFM_init();
 	RFM_OFF();
 #endif
-    
+
 	// init keyboard
     state_wheel_prev = ~PINB & (KBI_ROT1 | KBI_ROT2);
 }

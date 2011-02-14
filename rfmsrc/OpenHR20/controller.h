@@ -54,8 +54,6 @@ void CTL_temp_change_inc (int8_t ch);
 #define CTL_CLOSE_WINDOW_FORCE -3
 void CTL_change_mode(int8_t dif);
 
-#define CTL_OPEN_WINDOW_TIMEOUT (30*60) //30 minutes
-
 // ERRORS
 #define CTL_ERR_BATT_LOW                (1<<7)
 #define CTL_ERR_BATT_WARNING            (1<<6)

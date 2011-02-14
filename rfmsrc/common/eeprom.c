@@ -166,10 +166,9 @@ uint16_t timmers_patch_data;
  *  \note
  ******************************************************************************/
 
-uint16_t eeprom_timers_read_raw(uint16_t offset) {
+uint16_t eeprom_timers_read_raw(uint8_t offset) {
     if (offset != timmers_patch_offset) {
-        offset *= sizeof(ee_timers[0][0]);
-        uint16_t eeaddr = (uint16_t)ee_timers+offset;
+        uint16_t eeaddr = (uint16_t)offset * (uint16_t)sizeof(ee_timers[0][0]) + (uint16_t)ee_timers;
     	return (EEPROM_read(eeaddr+1)<<8) + EEPROM_read(eeaddr); //litle endian
     } else {
         return timmers_patch_data;
@@ -183,11 +182,9 @@ uint16_t eeprom_timers_read_raw(uint16_t offset) {
  *
  *  \note
  ******************************************************************************/
-void eeprom_timers_write_raw(uint16_t offset, uint16_t value) {
-    uint16_t eeaddr;
-    offset *= sizeof(ee_timers[0][0]);
-    if (offset>=sizeof(ee_timers)) return; // EEPROM protection
-    eeaddr = (uint16_t)ee_timers+offset;
+void eeprom_timers_write_raw(uint8_t offset, uint16_t value) {
+    if (offset>=(uint8_t)(sizeof(ee_timers)/sizeof(ee_timers[0][0]))) return; // EEPROM protection
+    uint16_t eeaddr = (uint16_t)offset * (uint16_t)sizeof(ee_timers[0][0]) + (uint16_t)ee_timers;
     EEPROM_write(eeaddr, value&0xff); //litle endian
     EEPROM_write(eeaddr+1 , (value>>8)); //litle endian
 }

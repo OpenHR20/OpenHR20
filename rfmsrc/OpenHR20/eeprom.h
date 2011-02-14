@@ -83,16 +83,22 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
     /* 20 */ uint8_t timer_mode; //!< =0 only one program, =1 programs for weekdays
     /* 21 */ uint8_t bat_warning_thld; //!< treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
     /* 22 */ uint8_t bat_low_thld; //!< threshold for battery low [unit 0.02V]=[unit 0.01V per cell]
-    /* 23 */ uint8_t window_open_detection_diff; //!< threshold for window open detection unit is 0.1C
-    /* 24 */ uint8_t window_close_detection_diff; //!< threshold for window close detection unit is 0.1C
-    /* 25 */ uint8_t window_open_detection_time;
-    /* 26 */ uint8_t window_close_detection_time;
-    /* 27 */ uint8_t window_open_timeout;           //!< maximum time for window open state [minutes]
-    /* 28 */ uint8_t allow_ADC_during_motor;
+    /* 23 */ uint8_t allow_ADC_during_motor;
+#if HW_WINDOW_DETECTION
+    /* 24 */ uint8_t window_open_detection_enable;
+    /* 25 */ uint8_t window_open_detection_delay; //!< window open detection delay [sec]
+    /* 26 */ uint8_t window_close_detection_delay; //!< window close detection delay [sec]
+#else
+    /* 24 */ uint8_t window_open_detection_diff; //!< threshold for window open detection unit is 0.1C
+    /* 25 */ uint8_t window_close_detection_diff; //!< threshold for window close detection unit is 0.1C
+    /* 26 */ uint8_t window_open_detection_time;
+    /* 27 */ uint8_t window_close_detection_time;
+    /* 28 */ uint8_t window_open_timeout;           //!< maximum time for window open state [minutes]
+#endif
 #if (RFM==1)
-	/* 29 */ uint8_t RFM_devaddr; //!< HR20's own device address in RFM radio networking. =0 mean disable radio
-	/* 2a...31 */ uint8_t security_key[8]; //!< key for encrypted radio messasges
-    /* 32 unused */ 
+	/*    */ uint8_t RFM_devaddr; //!< HR20's own device address in RFM radio networking. =0 mean disable radio
+	/*    */ uint8_t security_key[8]; //!< key for encrypted radio messasges
+    /* unused */ 
 #endif
 
 } config_t;
@@ -113,7 +119,11 @@ extern uint8_t EEPROM ee_layout;
 #define BOOT_ON2      (16*60+0x2000) //!<  16:00
 #define BOOT_OFF2     (21*60+0x1000) //!<  21:00
 
-#define EE_LAYOUT (0xE5) //!< EEPROM layout version (Experimental 5) 
+#if (HW_WINDOW_DETECTION)
+#define EE_LAYOUT (0x11) 
+#else
+#define EE_LAYOUT (0x10) 
+#endif
 
 #ifdef __EEPROM_C__
 // this is definition, not just declaration
@@ -212,22 +222,28 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 20 */  {0,           0,        0,        1},   //!< timer_mode; =0 only one program, =1 programs for weekdays 
   /* 21 */  {120,       120,       80,      160},   //!< bat_warning_thld; treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
   /* 22 */  {100,       100,       80,      160},   //!< bat_low_thld; treshold for battery low [unit 0.02V]=[unit 0.01V per cell]
-  /* 23 */  {50,         50,        7,      255},   //!< window_open_detection_diff; reshold for window open/close detection unit is 0.01C
-  /* 24 */  {50,         50,        7,      255},   //!< window_close_detection_diff; reshold for window open/close detection unit is 0.01C
-  /* 25 */  {8,           8,  1, AVGS_BUFFER_LEN},  //!< window_open_detection_time unit 15sec = 1/4min
-  /* 26 */  {8,           8,  1, AVGS_BUFFER_LEN},  //!< window_close_detection_time unit 15sec = 1/4min
-  /* 27 */  {90,         90,        2,      255},   //!< window_open_timeout
-  /* 28 */  {1,           1,        0,        1},   //!< allow_ADC_during_motor
+  /* 23 */  {1,           1,        0,        1},   //!< allow_ADC_during_motor
+#if HW_WINDOW_DETECTION
+  /* 24 */  {1,           1,        0,        1},   //!< window_open_detection_enable
+  /* 25 */  {5,           5,        0,      240},   //!< window_open_detection_delay [sec] max 4 minutes
+  /* 26 */  {5,           5,        0,      240},   //!< window_close_detection_delay [sec] max 4 minutes
+#else
+  /* 24 */  {50,         50,        7,      255},   //!< window_open_detection_diff; reshold for window open/close detection unit is 0.01C
+  /* 25 */  {50,         50,        7,      255},   //!< window_close_detection_diff; reshold for window open/close detection unit is 0.01C
+  /* 26 */  {8,           8,  1, AVGS_BUFFER_LEN},  //!< window_open_detection_time unit 15sec = 1/4min
+  /* 27 */  {8,           8,  1, AVGS_BUFFER_LEN},  //!< window_close_detection_time unit 15sec = 1/4min
+  /* 28 */  {90,         90,        2,      255},   //!< window_open_timeout
+#endif
 #if (RFM==1)
-  /* 29 */  {RFM_DEVICE_ADDRESS, RFM_DEVICE_ADDRESS, 0, 29}, //!< RFM_devaddr: HR20's own device address in RFM radio networking.
-  /* 2a */  {SECURITY_KEY_0, SECURITY_KEY_0, 0x00, 0xff},   //!< security_key[0] for encrypted radio messasges
-  /* 2b */  {SECURITY_KEY_1, SECURITY_KEY_1, 0x00, 0xff},   //!< security_key[1] for encrypted radio messasges
-  /* 2c */  {SECURITY_KEY_2, SECURITY_KEY_2, 0x00, 0xff},   //!< security_key[2] for encrypted radio messasges
-  /* 2d */  {SECURITY_KEY_3, SECURITY_KEY_3, 0x00, 0xff},   //!< security_key[3] for encrypted radio messasges
-  /* 2e */  {SECURITY_KEY_4, SECURITY_KEY_4, 0x00, 0xff},   //!< security_key[4] for encrypted radio messasges
-  /* 2f */  {SECURITY_KEY_5, SECURITY_KEY_5, 0x00, 0xff},   //!< security_key[5] for encrypted radio messasges
-  /* 30 */  {SECURITY_KEY_6, SECURITY_KEY_6, 0x00, 0xff},   //!< security_key[6] for encrypted radio messasges
-  /* 31 */  {SECURITY_KEY_7, SECURITY_KEY_7, 0x00, 0xff},   //!< security_key[7] for encrypted radio messasges
+  /*    */  {RFM_DEVICE_ADDRESS, RFM_DEVICE_ADDRESS, 0, 29}, //!< RFM_devaddr: HR20's own device address in RFM radio networking.
+  /*    */  {SECURITY_KEY_0, SECURITY_KEY_0, 0x00, 0xff},   //!< security_key[0] for encrypted radio messasges
+  /*    */  {SECURITY_KEY_1, SECURITY_KEY_1, 0x00, 0xff},   //!< security_key[1] for encrypted radio messasges
+  /*    */  {SECURITY_KEY_2, SECURITY_KEY_2, 0x00, 0xff},   //!< security_key[2] for encrypted radio messasges
+  /*    */  {SECURITY_KEY_3, SECURITY_KEY_3, 0x00, 0xff},   //!< security_key[3] for encrypted radio messasges
+  /*    */  {SECURITY_KEY_4, SECURITY_KEY_4, 0x00, 0xff},   //!< security_key[4] for encrypted radio messasges
+  /*    */  {SECURITY_KEY_5, SECURITY_KEY_5, 0x00, 0xff},   //!< security_key[5] for encrypted radio messasges
+  /*    */  {SECURITY_KEY_6, SECURITY_KEY_6, 0x00, 0xff},   //!< security_key[6] for encrypted radio messasges
+  /*    */  {SECURITY_KEY_7, SECURITY_KEY_7, 0x00, 0xff},   //!< security_key[7] for encrypted radio messasges
 #endif
 };
 #endif //__EEPROM_C__
@@ -238,9 +254,9 @@ uint8_t EEPROM_read(uint16_t address);
 void eeprom_config_init(bool restore_default);
 void eeprom_config_save(uint8_t idx);
 
-uint16_t eeprom_timers_read_raw(uint16_t offset);
+uint16_t eeprom_timers_read_raw(uint8_t offset);
 #define timers_get_raw_index(dow,slot) (dow*RTC_TIMERS_PER_DOW+slot)
-void eeprom_timers_write_raw(uint16_t offset, uint16_t value);
+void eeprom_timers_write_raw(uint8_t offset, uint16_t value);
 #define eeprom_timers_write(dow,slot,value) (eeprom_timers_write_raw((dow*RTC_TIMERS_PER_DOW+slot),value))
 
 extern uint8_t  timmers_patch_offset;

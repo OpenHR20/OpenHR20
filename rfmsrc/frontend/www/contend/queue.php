@@ -38,7 +38,7 @@ class contend_queue extends contend {
 
       if ($_GET['read_eeprom']==1) {
 	$cmd[] = "Gff";
-	for ($i=0; $i<0x31; $i++) {
+	for ($i=0; $i<0x32; $i++) {
 	    $cmd[] = sprintf ("G%02x",$i);
 	}
       }

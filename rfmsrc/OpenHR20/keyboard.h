@@ -49,6 +49,8 @@ extern uint16_t kb_events;
 #define KB_EVENT_LOCK_LONG		(1 << 11)
 #define KB_EVENT_ALL_LONG		(1 << 12)
 #define KB_EVENT_NONE_LONG		(1 << 13)
+#define KB_EVENT_UPDATE_LCD		(1 << 14)
+
 
 #define LONG_PRESS_THLD 4
 #define LONG_QUIET_THLD 20

@@ -35,13 +35,14 @@
 #include <stdlib.h>
 #include <avr/pgmspace.h>
 
-#include "config.h" 
+#include "config.h"
 #include "main.h"
 #include "com.h"
 #include "../common/rtc.h"
 #include "adc.h"
 #include "eeprom.h"
 #include "controller.h"
+#include "keyboard.h"
 
 // global Vars for default values: temperatures and speed
 uint8_t CTL_temp_wanted=0;   // actual desired temperature
@@ -49,15 +50,35 @@ uint8_t CTL_temp_wanted_last=0xff;   // desired temperature value used for last 
 uint8_t CTL_temp_auto=0;   // actual desired temperature by timer
 bool CTL_mode_auto=true;   // actual desired temperature by timer
 uint8_t CTL_mode_window = 0; // open window (0=closed, >0 open-timmer)
-uint16_t CTL_open_window_timeout;
-
-static uint16_t PID_update_timeout=16;   // timer to next PID controler action/first is 16 sec after statup 
-int8_t PID_force_update=16;      // signed value, val<0 means disable force updates \todo rename
+#if (HW_WINDOW_DETECTION)
+	static uint8_t window_timer=AVERAGE_LEN+1;
+#else
+	uint16_t CTL_open_window_timeout;
+#endif
+static uint16_t PID_update_timeout=AVERAGE_LEN+1;   // timer to next PID controler action/first is 16 sec after statup
+int8_t PID_force_update=AVERAGE_LEN+1;      // signed value, val<0 means disable force updates \todo rename
 
 static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old_result);
 
 uint8_t CTL_error=0;
 
+#if (HW_WINDOW_DETECTION)
+static void CTL_window_detection(void) {
+	bool w = ((PINE & (1<<PE2))!=0) && config.window_open_detection_enable;
+
+	if (CTL_mode_window != w) {
+		if (window_timer==0) {
+			CTL_mode_window = w;
+			PID_force_update = 0;
+			// kb_events |= KB_EVENT_UPDATE_LCD;
+		} else {
+			window_timer--;
+			return;
+		}
+	}
+	window_timer=(w)?(config.window_close_detection_delay):(config.window_open_detection_delay);
+}
+#else
 static void CTL_window_detection(void) {
     uint8_t i = (ring_buf_temp_avgs_pos+AVGS_BUFFER_LEN
         -((CTL_mode_window!=0)?config.window_close_detection_time:config.window_open_detection_time)
@@ -76,15 +97,18 @@ static void CTL_window_detection(void) {
     if ((temp_average-min) > (int16_t) config.window_close_detection_diff) {
         if (CTL_mode_window!=0) {
             CTL_mode_window=0;
-            PID_force_update = 0; 
-        }  
+            PID_force_update = 0;
+			//kb_events |= KB_EVENT_UPDATE_LCD;
+        }
     } else {
         if ((CTL_mode_window==0) && ((max-temp_average) > (int16_t) config.window_open_detection_diff)) {
             CTL_mode_window=config.window_open_timeout;
-            PID_force_update = 0; 
+            PID_force_update = 0;
+			//kb_events |= KB_EVENT_UPDATE_LCD;
         }
     }
 }
+#endif
 
 /*!
  *******************************************************************************
@@ -92,7 +116,7 @@ static void CTL_window_detection(void) {
  *  \note call it once per second
  *  \param minute_ch is true when minute is changed
  *  \returns valve position
- *   
+ *
  ******************************************************************************/
 uint8_t CTL_update(bool minute_ch, uint8_t valve) {
     if ( minute_ch || (CTL_temp_auto==0) ) {
@@ -101,14 +125,14 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
         if (t!=0) {
             CTL_temp_auto=t;
             if (CTL_mode_auto) {
-                CTL_temp_wanted=CTL_temp_auto; 
+                CTL_temp_wanted=CTL_temp_auto;
                 if ((PID_force_update<0)&&(CTL_temp_wanted!=CTL_temp_wanted_last)) {
                     PID_force_update=0;
                 }
             }
         }
     }
-    
+
     CTL_window_detection();
     if (PID_update_timeout>0) PID_update_timeout--;
     if (PID_force_update>0) PID_force_update--;
@@ -133,12 +157,12 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
             } else {
                 valve = pid_Controller(calc_temp(temp),temp_average,valve);
             }
-        } 
+        }
         COM_print_debug(valve);
         PID_force_update = -1; // invalid value = not used
     }
     // batt error detection
-    if (bat_average) { 
+    if (bat_average) {
 		if (bat_average < 20*(uint16_t)config.bat_low_thld) {
     	    CTL_error |=  CTL_ERR_BATT_LOW | CTL_ERR_BATT_WARNING;
 	    } else {
@@ -154,7 +178,7 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
 	        }
 	    }
 	}
-    
+
     return valve;
 }
 
@@ -169,10 +193,10 @@ void CTL_temp_change_inc (int8_t ch) {
 	if (CTL_temp_wanted<TEMP_MIN-1) {
 		CTL_temp_wanted= TEMP_MIN-1;
 	} else if (CTL_temp_wanted>TEMP_MAX+1) {
-		CTL_temp_wanted= TEMP_MAX+1; 
-	}    
+		CTL_temp_wanted= TEMP_MAX+1;
+	}
 	CTL_mode_window = 0;
-    PID_force_update = 10; 
+    PID_force_update = 10;
 }
 
 static uint8_t menu_temp_rewoke;
@@ -184,20 +208,21 @@ static uint8_t menu_temp_rewoke;
 void CTL_change_mode(int8_t m) {
     if (m == CTL_CHANGE_MODE) {
         // change
-  		menu_temp_rewoke=CTL_temp_auto; 
+  		menu_temp_rewoke=CTL_temp_auto;
         CTL_mode_auto=!CTL_mode_auto;
-        PID_force_update = 10; 
+        PID_force_update = 10;
     } else if (m == CTL_CHANGE_MODE_REWOKE) {
         //rewoke
   		CTL_temp_auto=menu_temp_rewoke;
         CTL_mode_auto=!CTL_mode_auto;
-        PID_force_update = 10; 
+        PID_force_update = 10;
     } else {
         if (m >= 0) CTL_mode_auto=m;
-        PID_force_update = 0; 
+        PID_force_update = 0;
     }
     if (CTL_mode_auto && (m != CTL_CHANGE_MODE_REWOKE)) {
-        CTL_temp_auto=0;  //refresh wanted temperature in next step
+    	CTL_temp_wanted=(CTL_temp_auto=RTC_ActualTimerTemperature(false));
+    	// CTL_temp_auto=0;  //refresh wanted temperature in next step
     }
     CTL_mode_window = 0;
 }
@@ -226,29 +251,29 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old
   int32_t /*error2,*/ pi_term;
   int16_t error16, maxSumError;
   error16 = setPoint - processValue;
-  
+
   // maximum error is 20 degree C
-  if (error16 > 2000) { 
+  if (error16 > 2000) {
     error16=2000;
   } else if (error16 < -2000) {
     error16=-2000;
   }
 
-  // Calculate Iterm and limit integral runaway  
+  // Calculate Iterm and limit integral runaway
   {
     int16_t d = lastProcessValue - processValue;
     if  ((lastProcessValue!=0)
 	&& (
 		((d==0) && (abs(error16)>config.temp_tolerance))
-	     || ((d>0)  && (error16>0)) 
+	     || ((d>0)  && (error16>0))
 	     || ((d<0)  && (error16<0))
 	   )) {
-        // update sumError if turn is wrong only 
+        // update sumError if turn is wrong only
         int16_t max = (int16_t)scalling_factor*50/config.P_Factor;
         if (error16 > max) {  // maximum sumError change + limiter
-          sumError += max;  
+          sumError += max;
         } else if (error16 < -max) { // maximum sumError change - limiter
-          sumError -= max;  
+          sumError -= max;
         } else {
           sumError += error16;
         }
@@ -266,35 +291,35 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old
   } else if(sumError < -maxSumError){
     sumError = -maxSumError;
   }
-  
+
   pi_term = ((int32_t)config.PP_Factor * (int32_t)abs(error16));
   pi_term += (int32_t)((uint16_t)config.P_Factor <<8);
   pi_term *= (int32_t)error16;
-  pi_term >>= 8; 
+  pi_term >>= 8;
   // pi_term - > for overload limit: maximum is +-(((255*2000)+255)*2000) = +-1020510000/256=3986367
-  
+
   pi_term += (int16_t)(config.I_Factor) * (int16_t)sumError; // maximum is (scalling_factor*50/I_Factor)*I_Factor
   // pi_term - > for overload limit: maximum is +- (3986367 + scalling_factor*50) = +-3999167
-   
+
   pi_term += (int16_t)(config.valve_center)*scalling_factor;
   if(pi_term > 100*scalling_factor){
     return config.valve_max;
   } else if(pi_term < 0){
-    return config.valve_min; 
+    return config.valve_min;
   }
   // now we can use 16bit value
   {
     int16_t pi_term16 = pi_term;
-    
+
     // ignore changes < 1%
     if (abs(pi_term16-((int16_t)(old_result)*scalling_factor))<scalling_factor) return old_result;
-    
+
     pi_term16 >>=8; //= scalling_factor;
-  
+
     if(pi_term16 > config.valve_max){
       return config.valve_max;
     } else if(pi_term16 < config.valve_min){
-      return config.valve_min; 
+      return config.valve_min;
     }
     return((uint8_t)pi_term16);
   }

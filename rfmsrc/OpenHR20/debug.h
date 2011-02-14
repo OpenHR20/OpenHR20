@@ -38,15 +38,8 @@
 #define DEBUG_SKIP_DATETIME_SETTING_AFTER_RESET 0
 
 
-#if (DEBUG_MODE > 1)&& THERMOTRONIC!=1
-    #define DEBUG_BEFORE_SLEEP() (PORTE &= ~(1<<PE2))
-    #define DEBUG_AFTER_SLEEP()  (PORTE |= (1<<PE2))
-#else
-    #define DEBUG_BEFORE_SLEEP()
-    #define DEBUG_AFTER_SLEEP()
-#endif
-
-
+#define DEBUG_BEFORE_SLEEP()
+#define DEBUG_AFTER_SLEEP()
 
 #define KEEP_ALIVE_FOR_COMMUNICATION DEBUG_MODE
 
@@ -60,6 +53,6 @@
 
 #if RFM
     #define DEBUG_DUMP_RFM DEBUG_MODE
-#else 
+#else
     #define DEBUG_DUMP_RFM 0
 #endif

@@ -73,6 +73,7 @@ TARGET = hr20
 OBJDIR = obj
 
 
+
 # List C source files here. (C dependencies are automatically generated.)
 # order of this files have effect on code size (relaxing), therefore it divided to 2 parts
 SRC =  \
@@ -152,6 +153,7 @@ CFLAGS = -g$(DEBUG)
 CFLAGS += $(CDEFS)
 CFLAGS += $(REV)
 CFLAGS += $(RFM)
+CFLAGS += $(HW_WINDOW_DETECTION)
 CFLAGS += -O$(OPT)
 CFLAGS += -funsigned-char
 CFLAGS += -funsigned-bitfields
@@ -386,7 +388,8 @@ ALL_ASFLAGS = -mmcu=$(MCU) -I. -x assembler-with-cpp $(ASFLAGS)
 all: begin gccversion sizebefore build sizeafter end
 
 # Change the build target to build a HEX file or a library.
-build: elf hex eep bin lss sym
+#build: elf hex eep bin lss sym info
+build: elf hex eep bin lss info
 #build: lib
 
 
@@ -398,6 +401,7 @@ lss: $(TARGET).lss
 sym: $(TARGET).sym
 LIBNAME=lib$(TARGET).a
 lib: $(LIBNAME)
+info: $(TARGET).txt
 
 
 
@@ -416,15 +420,7 @@ end:
 # Display size of file.
 HEXSIZE = $(SIZE) --target=$(FORMAT) $(TARGET).hex
 
-# different command line parameters for "avr-size" on Linux and Windows.
-ifdef ComSpec  
-  # WIN32
-  ELFSIZE = $(SIZE) --mcu=$(MCU) --format=avr $(TARGET).elf
-else
-  # Linux
-  ELFSIZE = $(SIZE)  $(TARGET).elf
-endif
-
+ELFSIZE = $(SIZE) --mcu=$(MCU) --format=avr $(TARGET).elf
 
 
 sizebefore:
@@ -499,6 +495,15 @@ extcoff: $(TARGET).elf
 	@echo $(MSG_EXTENDED_COFF) $(TARGET).cof
 	$(COFFCONVERT) -O coff-ext-avr $< $(TARGET).cof
 
+#create info file
+%.txt: %.elf
+	$(REMOVE) $@
+	@echo "Configuration" >> $@
+	@echo "RFM=$(RFM)" >> $@
+	@echo "HW_WINDOW_DETECTION=$(HW_WINDOW_DETECTION)" >> $@
+	@echo "==================================" >> $@
+	@echo >> $@
+	$(ELFSIZE) >> $@
 
 
 # Create final output files (.hex, .eep) from ELF output file.
@@ -514,7 +519,7 @@ extcoff: $(TARGET).elf
 	--change-section-lma .eeprom=0 --no-change-warnings -O $(FORMAT) $< $@ || exit 0
 
 # Create extended listing file from ELF output file.
-%.lss: %.elf
+%.lss: %.elf sizeafter
 	@echo
 	@echo $(MSG_EXTENDED_LISTING) $@
 	$(OBJDUMP) -h -S -z $< > $@
@@ -529,7 +534,7 @@ extcoff: $(TARGET).elf
 %.bin: %.elf
 	@echo
 	@echo "creating Binary for use with bootloader"
-	$(OBJCOPY) $< -S -R .eeprom -O binary $@
+	$(OBJCOPY) $< -S -R .eeprom -R .fuse -O binary $@
 
 # Create library from object files.
 .SECONDARY : $(TARGET).a
@@ -587,8 +592,11 @@ clean_list :
 	$(REMOVE) $(TARGET).map
 	$(REMOVE) $(TARGET).sym
 	$(REMOVE) $(TARGET).lss
+	$(REMOVE) $(TARGET).txt
 	$(REMOVE) $(SRC:%.c=$(OBJDIR)/%.o)
 	$(REMOVE) $(SRC:%.c=$(OBJDIR)/%.lst)
+	$(REMOVE) $(ASRC:%.S=$(OBJDIR)/%.o)
+	$(REMOVE) $(ASRC:%.S=$(OBJDIR)/%.lst)
 	$(REMOVE) $(SRC:.c=.s)
 	$(REMOVE) $(SRC:.c=.d)
 	$(REMOVE) $(SRC:.c=.i)

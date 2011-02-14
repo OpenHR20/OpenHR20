@@ -64,8 +64,6 @@ uint8_t sleep_with_ADC=0;
  * make average for last 15 seconds
  * used for calculate 1 minute difference
  ******************************************************************************/
-	
-#define AVERAGE_LEN 15
 
 static int16_t ring_buf[2][AVERAGE_LEN];
 int16_t ring_buf_temp_avgs [AVGS_BUFFER_LEN];

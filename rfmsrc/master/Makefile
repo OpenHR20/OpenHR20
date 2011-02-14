@@ -407,7 +407,8 @@ ALL_ASFLAGS = -mmcu=$(MCU) -I. -x assembler-with-cpp $(ASFLAGS)
 all: begin gccversion sizebefore build sizeafter end
 
 # Change the build target to build a HEX file or a library.
-build: elf hex eep bin lss sym
+#build: elf hex eep bin lss sym info
+build: elf hex eep bin lss info
 #build: lib
 
 
@@ -419,6 +420,7 @@ lss: $(TARGET).lss
 sym: $(TARGET).sym
 LIBNAME=lib$(TARGET).a
 lib: $(LIBNAME)
+info: $(TARGET).txt
 
 
 
@@ -438,13 +440,13 @@ end:
 HEXSIZE = $(SIZE) --target=$(FORMAT) $(TARGET).hex
 
 # different command line parameters for "avr-size" on Linux and Windows.
-ifdef ComSpec  
+#ifdef ComSpec  
   # WIN32
   ELFSIZE = $(SIZE) --mcu=$(MCU) --format=avr $(TARGET).elf
-else
+#else
   # Linux
-  ELFSIZE = $(SIZE)  $(TARGET).elf
-endif
+#  ELFSIZE = $(SIZE)  $(TARGET).elf
+#endif
 
 
 
@@ -520,7 +522,13 @@ extcoff: $(TARGET).elf
 	@echo $(MSG_EXTENDED_COFF) $(TARGET).cof
 	$(COFFCONVERT) -O coff-ext-avr $< $(TARGET).cof
 
-
+#create info file
+%.txt: %.elf
+	$(REMOVE) $@
+	#@echo "Configuration" >> $@
+	#@echo "==================================" >> $@
+	#@echo >> $@
+	$(ELFSIZE) >> $@
 
 # Create final output files (.hex, .eep) from ELF output file.
 %.hex: %.elf
@@ -550,7 +558,7 @@ extcoff: $(TARGET).elf
 %.bin: %.elf
 	@echo
 	@echo "creating Binary for use with bootloader"
-	$(OBJCOPY) $< -S -R .eeprom -O binary $@
+	$(OBJCOPY) $< -S -R .eeprom -R .fuse -O binary $@
 
 # Create library from object files.
 .SECONDARY : $(TARGET).a
@@ -620,6 +628,7 @@ clean_list :
 	$(REMOVE) $(TARGET).map
 	$(REMOVE) $(TARGET).sym
 	$(REMOVE) $(TARGET).lss
+	$(REMOVE) $(TARGET).txt
 	$(REMOVE) $(SRC:%.c=$(OBJDIR)/%.o)
 	$(REMOVE) $(SRC:%.c=$(OBJDIR)/%.lst)
 	$(REMOVE) $(ASRC:%.S=$(OBJDIR)/%.o)

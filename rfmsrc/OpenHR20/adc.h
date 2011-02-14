@@ -54,6 +54,7 @@
 #define temp_average (ring_average[TEMP_RING_TYPE])
 #define bat_average (ring_average[BAT_RING_TYPE])
 #define AVGS_BUFFER_LEN (4*8) // 4 per minute * 8
+#define AVERAGE_LEN 15
 
 #if THERMOTRONIC==1
 #define TEMP_CAL_OFFSET 380 // offset of calibration points [ADC units]
