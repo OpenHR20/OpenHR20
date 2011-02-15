@@ -519,7 +519,7 @@ extcoff: $(TARGET).elf
 	--change-section-lma .eeprom=0 --no-change-warnings -O $(FORMAT) $< $@ || exit 0
 
 # Create extended listing file from ELF output file.
-%.lss: %.elf sizeafter
+%.lss: %.elf
 	@echo
 	@echo $(MSG_EXTENDED_LISTING) $@
 	$(OBJDUMP) -h -S -z $< > $@

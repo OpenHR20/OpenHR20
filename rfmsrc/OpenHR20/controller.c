@@ -64,7 +64,10 @@ uint8_t CTL_error=0;
 
 #if (HW_WINDOW_DETECTION)
 static void CTL_window_detection(void) {
-	bool w = ((PINE & (1<<PE2))!=0) && config.window_open_detection_enable;
+	bool w;
+	PORTE |= _BV(PE2); // enable pull-up
+	w = ((PINE & _BV(PE2))!=0) && config.window_open_detection_enable;
+	if (!w) PORTE &= ~_BV(PE2); // disable pullup for save energy
 
 	if (CTL_mode_window != w) {
 		if (window_timer==0) {
