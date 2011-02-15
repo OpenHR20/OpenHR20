@@ -72,8 +72,6 @@ In this file we define only configuration parameters, for example what kind of c
 #ifndef REVISION
  #define REVISION "$Rev$"
 #endif
-#define VERSION_STRING  ":OpenHR20rfm E" STR(REVHIGH) "." STR(REVLOW) " " __DATE__ " " __TIME__ " " REVISION
-
 
 // Parameters for the COMM-Port
 #define COM_BAUD_RATE 9600
@@ -193,6 +191,14 @@ In this file we define only configuration parameters, for example what kind of c
 
 // typedefs
 typedef enum { false, true } bool;
+
+#if RFM
+	#define VER_NAME "OpenHR20rfm"
+#else
+	#define VER_NAME "OpenHR20"
+#endif
+
+#define VERSION_STRING  ":" VER_NAME " " STR(REVHIGH) "." STR(REVLOW) " " __DATE__ " " __TIME__ " " REVISION
 
 #endif /* CONFIG_H */
 

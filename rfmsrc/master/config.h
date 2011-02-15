@@ -65,7 +65,7 @@ In this file we define only configuration parameters, for example what kind of c
 #ifndef REVISION
  #define REVISION "$Rev$"
 #endif 
-#define VERSION_STRING  "V: OpenHR20 master SW version 0.02 build " __DATE__ " " __TIME__ " " REVISION
+#define VERSION_STRING  "V: OpenHR20 master SW version 1.0 build " __DATE__ " " __TIME__ " " REVISION
 
 // Parameters for the COMM-Port
 #define COM_BAUD_RATE 38400
