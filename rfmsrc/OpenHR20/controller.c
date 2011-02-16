@@ -65,7 +65,8 @@ uint8_t CTL_error=0;
 #if (HW_WINDOW_DETECTION)
 static void CTL_window_detection(void) {
 	bool w;
-	PORTE |= _BV(PE2); // enable pull-up
+	// PORTE |= _BV(PE2); // enable pull-up
+	// nop();nop();
 	w = ((PINE & _BV(PE2))!=0) && config.window_open_detection_enable;
 	if (!w) PORTE &= ~_BV(PE2); // disable pullup for save energy
 
@@ -122,6 +123,10 @@ static void CTL_window_detection(void) {
  *
  ******************************************************************************/
 uint8_t CTL_update(bool minute_ch, uint8_t valve) {
+#if (HW_WINDOW_DETECTION)
+	PORTE |= _BV(PE2); // enable pull-up
+#endif
+
     if ( minute_ch || (CTL_temp_auto==0) ) {
         // minutes changed or we need return to timers
         uint8_t t=RTC_ActualTimerTemperature(!(CTL_temp_auto==0));

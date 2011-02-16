@@ -214,6 +214,9 @@ int __attribute__ ((noreturn)) main(void)
 
         if (task & TASK_RTC) {
             task&=~TASK_RTC;
+			#if (HW_WINDOW_DETECTION)
+				PORTE |= _BV(PE2); // enable pull-up
+			#endif
             if (RTC_timer_done&_BV(RTC_TIMER_RTC))
             {
                 RTC_AddOneSecond();
