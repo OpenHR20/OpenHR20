@@ -58,7 +58,7 @@ uint8_t CTL_mode_window = 0; // open window (0=closed, >0 open-timmer)
 static uint16_t PID_update_timeout=AVERAGE_LEN+1;   // timer to next PID controler action/first is 16 sec after statup
 int8_t PID_force_update=AVERAGE_LEN+1;      // signed value, val<0 means disable force updates \todo rename
 
-static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old_result);
+static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t old_result);
 
 uint8_t CTL_error=0;
 
@@ -254,7 +254,7 @@ int16_t sumError=0;
  *  \param setPoint  Desired value.
  *  \param processValue  Measured value.
  */
-static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old_result)
+static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t old_result)
 {
   int32_t /*error2,*/ pi_term;
   int16_t error16, maxSumError;
@@ -318,7 +318,7 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old
     int16_t pi_term16 = pi_term;
 
     // asymetric round, ignore changes < 3/4%
-    if ((int8_t)(pi_term16/scalling_factor) >= old_result) {
+    if ((uint8_t)(pi_term16/scalling_factor) >= old_result) {
         pi_term16 += scalling_factor*1/4; // prepare for round
     } else {
         pi_term16 += scalling_factor*3/4; // prepare for round
