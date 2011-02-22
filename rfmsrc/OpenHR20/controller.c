@@ -288,16 +288,14 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old
     }
     lastProcessValue = processValue;
   }
-  if (config.I_Factor == 0) {
-      maxSumError = 12800; // scalling_factor*50/1
-  } else {
+  if (config.I_Factor > 0) {
       // for overload protection: maximum is scalling_factor*50/1 = 12800
       maxSumError = ((int16_t)scalling_factor*50)/config.I_Factor;
-  }
-  if(sumError > maxSumError){
-    sumError = maxSumError;
-  } else if(sumError < -maxSumError){
-    sumError = -maxSumError;
+	  if(sumError > maxSumError){
+		sumError = maxSumError;
+	  } else if(sumError < -maxSumError){
+		sumError = -maxSumError;
+	  }
   }
 
   pi_term = ((int32_t)config.PP_Factor * (int32_t)abs(error16));
@@ -310,7 +308,7 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old
   // pi_term - > for overload limit: maximum is +- (3986367 + scalling_factor*50) = +-3999167
 
   pi_term += (int16_t)(config.valve_center)*scalling_factor;
-  if(pi_term > 100*scalling_factor){
+  if(pi_term > (int32_t)((uint16_t)config.valve_max*scalling_factor)){
     return config.valve_max;
   } else if(pi_term < 0){
     return config.valve_min;
@@ -319,14 +317,15 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, int8_t old
   {
     int16_t pi_term16 = pi_term;
 
-    // ignore changes < 1%
-    if (abs(pi_term16-((int16_t)(old_result)*scalling_factor))<scalling_factor) return old_result;
+    // asymetric round, ignore changes < 3/4%
+    if ((int8_t)(pi_term16/scalling_factor) >= old_result) {
+        pi_term16 += scalling_factor*1/4; // prepare for round
+    } else {
+        pi_term16 += scalling_factor*3/4; // prepare for round
+    }
+    pi_term16 /= scalling_factor;
 
-    pi_term16 >>=8; //= scalling_factor;
-
-    if(pi_term16 > config.valve_max){
-      return config.valve_max;
-    } else if(pi_term16 < config.valve_min){
+	if(pi_term16 < config.valve_min){
       return config.valve_min;
     }
     return((uint8_t)pi_term16);
