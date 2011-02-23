@@ -318,10 +318,11 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t ol
     int16_t pi_term16 = pi_term;
 
     // asymetric round, ignore changes < 3/4%
+    pi_term16 += scalling_factor/2; // prepare for round
     if ((uint8_t)(pi_term16/scalling_factor) >= old_result) {
-        pi_term16 += scalling_factor*1/4; // prepare for round
+        pi_term16 -= config.valve_hysteresis; // prepare for round
     } else {
-        pi_term16 += scalling_factor*3/4; // prepare for round
+        pi_term16 += config.valve_hysteresis; // prepare for round
     }
     pi_term16 /= scalling_factor;
 
