@@ -84,9 +84,11 @@ class contend_status extends contend {
       <!--[if IE]><script language="javascript" type="text/javascript" src="/js/excanvas.min.js"></script><![endif]-->
       <script language="javascript" type="text/javascript" src="/js/jquery.min.js"></script>
       <script language="javascript" type="text/javascript" src="/js/jquery.flot.min.js"></script>
+      <script language="javascript" type="text/javascript" src="/js/jquery.flot.selection.min.js"></script>
+      
       
       <script id="source" language="javascript" type="text/javascript">
-      document.write("<div id=\"placeholder\" style=\"width:800px;height:400px;\"></div>");
+      document.write("<div id=\"chart\" style=\"width:800px;height:400px;\"></div>");
       $(function () {
 	<?php
 	    $now = time();
@@ -122,17 +124,62 @@ class contend_status extends contend {
 	    echo "var markings = ". json_encode($markings).";\n";
 	    
 	?>
-	    $.plot($("#placeholder"),
-	       [ { data: wanted },
-	         { data: real },
-	         { data: valve, yaxis: 2 }],
-	       { 
+	    var chart=$("#chart");
+	    var data= [{ data: wanted , label: "Wanted temp.", unit: "॰C "},
+	         { data: real, label: "Real temp." , unit: "॰C" },
+		 { data: valve, yaxis: 2, label: "Valve", unit: "%" }];
+	    var options = { 
 	            xaxis: { mode: 'time' },
 		    yaxis: { tickFormatter: function (v, axis) { return v.toFixed(axis.tickDecimals) +"॰C" }},
 		    y2axis: { tickFormatter: function (v, axis) { return v.toFixed(axis.tickDecimals) +"%" }},
-		    grid: {  markings: markings },
-		    colors: ["#00ff00", "#ff0000", "#0000ff"]
-	        });
+		    grid: {  markings: markings, hoverable: true },
+		    colors: [ "#00ff00", "#ff0000", "#0000ff" ],
+		    selection: { mode: "xy" },
+		    legend: { show: false }
+	        };
+	    $.plot(chart, data, options );
+	    chart.bind("plotselected", function (event, ranges) {
+		plot = $.plot(chart, data,
+		    $.extend(true, {}, options, {
+			xaxis: { min: ranges.xaxis.from, max: ranges.xaxis.to },
+			yaxis: { min: ranges.yaxis.from, max: ranges.yaxis.to },
+			y2axis: { min: ranges.y2axis.from, max: ranges.y2axis.to }
+		    }));			
+		    $('<div class="button" style="right:40px;top:20px">zoom out</div>').appendTo(chart).click(function(e) {
+			e.preventDefault();
+			$.plot(chart, data, options );
+		    });
+	    });
+	    
+	    function showTooltip(x, y, contents) {
+	        $('<div id="tooltip">' + contents + '</div>').css( {
+		    position: 'absolute',
+		    display: 'none',
+		    top: y + 5,
+		    left: x + 5,
+		    border: '1px solid #fdd',
+		    padding: '2px',
+		    'background-color': '#fee',
+		    opacity: 0.80
+		}).appendTo("body").fadeIn(200);
+	    }
+	    
+	    var previousPoint = null;
+	    chart.bind("plothover", function (event, pos, item) {
+		    if (item) {
+		        if (previousPoint != item.datapoint) {
+			    previousPoint = item.datapoint;
+			    $("#tooltip").remove();
+			    var x = item.datapoint[0].toFixed(2),
+			        y = item.datapoint[1].toFixed(2);
+			    showTooltip(item.pageX, item.pageY,
+				item.series.label + " : " + y + item.series.unit);
+			}
+		    } else {
+			$("#tooltip").remove();
+			previousPoint = null;
+		    }
+	    });
 	});
       </script>												   
 	      

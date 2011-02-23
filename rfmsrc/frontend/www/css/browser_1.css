@@ -66,3 +66,18 @@ table {
   background-color: #99FF00;
   /* border: 1px solid blue; */
 }
+
+input.disabled, select.disabled, button.disabled {
+    background-color: lightgrey;
+    color: gray;
+}
+	
+#chart div.button {
+    position: absolute;
+    cursor: pointer;
+    font-size: smaller;
+    color: #999;
+    background-color: #eee;
+    padding: 2px;
+}
+				    
