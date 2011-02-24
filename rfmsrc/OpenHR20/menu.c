@@ -75,7 +75,7 @@ typedef enum {
 } menu_t;
 
 menu_t menu_state;
-static bool locked = false; 
+bool menu_locked = false; 
 uint32_t hourbar_buff;
 
 /*!
@@ -106,10 +106,10 @@ static bool events_common(void) {
     bool ret=false;
     if (kb_events & KB_EVENT_LOCK_LONG) {
         menu_auto_update_timeout=LONG_PRESS_THLD+1;
-        locked = ! locked;
-        menu_state = (locked)?menu_lock:menu_home;
+        menu_locked = ! menu_locked;
+        menu_state = (menu_locked)?menu_lock:menu_home;
         ret=true;
-    } else if (!locked) {    
+    } else if (!menu_locked) {    
         if (kb_events & KB_EVENT_ALL_LONG) { // service menu
             menu_state = menu_service1;
             ret=true;
@@ -227,7 +227,7 @@ bool menu_controller(bool new_state) {
             if (menu_state > menu_home4) menu_state=menu_home;
             ret=true; 
         } else {
-            if (locked) {
+            if (menu_locked) {
                 if ( kb_events & (
                         KB_EVENT_WHEEL_PLUS  | KB_EVENT_WHEEL_MINUS | KB_EVENT_PROG
                         | KB_EVENT_AUTO | KB_EVENT_PROG_REWOKE | KB_EVENT_C_REWOKE | KB_EVENT_AUTO_REWOKE

@@ -588,7 +588,7 @@ void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok) {
                 print_s_p(PSTR(" E"));
                 print_hexXX(d[3]);
                 if ((d[2]&0x40)!=0) print_s_p(PSTR(" W")); 
-                if ((d[2]&0x80)!=0) print_s_p(PSTR(" X")); 
+                if ((d[2]&0x80)!=0) print_s_p(PSTR(" L")); 
                 d+=10;
                 break;
             case 'T':
@@ -622,6 +622,16 @@ void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok) {
                 COM_putchar('=');
                 print_hexXX(d[2]);
                 d+=3;
+                break;                
+            case 'L':
+                COM_putchar(d[0]);
+                len-=2;
+                if (len<0) {
+                    print_incomplete_mark(len);
+                    break;
+                }
+                print_hexXX(d[1]);
+                d+=2;
                 break;                
             default:
                 while ((len--)>0) {

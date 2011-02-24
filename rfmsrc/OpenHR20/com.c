@@ -1,4 +1,4 @@
-/*
+/*`
  *  Open HR20
  *
  *  target:     ATmega169 @ 4 MHz in Honnywell Rondostat HR20E
@@ -47,12 +47,15 @@
 #include "watch.h"
 #include "eeprom.h"
 #include "controller.h"
+#include "menu.h"
 #include "../common/wireless.h"
 #include "debug.h"
 
 
 #define TX_BUFF_SIZE 128
 #define RX_BUFF_SIZE 32
+
+#define ENABLE_LOCAL_COMMANDS 1
 
 static char tx_buff[TX_BUFF_SIZE];
 static char rx_buff[RX_BUFF_SIZE];
@@ -205,7 +208,7 @@ static void print_hexXX(uint8_t i) {
  *******************************************************************************
  *  \brief helper function print 4 digit dec number
  *
- *  \note only unsigned numbers
+ *  \note
  ******************************************************************************/
 static void print_hexXXXX(uint16_t i) {
 	print_hexXX(i>>8);
@@ -216,7 +219,7 @@ static void print_hexXXXX(uint16_t i) {
  *******************************************************************************
  *  \brief helper function print string without \n2 digit dec number
  *
- *  \note only unsigned numbers
+ *  \note
  ******************************************************************************/
 static void print_s_p(const char * s) {
 	char c;
@@ -309,6 +312,9 @@ void COM_print_debug(int8_t valve) {
 	if (mode_window()) {
 		print_s_p(PSTR(" W"));
 	}
+	if (menu_locked) {
+		print_s_p(PSTR(" L"));
+	}
 	COM_putchar('\n');
 	COM_flush();
 #if (RFM==1)
@@ -323,7 +329,8 @@ void COM_print_debug(int8_t valve) {
         | ((CTL_mode_auto)?0x80:0));
 	wireless_putchar(
            RTC_GetSecond()
-        | ((mode_window())?0x40:0));
+        | ((mode_window())?0x40:0)
+        | ((menu_locked)?0x80:0));
 	wireless_putchar(CTL_error);
 	wireless_putchar(temp_average >> 8); // current temp
 	wireless_putchar(temp_average & 0xff);
@@ -407,6 +414,7 @@ static void print_idx(char t, uint8_t i) {
  *  \note   Hhhmmss\n - set, hour hh, minute mm, second ss; HEX values!!!
  *  \note   Axx\n - set wanted temperature [unit 0.5C]
  *  \note   Mxx\n - set mode and close window (00=manu 01=auto fd=nochange/close window only)
+ * 	\note	Lxx\n - Lock keys, and return lock status (00=unlock, 01=lock, 02=status only)
  *	
  ******************************************************************************/
 void COM_commad_parse (void) {
@@ -417,6 +425,7 @@ void COM_commad_parse (void) {
 			if (COM_getchar()=='\n') print_version(false);
 			c='\0';
 			break;
+#if ENABLE_LOCAL_COMMANDS
 		case 'D':
 			if (COM_getchar()=='\n') COM_print_debug(-1);
 			c='\0';
@@ -499,6 +508,12 @@ void COM_commad_parse (void) {
             CTL_set_temp(com_hex[0]);
             COM_print_debug(-1);
             break;
+        case 'L':
+            if (COM_hex_parse(1*2)!='\0') { break; }
+            if (com_hex[0]<=1) menu_locked=com_hex[0];
+            print_hexXX(menu_locked);
+            break;
+#endif
 		//case '\n':
 		//case '\0':
 		default:
@@ -593,6 +608,11 @@ void COM_wireless_command_parse (uint8_t * rfm_framebuf, uint8_t rfm_framepos) {
             if (rfm_framebuf[pos]>TEMP_MAX+1) { break; }
             CTL_set_temp(rfm_framebuf[pos++]);
             COM_print_debug(-2);
+            break;
+        case 'L':
+            if (rfm_framebuf[pos]<=1) menu_locked=rfm_framebuf[pos];
+            wireless_putchar(menu_locked);
+            pos++;
             break;
 		default:
 			break;
