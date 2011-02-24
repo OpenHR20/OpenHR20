@@ -151,20 +151,17 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
         } else {
             temp = CTL_temp_wanted;
         }
-        //update now
-        if (temp!=CTL_temp_wanted_last) {
-            CTL_temp_wanted_last=temp;
-            sumError=0;
-            goto UPDATE_NOW; // optimization
-        }
-        if (PID_update_timeout == 0) {
-            UPDATE_NOW:
+        if ((temp!=CTL_temp_wanted_last) || (PID_update_timeout == 0)) {
             PID_update_timeout = (config.PID_interval * 5); // new PID pooling
             if (temp>TEMP_MAX) {
                 valve = config.valve_max;
             } else {
                 valve = pid_Controller(calc_temp(temp),temp_average,valve);
             }
+			if (temp!=CTL_temp_wanted_last) {
+				CTL_temp_wanted_last=temp;
+				sumError=0;
+			}
         }
         COM_print_debug(valve);
         PID_force_update = -1; // invalid value = not used
