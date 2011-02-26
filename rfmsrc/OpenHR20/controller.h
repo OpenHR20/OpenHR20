@@ -64,5 +64,5 @@ void CTL_change_mode(int8_t dif);
 #define CTL_ERR_NA_1                    (1<<1)
 #define CTL_ERR_NA_0                    (1<<0)
 
-extern int16_t sumError;
+extern int32_t sumError;
 

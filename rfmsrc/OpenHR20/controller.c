@@ -151,17 +151,22 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
         } else {
             temp = CTL_temp_wanted;
         }
-        if ((temp!=CTL_temp_wanted_last) || (PID_update_timeout == 0)) {
+        if (temp!=CTL_temp_wanted_last) {
+			CTL_temp_wanted_last=temp;
+			goto UPDATE_NOW; // optimize
+		}
+        if (/*(temp!=CTL_temp_wanted_last) ||*/ (PID_update_timeout == 0)) {
+			UPDATE_NOW:
             PID_update_timeout = (config.PID_interval * 5); // new PID pooling
             if (temp>TEMP_MAX) {
                 valve = config.valve_max;
             } else {
                 valve = pid_Controller(calc_temp(temp),temp_average,valve);
             }
-			if (temp!=CTL_temp_wanted_last) {
+			/*if (temp!=CTL_temp_wanted_last) {
 				CTL_temp_wanted_last=temp;
 				sumError=0;
-			}
+			}*/
         }
         COM_print_debug(valve);
         PID_force_update = -1; // invalid value = not used
@@ -232,11 +237,8 @@ void CTL_change_mode(int8_t m) {
     CTL_mode_window = 0;
 }
 
-//! Last process value, used to find derivative of process value.
-static int16_t lastProcessValue=0;
-
 //! Summation of errors, used for integrate calculations
-int16_t sumError=0;
+int32_t sumError=0;
 //! The scalling_factor for PID constants
 #define scalling_factor  (256)
 #if (scalling_factor != 256)
@@ -254,7 +256,7 @@ int16_t sumError=0;
 static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t old_result)
 {
   int32_t /*error2,*/ pi_term;
-  int16_t error16, maxSumError;
+  int16_t error16;
   error16 = setPoint - processValue;
 
   // maximum error is 20 degree C
@@ -264,30 +266,16 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t ol
     error16=-2000;
   }
 
-  // Calculate Iterm and limit integral runaway
-  {
-    int16_t d = lastProcessValue - processValue;
-    if  ((lastProcessValue!=0)
-	&& (
-		((d==0) && (abs(error16)>config.temp_tolerance))
-	     || ((d>0)  && (error16>0))
-	     || ((d<0)  && (error16<0))
-	   )) {
-        // update sumError if turn is wrong only
-        int16_t max = (int16_t)scalling_factor*50/config.P_Factor;
-        if (error16 > max) {  // maximum sumError change + limiter
-          sumError += max;
-        } else if (error16 < -max) { // maximum sumError change - limiter
-          sumError -= max;
-        } else {
-          sumError += error16;
-        }
-    }
-    lastProcessValue = processValue;
+  if (  ((old_result>config.valve_min)||(error16>0))
+	 && ((old_result<config.valve_max)||(error16<0))) {
+	 // ignore interator update on valve saturation
+		 
+	 sumError += error16*8;
   }
   if (config.I_Factor > 0) {
+	  int32_t maxSumError;
       // for overload protection: maximum is scalling_factor*50/1 = 12800
-      maxSumError = ((int16_t)scalling_factor*50)/config.I_Factor;
+      maxSumError = ((int32_t)scalling_factor*(int32_t)scalling_factor*50)/config.I_Factor;
 	  if(sumError > maxSumError){
 		sumError = maxSumError;
 	  } else if(sumError < -maxSumError){
@@ -298,24 +286,26 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t ol
   pi_term = ((int32_t)config.PP_Factor * (int32_t)abs(error16));
   pi_term += (int32_t)((uint16_t)config.P_Factor <<8);
   pi_term *= (int32_t)error16;
-  pi_term >>= 8;
-  // pi_term - > for overload limit: maximum is +-(((255*2000)+255)*2000) = +-1020510000/256=3986367
+  pi_term += (int32_t)(config.I_Factor) * sumError; // maximum is 65536*50=(scalling_factor*scalling_factor*50/I_Factor)*I_Factor
+  /* 
+   * pi_term - > for overload limit: 
+   * maximum is +-(((255*2000)+255)*2000+65536*50)
+   * = +-1023786800 fit into signed 32bit
+  */
+  pi_term += (int32_t)(config.valve_center)*scalling_factor*scalling_factor;
+  pi_term >>= 8; // /=scalling_factor
 
-  pi_term += (int16_t)(config.I_Factor) * (int16_t)sumError; // maximum is (scalling_factor*50/I_Factor)*I_Factor
-  // pi_term - > for overload limit: maximum is +- (3986367 + scalling_factor*50) = +-3999167
-
-  pi_term += (int16_t)(config.valve_center)*scalling_factor;
   if(pi_term > (int32_t)((uint16_t)config.valve_max*scalling_factor)){
     return config.valve_max;
   } else if(pi_term < 0){
     return config.valve_min;
   }
-  // now we can use 16bit value
+  // now we can use 16bit value ( 0 < pi_term < 25600 )
   {
-    int16_t pi_term16 = pi_term;
+    uint16_t pi_term16 = pi_term;
 
 	{
-		bool gt = (uint8_t)(pi_term16/scalling_factor) >= old_result;
+		bool gt = (uint8_t)(pi_term16>>8 /*/scalling_factor*/) >= old_result;
 		// asymetric round, ignore changes < 3/4%
 		pi_term16 += scalling_factor/2; // prepare for round
 		if (gt) {
@@ -323,7 +313,7 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t ol
 		} else {
 			pi_term16 += config.valve_hysteresis; // prepare for round
 		}
-		pi_term16 /= scalling_factor;
+		pi_term16 >>= 8; // /= scalling_factor;
 	}
 
 	if(pi_term16 < config.valve_min){
