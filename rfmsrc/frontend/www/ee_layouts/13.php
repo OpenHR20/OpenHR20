@@ -9,7 +9,7 @@ $layout_ids_double = array (
     array( 'PP_Factor' , 'Proportional kvadratic tuning constant, multiplied with 256' ),
     array( 'P_Factor' , 'Proportional tuning constant, multiplied with 256' ),
     array( 'I_Factor' , 'Integral tuning constant, multiplied with 256' ),
-    array( 'temp_tolerance' , 'tolerance of temperature in 1/100 degree to lazy integrator (improve stability)' ),
+    array( 'reserved1' , '' ),
     array( 'PID_interval' , 'PID_interval*5 = interval in seconds' ),
     array( 'valve_min' , 'valve position limiter min' ),
     array( 'valve_center' , 'default valve position for "zero - error" - improve stabilization after change temperature' ),
