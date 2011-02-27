@@ -183,13 +183,13 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 02 */  {34,        34,  TEMP_MIN,TEMP_MAX},    //!< temperature 1  - energy save (unit is 0.5stC)
   /* 03 */  {42,        42,  TEMP_MIN,TEMP_MAX},    //!< temperature 2  - comfort (unit is 0.5stC)
   /* 04 */  {48,        48,  TEMP_MIN,TEMP_MAX},    //!< temperature 3  - supercomfort (unit is 0.5stC)
-  /* 05 */  {32,        32,         0,      255},   //!< PP_Factor;
+  /* 05 */  {16,        16,         0,      255},   //!< PP_Factor;
   /* 06 */  {2,          2,         0,      255},   //!< P_Factor;
-  /* 07 */  {32,        32,         0,      255},   //!< I_Factor;
+  /* 07 */  {16,        16,         0,      255},   //!< I_Factor;
   /* 08 */  {0,          0,         0,      255},   //!< reserved1
   /* 09 */  {240/5,   240/5,     20/5,      255},   //!< PID_interval*5 = interval in seconds;  min=20sec, max=21.25 minutes
   /* 0a */  {30,         30,        0,      100},   //!< valve_min
-  /* 0b */  {55,         55,        0,      100},   //!< valve_center
+  /* 0b */  {45,         45,        0,      100},   //!< valve_center
   /* 0c */  {80,         80,        0,      100},   //!< valve_max
   /* 0d */  {64,         64,        0,      127},   //!< valve_hysteresis; valve movement hysteresis (unit is 1/128%), must be <128
   /* 0e */  {32,         32,        32,     255},   //!< min motor_pwm PWM setting
@@ -199,7 +199,7 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 12 */  {78,         78,        5,      255},   //!< motor_close_eye_timeout; time from last pulse to disable eye [1/61sec]
   /* 13 */  {130,       130,      110,      250},   //!< motor_end_detect_cal; stop timer threshold in % to previous average 
   /* 14 */  {150,       150,      110,      250},   //!< motor_end_detect_run; stop timer threshold in % to previous average 
-  /* 15 */  {176,       176,       10,      255},   //!< motor_speed
+  /* 15 */  {184,       184,       10,      255},   //!< motor_speed
   /* 16 */  {50,         50,       10,      200},   //!< motor_speed_ctl_gain
   /* 17 */  {10,         10,        1,       64},   //!< motor_pwm_max_step             
   /* 18 */  {255,       255,        0,      255},   //!< manual calibration L
