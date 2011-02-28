@@ -245,7 +245,7 @@ int32_t sumError=0;
     #error optimized only for (scalling_factor == 256)
 #endif
 
-
+static int16_t lastProcessValue=0;
 /*! \brief non-linear  PID control algorithm.
  *
  *  Calculates output from setpoint, process value and PID status.
@@ -266,11 +266,18 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t ol
     error16=-2000;
   }
 
-  if (  ((old_result>config.valve_min)||(error16>0))
-	 && ((old_result<config.valve_max)||(error16<0))) {
-	 // ignore interator update on valve saturation
-		 
-	 sumError += error16*8;
+  {
+	  int16_t d = lastProcessValue - processValue;
+	  if (  ( (old_result>config.valve_min) || (error16>0) )
+		 && ( (old_result<config.valve_max) || (error16<0) )
+		 && ( ((d>=0)  && (error16>0))  || ((d<=0)  && (error16<0)) ) 	 
+	     ) {
+			  int16_t d = lastProcessValue - processValue;
+		 // PI windup protection
+			 
+		 sumError += error16*8;
+	  }
+	  lastProcessValue = processValue;
   }
   if (config.I_Factor > 0) {
 	  int32_t maxSumError;
