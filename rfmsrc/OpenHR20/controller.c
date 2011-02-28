@@ -260,10 +260,10 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t ol
   error16 = setPoint - processValue;
 
   // maximum error is 20 degree C
-  if (error16 > 2000) {
-    error16=2000;
-  } else if (error16 < -2000) {
-    error16=-2000;
+  if (error16 > 1200) {
+    error16=1200;
+  } else if (error16 < -1200) {
+    error16=-1200;
   }
 
   {
@@ -272,7 +272,6 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t ol
 		 && ( (old_result<config.valve_max) || (error16<0) )
 		 && ( ((d>=0)  && (error16>0))  || ((d<=0)  && (error16<0)) ) 	 
 	     ) {
-			  int16_t d = lastProcessValue - processValue;
 		 // PI windup protection
 			 
 		 sumError += error16*8;
@@ -290,14 +289,16 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t ol
 	  }
   }
 
-  pi_term = ((int32_t)config.PP_Factor * (int32_t)abs(error16));
-  pi_term += (int32_t)((uint16_t)config.P_Factor <<8);
+  pi_term = (int32_t)(error16);
+  pi_term *=  pi_term * (int32_t)config.P3_Factor;
+  pi_term >>= 8;
+  pi_term += ((uint16_t)config.P_Factor <<8);
   pi_term *= (int32_t)error16;
   pi_term += (int32_t)(config.I_Factor) * sumError; // maximum is 65536*50=(scalling_factor*scalling_factor*50/I_Factor)*I_Factor
   /* 
    * pi_term - > for overload limit: 
-   * maximum is +-(((255*2000)+255)*2000+65536*50)
-   * = +-1023786800 fit into signed 32bit
+   * maximum is +-(((255*1200*1200/256)+255)*1200+65536*50)
+   * = +-1724832800 fit into signed 32bit
   */
   pi_term += (int32_t)(config.valve_center)*scalling_factor*scalling_factor;
   pi_term >>= 8; // /=scalling_factor
