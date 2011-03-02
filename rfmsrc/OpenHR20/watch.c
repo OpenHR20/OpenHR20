@@ -61,18 +61,19 @@ static uint16_t watch_map[WATCH_N] PROGMEM = {
     /* 01 */ ((uint16_t) &bat_average) + B16,  // battery 
     /* 02 */ ((uint16_t) &sumError) + B16,
     /* 03 */ ((uint16_t) &sumError)+ 2 + B16,
-	/* 04 */ ((uint16_t) &CTL_temp_wanted) + B8,
-	/* 05 */ ((uint16_t) &CTL_temp_wanted_last) +B8,
-	/* 06 */ ((uint16_t) &CTL_temp_auto) +B8,
-	/* 07 */ ((uint16_t) &CTL_mode_auto) +B8,
-	/* 08 */ ((uint16_t) &CTL_mode_window) + B8,
-	/* 09 */ ((uint16_t) &motor_diag) + B16,
-	/* 0a */ ((uint16_t) &MOTOR_PosMax) + B16,
-	/* 0b */ ((uint16_t) &MOTOR_PosAct) + B16,
-	/* 0c */ ((uint16_t) &MOTOR_PosOvershoot) + B8,
+    /* 05 */ ((uint16_t) &CTL_allow_integration) + B8,
+	/* 06 */ ((uint16_t) &CTL_temp_wanted) + B8,
+	/* 07 */ ((uint16_t) &CTL_temp_wanted_last) +B8,
+	/* 08 */ ((uint16_t) &CTL_temp_auto) +B8,
+	/* 09 */ ((uint16_t) &CTL_mode_auto) +B8,
+	/* 0a */ ((uint16_t) &CTL_mode_window) + B8,
+	/* 0b */ ((uint16_t) &motor_diag) + B16,
+	/* 0c */ ((uint16_t) &MOTOR_PosMax) + B16,
+	/* 0d */ ((uint16_t) &MOTOR_PosAct) + B16,
+	/* 0e */ ((uint16_t) &MOTOR_PosOvershoot) + B8,
 #if DEBUG_MOTOR_COUNTER
-	/* 0d */ ((uint16_t) &MOTOR_counter) + B16,
-	/* 0e */ ((uint16_t) &MOTOR_counter)+ 2 + B16,
+	/* 0f */ ((uint16_t) &MOTOR_counter) + B16,
+	/* 10 */ ((uint16_t) &MOTOR_counter)+ 2 + B16,
 #endif
 };
 

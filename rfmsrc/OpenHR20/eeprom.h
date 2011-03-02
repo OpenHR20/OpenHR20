@@ -56,7 +56,7 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
     /* 05 */ uint8_t P3_Factor;  //!< Proportional cubic tuning constant
     /* 06 */ uint8_t P_Factor;  //!< Proportional tuning constant
     /* 07 */ uint8_t I_Factor;  //!< Integral tuning constant
-    /* 08 */ uint8_t reserved1;  //!< reserved1
+    /* 08 */ uint8_t I_allow_time;  //!< time in PID_interval steps for allow integrator after error cross 0
     /* 09 */ uint8_t PID_interval; //!< PID_interval*5 = interval in seconds    
     /* 0a */ uint8_t valve_min; //!< valve position limiter min
     /* 0b */ uint8_t valve_center;  //!< default valve position for "zero - error" - improve stabilization after change temperature
@@ -186,7 +186,7 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 05 */  {33,        33,         0,      255},   //!< P3_Factor;
   /* 06 */  {3,          3,         0,      255},   //!< P_Factor;
   /* 07 */  {16,        16,         0,      255},   //!< I_Factor;
-  /* 08 */  {0,          0,         0,      255},   //!< reserved1
+  /* 08 */  {10,        10,         0,      255},   //!< I_allow_time
   /* 09 */  {240/5,   240/5,     20/5,      255},   //!< PID_interval*5 = interval in seconds;  min=20sec, max=21.25 minutes
   /* 0a */  {30,         30,        0,      100},   //!< valve_min
   /* 0b */  {45,         45,        0,      100},   //!< valve_center

@@ -58,7 +58,7 @@ uint8_t CTL_mode_window = 0; // open window (0=closed, >0 open-timmer)
 static uint16_t PID_update_timeout=AVERAGE_LEN+1;   // timer to next PID controler action/first is 16 sec after statup
 int8_t PID_force_update=AVERAGE_LEN+1;      // signed value, val<0 means disable force updates \todo rename
 
-static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t old_result);
+static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t old_result, bool updateNow);
 
 uint8_t CTL_error=0;
 
@@ -151,22 +151,20 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
         } else {
             temp = CTL_temp_wanted;
         }
-        if (temp!=CTL_temp_wanted_last) {
+        bool updateNow=(temp!=CTL_temp_wanted_last);
+        if (updateNow) {
 			CTL_temp_wanted_last=temp;
+			CTL_allow_integration = 0;
 			goto UPDATE_NOW; // optimize
 		}
-        if (/*(temp!=CTL_temp_wanted_last) ||*/ (PID_update_timeout == 0)) {
+        if ((PID_update_timeout == 0)) {
 			UPDATE_NOW:
             PID_update_timeout = (config.PID_interval * 5); // new PID pooling
             if (temp>TEMP_MAX) {
                 valve = config.valve_max;
             } else {
-                valve = pid_Controller(calc_temp(temp),temp_average,valve);
+                valve = pid_Controller(calc_temp(temp),temp_average,valve,updateNow);
             }
-			/*if (temp!=CTL_temp_wanted_last) {
-				CTL_temp_wanted_last=temp;
-				sumError=0;
-			}*/
         }
         COM_print_debug(valve);
         PID_force_update = -1; // invalid value = not used
@@ -245,7 +243,8 @@ int32_t sumError=0;
     #error optimized only for (scalling_factor == 256)
 #endif
 
-static int16_t lastProcessValue=0;
+static uint8_t lastErrorSign = 0;
+uint8_t CTL_allow_integration = 0;
 /*! \brief non-linear  PID control algorithm.
  *
  *  Calculates output from setpoint, process value and PID status.
@@ -253,13 +252,13 @@ static int16_t lastProcessValue=0;
  *  \param setPoint  Desired value.
  *  \param processValue  Measured value.
  */
-static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t old_result)
+static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t old_result, bool updateNow)
 {
   int32_t /*error2,*/ pi_term;
   int16_t error16;
   error16 = setPoint - processValue;
 
-  // maximum error is 20 degree C
+  // maximum error is 12 degree C
   if (error16 > 1200) {
     error16=1200;
   } else if (error16 < -1200) {
@@ -267,16 +266,27 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t ol
   }
 
   {
-	  int16_t d = lastProcessValue - processValue;
-	  if (  ( (old_result>config.valve_min) || (error16>0) )
-		 && ( (old_result<config.valve_max) || (error16<0) )
-		 && ( ((d>=0)  && (error16>0))  || ((d<=0)  && (error16<0)) ) 	 
-	     ) {
-		 // PI windup protection
-			 
-		 sumError += error16*8;
+	  if (updateNow) {
+		  CTL_allow_integration=0;
+	  } else {
+		  if ((((lastErrorSign^(uint8_t)(error16>>8))&0x80)!=0) || (error16==0)) {
+			  //sign of last error16 != sign of current OR error16 == 0
+			  // if (abs(error16)<50) { // ?? alternative ??
+			  CTL_allow_integration = config.I_allow_time;
+		  }
 	  }
-	  lastProcessValue = processValue;
+	  lastErrorSign = (uint8_t)(error16>>8);
+	  if ( CTL_allow_integration > 0 ) {
+		  // PI windup protection I
+		  CTL_allow_integration--;
+		  if (  ( (old_result>config.valve_min) || (error16>=0) )
+			 && ( (old_result<config.valve_max) || (error16<0) )
+			 ) {
+			 // PI windup protection II
+			 sumError += error16*8;
+		  }
+	  }
+	  
   }
   if (config.I_Factor > 0) {
 	  int32_t maxSumError;
