@@ -188,7 +188,11 @@ static int16_t ADC_Convert_To_Degree(int16_t adc)
             (((int32_t)(adc - kx))*(-TEMP_CAL_STEP))
             /(int32_t)(kx_d[i])
     ); 
+
     dummy += TEMP_CAL_N*TEMP_CAL_STEP-((int16_t)(i-1))*TEMP_CAL_STEP;
+#if TEMP_COMPENSATE_OPTION
+    dummy += (int16_t)config.room_temp_offset*10;
+#endif
 
     return (dummy);        
 }

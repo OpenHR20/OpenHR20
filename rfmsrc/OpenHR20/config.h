@@ -90,6 +90,9 @@ In this file we define only configuration parameters, for example what kind of c
 #ifndef HW_WINDOW_DETECTION
 	#define HW_WINDOW_DETECTION 0
 #endif
+#ifndef TEMP_COMPENSATE_OPTION
+	#define TEMP_COMPENSATE_OPTION 0
+#endif
 
 #if THERMOTRONIC
     #ifdef RFM
