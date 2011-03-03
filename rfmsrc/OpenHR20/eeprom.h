@@ -97,7 +97,7 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
     /* 29 */ uint8_t window_open_timeout;           //!< maximum time for window open state [minutes]
 #endif
 #if TEMP_COMPENSATE_OPTION
-	/* 2A */ int8_t  room_temp_offset;
+	/*    */ int8_t  room_temp_offset;
 #endif
 #if (RFM==1)
 	/*    */ uint8_t RFM_devaddr; //!< HR20's own device address in RFM radio networking. =0 mean disable radio
