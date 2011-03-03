@@ -57,6 +57,8 @@ uint8_t CTL_mode_window = 0; // open window (0=closed, >0 open-timmer)
 #endif
 static uint16_t PID_update_timeout=AVERAGE_LEN+1;   // timer to next PID controler action/first is 16 sec after statup
 int8_t PID_force_update=AVERAGE_LEN+1;      // signed value, val<0 means disable force updates \todo rename
+static bool lastMovementPlus = false;
+uint8_t CTL_allow_integration = 0;
 
 static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t old_result, bool updateNow);
 
@@ -160,11 +162,19 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
         if ((PID_update_timeout == 0)) {
 			UPDATE_NOW:
             PID_update_timeout = (config.PID_interval * 5); // new PID pooling
+			uint8_t new_valve;
             if (temp>TEMP_MAX) {
-                valve = config.valve_max;
+                new_valve = config.valve_max;
             } else {
-                valve = pid_Controller(calc_temp(temp),temp_average,valve,updateNow);
+                new_valve = pid_Controller(calc_temp(temp),temp_average,valve,updateNow);
             }
+			{
+				bool plus = ((new_valve == valve)?lastMovementPlus:(new_valve>valve));
+				if (!updateNow && (plus != lastMovementPlus)) {
+					CTL_allow_integration = config.I_allow_time;
+				}
+				lastMovementPlus = plus;
+			}
         }
         COM_print_debug(valve);
         PID_force_update = -1; // invalid value = not used
@@ -235,16 +245,19 @@ void CTL_change_mode(int8_t m) {
     CTL_mode_window = 0;
 }
 
+#define ALLOW_INTEGRATOR_ON_ZERO_CROSS 0
 //! Summation of errors, used for integrate calculations
 int32_t sumError=0;
+#if ALLOW_INTEGRATOR_ON_ZERO_CROSS
+	static uint8_t lastErrorSign = 0;
+#endif
 //! The scalling_factor for PID constants
 #define scalling_factor  (256)
 #if (scalling_factor != 256)
     #error optimized only for (scalling_factor == 256)
 #endif
 
-static uint8_t lastErrorSign = 0;
-uint8_t CTL_allow_integration = 0;
+//static uint8_t lastErrorSign = 0;
 /*! \brief non-linear  PID control algorithm.
  *
  *  Calculates output from setpoint, process value and PID status.
@@ -266,16 +279,16 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t ol
   }
 
   {
-	  if (updateNow) {
-		  CTL_allow_integration=0;
-	  } else {
+	  #if ALLOW_INTEGRATOR_ON_ZERO_CROSS
+		if (!updateNow) {
 		  if ((((lastErrorSign^(uint8_t)(error16>>8))&0x80)!=0) || (error16==0)) {
-			  //sign of last error16 != sign of current OR error16 == 0
-			  // if (abs(error16)<50) { // ?? alternative ??
-			  CTL_allow_integration = config.I_allow_time;
-		  }
-	  }
-	  lastErrorSign = (uint8_t)(error16>>8);
+				  //sign of last error16 != sign of current OR error16 == 0
+				  // if (abs(error16)<50) { // ?? alternative ??
+				  CTL_allow_integration = config.I_allow_time;
+			  }
+		 }
+		 lastErrorSign = (uint8_t)(error16>>8);
+	  #endif
 	  if ( CTL_allow_integration > 0 ) {
 		  // PI windup protection I
 		  CTL_allow_integration--;
@@ -337,7 +350,8 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t ol
 	if(pi_term16 < config.valve_min){
       return config.valve_min;
     }
-    return((uint8_t)pi_term16);
+    
+	return (uint8_t)pi_term16;
   }
 }
 
