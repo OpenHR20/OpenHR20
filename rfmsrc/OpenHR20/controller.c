@@ -175,6 +175,7 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
 				}
 				lastMovementPlus = plus;
 			}
+			valve=new_valve;
         }
         COM_print_debug(valve);
         PID_force_update = -1; // invalid value = not used
