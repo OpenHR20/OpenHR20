@@ -295,6 +295,7 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t ol
 		  CTL_allow_integration--;
 		  if (  ( (old_result>config.valve_min) || (error16>=0) )
 			 && ( (old_result<config.valve_max) || (error16<0) )
+			 && ( ((error16>=0) && lastMovementPlus) || ((error16<0) && !lastMovementPlus) )
 			 ) {
 			 // PI windup protection II
 			 sumError += error16*8;
