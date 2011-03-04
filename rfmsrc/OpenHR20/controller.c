@@ -170,7 +170,7 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
             }
 			{
 				bool plus = ((new_valve == valve)?lastMovementPlus:(new_valve>valve));
-				if (!updateNow && (plus != lastMovementPlus)) {
+				if ((valve>config.valve_min) && (valve<config.valve_max) &&  !updateNow && (plus != lastMovementPlus)) {
 					CTL_allow_integration = config.I_allow_time;
 				}
 				lastMovementPlus = plus;
@@ -258,6 +258,8 @@ int32_t sumError=0;
     #error optimized only for (scalling_factor == 256)
 #endif
 
+//! Last process value, used to find derivative of process value. 	 
+static int16_t lastProcessValue=0;
 //static uint8_t lastErrorSign = 0;
 /*! \brief non-linear  PID control algorithm.
  *
@@ -295,14 +297,17 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t ol
 		  CTL_allow_integration--;
 		  if (  ( (old_result>config.valve_min) || (error16>=0) )
 			 && ( (old_result<config.valve_max) || (error16<0) )
-			 && ( ((error16>=0) && lastMovementPlus) || ((error16<0) && !lastMovementPlus) )
+			 && ( ((processValue>lastProcessValue) && lastMovementPlus) || ((processValue<lastProcessValue) && !lastMovementPlus) )
 			 ) {
 			 // PI windup protection II
 			 sumError += error16*8;
-		  }
+		  } else {
+			 CTL_allow_integration = 0;
+		  } 
 	  }
 	  
   }
+  lastProcessValue = processValue;
   if (config.I_Factor > 0) {
 	  int32_t maxSumError;
       // for overload protection: maximum is scalling_factor*50/1 = 12800
