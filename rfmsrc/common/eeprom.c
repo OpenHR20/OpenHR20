@@ -27,8 +27,8 @@
  * \file       eeprom.c
  * \brief      EEPROM storage
  * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>
- * \date       $Date: 2008-12-25 21:30:16 +0100 (čt, 25 XII 2008) $
- * $Rev: 120 $
+ * \date       $Date$
+ * $Rev$
  */
 
 #include "config.h"
