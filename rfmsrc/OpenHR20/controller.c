@@ -57,8 +57,8 @@ uint8_t CTL_mode_window = 0; // open window (0=closed, >0 open-timmer)
 #endif
 static uint16_t PID_update_timeout=AVERAGE_LEN+1;   // timer to next PID controler action/first is 16 sec after statup
 int8_t PID_force_update=AVERAGE_LEN+1;      // signed value, val<0 means disable force updates \todo rename
-static bool lastMovementPlus = false;
-uint8_t CTL_allow_integration = 0;
+#define VALVE_HISTORY_LEN 10
+static uint8_t valveHistory[VALVE_HISTORY_LEN];
 
 static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t old_result, bool updateNow);
 
@@ -156,7 +156,7 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
         bool updateNow=(temp!=CTL_temp_wanted_last);
         if (updateNow) {
 			CTL_temp_wanted_last=temp;
-			CTL_allow_integration = 0;
+			//CTL_allow_integration = 0;
 			goto UPDATE_NOW; // optimize
 		}
         if ((PID_update_timeout == 0)) {
@@ -168,12 +168,12 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
             } else {
                 new_valve = pid_Controller(calc_temp(temp),temp_average,valve,updateNow);
             }
-			{
-				bool plus = ((new_valve == valve)?lastMovementPlus:(new_valve>valve));
-				if ((valve>config.valve_min) && (valve<config.valve_max) &&  !updateNow && (plus != lastMovementPlus)) {
-					CTL_allow_integration = config.I_allow_time;
+			{	
+				int8_t i;
+				for (i=VALVE_HISTORY_LEN-1; i>0; i--) {
+					valveHistory[i]=valveHistory[i-1];
 				}
-				lastMovementPlus = plus;
+				valveHistory[0]=valve;
 			}
 			valve=new_valve;
         }
@@ -282,30 +282,25 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t ol
   }
 
   {
-	  #if ALLOW_INTEGRATOR_ON_ZERO_CROSS
-		if (!updateNow) {
-		  if ((((lastErrorSign^(uint8_t)(error16>>8))&0x80)!=0) || (error16==0)) {
-				  //sign of last error16 != sign of current OR error16 == 0
-				  // if (abs(error16)<50) { // ?? alternative ??
-				  CTL_allow_integration = config.I_allow_time;
-			  }
-		 }
-		 lastErrorSign = (uint8_t)(error16>>8);
-	  #endif
-	  if ( CTL_allow_integration > 0 ) {
-		  // PI windup protection I
-		  CTL_allow_integration--;
-		  if (  ( (old_result>config.valve_min) || (error16>=0) )
-			 && ( (old_result<config.valve_max) || (error16<0) )
-			 && ( ((processValue>lastProcessValue) && lastMovementPlus) || ((processValue<lastProcessValue) && !lastMovementPlus) )
-			 ) {
-			 // PI windup protection II
-			 sumError += error16*8;
-		  } else {
-			 CTL_allow_integration = 0;
-		  } 
-	  }
-	  
+	  if (!updateNow) {
+		  if ((((processValue < lastProcessValue) && (valveHistory[1] < valveHistory[VALVE_HISTORY_LEN-1]))
+			|| ((processValue > lastProcessValue) && (valveHistory[1] > valveHistory[VALVE_HISTORY_LEN-1])))
+				// comment it !
+			   #if ALLOW_INTEGRATOR_ON_ZERO_CROSS
+				   || ((((lastErrorSign^(uint8_t)(error16>>8))&0x80)!=0) || (error16==0)) //sign of last error16 != sign of current OR error16 == 0
+			   #endif
+			  ) { 
+			  if (  ( (old_result>config.valve_min) || (error16>=0) )
+				 && ( (old_result<config.valve_max) || (error16<0) )
+				 ) {
+					 // PI windup protection II
+					 sumError += error16*8;
+			  } 
+		  }
+		  #if ALLOW_INTEGRATOR_ON_ZERO_CROSS
+			  lastErrorSign = (uint8_t)(error16>>8);
+		  #endif
+	  }	  
   }
   lastProcessValue = processValue;
   if (config.I_Factor > 0) {

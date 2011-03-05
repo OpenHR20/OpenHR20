@@ -5,7 +5,6 @@ $trace_layout_ids_double = array (
     array( 'bat_average' , 'battery voltage [1/1000 V]' ),
     array( 'sumError_LO_W' , '' ),
     array( 'sumError_HI_W' , '' ),
-    array( 'CTL_allow_integration', '' ),
     array( 'CTL_temp_wanted' , '' ),
     array( 'CTL_temp_wanted_last' , '' ),
     array( 'CTL_temp_auto' , '' ),
