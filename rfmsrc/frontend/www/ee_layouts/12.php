@@ -9,7 +9,7 @@ $layout_ids_double = array (
     array( 'PP_Factor' , 'Proportional kvadratic tuning constant, multiplied with 256' ),
     array( 'P_Factor' , 'Proportional tuning constant, multiplied with 256' ),
     array( 'I_Factor' , 'Integral tuning constant, multiplied with 256' ),
-    array( 'I_allow_time' , 'time in PID_interval steps for allow integrator after error cross 0' ),
+    array( 'I_windup_history_len' , 'history lookup lenght to windup protection' ),
     array( 'PID_interval' , 'PID_interval*5 = interval in seconds' ),
     array( 'valve_min' , 'valve position limiter min' ),
     array( 'valve_center' , 'default valve position for "zero - error" - improve stabilization after change temperature' ),

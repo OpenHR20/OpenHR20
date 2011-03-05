@@ -40,14 +40,18 @@ extern uint8_t CTL_mode_auto;
 extern int8_t PID_force_update;      // signed value, val<0 means disable force updates
 extern uint8_t CTL_error;
 extern uint8_t CTL_mode_window;
-extern uint8_t CTL_allow_integration;
+
 #define mode_window() (CTL_mode_window!=0)
+
+#define VALVE_HISTORY_LEN 10
+extern uint8_t valveHistory[VALVE_HISTORY_LEN];
+#define valve_wanted (valveHistory[0])
 
 #define CTL_update_temp_auto() (CTL_temp_auto=0)
 #define CTL_test_auto() (CTL_mode_auto && (CTL_temp_auto==CTL_temp_wanted))
 #define CTL_set_temp(t) (PID_force_update = 10, CTL_temp_wanted=t)
 
-uint8_t CTL_update(bool minute_ch, uint8_t valve);
+void CTL_update(bool minute_ch);
 void CTL_temp_change_inc (int8_t ch);
 
 #define CTL_CHANGE_MODE        -1

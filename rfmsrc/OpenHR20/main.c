@@ -69,7 +69,7 @@
 //volatile bool    m_automatic_mode;         // auto mode (false: manu mode)
 
 // global Vars for default values: temperatures and speed
-uint8_t valve_wanted=0;
+// uint8_t valve_wanted=0;
 
 // prototypes
 int main(void);                            // main with main loop
@@ -229,7 +229,7 @@ int __attribute__ ((noreturn)) main(void)
                     COM_flush();
                 #endif
                 bool minute=(RTC_GetSecond()==0);
-                valve_wanted = CTL_update(minute,valve_wanted);
+                CTL_update(minute);
                 if (minute) {
                     if (((CTL_error &  (CTL_ERR_BATT_LOW | CTL_ERR_BATT_WARNING)) == 0)
     			        && (RTC_GetDayOfWeek()==6)

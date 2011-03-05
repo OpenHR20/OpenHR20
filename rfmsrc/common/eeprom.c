@@ -32,6 +32,9 @@
  */
 
 #include "config.h"
+#if !defined(MASTER_CONFIG_H)
+	#include "controller.h"
+#endif
 #include <avr/eeprom.h>
 
 #define __EEPROM_C__

@@ -1,4 +1,4 @@
-/*`
+/*
  *  Open HR20
  *
  *  target:     ATmega169 @ 4 MHz in Honnywell Rondostat HR20E
@@ -269,7 +269,7 @@ void COM_init(void) {
  *
  *  \note
  ******************************************************************************/
-void COM_print_debug(int8_t valve) {
+void COM_print_debug(uint8_t type) {
     print_s_p(PSTR("D: "));
     print_hexXX(RTC_GetDayOfWeek()+0xd0);
 	COM_putchar(' ');
@@ -287,7 +287,7 @@ void COM_print_debug(int8_t valve) {
 	COM_putchar(' ');
     COM_putchar((CTL_mode_auto)?(CTL_test_auto()?'A':'-'):'M');
 	print_s_p(PSTR(" V: "));
-	print_decXX( (valve>=0) ? valve : valve_wanted);
+	print_decXX(valve_wanted);
 	print_s_p(PSTR(" I: "));
 	print_decXXXX(temp_average);
 	print_s_p(PSTR(" S: "));
@@ -306,7 +306,7 @@ void COM_print_debug(int8_t valve) {
 		print_s_p(PSTR(" E:"));
         print_hexXX(CTL_error);
     }                   
-	if (valve<0) {
+	if (type>0) {
 		print_s_p(PSTR(" X"));
 	}
 	if (mode_window()) {
@@ -318,7 +318,7 @@ void COM_print_debug(int8_t valve) {
 	COM_putchar('\n');
 	COM_flush();
 #if (RFM==1)
-    bool sync = (valve==-2);
+    bool sync = (type==2);
     if (!sync) {
         wireless_async=true;
         wireless_putchar('D');
@@ -337,7 +337,7 @@ void COM_print_debug(int8_t valve) {
 	wireless_putchar(bat_average >> 8); // current temp
 	wireless_putchar(bat_average & 0xff);
 	wireless_putchar(CTL_temp_wanted); // wanted temp
-	wireless_putchar((valve>=0) ? valve : valve_wanted); // valve pos
+	wireless_putchar(valve_wanted); // valve pos
 	wireless_async=false;
 	rfm_start_tx();
 #endif
@@ -427,7 +427,7 @@ void COM_commad_parse (void) {
 			break;
 #if ENABLE_LOCAL_COMMANDS
 		case 'D':
-			if (COM_getchar()=='\n') COM_print_debug(-1);
+			if (COM_getchar()=='\n') COM_print_debug(1);
 			c='\0';
 			break;
 		case 'T':
@@ -475,7 +475,7 @@ void COM_commad_parse (void) {
 		case 'Y':
 			if (COM_hex_parse(3*2)!='\0') { break; }
 			RTC_SetDate(com_hex[2],com_hex[1],com_hex[0]);
-			COM_print_debug(-1);
+			COM_print_debug(1);
 			c='\0';
 			break;
 		case 'H':
@@ -483,7 +483,7 @@ void COM_commad_parse (void) {
 			RTC_SetHour(com_hex[0]);
 			RTC_SetMinute(com_hex[1]);
 			RTC_SetSecond(com_hex[2]);
-			COM_print_debug(-1);
+			COM_print_debug(1);
 			c='\0';
 			break;
 		case 'B':
@@ -499,14 +499,14 @@ void COM_commad_parse (void) {
         case 'M':
             if (COM_hex_parse(1*2)!='\0') { break; }
             CTL_change_mode(com_hex[0]==1);
-            COM_print_debug(-1);
+            COM_print_debug(1);
             break;
         case 'A':
             if (COM_hex_parse(1*2)!='\0') { break; }
             if (com_hex[0]<TEMP_MIN-1) { break; }
             if (com_hex[0]>TEMP_MAX+1) { break; }
             CTL_set_temp(com_hex[0]);
-            COM_print_debug(-1);
+            COM_print_debug(1);
             break;
         case 'L':
             if (COM_hex_parse(1*2)!='\0') { break; }
@@ -549,7 +549,7 @@ void COM_wireless_command_parse (uint8_t * rfm_framebuf, uint8_t rfm_framepos) {
 			print_version(true);
 			break;
 		case 'D':
-			COM_print_debug(-2);
+			COM_print_debug(2);
 			break;
 		case 'T':
 		    wireless_putchar(rfm_framebuf[pos]);
@@ -601,13 +601,13 @@ void COM_wireless_command_parse (uint8_t * rfm_framebuf, uint8_t rfm_framepos) {
 			break;
         case 'M':
             CTL_change_mode(rfm_framebuf[pos++]==1);
-            COM_print_debug(-2);
+            COM_print_debug(2);
             break;
         case 'A':
             if (rfm_framebuf[pos]<TEMP_MIN-1) { break; }
             if (rfm_framebuf[pos]>TEMP_MAX+1) { break; }
             CTL_set_temp(rfm_framebuf[pos++]);
-            COM_print_debug(-2);
+            COM_print_debug(2);
             break;
         case 'L':
             if (rfm_framebuf[pos]<=1) menu_locked=rfm_framebuf[pos];

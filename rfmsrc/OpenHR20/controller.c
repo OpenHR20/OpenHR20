@@ -57,8 +57,7 @@ uint8_t CTL_mode_window = 0; // open window (0=closed, >0 open-timmer)
 #endif
 static uint16_t PID_update_timeout=AVERAGE_LEN+1;   // timer to next PID controler action/first is 16 sec after statup
 int8_t PID_force_update=AVERAGE_LEN+1;      // signed value, val<0 means disable force updates \todo rename
-#define VALVE_HISTORY_LEN 10
-static uint8_t valveHistory[VALVE_HISTORY_LEN];
+uint8_t valveHistory[VALVE_HISTORY_LEN];
 
 static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t old_result, bool updateNow);
 
@@ -124,7 +123,7 @@ static void CTL_window_detection(void) {
  *  \returns valve position
  *
  ******************************************************************************/
-uint8_t CTL_update(bool minute_ch, uint8_t valve) {
+void CTL_update(bool minute_ch) {
 #if (HW_WINDOW_DETECTION)
 	PORTE |= _BV(PE2); // enable pull-up
 #endif
@@ -166,18 +165,22 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
             if (temp>TEMP_MAX) {
                 new_valve = config.valve_max;
             } else {
-                new_valve = pid_Controller(calc_temp(temp),temp_average,valve,updateNow);
+                new_valve = pid_Controller(calc_temp(temp),temp_average,valveHistory[0],updateNow);
             }
 			{	
 				int8_t i;
-				for (i=VALVE_HISTORY_LEN-1; i>0; i--) {
-					valveHistory[i]=valveHistory[i-1];
+				for(i=VALVE_HISTORY_LEN-1; i>0; i--) {
+					if (updateNow || (new_valve <= config.valve_max) || (new_valve >= config.valve_min)) {
+						// condition inside loop is stupid, but produce shorter code
+						valveHistory[i]=new_valve;
+					} else  {
+						valveHistory[i]=valveHistory[i-1];
+					}
 				}
-				valveHistory[0]=valve;
+				valveHistory[0]=new_valve;
 			}
-			valve=new_valve;
         }
-        COM_print_debug(valve);
+        COM_print_debug(0);
         PID_force_update = -1; // invalid value = not used
     }
     // batt error detection
@@ -197,8 +200,6 @@ uint8_t CTL_update(bool minute_ch, uint8_t valve) {
 	        }
 	    }
 	}
-
-    return valve;
 }
 
 /*!
@@ -250,6 +251,7 @@ void CTL_change_mode(int8_t m) {
 //! Summation of errors, used for integrate calculations
 int32_t sumError=0;
 #if ALLOW_INTEGRATOR_ON_ZERO_CROSS
+	#warning not tested code
 	static uint8_t lastErrorSign = 0;
 #endif
 //! The scalling_factor for PID constants
@@ -282,25 +284,25 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t ol
   }
 
   {
-	  if (!updateNow) {
-		  if ((((processValue < lastProcessValue) && (valveHistory[1] <= valveHistory[VALVE_HISTORY_LEN-1]))
-			|| ((processValue > lastProcessValue) && (valveHistory[1] >= valveHistory[VALVE_HISTORY_LEN-1])))
-				// comment it !
-			   #if ALLOW_INTEGRATOR_ON_ZERO_CROSS
-				   || ((((lastErrorSign^(uint8_t)(error16>>8))&0x80)!=0) || (error16==0)) //sign of last error16 != sign of current OR error16 == 0
-			   #endif
-			  ) { 
-			  if (  ( (old_result>config.valve_min) || (error16>=0) )
-				 && ( (old_result<config.valve_max) || (error16<0) )
-				 ) {
-					 // PI windup protection II
-					 sumError += error16*8;
-			  } 
-		  }
-		  #if ALLOW_INTEGRATOR_ON_ZERO_CROSS
-			  lastErrorSign = (uint8_t)(error16>>8);
-		  #endif
+	  uint8_t v1 = valveHistory[1];
+	  uint8_t v2 = valveHistory[VALVE_HISTORY_LEN-1];
+	  
+	  if (!updateNow
+		&& ((error16 >= 0) ? (v1 < config.valve_max) : (v1 > config.valve_min))
+		&& ( (v1==v2)
+			 || ((v1<v2)?(processValue < lastProcessValue):(processValue > lastProcessValue))
+			 #if ALLOW_INTEGRATOR_ON_ZERO_CROSS
+			 || ((((lastErrorSign^(uint8_t)(error16>>8))&0x80)!=0) || (error16==0)) //sign of last error16 != sign of current OR error16 == 0
+			 #endif
+		   ) 
+		) {
+			// comment condition better!
+			// PI windup protection
+			sumError += error16*8;
 	  }	  
+	  #if ALLOW_INTEGRATOR_ON_ZERO_CROSS
+		  lastErrorSign = (uint8_t)(error16>>8);
+	  #endif
   }
   lastProcessValue = processValue;
   if (config.I_Factor > 0) {
@@ -349,7 +351,7 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t ol
 		pi_term16 >>= 8; // /= scalling_factor;
 	}
 
-	if(pi_term16 < config.valve_min){
+	if(pi_term16 < config.valve_min) {
       return config.valve_min;
     }
     

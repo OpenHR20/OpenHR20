@@ -48,9 +48,6 @@
 // global vars
 extern uint16_t serialNumber;	//!< Unique serial number \todo move to CONFIG.H
 
-
-extern uint8_t valve_wanted;
-
 #define c2temp(c) (c*2)
 #define calc_temp(t) (((uint16_t)t)*50)   // result unit is 1/100 C
 #define TEMP_MIN    c2temp (5)   // 5�C
