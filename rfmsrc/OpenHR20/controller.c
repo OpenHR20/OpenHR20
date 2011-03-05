@@ -283,8 +283,8 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t ol
 
   {
 	  if (!updateNow) {
-		  if ((((processValue < lastProcessValue) && (valveHistory[1] < valveHistory[VALVE_HISTORY_LEN-1]))
-			|| ((processValue > lastProcessValue) && (valveHistory[1] > valveHistory[VALVE_HISTORY_LEN-1])))
+		  if ((((processValue < lastProcessValue) && (valveHistory[1] <= valveHistory[VALVE_HISTORY_LEN-1]))
+			|| ((processValue > lastProcessValue) && (valveHistory[1] >= valveHistory[VALVE_HISTORY_LEN-1])))
 				// comment it !
 			   #if ALLOW_INTEGRATOR_ON_ZERO_CROSS
 				   || ((((lastErrorSign^(uint8_t)(error16>>8))&0x80)!=0) || (error16==0)) //sign of last error16 != sign of current OR error16 == 0
