@@ -44,6 +44,8 @@
 #include "controller.h"
 #include "keyboard.h"
 
+#define CTL_ALLOWINTEGRATOR_TIME 8
+
 // global Vars for default values: temperatures and speed
 uint8_t CTL_temp_wanted=0;   // actual desired temperature
 uint8_t CTL_temp_wanted_last=0xff;   // desired temperature value used for last PID control
@@ -55,6 +57,7 @@ uint8_t CTL_mode_window = 0; // open window (0=closed, >0 open-timmer)
 #else
 	uint16_t CTL_open_window_timeout;
 #endif
+uint8_t CTL_allowIntegrator;
 static uint16_t PID_update_timeout=AVERAGE_LEN+1;   // timer to next PID controler action/first is 16 sec after statup
 int8_t PID_force_update=AVERAGE_LEN+1;      // signed value, val<0 means disable force updates \todo rename
 uint8_t valveHistory[VALVE_HISTORY_LEN];
@@ -155,7 +158,7 @@ void CTL_update(bool minute_ch) {
         bool updateNow=(temp!=CTL_temp_wanted_last);
         if (updateNow) {
 			CTL_temp_wanted_last=temp;
-			//CTL_allow_integration = 0;
+			//CTL_allowIntegrator=CTL_ALLOWINTEGRATOR_TIME;
 			goto UPDATE_NOW; // optimize
 		}
         if ((PID_update_timeout == 0)) {
@@ -247,13 +250,13 @@ void CTL_change_mode(int8_t m) {
     CTL_mode_window = 0;
 }
 
-#define ALLOW_INTEGRATOR_ON_ZERO_CROSS 0
 //! Summation of errors, used for integrate calculations
 int32_t sumError=0;
-#if ALLOW_INTEGRATOR_ON_ZERO_CROSS
-	#warning not tested code
-	static uint8_t lastErrorSign = 0;
-#endif
+static uint8_t lastErrorSign = 0;
+//static bool lastProcessChangePlus = false;
+//static bool zeroPass = false;
+static uint16_t lastAbsError;
+static uint16_t last2AbsError;
 //! The scalling_factor for PID constants
 #define scalling_factor  (256)
 #if (scalling_factor != 256)
@@ -262,7 +265,6 @@ int32_t sumError=0;
 
 //! Last process value, used to find derivative of process value. 	 
 static int16_t lastProcessValue=0;
-//static uint8_t lastErrorSign = 0;
 /*! \brief non-linear  PID control algorithm.
  *
  *  Calculates output from setpoint, process value and PID status.
@@ -284,25 +286,49 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t ol
   }
 
   {
-	  uint8_t v1 = valveHistory[1];
-	  uint8_t v2 = valveHistory[VALVE_HISTORY_LEN-1];
-	  
-	  if (!updateNow
-		&& ((error16 >= 0) ? (v1 < config.valve_max) : (v1 > config.valve_min))
-		&& ( (v1==v2)
-			 || ((v1<v2)?(processValue < lastProcessValue):(processValue > lastProcessValue))
-			 #if ALLOW_INTEGRATOR_ON_ZERO_CROSS
-			 || ((((lastErrorSign^(uint8_t)(error16>>8))&0x80)!=0) || (error16==0)) //sign of last error16 != sign of current OR error16 == 0
-			 #endif
-		   ) 
-		) {
-			// comment condition better!
-			// PI windup protection
-			sumError += error16*8;
-	  }	  
-	  #if ALLOW_INTEGRATOR_ON_ZERO_CROSS
-		  lastErrorSign = (uint8_t)(error16>>8);
-	  #endif
+	  /*bool processChangePlus = (processValue > lastProcessValue);
+	  if (processValue == lastProcessValue) {
+		  processChangePlus = lastProcessChangePlus; // use old in == case
+	  }*/
+	  if (updateNow) {
+		  //zeroPass=false;
+		  lastAbsError = abs(error16);
+		  last2AbsError = lastAbsError;
+		  CTL_allowIntegrator=CTL_ALLOWINTEGRATOR_TIME;
+	  } else {
+		  if (((lastErrorSign != ((uint8_t)(error16>>8)&0x80))) || (error16==0)) { //sign of last error16 != sign of current OR error16 == 0
+			  //zeroPass=true;
+			  CTL_allowIntegrator=CTL_ALLOWINTEGRATOR_TIME; // ? optional
+		  }
+		  if (CTL_allowIntegrator) {
+			  int16_t absErr = abs(error16);
+			  /*if ((processChangePlus != lastProcessChangePlus) && zeroPass) {
+				  CTL_allowIntegrator--;
+				  zeroPass = CTL_allowIntegrator; // dity trick correct/longer is (CTL_allowIntegrator>0)
+			  } else */
+			  if (absErr >= last2AbsError) { // error can grow only limited time 
+				  CTL_allowIntegrator--;
+			  }
+			  last2AbsError = lastAbsError;
+			  lastAbsError = absErr;
+
+			  uint8_t v1 = valveHistory[1];
+			  uint8_t v2 = valveHistory[VALVE_HISTORY_LEN-1];
+			  if (CTL_allowIntegrator) {
+				if (   ((error16 >= 0) ? (v1 < config.valve_max) : (v1 > config.valve_min))
+					&& ( (v1==v2)
+						 || ((v1<v2)?(processValue < lastProcessValue):(processValue > lastProcessValue))
+					   ) 
+					) {
+						// comment condition better!
+						// PI windup protection
+						sumError += error16*8;
+					}
+			  }	  
+		  }
+	  }
+	  lastErrorSign = (uint8_t)(error16>>8)&0x80;
+	  //lastProcessChangePlus = processChangePlus;
   }
   lastProcessValue = processValue;
   if (config.I_Factor > 0) {

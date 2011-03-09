@@ -1,6 +1,8 @@
 
 
 all: rfm_int_sww rfm_int_hww rfm_ext_sww original_sww original_hww thermotronic_sww master1
+	 cp OpenHR20/license.txt $(DEST)/
+
 clean:
 	 $(MAKE) clean -C OpenHR20 TARGET=../$(DEST)/rfm_int_sww/hr20 OBJDIR=rfm_int_sww
 	 $(MAKE) clean -C OpenHR20 TARGET=../$(DEST)/rfm_int_hww/hr20 OBJDIR=rfm_int_hww
