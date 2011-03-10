@@ -147,8 +147,9 @@ void CTL_update(bool minute_ch) {
 
     CTL_window_detection();
     if (PID_update_timeout>0) PID_update_timeout--;
-    if (PID_force_update>0) PID_force_update--;
-    if ((PID_update_timeout == 0)||(PID_force_update==0)) {
+    if (PID_force_update>0) { 
+		PID_force_update--;
+	} else if ((PID_update_timeout == 0)||(PID_force_update==0)) {
         uint8_t temp;
         if ((CTL_temp_wanted<TEMP_MIN) || mode_window()) {
             temp = TEMP_MIN;  // frost protection to TEMP_MIN
@@ -219,7 +220,7 @@ void CTL_temp_change_inc (int8_t ch) {
 		CTL_temp_wanted= TEMP_MAX+1;
 	}
 	CTL_mode_window = 0;
-    PID_force_update = 10;
+    PID_force_update = 9;
 }
 
 static uint8_t menu_temp_rewoke;
@@ -233,12 +234,12 @@ void CTL_change_mode(int8_t m) {
         // change
   		menu_temp_rewoke=CTL_temp_auto;
         CTL_mode_auto=!CTL_mode_auto;
-        PID_force_update = 10;
+        PID_force_update = 9;
     } else if (m == CTL_CHANGE_MODE_REWOKE) {
         //rewoke
   		CTL_temp_auto=menu_temp_rewoke;
         CTL_mode_auto=!CTL_mode_auto;
-        PID_force_update = 10;
+        PID_force_update = 9;
     } else {
         if (m >= 0) CTL_mode_auto=m;
         PID_force_update = 0;
