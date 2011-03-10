@@ -302,7 +302,7 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t ol
 		  if (((lastErrorSign != ((uint8_t)(error16>>8)&0x80))) || (error16==0)) { //sign of last error16 != sign of current OR error16 == 0
 			  //zeroPass=true;
 			  CTL_interatorCredit=config.I_max_credit; // ? optional
-			  //goto INTEGRATOR; // next integration, do not change CTL_interatorCredit
+			  goto INTEGRATOR; // next integration, do not change CTL_interatorCredit
 		  }
 		  if (CTL_interatorCredit>0) {
 			  if (absErr >= last2AbsError) { // error can grow only limited time 
