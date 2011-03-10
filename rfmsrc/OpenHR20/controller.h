@@ -43,7 +43,7 @@ extern uint8_t CTL_mode_window;
 
 #define mode_window() (CTL_mode_window!=0)
 
-#define VALVE_HISTORY_LEN 10
+#define VALVE_HISTORY_LEN 1
 extern uint8_t valveHistory[VALVE_HISTORY_LEN];
 #define valve_wanted (valveHistory[0])
 
@@ -70,4 +70,4 @@ void CTL_change_mode(int8_t dif);
 #define CTL_ERR_NA_0                    (1<<0)
 
 extern int32_t sumError;
-
+extern int8_t CTL_interatorCredit;

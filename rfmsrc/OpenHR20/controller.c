@@ -44,8 +44,6 @@
 #include "controller.h"
 #include "keyboard.h"
 
-#define CTL_ALLOWINTEGRATOR_TIME 8
-
 // global Vars for default values: temperatures and speed
 uint8_t CTL_temp_wanted=0;   // actual desired temperature
 uint8_t CTL_temp_wanted_last=0xff;   // desired temperature value used for last PID control
@@ -57,7 +55,7 @@ uint8_t CTL_mode_window = 0; // open window (0=closed, >0 open-timmer)
 #else
 	uint16_t CTL_open_window_timeout;
 #endif
-uint8_t CTL_allowIntegrator;
+int8_t CTL_interatorCredit;
 static uint16_t PID_update_timeout=AVERAGE_LEN+1;   // timer to next PID controler action/first is 16 sec after statup
 int8_t PID_force_update=AVERAGE_LEN+1;      // signed value, val<0 means disable force updates \todo rename
 uint8_t valveHistory[VALVE_HISTORY_LEN];
@@ -159,7 +157,7 @@ void CTL_update(bool minute_ch) {
         bool updateNow=(temp!=CTL_temp_wanted_last);
         if (updateNow) {
 			CTL_temp_wanted_last=temp;
-			//CTL_allowIntegrator=CTL_ALLOWINTEGRATOR_TIME;
+			//CTL_interatorCredit=CTL_ALLOWINTEGRATOR_TIME;
 			goto UPDATE_NOW; // optimize
 		}
         if ((PID_update_timeout == 0)) {
@@ -295,46 +293,34 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t ol
 		  //zeroPass=false;
 		  lastAbsError = abs(error16);
 		  last2AbsError = lastAbsError;
-		  CTL_allowIntegrator=CTL_ALLOWINTEGRATOR_TIME;
-	  } else {
+		  CTL_interatorCredit=config.I_max_credit;
+	  } else  {
+	    uint8_t v0 = valveHistory[0];
+		int16_t absErr = abs(error16);
+		
+	    if ((error16 >= 0) ? (v0 < config.valve_max) : (v0 > config.valve_min)) {
 		  if (((lastErrorSign != ((uint8_t)(error16>>8)&0x80))) || (error16==0)) { //sign of last error16 != sign of current OR error16 == 0
 			  //zeroPass=true;
-			  CTL_allowIntegrator=CTL_ALLOWINTEGRATOR_TIME; // ? optional
+			  CTL_interatorCredit=config.I_max_credit; // ? optional
+			  //goto INTEGRATOR; // next integration, do not change CTL_interatorCredit
 		  }
-		  if (CTL_allowIntegrator) {
-			  int16_t absErr = abs(error16);
-			  /*if ((processChangePlus != lastProcessChangePlus) && zeroPass) {
-				  CTL_allowIntegrator--;
-				  zeroPass = CTL_allowIntegrator; // dity trick correct/longer is (CTL_allowIntegrator>0)
-			  } else */
+		  if (CTL_interatorCredit>0) {
 			  if (absErr >= last2AbsError) { // error can grow only limited time 
-				  CTL_allowIntegrator--;
+				  CTL_interatorCredit-=(absErr/20)+1; // max is 1200/20+1 = 61
+				  INTEGRATOR:
+  				  sumError += error16*8;
 			  }
-			  last2AbsError = lastAbsError;
-			  lastAbsError = absErr;
-
-			  uint8_t v1 = valveHistory[1];
-			  uint8_t v2 = valveHistory[VALVE_HISTORY_LEN-1];
-			  if (CTL_allowIntegrator) {
-				if (   ((error16 >= 0) ? (v1 < config.valve_max) : (v1 > config.valve_min))
-					&& ( (v1==v2)
-						 || ((v1<v2)?(processValue < lastProcessValue):(processValue > lastProcessValue))
-					   ) 
-					) {
-						// comment condition better!
-						// PI windup protection
-						sumError += error16*8;
-					}
-			  }	  
 		  }
-	  }
-	  lastErrorSign = (uint8_t)(error16>>8)&0x80;
-	  //lastProcessChangePlus = processChangePlus;
+	    }
+		lastAbsError = absErr;
+		last2AbsError = lastAbsError;
+	    lastErrorSign = (uint8_t)(error16>>8)&0x80;
+      }
   }
   lastProcessValue = processValue;
   if (config.I_Factor > 0) {
 	  int32_t maxSumError;
-      // for overload protection: maximum is scalling_factor*50/1 = 12800
+      // for overload protection: maximum is scalling_factor*scalling_factor*50/1 = 3276800
       maxSumError = ((int32_t)scalling_factor*(int32_t)scalling_factor*50)/config.I_Factor;
 	  if(sumError > maxSumError){
 		sumError = maxSumError;
