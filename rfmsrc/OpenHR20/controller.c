@@ -252,10 +252,9 @@ void CTL_change_mode(int8_t m) {
 //! Summation of errors, used for integrate calculations
 int32_t sumError=0;
 static uint8_t lastErrorSign = 0;
-//static bool lastProcessChangePlus = false;
-//static bool zeroPass = false;
 static uint16_t lastAbsError;
 static uint16_t last2AbsError;
+static uint8_t integratorBlock;
 //! The scalling_factor for PID constants
 #define scalling_factor  (256)
 #if (scalling_factor != 256)
@@ -285,33 +284,29 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t ol
   }
 
   {
-	  /*bool processChangePlus = (processValue > lastProcessValue);
-	  if (processValue == lastProcessValue) {
-		  processChangePlus = lastProcessChangePlus; // use old in == case
-	  }*/
 	  if (updateNow) {
-		  //zeroPass=false;
-		  lastAbsError = abs(error16);
-		  last2AbsError = lastAbsError;
 		  CTL_interatorCredit=config.I_max_credit;
+		  integratorBlock=6; // do not allow update integrator after temp change
 	  } else  {
 	    uint8_t v0 = valveHistory[0];
 		int16_t absErr = abs(error16);
-		
-	    if ((error16 >= 0) ? (v0 < config.valve_max) : (v0 > config.valve_min)) {
-		  if (((lastErrorSign != ((uint8_t)(error16>>8)&0x80))) || (error16==0)) { //sign of last error16 != sign of current OR error16 == 0
-			  //zeroPass=true;
-			  CTL_interatorCredit=config.I_max_credit; // ? optional
-			  goto INTEGRATOR; // next integration, do not change CTL_interatorCredit
-		  }
-		  if (CTL_interatorCredit>0) {
-			  if (absErr >= last2AbsError) { // error can grow only limited time 
-				  CTL_interatorCredit-=(absErr/20)+1; // max is 1200/20+1 = 61
-				  INTEGRATOR:
-  				  sumError += error16*8;
+		if (integratorBlock == 0) {
+			if ((error16 >= 0) ? (v0 < config.valve_max) : (v0 > config.valve_min)) {
+			  if (((lastErrorSign != ((uint8_t)(error16>>8)&0x80))) || (error16==0)) { //sign of last error16 != sign of current OR error16 == 0
+				  CTL_interatorCredit=config.I_max_credit; // ? optional
+				  goto INTEGRATOR; // next integration, do not change CTL_interatorCredit
 			  }
-		  }
-	    }
+			  if (CTL_interatorCredit>0) {
+				  if (absErr >= last2AbsError) { // error can grow only limited time 
+					  CTL_interatorCredit-=(absErr/25)+1; // max is 1200/20+1 = 61
+					  INTEGRATOR:
+					  sumError += error16*8;
+				  }
+			  }
+			}
+		} else {
+			integratorBlock--;
+		}
 		lastAbsError = absErr;
 		last2AbsError = lastAbsError;
 	    lastErrorSign = (uint8_t)(error16>>8)&0x80;

@@ -188,7 +188,7 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 04 */  {48,        48,  TEMP_MIN,TEMP_MAX},    //!< temperature 3  - supercomfort (unit is 0.5stC)
   /* 05 */  {33,        33,         0,      255},   //!< P3_Factor;
   /* 06 */  {8,          8,         0,      255},   //!< P_Factor;
-  /* 07 */  {16,        16,         0,      255},   //!< I_Factor;
+  /* 07 */  {32,        32,         0,      255},   //!< I_Factor;
   /* 08 */  {40,        40,			0,      127},   //!< I_max_credit
   /* 09 */  {240/5,   240/5,     20/5,      255},   //!< PID_interval*5 = interval in seconds;  min=20sec, max=21.25 minutes
   /* 0a */  {30,         30,        0,      100},   //!< valve_min
