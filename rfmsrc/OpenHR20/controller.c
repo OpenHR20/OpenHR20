@@ -307,8 +307,8 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t ol
 		} else {
 			integratorBlock--;
 		}
-		lastAbsError = absErr;
 		last2AbsError = lastAbsError;
+		lastAbsError = absErr;
 	    lastErrorSign = (uint8_t)(error16>>8)&0x80;
       }
   }
