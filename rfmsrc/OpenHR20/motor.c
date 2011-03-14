@@ -250,7 +250,7 @@ static void MOTOR_Control(motor_dir_t direction) {
 #endif
             {
                 // pwm startup battery voltage compensation
-                MOTOR_pwm_set((int16_t)(((uint16_t)config.motor_pwm_max * 256) / ((bat_average)/(2600/256))));
+                MOTOR_pwm_set((int16_t)(((uint16_t)config.motor_pwm_max * 256) / ((bat_average)/(2800/256))));
             }
             if ( direction == close) {
                 // set pins of H-Bridge

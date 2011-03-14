@@ -202,7 +202,7 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 12 */  {78,         78,        5,      255},   //!< motor_close_eye_timeout; time from last pulse to disable eye [1/61sec]
   /* 13 */  {130,       130,      110,      250},   //!< motor_end_detect_cal; stop timer threshold in % to previous average 
   /* 14 */  {150,       150,      110,      250},   //!< motor_end_detect_run; stop timer threshold in % to previous average 
-  /* 15 */  {168,       168,       10,      255},   //!< motor_speed
+  /* 15 */  {184,       184,       10,      255},   //!< motor_speed
   /* 16 */  {50,         50,       10,      200},   //!< motor_speed_ctl_gain
   /* 17 */  {10,         10,        1,       64},   //!< motor_pwm_max_step             
   /* 18 */  {255,       255,        0,      255},   //!< manual calibration L
