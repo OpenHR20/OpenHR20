@@ -62,6 +62,9 @@ typedef enum {
     menu_preset_temp0, menu_preset_temp1, menu_preset_temp2, menu_preset_temp3, 
     // home screens
     menu_home_no_alter, menu_home, menu_home2, menu_home3, menu_home4,
+#if MENU_SHOW_BATTERY
+    menu_home5,
+#endif
     // lock message
     menu_lock,
     // service menu
@@ -222,9 +225,16 @@ bool menu_controller(bool new_state) {
     case menu_home2:        // alternate version, real temperature
     case menu_home3:        // alternate version, valve pos
     case menu_home4:        // alternate version, time    
+#if MENU_SHOW_BATTERY
+    case menu_home5:        // alternate version, battery    
+#endif
         if ( kb_events & KB_EVENT_C ) {
             menu_state++;       // go to next alternate home screen
+#if MENU_SHOW_BATTERY
+            if (menu_state > menu_home5) menu_state=menu_home;
+#else
             if (menu_state > menu_home4) menu_state=menu_home;
+#endif
             ret=true; 
         } else {
             if (menu_locked) {
@@ -456,7 +466,16 @@ void menu_view(bool update) {
         if (update) clr_show2(LCD_SEG_COL1,LCD_SEG_COL2);
         LCD_PrintDec(RTC_GetHour(), 2, ((menu_state == menu_set_hour) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));
         LCD_PrintDec(RTC_GetMinute(), 0, ((menu_state == menu_set_minute) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));
-       break;                                                               
+       break;                                       
+#if MENU_SHOW_BATTERY
+	case menu_home5:        // battery 
+		clr_show1(LCD_SEG_COL1);           // decimal point
+        LCD_PrintDec(bat_average/100, 2, LCD_MODE_ON);
+        LCD_PrintDec(bat_average%100, 0, LCD_MODE_ON);
+       break;        
+#endif                                                       
+		
+
     case menu_home: // wanted temp / error code / adaptation status
         if (MOTOR_calibration_step>0) {
             clr_show1(LCD_SEG_BAR24);
