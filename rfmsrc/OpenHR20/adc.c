@@ -242,7 +242,7 @@ uint8_t task_ADC(void) {
                 state_ADC=3;
                 break;
             }
-			update_ring(BAT_RING_TYPE,ADC_Get_Bat_Voltage(ADCW));
+			update_ring(BAT_RING_TYPE,ADC_Get_Bat_Voltage(ad));
 
 			// activate voltage divider
 			ADC_ACT_TEMP_P |= (1<<ADC_ACT_TEMP);
