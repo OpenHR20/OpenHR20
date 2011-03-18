@@ -249,8 +249,13 @@ static void MOTOR_Control(motor_dir_t direction) {
             PCMSK0 |= (1<<PCINT4);  // enable interrupt from eye
 #endif
             {
+#if MOTOR_COMPENSATE_BATTERY
                 // pwm startup battery voltage compensation
                 MOTOR_pwm_set((int16_t)(((uint16_t)config.motor_pwm_max * 256) / ((bat_average)/(2800/256))));
+#else
+                MOTOR_pwm_set(config.motor_pwm_max);
+#endif
+
             }
             if ( direction == close) {
                 // set pins of H-Bridge
