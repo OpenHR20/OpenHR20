@@ -233,25 +233,35 @@ uint8_t task_ADC(void) {
 		// start new with same configuration;
 		sleep_with_ADC=1;
 		break;
-	case 3: //step 3
-		update_ring(BAT_RING_TYPE,ADC_Get_Bat_Voltage(ADCW));
-
-	    // activate voltage divider
-	    ADC_ACT_TEMP_P |= (1<<ADC_ACT_TEMP);
-		ADMUX = ADC_TEMP_MUX | (1<<REFS0);
-		sleep_with_ADC=1;
-		break;
 	case 4: //step 4
+		{	
+			int16_t ad = ADCW;
+            if ((ad>dummy_adc+ADC_TOLERANCE)||(ad<dummy_adc-ADC_TOLERANCE)) { 
+                // adc noise protection, repeat measure
+                dummy_adc=ad;
+                state_ADC=3;
+                break;
+            }
+			update_ring(BAT_RING_TYPE,ADC_Get_Bat_Voltage(ADCW));
+
+			// activate voltage divider
+			ADC_ACT_TEMP_P |= (1<<ADC_ACT_TEMP);
+			ADMUX = ADC_TEMP_MUX | (1<<REFS0);
+			sleep_with_ADC=1;
+		}
+		break;
+	case 3: //step 3
+	case 5: //step 5
         dummy_adc = ADCW;
 	    sleep_with_ADC=1;
 	    break;
-	case 5: //step 5
+	case 6: //step 6
         {
             int16_t ad = ADCW;
             if ((ad>dummy_adc+ADC_TOLERANCE)||(ad<dummy_adc-ADC_TOLERANCE)) { 
                 // adc noise protection, repeat measure
                 dummy_adc=ad;
-                state_ADC=4;
+                state_ADC=5;
                 break;
             }
             int16_t t = ADC_Convert_To_Degree(ad);
