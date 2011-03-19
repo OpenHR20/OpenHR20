@@ -238,7 +238,8 @@ int __attribute__ ((noreturn)) main(void)
                         // every saturday 10:00AM
                         // TODO: improve this code!
                         // valve protection / CyCL
-                        sumError=0;
+                        sumError=0; // new calibration need found new sumError
+                        CTL_interatorCredit=config.I_max_credit;
                         MOTOR_updateCalibration(0);
                     }
 					#if (! HW_WINDOW_DETECTION)
