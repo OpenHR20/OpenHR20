@@ -300,6 +300,7 @@ void COM_print_debug(uint8_t type) {
 	print_decXXXX(bat_average);
 #if DEBUG_PRINT_I_SUM
 	print_s_p(PSTR(" Is: "));
+	print_hexXXXX(sumError>>16);
 	print_hexXXXX(sumError);
 	print_s_p(PSTR(" Ic: ")); //jr
 	print_hexXX(CTL_interatorCredit);
