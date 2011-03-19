@@ -478,8 +478,8 @@ void menu_view(bool update) {
        break;                                       
 #if MENU_SHOW_BATTERY
 	case menu_home5:        // battery 
-        LCD_PrintChar(bat_average/100, 2, LCD_MODE_ON);
-        LCD_PrintChar(bat_average%100, 0, LCD_MODE_ON);
+        LCD_PrintDec(bat_average/100, 2, LCD_MODE_ON);
+        LCD_PrintDec(bat_average%100, 0, LCD_MODE_ON);
        break;        
 #endif                                                       
 		
