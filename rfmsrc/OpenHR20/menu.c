@@ -122,8 +122,12 @@ static bool events_common(void) {
         } else if ( kb_events & KB_EVENT_PROG_LONG ) {
 			menu_state=menu_set_timmer_dow_start;
             ret=true; 
-        } else if ( kb_events & KB_EVENT_NONE_LONG ) {
-            menu_state=menu_home; // retun to main home screen
+        } else if (( kb_events & KB_EVENT_NONE_LONG ) 
+#if NO_AUTORETURN_FROM_ALT_MENUES 
+           && ! (((menu_state>=menu_home2) && (menu_state<=menu_home5)) || menu_state==menu_service_watch)
+#endif  
+		   ) {
+	        menu_state=menu_home; // retun to main home screen
             ret=true;
         } else if ( kb_events & KB_EVENT_C_LONG ) {
             menu_state=menu_preset_temp0; 

@@ -150,8 +150,15 @@ In this file we define only configuration parameters, for example what kind of c
 #define BOOT_hh        12  //!< Boot-Up time: hour
 #define BOOT_mm        00  //!< Boot-Up time: minutes
 
-#define MENU_SHOW_BATTERY 1
-#define MOTOR_COMPENSATE_BATTERY 0
+#ifndef MENU_SHOW_BATTERY
+	#define MENU_SHOW_BATTERY 1
+#endif
+#ifndef MOTOR_COMPENSATE_BATTERY
+	#define MOTOR_COMPENSATE_BATTERY 0
+#endif
+#ifndef NO_AUTORETURN_FROM_ALT_MENUES
+	#define NO_AUTORETURN_FROM_ALT_MENUES 0
+#endif
 
 /**********************/
 /* code configuration */
