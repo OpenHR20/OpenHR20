@@ -235,7 +235,7 @@ int __attribute__ ((noreturn)) main(void)
     			        && (RTC_GetDayOfWeek()==6)
     				    && (RTC_GetHour()==10)
     				    && (RTC_GetMinute()==0)) {
-                        // every sunday 10:00AM
+                        // every saturday 10:00AM
                         // TODO: improve this code!
                         // valve protection / CyCL
                         sumError=0;
