@@ -59,6 +59,10 @@ void CTL_temp_change_inc (int8_t ch);
 #define CTL_CLOSE_WINDOW_FORCE -3
 void CTL_change_mode(int8_t dif);
 
+#define DEFINE_INTEGRATOR_BLOCK 6
+extern uint8_t CTL_integratorBlock;
+
+
 // ERRORS
 #define CTL_ERR_BATT_LOW                (1<<7)
 #define CTL_ERR_BATT_WARNING            (1<<6)

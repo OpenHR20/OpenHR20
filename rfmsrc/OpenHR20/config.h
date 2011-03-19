@@ -159,8 +159,8 @@ In this file we define only configuration parameters, for example what kind of c
 #ifndef NO_AUTORETURN_FROM_ALT_MENUES
 	#define NO_AUTORETURN_FROM_ALT_MENUES 0
 #endif
-#ifndef CyCL_RESETS_sumError
-	#define CyCL_RESETS_sumError 0
+#ifndef CALIBRATION_RESETS_sumError
+	#define CALIBRATION_RESETS_sumError 0
 #endif
 
 /**********************/

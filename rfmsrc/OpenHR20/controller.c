@@ -254,7 +254,7 @@ int32_t sumError=0;
 static uint8_t lastErrorSign = 0;
 static uint16_t lastAbsError;
 static uint16_t last2AbsError;
-static uint8_t integratorBlock;
+uint8_t CTL_integratorBlock;
 //! The scalling_factor for PID constants
 #define scalling_factor  (256)
 #if (scalling_factor != 256)
@@ -286,11 +286,11 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t ol
   {
 	  if (updateNow) {
 		  CTL_interatorCredit=config.I_max_credit;
-		  integratorBlock=6; // do not allow update integrator after temp change
+		  CTL_integratorBlock=DEFINE_INTEGRATOR_BLOCK; // do not allow update integrator after temp change
 	  } else  {
 	    uint8_t v0 = valveHistory[0];
 		int16_t absErr = abs(error16);
-		if (integratorBlock == 0) {
+		if (CTL_integratorBlock == 0) {
 			if ((error16 >= 0) ? (v0 < config.valve_max) : (v0 > config.valve_min)) {
 			  if (((lastErrorSign != ((uint8_t)(error16>>8)&0x80))) || (error16==0)) { //sign of last error16 != sign of current OR error16 == 0
 				  CTL_interatorCredit=config.I_max_credit; // ? optional
@@ -305,7 +305,7 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t ol
 			  }
 			}
 		} else {
-			integratorBlock--;
+			CTL_integratorBlock--;
 		}
 		last2AbsError = lastAbsError;
 		lastAbsError = absErr;

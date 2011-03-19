@@ -105,6 +105,12 @@ void MOTOR_updateCalibration(uint8_t cal_type)
         MOTOR_calibration_step=-2;     // not calibrated
         MOTOR_wait_for_new_calibration = 5;
         CTL_error &= ~CTL_ERR_MOTOR;
+		#if CALIBRATION_RESETS_sumError
+			sumError=0; // new calibration need found new sumError
+		#endif
+        CTL_integratorBlock=DEFINE_INTEGRATOR_BLOCK;
+		CTL_interatorCredit=config.I_max_credit;
+        
     } else {
         if (MOTOR_wait_for_new_calibration != 0) {
             MOTOR_wait_for_new_calibration--;
