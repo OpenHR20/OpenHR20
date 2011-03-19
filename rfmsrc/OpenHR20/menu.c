@@ -247,21 +247,30 @@ bool menu_controller(bool new_state) {
                     ret=true;
                     }
             } else { // not locked
-    			if ((wheel != 0) &&   ((menu_state == menu_home) 
-    							    || (menu_state == menu_home_no_alter))) {
-    				CTL_temp_change_inc(wheel);
-    				menu_state = menu_home_no_alter;
-                    ret=true; 
-    			} 			 
-                if ( kb_events & KB_EVENT_AUTO ) {
-                    CTL_change_mode(CTL_CHANGE_MODE); // change mode
-                    menu_state=menu_home_no_alter;
-                    ret=true; 
-                } else if ( kb_events & KB_EVENT_AUTO_REWOKE ) {
-                    CTL_change_mode(CTL_CHANGE_MODE_REWOKE); // change mode
-                    menu_state=menu_home_no_alter;
-                    ret=true; 
-                }
+				if ((menu_state == menu_home) || (menu_state == menu_home_no_alter)) {
+					if (wheel != 0) {
+						CTL_temp_change_inc(wheel);
+						menu_state = menu_home_no_alter;
+						ret=true; 
+					} 			 
+					if ( kb_events & KB_EVENT_AUTO ) {
+						CTL_change_mode(CTL_CHANGE_MODE); // change mode
+						menu_state=menu_home_no_alter;
+						ret=true; 
+					} else if ( kb_events & KB_EVENT_AUTO_REWOKE ) {
+						CTL_change_mode(CTL_CHANGE_MODE_REWOKE); // change mode
+						menu_state=menu_home_no_alter;
+						ret=true; 
+					}
+				} else {
+					if ( kb_events & (
+                        KB_EVENT_WHEEL_PLUS  | KB_EVENT_WHEEL_MINUS | KB_EVENT_PROG
+                        | KB_EVENT_AUTO | KB_EVENT_PROG_REWOKE | KB_EVENT_C_REWOKE | KB_EVENT_AUTO_REWOKE
+                        | KB_EVENT_PROG_LONG | KB_EVENT_C_LONG | KB_EVENT_AUTO_LONG )) {
+							menu_state = menu_home;
+							ret = true;
+					}
+				}
                 // TODO ....  
             }
         } 

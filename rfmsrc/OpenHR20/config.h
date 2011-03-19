@@ -150,7 +150,7 @@ In this file we define only configuration parameters, for example what kind of c
 #define BOOT_hh        12  //!< Boot-Up time: hour
 #define BOOT_mm        00  //!< Boot-Up time: minutes
 
-#define MENU_SHOW_BATTERY 0
+#define MENU_SHOW_BATTERY 1
 #define MOTOR_COMPENSATE_BATTERY 0
 
 /**********************/
@@ -168,7 +168,7 @@ In this file we define only configuration parameters, for example what kind of c
 
 
 /* revision remarks
- ********************************************
+ *********************************************
  */
 
 

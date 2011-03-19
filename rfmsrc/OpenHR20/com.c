@@ -301,6 +301,8 @@ void COM_print_debug(uint8_t type) {
 #if DEBUG_PRINT_I_SUM
 	print_s_p(PSTR(" Is: "));
 	print_hexXXXX(sumError);
+	print_s_p(PSTR(" Ic: ")); //jr
+	print_hexXX(CTL_interatorCredit);
 #endif
     if (CTL_error!=0) {
 		print_s_p(PSTR(" E:"));
