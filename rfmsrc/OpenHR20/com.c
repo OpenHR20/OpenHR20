@@ -701,3 +701,11 @@ void COM_print_time(uint8_t c) {
 }
 
 #endif
+
+#if DEBUG_PRINT_STR_16
+void COM_printStr16 (const char * s, uint16_t x) {
+	print_s_p(s);
+	print_hexXXXX(x);
+	COM_putchar('\n');
+}
+#endif

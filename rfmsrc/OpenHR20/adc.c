@@ -242,6 +242,9 @@ uint8_t task_ADC(void) {
                 state_ADC=3;
                 break;
             }
+			#if DEBUG_BATT_ADC
+				COM_printStr16(PSTR("batAD x"),ad);
+			#endif
 			update_ring(BAT_RING_TYPE,ADC_Get_Bat_Voltage(ad));
 
 			// activate voltage divider
