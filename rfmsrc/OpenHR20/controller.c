@@ -270,6 +270,19 @@ static int16_t lastProcessValue=0;
  *  \param setPoint  Desired value.
  *  \param processValue  Measured value.
  */
+
+static uint16_t lastTempChangeErrorAbs;
+static int32_t lastTempChangeSumError;
+
+static void testIntegratorRevert(uint16_t absErr) {
+	if (absErr>=lastTempChangeErrorAbs) {
+		// revert Integrator to previous state if curren error is not smaller
+		sumError=lastTempChangeSumError;
+	}
+	lastTempChangeErrorAbs = 0xffff; // function can be called more time but only first is valid
+}
+
+
 static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t old_result, bool updateNow)
 {
   int32_t /*error2,*/ pi_term;
@@ -284,12 +297,15 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t ol
   }
 
   {
+	  int16_t absErr = abs(error16);
 	  if (updateNow) {
 		  CTL_interatorCredit=config.I_max_credit;
 		  CTL_integratorBlock=DEFINE_INTEGRATOR_BLOCK; // do not allow update integrator after temp change
-	  } else  {
+		  testIntegratorRevert(lastAbsError);
+		  lastTempChangeErrorAbs = absErr;
+		  lastTempChangeSumError = sumError;
+	  } else {
 	    uint8_t v0 = valveHistory[0];
-		int16_t absErr = abs(error16);
 		if (CTL_integratorBlock == 0) {
 			if ((error16 >= 0) ? (v0 < config.valve_max) : (v0 > config.valve_min)) {
 			  if (((lastErrorSign != ((uint8_t)(error16>>8)&0x80))) || (error16==0)) { //sign of last error16 != sign of current OR error16 == 0
@@ -302,6 +318,8 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t ol
 					  INTEGRATOR:
 					  sumError += error16*8;
 				  }
+			  } else {
+				  testIntegratorRevert(absErr);
 			  }
 			}
 		} else {
