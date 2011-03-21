@@ -302,8 +302,12 @@ void COM_print_debug(uint8_t type) {
 	print_s_p(PSTR(" Is: "));
 	print_hexXXXX(sumError>>16);
 	print_hexXXXX(sumError);
+	print_s_p(PSTR(" Ib: ")); //jr
+	print_hexXX(CTL_integratorBlock);
 	print_s_p(PSTR(" Ic: ")); //jr
 	print_hexXX(CTL_interatorCredit);
+	print_s_p(PSTR(" Ie: ")); //jr
+	print_hexXX(CTL_creditExpiration);
 #endif
     if (CTL_error!=0) {
 		print_s_p(PSTR(" E:"));
