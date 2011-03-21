@@ -58,8 +58,10 @@ int8_t menu_auto_update_timeout = 2;
 typedef enum {
     // startup
     menu_startup, menu_version,
+#if (! REMOTE_SETTING_ONLY)
     // preprogramed temperatures
     menu_preset_temp0, menu_preset_temp1, menu_preset_temp2, menu_preset_temp3, 
+#endif
     // home screens
     menu_home_no_alter, menu_home, menu_home2, menu_home3, menu_home4,
 #if MENU_SHOW_BATTERY
@@ -69,11 +71,13 @@ typedef enum {
     menu_lock,
     // service menu
     menu_service1, menu_service2, menu_service_watch,
+#if (! REMOTE_SETTING_ONLY)
     // datetime setting
     menu_set_year, menu_set_month, menu_set_day, menu_set_hour, menu_set_minute,
 
-    // datetime setting
+    // timmers setting
     menu_set_timmer_dow_start, menu_set_timmer_dow, menu_set_timmer
+#endif
     
 } menu_t;
 
@@ -116,12 +120,14 @@ static bool events_common(void) {
         if (kb_events & KB_EVENT_ALL_LONG) { // service menu
             menu_state = menu_service1;
             ret=true;
+#if (! REMOTE_SETTING_ONLY)
         } else if ( kb_events & KB_EVENT_AUTO_LONG ) {
     		menu_state=menu_set_year;
             ret=true; 
         } else if ( kb_events & KB_EVENT_PROG_LONG ) {
 			menu_state=menu_set_timmer_dow_start;
             ret=true; 
+#endif
         } else if (( kb_events & KB_EVENT_NONE_LONG ) 
 #if NO_AUTORETURN_FROM_ALT_MENUES 
            && ! (((menu_state>=menu_home2) && (menu_state<=menu_home5)) || menu_state==menu_service_watch)
@@ -129,9 +135,11 @@ static bool events_common(void) {
 		   ) {
 	        menu_state=menu_home; // retun to main home screen
             ret=true;
+#if (! REMOTE_SETTING_ONLY)
         } else if ( kb_events & KB_EVENT_C_LONG ) {
             menu_state=menu_preset_temp0; 
             ret=true;
+#endif
         }
 
 	}
@@ -173,7 +181,7 @@ bool menu_controller(bool new_state) {
             menu_auto_update_timeout=2;
         }
         if (menu_auto_update_timeout==0) {
-            #if DEBUG_SKIP_DATETIME_SETTING_AFTER_RESET
+            #if (DEBUG_SKIP_DATETIME_SETTING_AFTER_RESET) || (REMOTE_SETTING_ONLY)
                 menu_state = menu_home;
             #else
                 menu_state = menu_set_year;
@@ -181,6 +189,7 @@ bool menu_controller(bool new_state) {
             ret=true;
         }
         break;
+#if (! REMOTE_SETTING_ONLY)
     case menu_set_year:
         if (wheel != 0) RTC_SetYear(RTC_GetYearYY()+wheel);
         if ( kb_events & KB_EVENT_PROG) {
@@ -224,6 +233,7 @@ bool menu_controller(bool new_state) {
             ret=true;
         }
         break;
+#endif
     case menu_home_no_alter: // same as home screen, but without alternate contend
     case menu_home:         // home screen
     case menu_home2:        // alternate version, real temperature
@@ -279,6 +289,7 @@ bool menu_controller(bool new_state) {
             }
         } 
         break;
+#if (! REMOTE_SETTING_ONLY)
     case menu_set_timmer_dow_start:
         if (new_state) menu_set_dow=((config.timer_mode==1)?RTC_GetDayOfWeek():0);
         menu_state = menu_set_timmer_dow;
@@ -322,6 +333,8 @@ bool menu_controller(bool new_state) {
             ret=true; 
         }
         break;
+#endif
+#if (! REMOTE_SETTING_ONLY)
     case menu_preset_temp0:
     case menu_preset_temp1:
     case menu_preset_temp2:
@@ -343,7 +356,7 @@ bool menu_controller(bool new_state) {
             ret=true; 
         }
 		break;
-
+#endif
     default:
     case menu_lock:        // "bloc" message
         if (menu_auto_update_timeout==0) { menu_state=menu_home; ret=true; } 
@@ -463,7 +476,8 @@ void menu_view(bool update) {
         clr_show1(LCD_SEG_COL1);
         LCD_PrintHexW(VERSION_N,LCD_MODE_ON);
         break; 
-    case menu_set_year:
+#if (! REMOTE_SETTING_ONLY)
+	case menu_set_year:
         LCD_AllSegments(LCD_MODE_OFF); // all segments off
         LCD_PrintDecW(RTC_GetYearYYYY(),LCD_MODE_BLINK_1);
        break;
@@ -480,6 +494,13 @@ void menu_view(bool update) {
         LCD_PrintDec(RTC_GetHour(), 2, ((menu_state == menu_set_hour) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));
         LCD_PrintDec(RTC_GetMinute(), 0, ((menu_state == menu_set_minute) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));
        break;                                       
+#else
+    case menu_home4: // time
+        if (update) clr_show2(LCD_SEG_COL1,LCD_SEG_COL2);
+        LCD_PrintDec(RTC_GetHour(), 2,  LCD_MODE_ON);
+        LCD_PrintDec(RTC_GetMinute(), 0, LCD_MODE_ON);
+       break;                                       
+#endif
 #if MENU_SHOW_BATTERY
 	case menu_home5:        // battery 
 		LCD_AllSegments(LCD_MODE_OFF);
@@ -545,6 +566,7 @@ void menu_view(bool update) {
             }
         }
         break;
+#if (! REMOTE_SETTING_ONLY)
     case menu_set_timmer_dow:
         clr_show1(LCD_SEG_PROG); // all segments off
         LCD_PrintDayOfWeek(menu_set_dow, LCD_MODE_BLINK_1);
@@ -566,6 +588,7 @@ void menu_view(bool update) {
         }
         show_selected_temperature_type(menu_set_mode,LCD_MODE_BLINK_1);
         break;                                                             
+#endif
     case menu_lock:        // "bloc" message
         LCD_AllSegments(LCD_MODE_OFF); // all segments off
         LCD_PrintStringID(LCD_STRING_bloc,LCD_MODE_ON);
@@ -582,6 +605,7 @@ void menu_view(bool update) {
         LCD_PrintHexW(watch(service_watch_n),LCD_MODE_ON);
         LCD_SetHourBarSeg(service_watch_n, LCD_MODE_BLINK_1);
         break;
+#if (! REMOTE_SETTING_ONLY)
     case menu_preset_temp0:
     case menu_preset_temp1:
     case menu_preset_temp2:
@@ -589,6 +613,7 @@ void menu_view(bool update) {
         clr_show1(LCD_SEG_COL1);           // decimal point
         LCD_PrintTemp(menu_set_temp,LCD_MODE_BLINK_1);
         show_selected_temperature_type(menu_state-menu_preset_temp0,LCD_MODE_ON);
+#endif
     default:
         break;                   
     }                                          

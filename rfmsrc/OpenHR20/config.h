@@ -142,6 +142,10 @@ In this file we define only configuration parameters, for example what kind of c
 	#define DISABLE_JTAG           0
 #endif
 
+#ifndef REMOTE_SETTING_ONLY
+	// #define REMOTE_SETTING_ONLY	(RFM12)
+	#define REMOTE_SETTING_ONLY	0
+#endif
 
 // Some default Values
 #define BOOT_DD         1  //!< Boot-Up date: day
