@@ -56,6 +56,7 @@ uint8_t CTL_mode_window = 0; // open window (0=closed, >0 open-timmer)
 	uint16_t CTL_open_window_timeout;
 #endif
 int8_t CTL_interatorCredit;
+uint8_t CTL_creditExpiration;
 static uint16_t PID_update_timeout=AVERAGE_LEN+1;   // timer to next PID controler action/first is 16 sec after statup
 int8_t PID_force_update=AVERAGE_LEN+1;      // signed value, val<0 means disable force updates \todo rename
 uint8_t valveHistory[VALVE_HISTORY_LEN];
@@ -157,7 +158,6 @@ void CTL_update(bool minute_ch) {
         bool updateNow=(temp!=CTL_temp_wanted_last);
         if (updateNow) {
 			CTL_temp_wanted_last=temp;
-			//CTL_interatorCredit=CTL_ALLOWINTEGRATOR_TIME;
 			goto UPDATE_NOW; // optimize
 		}
         if ((PID_update_timeout == 0)) {
@@ -275,8 +275,8 @@ static uint16_t lastTempChangeErrorAbs;
 static int32_t lastTempChangeSumError;
 
 static void testIntegratorRevert(uint16_t absErr) {
-	if (absErr>=lastTempChangeErrorAbs) {
-		// revert Integrator to previous state if curren error is not smaller
+	if (absErr>=(lastTempChangeErrorAbs/2)) {
+		// revert Integrator to previous state if current error is not smaller than 1/2  of original
 		sumError=lastTempChangeSumError;
 	}
 	lastTempChangeErrorAbs = 0xffff; // function can be called more time but only first is valid
@@ -300,18 +300,25 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t ol
 	  int16_t absErr = abs(error16);
 	  if (updateNow) {
 		  CTL_interatorCredit=config.I_max_credit;
-		  CTL_integratorBlock=DEFINE_INTEGRATOR_BLOCK; // do not allow update integrator after temp change
+		  CTL_creditExpiration=config.I_credit_expiration;
+		  CTL_integratorBlock=DEFINE_INTEGRATOR_BLOCK; // do not allow update integrator immediately after temp change
 		  testIntegratorRevert(lastAbsError);
 		  lastTempChangeErrorAbs = absErr;
 		  lastTempChangeSumError = sumError;
 	  } else {
 	    uint8_t v0 = valveHistory[0];
 		if (CTL_integratorBlock == 0) {
+			if (CTL_creditExpiration>0) {
+				CTL_creditExpiration--;
+			} else {
+				CTL_interatorCredit=0;
+			}
 			if ((error16 >= 0) ? (v0 < config.valve_max) : (v0 > config.valve_min)) {
 			  if (((lastErrorSign != ((uint8_t)(error16>>8)&0x80))) || 
 				((absErr==last2AbsError) && (absErr<=I_ERR_TOLLERANCE_AROUND_0))) { //sign of last error16 != sign of current OR abserror around 0
 
 				  CTL_interatorCredit=config.I_max_credit; // ? optional
+				  CTL_creditExpiration=config.I_credit_expiration;
 				  goto INTEGRATOR; // next integration, do not change CTL_interatorCredit
 			  }
 			  if (CTL_interatorCredit>0) {
@@ -320,10 +327,12 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t ol
 					  INTEGRATOR:
 					  sumError += error16*8;
 				  }
-			  } else {
-				  testIntegratorRevert(absErr);
 			  }
-			}
+			} 
+			if (CTL_interatorCredit<=0) {
+				// credit is empty, test result
+				testIntegratorRevert(absErr);
+			} 
 		} else {
 			CTL_integratorBlock--;
 		}

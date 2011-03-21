@@ -57,44 +57,45 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
     /* 06 */ uint8_t P_Factor;  //!< Proportional tuning constant
     /* 07 */ uint8_t I_Factor;  //!< Integral tuning constant
     /* 08 */ uint8_t I_max_credit;  //!< credit for interator limitation
-    /* 09 */ uint8_t PID_interval; //!< PID_interval*5 = interval in seconds    
-    /* 0a */ uint8_t valve_min; //!< valve position limiter min
-    /* 0b */ uint8_t valve_center;  //!< default valve position for "zero - error" - improve stabilization after change temperature
-    /* 0c */ uint8_t valve_max; //!< valve position limiter max
-    /* 0d */ uint8_t valve_hysteresis; //!< valve movement hysteresis (unit is 1/128%)
-    /* 0e */ uint8_t motor_pwm_min;   //!< min PWM for motor 
-    /* 0f */ uint8_t motor_pwm_max;  //!< max PWM for motor
-    /* 10 */ uint8_t motor_eye_low;  //!< min signal lenght to accept low level (multiplied by 2)
-    /* 11 */ uint8_t motor_eye_high; //!< min signal lenght to accept high level (multiplied by 2)
-    /* 12 */ uint8_t motor_close_eye_timeout; //!<time from last pulse to disable eye [1/61sec]
-    /* 13 */ uint8_t motor_end_detect_cal; //!< stop timer threshold in % to previous average 
-    /* 14 */ uint8_t motor_end_detect_run; //!< stop timer threshold in % to previous average 
-    /* 15 */ uint8_t motor_speed; //!< /8 
-    /* 16 */ uint8_t motor_speed_ctl_gain;
-    /* 17 */ uint8_t motor_pwm_max_step;
-    /* 18 */ uint8_t MOTOR_ManuCalibration_L;
-    /* 19 */ uint8_t MOTOR_ManuCalibration_H;
-    /* 1a */ uint8_t temp_cal_table0; //!< temperature calibration table
-    /* 1b */ uint8_t temp_cal_table1; //!< temperature calibration table
-    /* 1c */ uint8_t temp_cal_table2; //!< temperature calibration table
-    /* 1d */ uint8_t temp_cal_table3; //!< temperature calibration table
-    /* 1e */ uint8_t temp_cal_table4; //!< temperature calibration table
-    /* 1f */ uint8_t temp_cal_table5; //!< temperature calibration table
-    /* 20 */ uint8_t temp_cal_table6; //!< temperature calibration table
-    /* 21 */ uint8_t timer_mode; //!< =0 only one program, =1 programs for weekdays
-    /* 22 */ uint8_t bat_warning_thld; //!< treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
-    /* 23 */ uint8_t bat_low_thld; //!< threshold for battery low [unit 0.02V]=[unit 0.01V per cell]
-    /* 24 */ uint8_t allow_ADC_during_motor;
+    /* 09 */ uint8_t I_credit_expiration; //!< unit is PID_interval
+    /* 0a */ uint8_t PID_interval; //!< PID_interval*5 = interval in seconds    
+    /* 0b */ uint8_t valve_min; //!< valve position limiter min
+    /* 0c */ uint8_t valve_center;  //!< default valve position for "zero - error" - improve stabilization after change temperature
+    /* 0d */ uint8_t valve_max; //!< valve position limiter max
+    /* 0e */ uint8_t valve_hysteresis; //!< valve movement hysteresis (unit is 1/128%)
+    /* 0f */ uint8_t motor_pwm_min;   //!< min PWM for motor 
+    /* 10 */ uint8_t motor_pwm_max;  //!< max PWM for motor
+    /* 11 */ uint8_t motor_eye_low;  //!< min signal lenght to accept low level (multiplied by 2)
+    /* 12 */ uint8_t motor_eye_high; //!< min signal lenght to accept high level (multiplied by 2)
+    /* 13 */ uint8_t motor_close_eye_timeout; //!<time from last pulse to disable eye [1/61sec]
+    /* 14 */ uint8_t motor_end_detect_cal; //!< stop timer threshold in % to previous average 
+    /* 15 */ uint8_t motor_end_detect_run; //!< stop timer threshold in % to previous average 
+    /* 16 */ uint8_t motor_speed; //!< /8 
+    /* 17 */ uint8_t motor_speed_ctl_gain;
+    /* 18 */ uint8_t motor_pwm_max_step;
+    /* 19 */ uint8_t MOTOR_ManuCalibration_L;
+    /* 1a */ uint8_t MOTOR_ManuCalibration_H;
+    /* 1b */ uint8_t temp_cal_table0; //!< temperature calibration table
+    /* 1c */ uint8_t temp_cal_table1; //!< temperature calibration table
+    /* 1d */ uint8_t temp_cal_table2; //!< temperature calibration table
+    /* 1e */ uint8_t temp_cal_table3; //!< temperature calibration table
+    /* 1f */ uint8_t temp_cal_table4; //!< temperature calibration table
+    /* 20 */ uint8_t temp_cal_table5; //!< temperature calibration table
+    /* 21 */ uint8_t temp_cal_table6; //!< temperature calibration table
+    /* 22 */ uint8_t timer_mode; //!< =0 only one program, =1 programs for weekdays
+    /* 23 */ uint8_t bat_warning_thld; //!< treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
+    /* 24 */ uint8_t bat_low_thld; //!< threshold for battery low [unit 0.02V]=[unit 0.01V per cell]
+    /* 25 */ uint8_t allow_ADC_during_motor;
 #if HW_WINDOW_DETECTION
-    /* 25 */ uint8_t window_open_detection_enable;
-    /* 26 */ uint8_t window_open_detection_delay; //!< window open detection delay [sec]
-    /* 27 */ uint8_t window_close_detection_delay; //!< window close detection delay [sec]
+    /* 26 */ uint8_t window_open_detection_enable;
+    /* 27 */ uint8_t window_open_detection_delay; //!< window open detection delay [sec]
+    /* 28 */ uint8_t window_close_detection_delay; //!< window close detection delay [sec]
 #else
-    /* 25 */ uint8_t window_open_detection_diff; //!< threshold for window open detection unit is 0.1C
-    /* 26 */ uint8_t window_close_detection_diff; //!< threshold for window close detection unit is 0.1C
-    /* 27 */ uint8_t window_open_detection_time;
-    /* 28 */ uint8_t window_close_detection_time;
-    /* 29 */ uint8_t window_open_timeout;           //!< maximum time for window open state [minutes]
+    /* 26 */ uint8_t window_open_detection_diff; //!< threshold for window open detection unit is 0.1C
+    /* 27 */ uint8_t window_close_detection_diff; //!< threshold for window close detection unit is 0.1C
+    /* 28 */ uint8_t window_open_detection_time;
+    /* 29 */ uint8_t window_close_detection_time;
+    /* 2a */ uint8_t window_open_timeout;           //!< maximum time for window open state [minutes]
 #endif
 #if TEMP_COMPENSATE_OPTION
 	/*    */ int8_t  room_temp_offset;
@@ -124,9 +125,9 @@ extern uint8_t EEPROM ee_layout;
 #define BOOT_OFF2     (21*60+0x1000) //!<  21:00
 
 #if (HW_WINDOW_DETECTION)
-#define EE_LAYOUT (0x13) 
+#define EE_LAYOUT (0x15) 
 #else
-#define EE_LAYOUT (0x12) 
+#define EE_LAYOUT (0x14) 
 #endif
 
 #ifdef __EEPROM_C__
@@ -190,54 +191,55 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 06 */  {8,          8,         0,      255},   //!< P_Factor;
   /* 07 */  {32,        32,         0,      255},   //!< I_Factor;
   /* 08 */  {40,        40,			0,      127},   //!< I_max_credit
-  /* 09 */  {240/5,   240/5,     20/5,      255},   //!< PID_interval*5 = interval in seconds;  min=20sec, max=21.25 minutes
-  /* 0a */  {30,         30,        0,      100},   //!< valve_min
-  /* 0b */  {45,         45,        0,      100},   //!< valve_center
-  /* 0c */  {80,         80,        0,      100},   //!< valve_max
-  /* 0d */  {64,         64,        0,      127},   //!< valve_hysteresis; valve movement hysteresis (unit is 1/128%), must be <128
-  /* 0e */  {32,         32,        32,     255},   //!< min motor_pwm PWM setting
-  /* 0f */  {250,       250,        50,     255},   //!< max motor_pwm PWM setting
-  /* 10 */  {100,       100,        1,      255},   //!< motor_eye_low
-  /* 11 */  {25,         25,        1,      255},   //!< motor_eye_high
-  /* 12 */  {78,         78,        5,      255},   //!< motor_close_eye_timeout; time from last pulse to disable eye [1/61sec]
-  /* 13 */  {130,       130,      110,      250},   //!< motor_end_detect_cal; stop timer threshold in % to previous average 
-  /* 14 */  {150,       150,      110,      250},   //!< motor_end_detect_run; stop timer threshold in % to previous average 
-  /* 15 */  {184,       184,       10,      255},   //!< motor_speed
-  /* 16 */  {50,         50,       10,      200},   //!< motor_speed_ctl_gain
-  /* 17 */  {10,         10,        1,       64},   //!< motor_pwm_max_step             
-  /* 18 */  {255,       255,        0,      255},   //!< manual calibration L
-  /* 19 */  {255,       255,        0,      255},   //!< manual calibration H
+  /* 09 */  {30,        30,			0,      255},   //!< I_credit_expiration unit is PID_interval, default 2 hour
+  /* 0a */  {240/5,   240/5,     20/5,      255},   //!< PID_interval*5 = interval in seconds;  min=20sec, max=21.25 minutes
+  /* 0b */  {30,         30,        0,      100},   //!< valve_min
+  /* 0c */  {45,         45,        0,      100},   //!< valve_center
+  /* 0d */  {80,         80,        0,      100},   //!< valve_max
+  /* 0e */  {64,         64,        0,      127},   //!< valve_hysteresis; valve movement hysteresis (unit is 1/128%), must be <128
+  /* 0f */  {32,         32,        32,     255},   //!< min motor_pwm PWM setting
+  /* 10 */  {250,       250,        50,     255},   //!< max motor_pwm PWM setting
+  /* 11 */  {100,       100,        1,      255},   //!< motor_eye_low
+  /* 12 */  {25,         25,        1,      255},   //!< motor_eye_high
+  /* 13 */  {78,         78,        5,      255},   //!< motor_close_eye_timeout; time from last pulse to disable eye [1/61sec]
+  /* 14 */  {130,       130,      110,      250},   //!< motor_end_detect_cal; stop timer threshold in % to previous average 
+  /* 15 */  {150,       150,      110,      250},   //!< motor_end_detect_run; stop timer threshold in % to previous average 
+  /* 16 */  {184,       184,       10,      255},   //!< motor_speed
+  /* 17 */  {50,         50,       10,      200},   //!< motor_speed_ctl_gain
+  /* 18 */  {10,         10,        1,       64},   //!< motor_pwm_max_step             
+  /* 19 */  {255,       255,        0,      255},   //!< manual calibration L
+  /* 1a */  {255,       255,        0,      255},   //!< manual calibration H
 #if THERMOTRONIC==1
-  /* 1a */  {605-TEMP_CAL_OFFSET,605-TEMP_CAL_OFFSET, 0,        255},   //!< value for 35C => 605 temperature calibration table 
-  /* 1b */  {645-605,645-605,      16,      255},   //!< value for 30C => 645 temperature calibration table
-  /* 1c */  {685-645,685-645,      16,      255},   //!< value for 25C => 685 temperature calibration table
-  /* 1d */  {825-685,825-685,      16,      255},   //!< value for 20C => 825 temperature calibration table
-  /* 1e */  {865-825,865-825,      16,      255},   //!< value for 15C => 865 temperature calibration table
-  /* 1f */  {905-865,905-865,      16,      255},   //!< value for 10C => 905 temperature calibration table
-  /* 20 */  {945-905,945-905,      16,      255},   //!< value for 05C => 945 temperature calibration table
+  /* 1b */  {605-TEMP_CAL_OFFSET,605-TEMP_CAL_OFFSET, 0,        255},   //!< value for 35C => 605 temperature calibration table 
+  /* 1c */  {645-605,645-605,      16,      255},   //!< value for 30C => 645 temperature calibration table
+  /* 1d */  {685-645,685-645,      16,      255},   //!< value for 25C => 685 temperature calibration table
+  /* 1e */  {825-685,825-685,      16,      255},   //!< value for 20C => 825 temperature calibration table
+  /* 1f */  {865-825,865-825,      16,      255},   //!< value for 15C => 865 temperature calibration table
+  /* 20 */  {905-865,905-865,      16,      255},   //!< value for 10C => 905 temperature calibration table
+  /* 21 */  {945-905,945-905,      16,      255},   //!< value for 05C => 945 temperature calibration table
 #else
-  /* 1a */  {295-TEMP_CAL_OFFSET,295-TEMP_CAL_OFFSET, 0,        255},   //!< value for 35C => 295 temperature calibration table 
-  /* 1b */  {340-295,340-295,      16,      255},   //!< value for 30C => 340 temperature calibration table
-  /* 1c */  {397-340,397-340,      16,      255},   //!< value for 25C => 397 temperature calibration table
-  /* 1d */  {472-397,472-397,      16,      255},   //!< value for 20C => 472 temperature calibration table
-  /* 1e */  {549-472,549-472,      16,      255},   //!< value for 15C => 549 temperature calibration table
-  /* 1f */  {614-549,614-549,      16,      255},   //!< value for 10C => 614 temperature calibration table
-  /* 20 */  {675-614,675-614,      16,      255},   //!< value for 05C => 675 temperature calibration table
+  /* 1b */  {295-TEMP_CAL_OFFSET,295-TEMP_CAL_OFFSET, 0,        255},   //!< value for 35C => 295 temperature calibration table 
+  /* 1c */  {340-295,340-295,      16,      255},   //!< value for 30C => 340 temperature calibration table
+  /* 1d */  {397-340,397-340,      16,      255},   //!< value for 25C => 397 temperature calibration table
+  /* 1e */  {472-397,472-397,      16,      255},   //!< value for 20C => 472 temperature calibration table
+  /* 1f */  {549-472,549-472,      16,      255},   //!< value for 15C => 549 temperature calibration table
+  /* 20 */  {614-549,614-549,      16,      255},   //!< value for 10C => 614 temperature calibration table
+  /* 21 */  {675-614,675-614,      16,      255},   //!< value for 05C => 675 temperature calibration table
 #endif
-  /* 21 */  {0,           0,        0,        1},   //!< timer_mode; =0 only one program, =1 programs for weekdays 
-  /* 22 */  {120,       120,       80,      160},   //!< bat_warning_thld; treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
-  /* 23 */  {100,       100,       80,      160},   //!< bat_low_thld; treshold for battery low [unit 0.02V]=[unit 0.01V per cell]
-  /* 24 */  {1,           1,        0,        1},   //!< allow_ADC_during_motor
+  /* 22 */  {0,           0,        0,        1},   //!< timer_mode; =0 only one program, =1 programs for weekdays 
+  /* 23 */  {120,       120,       80,      160},   //!< bat_warning_thld; treshold for battery warning [unit 0.02V]=[unit 0.01V per cell]
+  /* 24 */  {100,       100,       80,      160},   //!< bat_low_thld; treshold for battery low [unit 0.02V]=[unit 0.01V per cell]
+  /* 25 */  {1,           1,        0,        1},   //!< allow_ADC_during_motor
 #if HW_WINDOW_DETECTION
-  /* 25 */  {1,           1,        0,        1},   //!< window_open_detection_enable
-  /* 26 */  {5,           5,        0,      240},   //!< window_open_detection_delay [sec] max 4 minutes
-  /* 27 */  {5,           5,        0,      240},   //!< window_close_detection_delay [sec] max 4 minutes
+  /* 26 */  {1,           1,        0,        1},   //!< window_open_detection_enable
+  /* 27 */  {5,           5,        0,      240},   //!< window_open_detection_delay [sec] max 4 minutes
+  /* 28 */  {5,           5,        0,      240},   //!< window_close_detection_delay [sec] max 4 minutes
 #else
-  /* 25 */  {50,         50,        7,      255},   //!< window_open_detection_diff; reshold for window open/close detection unit is 0.01C
-  /* 26 */  {50,         50,        7,      255},   //!< window_close_detection_diff; reshold for window open/close detection unit is 0.01C
-  /* 27 */  {8,           8,  1, AVGS_BUFFER_LEN},  //!< window_open_detection_time unit 15sec = 1/4min
-  /* 28 */  {8,           8,  1, AVGS_BUFFER_LEN},  //!< window_close_detection_time unit 15sec = 1/4min
-  /* 29 */  {90,         90,        2,      255},   //!< window_open_timeout
+  /* 26 */  {50,         50,        7,      255},   //!< window_open_detection_diff; reshold for window open/close detection unit is 0.01C
+  /* 27 */  {50,         50,        7,      255},   //!< window_close_detection_diff; reshold for window open/close detection unit is 0.01C
+  /* 28 */  {8,           8,  1, AVGS_BUFFER_LEN},  //!< window_open_detection_time unit 15sec = 1/4min
+  /* 29 */  {8,           8,  1, AVGS_BUFFER_LEN},  //!< window_close_detection_time unit 15sec = 1/4min
+  /* 2a */  {90,         90,        2,      255},   //!< window_open_timeout
 #endif
 #if TEMP_COMPENSATE_OPTION
   /*    */  {0,           0,        0,      255},   //!< offset to roomtemp 1=0,1°C, binary complement for <0

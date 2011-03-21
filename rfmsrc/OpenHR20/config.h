@@ -143,8 +143,8 @@ In this file we define only configuration parameters, for example what kind of c
 #endif
 
 #ifndef REMOTE_SETTING_ONLY
-	// #define REMOTE_SETTING_ONLY	(RFM12)
-	#define REMOTE_SETTING_ONLY	0
+	#define REMOTE_SETTING_ONLY	(RFM12)
+	// #define REMOTE_SETTING_ONLY	0
 #endif
 
 // Some default Values
@@ -182,7 +182,7 @@ In this file we define only configuration parameters, for example what kind of c
 
 
 /* revision remarks
- *************************************************
+ **************************************************
  */
 
 
