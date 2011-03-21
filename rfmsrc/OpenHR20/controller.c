@@ -308,13 +308,15 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t ol
 	    uint8_t v0 = valveHistory[0];
 		if (CTL_integratorBlock == 0) {
 			if ((error16 >= 0) ? (v0 < config.valve_max) : (v0 > config.valve_min)) {
-			  if (((lastErrorSign != ((uint8_t)(error16>>8)&0x80))) || (error16==0)) { //sign of last error16 != sign of current OR error16 == 0
+			  if (((lastErrorSign != ((uint8_t)(error16>>8)&0x80))) || 
+				((absErr==last2AbsError) && (absErr<=I_ERR_TOLLERANCE_AROUND_0))) { //sign of last error16 != sign of current OR abserror around 0
+
 				  CTL_interatorCredit=config.I_max_credit; // ? optional
 				  goto INTEGRATOR; // next integration, do not change CTL_interatorCredit
 			  }
 			  if (CTL_interatorCredit>0) {
 				  if (absErr >= last2AbsError) { // error can grow only limited time 
-					  CTL_interatorCredit-=(absErr/25)+1; // max is 1200/20+1 = 61
+					  CTL_interatorCredit-=(absErr/I_ERR_WEIGHT)+1; // max is 1200/20+1 = 61
 					  INTEGRATOR:
 					  sumError += error16*8;
 				  }

@@ -60,6 +60,9 @@ void CTL_temp_change_inc (int8_t ch);
 void CTL_change_mode(int8_t dif);
 
 #define DEFINE_INTEGRATOR_BLOCK 6
+#define I_ERR_TOLLERANCE_AROUND_0 15 // unit 0,01°C. Set it quite restrictive !
+#define I_ERR_WEIGHT 25 //impact of error on I part
+
 extern uint8_t CTL_integratorBlock;
 
 
