@@ -50,9 +50,9 @@ int16_t MOTOR_PosMax;
 
 
 #if DEBUG_MOTOR_COUNTER
-    #define WATCH_LAYOUT 0x84
+    #define WATCH_LAYOUT 0x85
 #else
-    #define WATCH_LAYOUT 0x04
+    #define WATCH_LAYOUT 0x05
 #endif
 
 
@@ -60,14 +60,15 @@ static uint16_t watch_map[WATCH_N] PROGMEM = {
     /* 00 */ ((uint16_t) &sumError) + B16,
     /* 01 */ ((uint16_t) &sumError)+ 2 + B16,
     /* 02 */ ((uint16_t) &CTL_interatorCredit)+ B8,
-	/* 03 */ ((uint16_t) &CTL_mode_window) + B8,
-	/* 04 */ ((uint16_t) &motor_diag) + B16,
-	/* 05 */ ((uint16_t) &MOTOR_PosMax) + B16,
-	/* 06 */ ((uint16_t) &MOTOR_PosAct) + B16,
-	/* 07 */ ((uint16_t) &MOTOR_PosOvershoot) + B8,
+    /* 03 */ ((uint16_t) &CTL_creditExpiration)+ B8,
+	/* 04 */ ((uint16_t) &CTL_mode_window) + B8,
+	/* 05 */ ((uint16_t) &motor_diag) + B16,
+	/* 06 */ ((uint16_t) &MOTOR_PosMax) + B16,
+	/* 07 */ ((uint16_t) &MOTOR_PosAct) + B16,
+	/* 08 */ ((uint16_t) &MOTOR_PosOvershoot) + B8,
 #if DEBUG_MOTOR_COUNTER
-	/* 08 */ ((uint16_t) &MOTOR_counter) + B16,
-	/* 09 */ ((uint16_t) &MOTOR_counter)+ 2 + B16,
+	/* 09 */ ((uint16_t) &MOTOR_counter) + B16,
+	/* 0a */ ((uint16_t) &MOTOR_counter)+ 2 + B16,
 #endif
 };
 

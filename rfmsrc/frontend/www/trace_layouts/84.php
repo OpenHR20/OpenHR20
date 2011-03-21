@@ -4,6 +4,7 @@ $trace_layout_ids_double = array (
     array( 'sumError_LO_W' , '' ),
     array( 'sumError_HI_W' , '' ),
     array( 'CTL_interatorCredit', ''),
+    array( 'CTL_creditExpiration', ''),    
     array( 'CTL_mode_window' , 'Controller mode window timeout (0=closed)' ),
     array( 'motor_diag' , 'MOTOR diagnostic, time between 2 pulses' ),
     array( 'MOTOR_PosMax' , 'MOTOR maximum position [pulses]' ),

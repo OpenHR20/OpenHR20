@@ -78,3 +78,4 @@ extern uint8_t CTL_integratorBlock;
 
 extern int32_t sumError;
 extern int8_t CTL_interatorCredit;
+extern uint8_t CTL_creditExpiration;
