@@ -66,19 +66,24 @@ uint8_t sleep_with_ADC=0;
  ******************************************************************************/
 
 static int16_t ring_buf[2][AVERAGE_LEN];
-int16_t ring_buf_temp_avgs [AVGS_BUFFER_LEN];
-uint8_t ring_buf_temp_avgs_pos;
+#if ! HW_WINDOW_DETECTION
+	int16_t ring_buf_temp_avgs [AVGS_BUFFER_LEN];
+	uint8_t ring_buf_temp_avgs_pos;
+#endif
+
 static uint8_t ring_pos=0;
 static uint8_t ring_used=1; 
 static int32_t ring_sum [2] = {0,0};
 int16_t ring_average [2] = {0,0};
 
 static void shift_ring(void) {
+#if ! HW_WINDOW_DETECTION
 	ring_pos = (ring_pos+1) % AVERAGE_LEN;
 	if (ring_pos==0) {
         ring_buf_temp_avgs[ring_buf_temp_avgs_pos]=temp_average;
         ring_buf_temp_avgs_pos = (ring_buf_temp_avgs_pos+1)%AVGS_BUFFER_LEN;
     }
+#endif
 	if (ring_used<AVERAGE_LEN) {
 		ring_used++;
 	} 
