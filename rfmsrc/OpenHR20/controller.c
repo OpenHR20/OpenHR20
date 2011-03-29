@@ -306,14 +306,13 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t ol
 		  lastTempChangeErrorAbs = absErr;
 		  lastTempChangeSumError = sumError;
 	  } else {
-	    uint8_t v0 = valveHistory[0];
 		if (CTL_integratorBlock == 0) {
 			if (CTL_creditExpiration>0) {
 				CTL_creditExpiration--;
 			} else {
 				CTL_interatorCredit=0;
 			}
-			if ((error16 >= 0) ? (v0 < config.valve_max) : (v0 > config.valve_min)) {
+			if ((error16 >= 0) ? (old_result < config.valve_max) : (old_result > config.valve_min)) {
 			  if (((lastErrorSign != ((uint8_t)(error16>>8)&0x80))) || 
 				((absErr==last2AbsError) && (absErr<=I_ERR_TOLLERANCE_AROUND_0))) { //sign of last error16 != sign of current OR abserror around 0
 
