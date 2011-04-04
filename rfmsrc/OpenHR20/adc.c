@@ -72,31 +72,31 @@ static int16_t ring_buf[2][AVERAGE_LEN];
 #endif
 
 static uint8_t ring_pos=0;
-static uint8_t ring_used=1; 
+static uint8_t ring_used=0; 
 static int32_t ring_sum [2] = {0,0};
 int16_t ring_average [2] = {0,0};
 
 static void shift_ring(void) {
-#if ! HW_WINDOW_DETECTION
 	ring_pos = (ring_pos+1) % AVERAGE_LEN;
+	if (ring_used<AVERAGE_LEN) {
+		ring_used++;
+	} 
+#if ! HW_WINDOW_DETECTION
 	if (ring_pos==0) {
         ring_buf_temp_avgs[ring_buf_temp_avgs_pos]=temp_average;
         ring_buf_temp_avgs_pos = (ring_buf_temp_avgs_pos+1)%AVGS_BUFFER_LEN;
     }
 #endif
-	if (ring_used<AVERAGE_LEN) {
-		ring_used++;
-	} 
 }
 
 static void update_ring(uint8_t type, int16_t value) {
 
 	ring_sum[type]+=value;
-	if (ring_used>=AVERAGE_LEN) {
-		ring_sum[type]-=ring_buf[type][ring_pos];
+	ring_sum[type]-=ring_buf[type][ring_pos]; // note for boot: it is OK, ring_buf is initialized to zeroes
+	ring_buf[type][ring_pos]=value;
+	if (ring_used>=AVERAGE_LEN-1) { // note for "-1", last measurement can update ring_average
 		ring_average[type] = (int16_t) (ring_sum[type]/(int32_t)(AVERAGE_LEN));
 	}
-	ring_buf[type][ring_pos]=value;
 }
 
 
@@ -222,7 +222,7 @@ void start_task_ADC(void) {
 	ADMUX = ADC_UB_MUX | (1<<REFS0);
 	sleep_with_ADC=1;
 }
-#define ADC_TOLERANCE 1
+#define ADC_TOLERANCE 3
 static int16_t dummy_adc=0;
 /*!
  *******************************************************************************
@@ -243,8 +243,9 @@ uint8_t task_ADC(void) {
 			int16_t ad = ADCW;
             if ((ad>dummy_adc+ADC_TOLERANCE)||(ad<dummy_adc-ADC_TOLERANCE)) { 
                 // adc noise protection, repeat measure
+                REPEAT_ADC:
                 dummy_adc=ad;
-                state_ADC=3;
+                state_ADC--;
                 break;
             }
 			#if DEBUG_BATT_ADC
@@ -268,9 +269,7 @@ uint8_t task_ADC(void) {
             int16_t ad = ADCW;
             if ((ad>dummy_adc+ADC_TOLERANCE)||(ad<dummy_adc-ADC_TOLERANCE)) { 
                 // adc noise protection, repeat measure
-                dummy_adc=ad;
-                state_ADC=5;
-                break;
+                goto REPEAT_ADC; // optimization
             }
             int16_t t = ADC_Convert_To_Degree(ad);
             update_ring(TEMP_RING_TYPE,t);
