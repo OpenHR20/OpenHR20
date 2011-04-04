@@ -97,6 +97,14 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
     /* 29 */ uint8_t window_close_detection_time;
     /* 2a */ uint8_t window_open_timeout;           //!< maximum time for window open state [minutes]
 #endif
+#if BOOST_CONTROLER_AFTER_CHANGE
+	/*    */ uint8_t  temp_boost_setpoint_diff;
+	/*    */ uint8_t  temp_boost_hystereses;
+	/*    */ uint8_t  temp_boost_error;
+	/*    */ uint8_t  temp_boost_tempchange;
+	/*    */ uint8_t  temp_boost_time_cool;
+	/*    */ uint8_t  temp_boost_time_heat;
+#endif
 #if TEMP_COMPENSATE_OPTION
 	/*    */ int8_t  room_temp_offset;
 #endif
@@ -240,6 +248,14 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 28 */  {8,           8,  1, AVGS_BUFFER_LEN},  //!< window_open_detection_time unit 15sec = 1/4min
   /* 29 */  {8,           8,  1, AVGS_BUFFER_LEN},  //!< window_close_detection_time unit 15sec = 1/4min
   /* 2a */  {90,         90,        2,      255},   //!< window_open_timeout
+#endif
+#if BOOST_CONTROLER_AFTER_CHANGE
+  /*    */  {50,           0,        0,      255},   //!< temp_boost_setpoint_diff, unit 0,01°C
+  /*    */  {10,           0,        0,      255},   //!< temp_boost_hystereses, unit 0,01°C 
+  /*    */  {30,           0,        0,      255},   //!< temp_boost_error, unit 0,01°C
+  /*    */  {5,            0,        0,      255},   //!< temp_boost_tempchange_heat,0,1°C, boosttime=error/10(0,1°C)*time/tempchange
+  /*    */  {64,           0,        0,      255},   //!< temp_boost_time_cool, minutes
+  /*    */  {15,           0,        0,      255},   //!< temp_boost_time_heat, minutes
 #endif
 #if TEMP_COMPENSATE_OPTION
   /*    */  {0,           0,        0,      255},   //!< offset to roomtemp 1=0,1°C, binary complement for <0

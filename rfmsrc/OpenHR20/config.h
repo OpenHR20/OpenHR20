@@ -169,6 +169,9 @@ In this file we define only configuration parameters, for example what kind of c
 #ifndef BLOCK_INTEGRATOR_AFTER_VALVE_CHANGE
 	#define BLOCK_INTEGRATOR_AFTER_VALVE_CHANGE 0
 #endif
+#ifndef BOOST_CONTROLER_AFTER_CHANGE
+	#define BOOST_CONTROLER_AFTER_CHANGE 0
+#endif
 
 /**********************/
 /* code configuration */

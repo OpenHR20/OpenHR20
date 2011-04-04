@@ -57,6 +57,9 @@ uint8_t CTL_mode_window = 0; // open window (0=closed, >0 open-timmer)
 #endif
 int8_t CTL_interatorCredit;
 uint8_t CTL_creditExpiration;
+#if BOOST_CONTROLER_AFTER_CHANGE
+	uint8_t PID_boost_timeout=0;  //boost timout in minutes
+#endif
 static uint16_t PID_update_timeout=AVERAGE_LEN+1;   // timer to next PID controler action/first is 16 sec after statup
 int8_t PID_force_update=AVERAGE_LEN+1;      // signed value, val<0 means disable force updates \todo rename
 uint8_t valveHistory[VALVE_HISTORY_LEN];
@@ -143,6 +146,14 @@ void CTL_update(bool minute_ch) {
             }
         }
     }
+	#if BOOST_CONTROLER_AFTER_CHANGE
+		if ( minute_ch && (PID_boost_timeout>0)) {
+		PID_boost_timeout--;
+		  if (PID_boost_timeout==0) {
+		  PID_force_update = 0;
+		  }
+		}
+	#endif
 
     CTL_window_detection();
     if (PID_update_timeout>0) PID_update_timeout--;
@@ -237,6 +248,9 @@ void CTL_change_mode(int8_t m) {
     if (m == CTL_CHANGE_MODE) {
         // change
   		menu_temp_rewoke=CTL_temp_auto;
+		#if BOOST_CONTROLER_AFTER_CHANGE
+			PID_boost_timeout = 0; //jr disable boost
+		#endif
         CTL_mode_auto=!CTL_mode_auto;
         PID_force_update = 9;
     } else if (m == CTL_CHANGE_MODE_REWOKE) {
@@ -311,6 +325,13 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t ol
 		  testIntegratorRevert(lastAbsError);
 		  lastTempChangeErrorAbs = absErr;
 		  lastTempChangeSumError = sumError;
+		  #if BOOST_CONTROLER_AFTER_CHANGE
+			  if ((abs(setPoint-CTL_temp_wanted_last)>=config.temp_boost_setpoint_diff) // change of wanted temp large enough to start boost (0,5°C)
+				&& (absErr>=(int16_t)config.temp_boost_error)) {  // error large enough to start boost (0,3°C)
+				PID_boost_timeout = (error16 >= 0) ? config.temp_boost_time_heat : config.temp_boost_time_cool ;
+				PID_boost_timeout = (uint8_t)(MIN(255,abs(error16)/10*(int16_t)PID_boost_timeout/(int16_t)config.temp_boost_tempchange)); //boosttime=error/10(0,1°C)*time/tempchange
+			  }
+		  #endif
 	  } else {
 		if (CTL_integratorBlock == 0) {
 			if (CTL_creditExpiration>0) {
@@ -347,6 +368,22 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t ol
       }
   }
   lastProcessValue = processValue;
+  
+  #if BOOST_CONTROLER_AFTER_CHANGE
+	if (PID_boost_timeout > 0) {
+		if ((abs(error16)<=(int16_t)(config.temp_boost_error-config.temp_boost_hystereses))) {  // error <= temp_boost_error-temp_boost_hystereses
+			PID_boost_timeout=0; // end boost earlier, if error got to small (0,2°)
+		} else {
+			CTL_integratorBlock=DEFINE_INTEGRATOR_BLOCK;       //block Integrator
+			if (error16>0) {
+			  return config.valve_max;   //boost to max, no PID calculation
+			} else {
+			  return config.valve_min;   //boost to min, no PID calculation
+			}
+		}
+	}
+  #endif
+  
   if (config.I_Factor > 0) {
 	  int32_t maxSumError;
       // for overload protection: maximum is scalling_factor*scalling_factor*50/1 = 3276800
