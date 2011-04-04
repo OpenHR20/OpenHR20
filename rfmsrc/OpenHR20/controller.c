@@ -171,6 +171,12 @@ void CTL_update(bool minute_ch) {
             }
 			{	
 				int8_t i;
+				#if BLOCK_INTEGRATOR_AFTER_VALVE_CHANGE
+					if (valveHistory[0]!=new_valve) {  
+						CTL_integratorBlock=DEFINE_INTEGRATOR_BLOCK;       //block Integrator if valve moves
+					}
+				#endif
+
 				for(i=VALVE_HISTORY_LEN-1; i>0; i--) {
 					if (updateNow || (new_valve <= config.valve_max) || (new_valve >= config.valve_min)) {
 						// condition inside loop is stupid, but produce shorter code
@@ -386,7 +392,6 @@ static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t ol
 		}
 		pi_term16 >>= 8; // /= scalling_factor;
 	}
-
 	if(pi_term16 < config.valve_min) {
       return config.valve_min;
     }

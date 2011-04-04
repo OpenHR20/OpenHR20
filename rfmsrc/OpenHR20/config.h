@@ -166,6 +166,9 @@ In this file we define only configuration parameters, for example what kind of c
 #ifndef CALIBRATION_RESETS_sumError
 	#define CALIBRATION_RESETS_sumError 0
 #endif
+#ifndef BLOCK_INTEGRATOR_AFTER_VALVE_CHANGE
+	#define BLOCK_INTEGRATOR_AFTER_VALVE_CHANGE 0
+#endif
 
 /**********************/
 /* code configuration */
