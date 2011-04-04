@@ -137,6 +137,10 @@ extern uint8_t EEPROM ee_layout;
 #else
 #define EE_LAYOUT (0x14) 
 #endif
+#if (BOOST_CONTROLER_AFTER_CHANGE) || (TEMP_COMPENSATE_OPTION)
+	#define EE_LAYOUT (0xff) 
+	// for this options we haven't reserved EE_LAYOUT number yet
+#endif
 
 #ifdef __EEPROM_C__
 // this is definition, not just declaration
