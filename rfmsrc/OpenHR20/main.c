@@ -145,7 +145,7 @@ int __attribute__ ((noreturn)) main(void)
             }
 
 			if (sleep_with_ADC) {
-				sleep_with_ADC=0;
+				sleep_with_ADC=false;
 				// start conversions
 		        ADCSRA |= (1<<ADSC);
 			}
@@ -186,7 +186,7 @@ int __attribute__ ((noreturn)) main(void)
 
 		if (task & TASK_ADC) {
 			task&=~TASK_ADC;
-			if (task_ADC()==0) {
+			if (!task_ADC()) {
                 // ADC is done
             }
 			continue; // on most case we have only 1 task, improve time to sleep

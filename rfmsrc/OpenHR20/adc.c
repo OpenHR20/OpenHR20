@@ -54,7 +54,7 @@
 
 // vars
 static uint8_t state_ADC;
-uint8_t sleep_with_ADC=0;
+bool sleep_with_ADC=0;
 
 
 /*!
@@ -228,25 +228,24 @@ static int16_t dummy_adc=0;
  *******************************************************************************
  * ADC task
  ******************************************************************************/
-uint8_t task_ADC(void) {
-	switch (++state_ADC) {
-	case 2: //step 2
+bool task_ADC(void) {
+	switch (state_ADC) {
+	case 1: //step 1
 	    // set ADC control and status register
     	ADCSRA = (1<<ADEN)|(1<<ADPS2)|(1<<ADPS0)|(1<<ADIE); // prescaler=32
 		// ADC conversion from 1 (battery is done)
 		// first conversion put to trash
 		// start new with same configuration;
-		sleep_with_ADC=1;
 		break;
-	case 4: //step 4
+	case 3: //step 3
 		{	
 			int16_t ad = ADCW;
             if ((ad>dummy_adc+ADC_TOLERANCE)||(ad<dummy_adc-ADC_TOLERANCE)) { 
                 // adc noise protection, repeat measure
                 REPEAT_ADC:
                 dummy_adc=ad;
-                state_ADC--;
-                break;
+				sleep_with_ADC=true;
+                return true;
             }
 			#if DEBUG_BATT_ADC
 				COM_printStr16(PSTR("batAD x"),ad);
@@ -256,15 +255,13 @@ uint8_t task_ADC(void) {
 			// activate voltage divider
 			ADC_ACT_TEMP_P |= (1<<ADC_ACT_TEMP);
 			ADMUX = ADC_TEMP_MUX | (1<<REFS0);
-			sleep_with_ADC=1;
 		}
 		break;
-	case 3: //step 3
-	case 5: //step 5
+	case 2: //step 2
+	case 4: //step 4
         dummy_adc = ADCW;
-	    sleep_with_ADC=1;
 	    break;
-	case 6: //step 6
+	case 5: //step 5
         {
             int16_t ad = ADCW;
             if ((ad>dummy_adc+ADC_TOLERANCE)||(ad<dummy_adc-ADC_TOLERANCE)) { 
@@ -286,9 +283,11 @@ uint8_t task_ADC(void) {
 	    ADCSRA = (0<<ADEN)|(1<<ADPS2)|(1<<ADPS0)|(1<<ADIE); 
 		// power down ADC
 		power_down_ADC();
-		break;
+		return false;
 	}
-	return sleep_with_ADC;
+	state_ADC++;
+	sleep_with_ADC=true;
+	return true;
 }
 
 
