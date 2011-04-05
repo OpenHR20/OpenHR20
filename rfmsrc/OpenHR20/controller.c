@@ -304,8 +304,9 @@ static uint16_t lastTempChangeErrorAbs;
 static int32_t lastTempChangeSumError;
 
 static void testIntegratorRevert(uint16_t absErr) {
-	if (absErr>=(lastTempChangeErrorAbs/2)) {
-		// revert Integrator to previous state if current error is not smaller than 1/2  of original
+	 if ((absErr>=((lastTempChangeErrorAbs*3)>>2)) 
+		&& (absErr > (I_ERR_TOLLERANCE_AROUND_0))) {
+		// if error could not be reduced to 3/4 and Error is larger than I_ERR_TOLLERANCE_AROUND_0°C
 		sumError=lastTempChangeSumError;
 	}
 	lastTempChangeErrorAbs = 0xffff; // function can be called more time but only first is valid
