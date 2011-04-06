@@ -305,7 +305,7 @@ static int32_t lastTempChangeSumError;
 
 static void testIntegratorRevert(uint16_t absErr) {
 	 if ((absErr>=((lastTempChangeErrorAbs*3)>>2)) 
-		&& (absErr > (I_ERR_TOLLERANCE_AROUND_0))) {
+		&& (absErr > (I_ERR_TOLLERANCE_AROUND_0*2))) {
 		// if error could not be reduced to 3/4 and Error is larger than I_ERR_TOLLERANCE_AROUND_0°C
 		sumError=lastTempChangeSumError;
 	}
