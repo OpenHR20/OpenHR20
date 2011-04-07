@@ -167,16 +167,7 @@ void CTL_update(bool minute_ch) {
             temp = CTL_temp_wanted;
         }
         bool updateNow=(temp!=CTL_temp_wanted_last);
-        #if ! BOOST_CONTROLER_AFTER_CHANGE
-		  if (updateNow) {
-			CTL_temp_wanted_last=temp;
-			goto UPDATE_NOW; // optimize
-		  }
-		  if (PID_update_timeout == 0) {
-			UPDATE_NOW:
-		#else
 		  if (updateNow||(PID_update_timeout == 0)) {
-		#endif
             PID_update_timeout = (config.PID_interval * 5); // new PID pooling
 			uint8_t new_valve;
             if (temp>TEMP_MAX) {
@@ -184,11 +175,7 @@ void CTL_update(bool minute_ch) {
             } else {
                 new_valve = pid_Controller(calc_temp(temp),temp_average,valveHistory[0],updateNow);
             }
-			#if BOOST_CONTROLER_AFTER_CHANGE
-				if (updateNow) {
-					CTL_temp_wanted_last=temp;
-				}
-			#endif
+			CTL_temp_wanted_last=temp;
 			{	
 				int8_t i;
 				#if BLOCK_INTEGRATOR_AFTER_VALVE_CHANGE
