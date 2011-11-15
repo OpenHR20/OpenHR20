@@ -45,6 +45,24 @@
 /* The following must be AFTER the last include line */
 #if (defined COM_RS232) || (defined COM_RS485)
 
+#if defined (_AVR_IOM169_H_) || defined (_AVR_IOM32_H_)
+#define UDR0 UDR
+#define RXEN0 RXEN
+#define RXCIE0 RXCIE
+#define UCSR0A UCSRA
+#define UCSR0B UCSRB
+#define TXC0 TXC
+#define TXCIE0 TXCIE
+#define UDRIE0 UDRIE
+#define TXEN0 TXEN
+#define UBRR0H UBRRH
+#define UBRR0L UBRRL
+#define UCSR0C UCSRC
+#define UCSZ00 UCSZ0
+#define UCSZ01 UCSZ1
+#define U2X0 U2X
+#define URSEL0 URSEL
+#endif
 
 /*!
  *******************************************************************************
@@ -52,23 +70,16 @@
  *
  *  \note
  ******************************************************************************/
-#ifdef _AVR_IOM169P_H_
-ISR(USART0_RX_vect)
-#elif defined(_AVR_IOM169_H_)
+#if defined (_AVR_IOM169P_H_) || defined (_AVR_IOM169_H_) || defined (_AVR_IOM329_H_)
 ISR(USART0_RX_vect)
 #elif defined(_AVR_IOM16_H_) || defined(_AVR_IOM32_H_)
 ISR(USART_RXC_vect)
 #endif
 {
-	#ifdef _AVR_IOM169P_H_
 		COM_rx_char_isr(UDR0);	// Add char to input buffer
-		UCSR0B &= ~(_BV(RXEN0)|_BV(RXCIE0)); // disable receive
-	#elif defined(_AVR_IOM169_H_) || defined(_AVR_IOM16_H_) || defined(_AVR_IOM32_H_)
-		COM_rx_char_isr(UDR);	// Add char to input buffer
 		#if !defined(MASTER_CONFIG_H)
-			UCSRB &= ~(_BV(RXEN)|_BV(RXCIE)); // disable receive
+		UCSR0B &= ~(_BV(RXEN0)|_BV(RXCIE0)); // disable receive
 		#endif
-	#endif
 	#if !defined(_AVR_IOM16_H_) && !defined(_AVR_IOM32_H_)
     PCMSK0 |= (1<<PCINT0); // activate interrupt
   #endif
@@ -82,7 +93,7 @@ ISR(USART_RXC_vect)
  *  - We send one byte
  *  - If we have send all, disable interrupt
  ******************************************************************************/
-#ifdef _AVR_IOM169P_H_
+#if defined (_AVR_IOM169P_H_) || defined(_AVR_IOM329_H_)
 ISR(USART0_UDRE_vect)
 #elif defined(_AVR_IOM169_H_) || defined(_AVR_IOM16_H_)  || defined(_AVR_IOM32_H_)
 ISR(USART_UDRE_vect)
@@ -91,23 +102,13 @@ ISR(USART_UDRE_vect)
 	char c;
 	if ((c=COM_tx_char_isr())!='\0')
 	{
-		#ifdef _AVR_IOM169P_H_
 			UDR0 = c;
-		#elif defined(_AVR_IOM169_H_) || defined(_AVR_IOM16_H_) || defined(_AVR_IOM32_H_)
-			UDR = c;
-		#endif
 	}
 	else	// no more chars, disable Interrupt
 	{
-		#ifdef _AVR_IOM169P_H_
 			UCSR0B &= ~(_BV(UDRIE0));
 			UCSR0A |= _BV(TXC0); // clear interrupt flag
 			UCSR0B |= (_BV(TXCIE0));
-		#elif defined(_AVR_IOM169_H_) || defined(_AVR_IOM16_H_) || defined(_AVR_IOM32_H_)
-			UCSRB &= ~(_BV(UDRIE));
-			UCSRA |= _BV(TXC); // clear interrupt flag
-			UCSRB |= (_BV(TXCIE));
-		#endif
 	}
 }
 
@@ -117,9 +118,7 @@ ISR(USART_UDRE_vect)
  *
  *  \note
  ******************************************************************************/
-#ifdef _AVR_IOM169P_H_
-ISR(USART0_TX_vect)
-#elif defined(_AVR_IOM169_H_)
+#if defined (_AVR_IOM169P_H_) || defined (_AVR_IOM169_H_) || defined(_AVR_IOM329_H_)
 ISR(USART0_TX_vect)
 #elif defined(_AVR_IOM16_H_) || defined(_AVR_IOM32_H_)
 ISR(USART_TXC_vect)
@@ -129,11 +128,7 @@ ISR(USART_TXC_vect)
 		// TODO: change rs485 to receive
 		#error "code is not complete for rs485"
 	#endif
-	#ifdef _AVR_IOM169P_H_
 		UCSR0B &= ~(_BV(TXCIE0)|_BV(TXEN0));
-	#elif defined(_AVR_IOM169_H_) || defined(_AVR_IOM16_H_) || defined(_AVR_IOM32_H_)
-		UCSRB &= ~(_BV(TXCIE)|_BV(TXEN));
-	#endif
 }
 
 /*!
@@ -150,26 +145,18 @@ void RS_Init(void)
 	//long ubrr_val = ((F_CPU)/(baud*8L)-1);
 	uint16_t ubrr_val = ((F_CPU)/(COM_BAUD_RATE*8L)-1);
  
-	#ifdef _AVR_IOM169P_H_
 		UCSR0A = _BV(U2X0);
 		UBRR0H = (unsigned char)(ubrr_val>>8);
 		UBRR0L = (unsigned char)(ubrr_val & 0xFF);
 		UCSR0C = (_BV(UCSZ00) | _BV(UCSZ01));     // Asynchron 8N1 
-	#elif defined(_AVR_IOM169_H_) || defined(_AVR_IOM16_H_) || defined(_AVR_IOM32_H_)
-		UCSRA = _BV(U2X);
-		UBRRH = (unsigned char)(ubrr_val>>8);
-		UBRRL = (unsigned char)(ubrr_val & 0xFF);
 		#if defined(_AVR_IOM16_H_) || defined(_AVR_IOM32_H_)
-            UCSRC = (1<<URSEL) | (_BV(UCSZ0) | _BV(UCSZ1));     // Asynchron 8N1
+            UCSR0C = (1<<URSEL0) | (_BV(UCSZ00) | _BV(UCSZ01));     // Asynchron 8N1
             #if defined(MASTER_CONFIG_H)
-			  UCSRB = _BV(RXCIE) | _BV(RXEN);
+			  UCSR0B = _BV(RXCIE0) | _BV(RXEN0);
 			#endif
         #else 
-            UCSRC = (_BV(UCSZ0) | _BV(UCSZ1));     // Asynchron 8N1
+            UCSR0C = (_BV(UCSZ00) | _BV(UCSZ01));     // Asynchron 8N1
         #endif
-	#else
-		#error 'your CPU is not supported !'
-	#endif
 	#if !defined(_AVR_IOM16_H_) && !defined(_AVR_IOM32_H_)
     PCMSK0 |= (1<<PCINT0); // activate interrupt
   #endif
@@ -190,21 +177,12 @@ void RS_startSend(void)
 		// TODO: change rs485 to transmit
 		#error "code is not complete for rs485"
 	#endif
-	#ifdef _AVR_IOM169P_H_
 		if ((UCSR0B & _BV(UDRIE0))==0) {
 			UCSR0B &= ~(_BV(TXCIE0));
 			UCSR0A |= _BV(TXC0); // clear interrupt flag
 			UCSR0B |= _BV(UDRIE0) | _BV(TXEN0);
 			// UDR0 = COM_tx_char_isr(); // done in interrupt
 		}
-	#elif defined(_AVR_IOM169_H_) || defined(_AVR_IOM16_H_) || defined(_AVR_IOM32_H_)
-		if ((UCSRB & _BV(UDRIE))==0) {
-			UCSRB &= ~(_BV(TXCIE));
-			UCSRA |= _BV(TXC); // clear interrupt flag
-			UCSRB |= _BV(UDRIE)  | _BV(TXEN); 
-			//UDR = COM_tx_char_isr(); // done in interrupt
-		}
-	#endif
 	sei();
 }
 

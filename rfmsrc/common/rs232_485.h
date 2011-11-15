@@ -35,7 +35,7 @@
 
 #if (defined COM_RS232) || (defined COM_RS485)
 	
-	#ifdef _AVR_IOM169P_H_
+    #if defined(_AVR_IOM169P_H_) || defined(_AVR_IOM329_H_)
 		#define RS_need_clock() (UCSR0B & (_BV(TXEN0) | _BV(RXEN0)))
 		#define RS_enable_rx() (UCSR0B |= _BV(RXEN0) | _BV(RXCIE0))
 	#elif defined(_AVR_IOM169_H_) || defined(_AVR_IOM16_H_) || defined(_AVR_IOM32_H_)

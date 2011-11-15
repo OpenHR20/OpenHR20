@@ -40,6 +40,16 @@
 #include <avr/sleep.h>
 #include <avr/version.h>
 
+// redefine variable names for newer processor
+#ifdef _AVR_IOM329_H_
+#define LCDDR7 LCDDR07
+#define LCDDR6 LCDDR06
+#define LCDDR5 LCDDR05
+#define LCDDR2 LCDDR02
+#define LCDDR1 LCDDR01
+#define LCDDR0 LCDDR00
+#endif
+
 // HR20 Project includes
 #include "main.h"
 #include "lcd.h"
@@ -52,8 +62,11 @@
 #define LCD_CONTRAST_MAX      15   //!< \brief contrast maxmum
 #define LCD_MAX_POS            4   //!< \brief number of 7 segment chars
 #define LCD_MAX_CHARS  (sizeof(LCD_CharTablePrgMem))   //!< \brief no. of chars in \ref LCD_CharTablePrgMem
+#ifdef HR25
+#define LCD_REGISTER_COUNT     12   //!< \brief no. of registers each bitplane
+#else
 #define LCD_REGISTER_COUNT     9   //!< \brief no. of registers each bitplane
-
+#endif
 
 // Vars
 volatile uint8_t LCD_used_bitplanes = 1; //!< \brief number of used bitplanes / used for power save
@@ -200,14 +213,35 @@ uint8_t LCD_FieldOffsetTablePrgMem[] PROGMEM =
 #if THERMOTRONIC==1
     39,    //!<  Field 0
     35,    //!<  Field 1              
+    31,    //!<  Field 2
+    27     //!<  Field 3
+#elif HR25==1
+	39,    //!<  Field 0
+	35,    //!<  Field 0
+    30,    //!<  Field 2
+    26     //!<  Field 3
 #else
     40,    //!<  Field 0
     36,    //!<  Field 1              
-#endif
     31,    //!<  Field 2
     27     //!<  Field 3
+#endif
 };
 
+
+#ifdef HR25
+// Look-up table to adress a segment inside a field
+uint8_t LCD_SegOffsetTablePrgMem[] PROGMEM =
+{
+     2,    //  Seg A            AAAA
+     3,    //  Seg B           F    B
+    26,    //  Seg C           F    B
+    25,    //  Seg D            GGGG
+    24,    //  Seg E           E    C
+     0,    //  Seg F           E    C
+     1     //  Seg G            DDDD
+};
+#else
 // Look-up table to adress a segment inside a field
 uint8_t LCD_SegOffsetTablePrgMem[] PROGMEM =
 {
@@ -219,6 +253,7 @@ uint8_t LCD_SegOffsetTablePrgMem[] PROGMEM =
      0,    //  Seg F           E    C
      1     //  Seg G            DDDD
 };
+#endif
 
 //! Look-up table for adress hour-bar segments
 uint8_t LCD_SegHourBarOffsetTablePrgMem[] PROGMEM =
@@ -251,10 +286,13 @@ void LCD_Init(void)
 
     // LCD Control and Status Register B
     //   - clock source is TOSC1 pin
-    //   - COM0:2 connected
+    //   - COM0:2 connected (HR25 also has COM3)
     //   - SEG0:22 connected
+#ifdef HR25
+	LCDCRB = (1<<LCDCS) | (1<<LCDMUX1) | (1<<LCDMUX0) | (1<<LCDPM2) | (1<<LCDPM0);
+#else
 	LCDCRB = (1<<LCDCS) | (1<<LCDMUX1) | (1<<LCDPM2)| (1<<LCDPM0);
-
+#endif
     // LCD Frame Rate Register
     //   - LCD Prescaler Select N=16       @32.768Hz ->   2048Hz
     //   - LCD Duty Cycle 1/3 (K=6)       2048Hz / 6 -> 341,33Hz
@@ -887,6 +925,11 @@ void task_lcd_update(void) {
     	LCDDR10 = LCD_Data[LCD_Bitplane][6];
     	LCDDR11 = LCD_Data[LCD_Bitplane][7];
     	LCDDR12 = LCD_Data[LCD_Bitplane][8];
+#ifdef HR25
+    	LCDDR15 = LCD_Data[LCD_Bitplane][9];
+    	LCDDR16 = LCD_Data[LCD_Bitplane][10];
+    	LCDDR17 = LCD_Data[LCD_Bitplane][11];
+#endif
 	}
 
 

@@ -45,26 +45,33 @@
 # 5.4.2008: Dario Carluccio
 #           command line parameters for "avr-size" on Linux and Windows.
 
+# set a default - can be overriden on the command line with:
+#   make HW=THERMOTRONIC <...>
 # HW = THERMOTRONIC
-HW = HONEYWELL 
+HW = HONEYWELL
+# HW = HR25
 
-# MCU name
+# set up the TARGET and MCU based on HW
+# TARGET = Target file name (without extension).
+# MCU = MCU name
 ifeq ($(HW),THERMOTRONIC)
-    MCU = atmega169
+	MCU = atmega169
 	F_CPU = 1000000
-else
-    MCU = atmega169p
+	TARGET = thermotronic
+else ifeq ($(HW),HONEYWELL)
+	MCU = atmega169p
 	F_CPU = 4000000
-endif    
+	TARGET = hr20
+else ifeq ($(HW),HR25)
+	MCU = atmega329pa
+	F_CPU = 4000000
+	TARGET = hr25
+endif
 
 
 
 # Output format. (can be srec, ihex, binary)
 FORMAT = ihex
-
-
-# Target file name (without extension).
-TARGET = hr20
 
 
 # Object files directory
@@ -187,6 +194,9 @@ CFLAGS += -fdata-sections
 
 ifeq ($(HW),THERMOTRONIC)
     CFLAGS += -DTHERMOTRONIC=1
+endif
+ifeq ($(HW),HR25)
+    CFLAGS += -DHR25=1
 endif
 
 #---------------- Assembler Options ----------------
@@ -507,6 +517,7 @@ extcoff: $(TARGET).elf
 %.txt: %.elf
 	$(REMOVE) $@
 	@echo "Configuration" >> $@
+	@echo "Hardware type $(HW)" >> $@
 	@echo "RFM=$(RFM)" >> $@
 	@echo "HW_WINDOW_DETECTION=$(HW_WINDOW_DETECTION)" >> $@
 	@echo "==================================" >> $@
@@ -536,7 +547,7 @@ extcoff: $(TARGET).elf
 %.sym: %.elf
 	@echo
 	@echo $(MSG_SYMBOL_TABLE) $@
-	$(NM) -n $< > $@
+	$(NM) -P -n $< > $@
 
 # Create bin file for bootloader
 %.bin: %.elf

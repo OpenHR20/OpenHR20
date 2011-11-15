@@ -218,6 +218,128 @@ void task_lcd_update(void);
 #define LCD_SEG_MOON       68   // 12, 5 |  SEG221   |  [8], BIT 5
 //*****************************************************************
 #else
+
+#ifdef HR25
+/*! \verbatim
+ *******************************************************************************
+ *  LCD Layout:
+ *        ---------------------------BAR24------------------------------    
+ *
+ *        0|1|2|3|4|5|6|7|8|9|0a|0b|0c|0d|0e|B |0f|B |B |B |B |B |B |B |    
+ *        0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|  
+ *        --------------------------BAR_SUB-----------------------------
+ *                                                                          
+ *  MOON SUN SUPER2 D1   D2   D3      D4       D5    D6   D7         PADLOCK
+ *  BATOUT SPANNER                                                                       
+ *  BAT1,2 SNOW   3A         2A                  1A         0A       DEGREE CELCIUS       
+ *      Prog   3F    3B   2F    2B    Col2    1F    1B   0F    0B    PERCENT
+ *      Auto      3g         2g       Col1       1g         0g          
+ *      Eco    3E    3C   2E    2C            1E    1C   0E    0C    MINUS/VERTPLUS       
+ *      Manu      3D   Col3  2D       Col4       1D   Col5  0D       DOOROPEN   
+ *                                                                          
+ *******************************************************************************
+ \endverbatim   */
+#define LCD_SEG_B0          0
+#define LCD_SEG_B1          1
+#define LCD_SEG_B2          2
+#define LCD_SEG_B3          3
+#define LCD_SEG_B4          4
+#define LCD_SEG_B5          5
+#define LCD_SEG_B6          6
+#define LCD_SEG_B7          7
+
+#define LCD_SEG_B8          8
+#define LCD_SEG_B9          9
+#define LCD_SEG_B10        10
+#define LCD_SEG_B11        11
+#define LCD_SEG_B12        12
+#define LCD_SEG_B13        13
+#define LCD_SEG_B14        14
+#define LCD_SEG_B16        15
+
+#define LCD_SEG_B17        16
+#define LCD_SEG_B20        17
+#define LCD_SEG_B21        18
+#define LCD_SEG_BAR_SUB    19
+#define LCD_SEG_B23        20
+
+#define LCD_SEG_ECO        24
+#define LCD_SEG_PROG       25
+#define LCD_SEG_3F         26
+#define LCD_SEG_3G         27
+#define LCD_SEG_3A         28
+#define LCD_SEG_3B         29
+#define LCD_SEG_2F         30
+#define LCD_SEG_2G         31
+
+
+#define LCD_SEG_2A         32
+#define LCD_SEG_2B         33
+#define LCD_SEG_COL2       34
+#define LCD_SEG_1F         35
+#define LCD_SEG_1G         36
+#define LCD_SEG_1A         37
+#define LCD_SEG_1B         38
+#define LCD_SEG_0F         39
+
+#define LCD_SEG_0G         40
+#define LCD_SEG_0A         41
+#define LCD_SEG_0B         42
+#define LCD_SEG_MINUS      43
+#define LCD_DEGREE         44
+#define LCD_PADLOCK        45
+
+#define LCD_SEG_MANU       48
+#define LCD_SEG_AUTO       49
+#define LCD_SEG_3E         50
+#define LCD_SEG_3D         51
+#define LCD_SEG_3C         52
+#define LCD_SEG_COL3       53
+#define LCD_SEG_2E         54
+#define LCD_SEG_2D         55
+
+#define LCD_SEG_2C         56
+#define LCD_SEG_COL4       57
+#define LCD_SEG_COL1       58
+#define LCD_SEG_1E         59
+#define LCD_SEG_1D         60
+#define LCD_SEG_1C         61
+#define LCD_SEG_COL5       62
+#define LCD_SEG_0E         63
+
+#define LCD_SEG_0D         64
+#define LCD_SEG_0C         65
+#define LCD_SEG_DOOR_OPEN  66
+#define LCD_SEG_VERTPLUS   67
+#define LCD_SEG_PERCENT    68
+#define LCD_SEG_CELCIUS    69
+
+#define LCD_SEG_BAT_OUTLINE 72
+#define LCD_SEG_BAT_TOP     73 // BAT1
+#define LCD_SEG_BAT_BOTTOM  74 // BAT2
+#define LCD_SEG_SNOW        75
+#define LCD_SEG_SPANNER     76
+#define LCD_SEG_MOON        77
+#define LCD_SEG_SUN         78
+#define LCD_SEG_SUPER2      79
+
+#define LCD_SEG_D1          80
+#define LCD_SEG_D2          81
+#define LCD_SEG_D3          82
+#define LCD_SEG_D4          83
+#define LCD_SEG_D5          84
+#define LCD_SEG_D6          85
+#define LCD_SEG_D7          86
+#define LCD_SEG_B15         87
+
+#define LCD_SEG_B18         88
+#define LCD_SEG_B19         89
+#define LCD_SEG_B22         90
+#define LCD_SEG_BAR24       91
+
+
+#else /* HR20 */
+
 // LCD_SEG:_xx for LCD_SetSeg   // LCDDR | AtMega169 |  LCD_Data[]
 #define LCD_SEG_B0          0   //  0, 0 |  SEG000   |  [0], BIT 0
                                 //  0, 1 |  SEG001   |  [0], BIT 1
@@ -288,7 +410,8 @@ void task_lcd_update(void);
                                 // 12, 4 |  SEG220   |  [8], BIT 4
 #define LCD_SEG_MOON       69   // 12, 5 |  SEG221   |  [8], BIT 5
 //*****************************************************************
-#endif
+#endif /*HR25*/
+#endif /*!THERMOTRONIC*/
 
 //***************************
 // LCD Strings:
