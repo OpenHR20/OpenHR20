@@ -505,7 +505,7 @@ void COM_commad_parse (void) {
 			break;
         case 'M':
             if (COM_hex_parse(1*2)!='\0') { break; }
-            CTL_change_mode(com_hex[0]==1);
+            CTL_change_mode(com_hex[0]);
             COM_print_debug(1);
             break;
         case 'A':
@@ -607,7 +607,7 @@ void COM_wireless_command_parse (uint8_t * rfm_framebuf, uint8_t rfm_framepos) {
 			}
 			break;
         case 'M':
-            CTL_change_mode(rfm_framebuf[pos++]==1);
+            CTL_change_mode(rfm_framebuf[pos++]);
             COM_print_debug(2);
             break;
         case 'A':

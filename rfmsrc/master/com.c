@@ -445,10 +445,12 @@ void COM_commad_parse (void) {
     			uint8_t len=0;
     			switch (ch) {
                     case 'D':
+                    case 'V':
                         len=0;
                         break;
                     case 'M':
                     case 'A':
+                    case 'L':
                     case 'T':
                     case 'G':
                     case 'R':
