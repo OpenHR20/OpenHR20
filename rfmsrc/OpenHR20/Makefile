@@ -86,7 +86,6 @@ OBJDIR = obj
 SRC =  \
     motor.c \
     controller.c \
-    rs232_485_hw.c \
     watch.c \
     com.c \
     wireless.c \
@@ -101,6 +100,7 @@ SRC_B =  \
     eeprom.c \
     menu.c \
     lcd.c \
+    rs232_485_hw.c \
 
 
 # List Assembler source files here.
