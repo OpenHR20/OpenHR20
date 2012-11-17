@@ -1,4 +1,6 @@
 svn-openhr20
 ============
 
-clone of openhr20.svn.sourceforge.net
+Clone of openhr20.svn.sourceforge.net.
+branches: master-svn - pull from http://openhr20.svn.sourceforge.net
+          master - main 'release' branch
