@@ -15,3 +15,12 @@
 *.exe
 *.out
 *.app
+
+# Output files
+*.hex
+*.lss
+*.map
+*.elf
+*.bin
+*.eep
+.dep
