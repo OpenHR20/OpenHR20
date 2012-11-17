@@ -70,10 +70,18 @@ void task_keyboard(void) {
 	uint8_t wheel= keys & (KBI_ROT1 | KBI_ROT2);
 	if ((wheel ^ state_wheel_prev) & KBI_ROT1) {	//only ROT1 have interrupt, change detection
 		if ((wheel == 0) || (wheel == (KBI_ROT1|KBI_ROT2))) {
+#ifdef LCD_UPSIDE_DOWN
+			kb_events |= KB_EVENT_WHEEL_PLUS;
+#else
 			kb_events |= KB_EVENT_WHEEL_MINUS;
+#endif
 			long_quiet = 0;
 		} else {
+#ifdef LCD_UPSIDE_DOWN
+			kb_events |= KB_EVENT_WHEEL_MINUS;
+#else
 			kb_events |= KB_EVENT_WHEEL_PLUS;
+#endif
 			long_quiet = 0;
 		}
 		state_wheel_prev = wheel;
