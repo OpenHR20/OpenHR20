@@ -74,58 +74,63 @@ volatile uint8_t LCD_used_bitplanes = 1; //!< \brief number of used bitplanes / 
 //! segment data for the segment registers in each bitplane
 volatile uint8_t LCD_Data[LCD_BITPLANES][LCD_REGISTER_COUNT];
 
+#ifdef LCD_UPSIDE_DOWN
+  #define LCD_upside_down 1
+#else
+  #define LCD_upside_down 0
+#endif
 
 // Look-up table to convert value to LCD display data (segment control)
 // Get value with: bitmap = pgm_read_byte(&LCD_CharTablePrgMem[position]);
 uint8_t LCD_CharTablePrgMem[] PROGMEM =
 {
-    0x3F, //      0:0x3F   1:0x06   2:0x5B   3:0x4F   4:0x66   5:0x6D   6:0x7D
+    0x77, //      0:0x77   1:0x06   2:0x6B   3:0x4F   4:0x1e   5:0x5D   6:0x7D
     0x06, // 1    ******        *   ******   ******   *    *   ******   ******
-    0x5B, // 2    *    *        *        *        *   *    *   *        *
+    0x6B, // 2    *    *        *        *        *   *    *   *        *
     0x4F, // 3    *    *        *   ******   ******   ******   ******   ******
-    0x66, // 4    *    *        *   *             *        *        *   *    *
-    0x6D, // 5    ******        *   ******   ******        *   ******   ******
-    0x7D, // 6   0111111  0000110  1011011  1001111  1100110  1101101  1111101
+    0x1e, // 4    *    *        *   *             *        *        *   *    *
+    0x5d, // 5    ******        *   ******   ******        *   ******   ******
+    0x7d, // 6   1110111  0000110  1101011  1001111  0011110  1011101  1111101
 
-    0x07, // 7    7:0x07   8:0x7F   9:0x6F  10:0x77  11:0x7C  12:0x39  13:0x5E
+    0x07, // 7    7:0x07   8:0x7F   9:0x5F  10:0x3f  11:0x7C  12:0x71  13:0x5e
     0x7F, // 8    ******   ******   ******   ******   *        ******        *
-    0x6F, // 9         *   *    *   *    *   *    *   *        *             *
-    0x77, //10         *   ******   ******   ******   ******   *        ******
+    0x5F, // 9         *   *    *   *    *   *    *   *        *             *
+    0x3f, //10         *   ******   ******   ******   ******   *        ******
     0x7C, //11         *   *    *        *   *    *   *    *   *        *    *
-    0x39, //12         *   ******   ******   *    *   ******   ******   ******
-    0x5E, //13   0000111  1111111  1101111  1110111  1111100  0111001  1011110
+    0x71, //12         *   ******   ******   *    *   ******   ******   ******
+    0x6E, //13   0000111  1111111  1011111  0111111  1111100  1110001  1101110
 
-    0x79, //14   14:0x79  15:0x71  16:0x63  17:0x54  18:0x73  19:0x76 20:0x30
-    0x71, //15    ******   ******   ******            ******   *    *  *
-    0x63, //16    *        *        *    *            *    *   *    *  *
-    0x54, //17    ******   ******   ******   ******   ******   ******  *
-    0x73, //18    *        *                 *    *   *        *    *  *
-    0x76, //19    ******   *                 *    *   *        *    *  *
-    0x30, //20   1111001  1110001  1100011  1010100  1110011  1110110  0110000
+    0x79, //14   14:0x79  15:0x39  16:0x1b  17:0x2c  18:0x3b  19:0x3e 20:0x30
+    0x39, //15    ******   ******   ******            ******   *    *  *
+    0x1b, //16    *        *        *    *            *    *   *    *  *
+    0x2c, //17    ******   ******   ******   ******   ******   ******  *
+    0x3b, //18    *        *                 *    *   *        *    *  *
+    0x3e, //19    ******   *                 *    *   *        *    *  *
+    0x30, //20   1111001  0111001  0011011  0101100  0111011  0111110  0110000
 
-    0x08, //21   21:0x08  22:0x40  23:0x01  24:0x48  25:0x41  26:0x09  27:0x49
-    0x40, //22                      ******            ******   ******   ******
+    0x40, //21   21:0x40  22:0x08  23:0x01  24:0x48  25:0x09  26:0x41  27:0x49
+    0x08, //22                      ******            ******   ******   ******
     0x01, //23
     0x48, //24             ******            ******   ******            ******
-    0x41, //25
-    0x09, //26    ******                     ******            ******   ******
-    0x49, //27   0001000  1000000  0000001  1001000  1000001  0001001  1001001
+    0x09, //25
+    0x41, //26    ******                     ******            ******   ******
+    0x49, //27   1000000  0001000  0000001  1001000  0001001  1000001  1001001
 
-    0x50, //28   28:0x50  29:0x54  30:0x10  31:0x5c  32:0x00  33:0x33  34:0x27
-    0x54, //29                                                 ******   ******
-    0x10, //30                                                 *    *   *    *
-    0x5c, //31    ******   ******   *        ******   Space    *    *   *    *
+    0x28, //28   28:0x28  29:0x2c  30:0x20  31:0x6c  32:0x00  33:0x33  34:0x17
+    0x2c, //29                                                 ******   ******
+    0x20, //30                                                 *    *   *    *
+    0x6c, //31    ******   ******   *        ******   Space    *    *   *    *
     0x00, //32    *        *    *   *        *    *            *             *
     0x33, //33    *        *    *   *        ******            *             *
-    0x27, //34   1010000  1010100  0010000  1011100  0000000  0110011  0100111
+    0x17, //34   0101000  0101100  0100000  1101100  0000000  0110011  0010111
 
-    0x38, //35   35:0x38  36:0x58  37:0x3e  38:0x78  39:0x6e
-    0x58, //36    *                 *    *   *        *    *
-    0x3e, //37    *                 *    *   *        *    *
+    0x70, //35   35:0x70  36:0x68  37:0x76  38:0x78  39:0x5e
+    0x68, //36    *                 *    *   *        *    *
+    0x76, //37    *                 *    *   *        *    *
     0x78, //38    *        ******   *    *   ******   ******
-    0x6e  //39    *        *        *    *   *             *
+    0x5e  //39    *        *        *    *   *             *
           //40    ******   ******   ******   ******   ******
-          //41   0111000  1011000  0111110  1111000  1101110
+          //41   1110000  1101000  1110110  1111000  1011110
 };
 
 #if LANG==LANG_uni
@@ -217,7 +222,7 @@ uint8_t LCD_FieldOffsetTablePrgMem[] PROGMEM =
     27     //!<  Field 3
 #elif HR25==1
 	39,    //!<  Field 0
-	35,    //!<  Field 0
+	35,    //!<  Field 1
     30,    //!<  Field 2
     26     //!<  Field 3
 #else
@@ -234,24 +239,24 @@ uint8_t LCD_FieldOffsetTablePrgMem[] PROGMEM =
 uint8_t LCD_SegOffsetTablePrgMem[] PROGMEM =
 {
      2,    //  Seg A            AAAA
-     3,    //  Seg B           F    B
-    26,    //  Seg C           F    B
-    25,    //  Seg D            GGGG
-    24,    //  Seg E           E    C
-     0,    //  Seg F           E    C
-     1     //  Seg G            DDDD
+     3,    //  Seg B           E    B
+    26,    //  Seg C           E    B
+     1,    //  Seg D            DDDD
+     0,    //  Seg E           F    C
+    24,    //  Seg F           F    C
+    25     //  Seg G            GGGG
 };
 #else
 // Look-up table to adress a segment inside a field
 uint8_t LCD_SegOffsetTablePrgMem[] PROGMEM =
 {
      2,    //  Seg A            AAAA
-     3,    //  Seg B           F    B
-    27,    //  Seg C           F    B
-    25,    //  Seg D            GGGG
-    24,    //  Seg E           E    C
-     0,    //  Seg F           E    C
-     1     //  Seg G            DDDD
+     3,    //  Seg B           E    B
+    27,    //  Seg C           E    B
+     1,    //  Seg D            DDDD
+     0,    //  Seg E           F    C
+    24,    //  Seg F           F    C
+    25     //  Seg G            GGGG
 };
 #endif
 
@@ -362,15 +367,16 @@ void LCD_PrintChar(uint8_t value, uint8_t pos, uint8_t mode)
     if ((pos < LCD_MAX_POS) && (value < LCD_MAX_CHARS)) {
 
         // Get Fieldbase for Position
+		if (LCD_upside_down)
+		  pos = 3-pos;
         fieldbase = pgm_read_byte(&LCD_FieldOffsetTablePrgMem[pos]);
-
         // Get Bitmap for Value
         bitmap = pgm_read_byte(&LCD_CharTablePrgMem[value]);
         mask = 1;
 
         // Set 7 Bits
         for (i=0; i<7; i++){
-            seg = fieldbase + pgm_read_byte(&LCD_SegOffsetTablePrgMem[i]);
+            seg = fieldbase + pgm_read_byte(&LCD_SegOffsetTablePrgMem[LCD_upside_down?6-i:i]);
             // Set or Clear?
             LCD_SetSeg(seg,((bitmap & mask)?mode:LCD_MODE_OFF));
             mask <<= 1;
