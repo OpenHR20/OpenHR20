@@ -40,6 +40,14 @@
 #define __EEPROM_C__
 #include "eeprom.h"
 
+#if !defined(EEWE) && defined(EEPE)
+# define EEWE EEPE
+#endif
+
+#if !defined(EEMWE) && defined(EEMPE)
+# define EEMWE EEMPE
+#endif
+
 
 
 // test for compilation
@@ -123,6 +131,10 @@ void eeprom_config_init(bool restore_default) {
 	
 	uint16_t i;
 	uint8_t *config_ptr = config_raw;
+#if (NANODE == 1)
+        // set to allow erase and write in one operation
+        EECR |= (EEPM1 | EEPM0);
+#endif
 	for (i=0;i<CONFIG_RAW_SIZE;i++) {
 	    if (restore_default) {
    		   *config_ptr = config_default(i); // default value
