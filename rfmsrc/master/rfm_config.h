@@ -46,6 +46,29 @@
 // schematics: 
 // for wiring see file wiring.txt
 
+#if (NANODE == 1)
+// nanode has the following pins used: (D=0-7, B=8-13)
+// D3 = RFM12B Interrupt (INT 1) - connect to SDO (B12)
+// B2 Digital 10	 Slave Select for RFM12B - if installed
+// B3 Digital 11	 SPI bus: Shared MOSI (Master Output, Slave Input)
+// B4 Digital 12	 SPI bus: Shared MISO (Master Input, Slave Output)
+// B5 Digital 13	 SPI bus: Shared Serial Clock (output from master)
+#define RFM_SCK_DDR			DDRB
+#define RFM_SCK_PORT		PORTB
+#define RFM_SCK_BITPOS		5
+
+#define RFM_SDI_DDR			DDRB
+#define RFM_SDI_PORT		PORTB
+#define RFM_SDI_BITPOS		3
+
+#define RFM_NSEL_DDR		DDRB
+#define RFM_NSEL_PORT		PORTB
+#define RFM_NSEL_BITPOS		2
+
+#define RFM_SDO_DDR			DDRB
+#define RFM_SDO_PIN			PINB
+#define RFM_SDO_BITPOS		4
+#else
 #define RFM_SCK_DDR			DDRB
 #define RFM_SCK_PORT		PORTB
 #define RFM_SCK_BITPOS		7
@@ -61,16 +84,25 @@
 #define RFM_SDO_DDR			DDRB
 #define RFM_SDO_PIN			PINB
 #define RFM_SDO_BITPOS		6
-
+#endif
 /*
 #define RFM_NIRQ_DDR		DDRE
 #define RFM_NIRQ_PIN		PINE
 #define RFM_NIRQ_BITPOS		2
 */
 
+#if (NANODE == 1)
 #define RFM_CLK_OUTPUT 1
-
+void INT1_vect(void); // should be able to disable clock output?
+#else
+#define RFM_CLK_OUTPUT 1
 void INT2_vect(void);
+#endif
 
+#if (NANODE == 1)
+#define RFM_INT_EN() (EIMSK |= _BV(INT1), INT1_vect())
+#define RFM_INT_DIS() (EIMSK &= ~_BV(INT1))
+#else
 #define RFM_INT_EN() (GICR |= _BV(INT2), INT2_vect())
 #define RFM_INT_DIS() (GICR &= ~_BV(INT2))
+#endif

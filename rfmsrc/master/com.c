@@ -48,7 +48,7 @@
 #include "queue.h"
 
 
-#if defined(_AVR_IOM32_H_)
+#if defined(_AVR_IOM32_H_) || defined(__AVR_ATmega328P__)
     #define TX_BUFF_SIZE 512
 #else 
     #define TX_BUFF_SIZE 256

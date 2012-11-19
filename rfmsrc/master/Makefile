@@ -54,6 +54,17 @@ MCU = atmega32
 #     calculate timings. Do NOT tack on a 'UL' at the end, this will be done
 #     automatically to create a 32-bit value in your source code.
 F_CPU = 10000000
+ifeq ($(MCU), atmega328p)
+      NANODE:=1
+      F_CPU:=16000000
+else
+      NANODE:=0
+endif
+
+# define for ATMEGA_DEVELOPMENT_BOARD with LEDs on PA
+ifneq ($(ATMEGA32_DEV_BOARD), 1)
+      ATMEGA32_DEV_BOARD:=0
+endif
 
 # Output format. (can be srec, ihex, binary)
 FORMAT = ihex
@@ -395,9 +406,10 @@ GENDEPFLAGS = -MMD -MP -MF .dep/$(@F).d
 
 # Combine all necessary flags and optional flags.
 # Add target processor to flags.
-ALL_CFLAGS = -mmcu=$(MCU) -I. $(CFLAGS) $(GENDEPFLAGS)
-ALL_CPPFLAGS = -mmcu=$(MCU) -I. -x c++ $(CPPFLAGS) $(GENDEPFLAGS)
-ALL_ASFLAGS = -mmcu=$(MCU) -I. -x assembler-with-cpp $(ASFLAGS)
+EXTRAS=-DMCU=$(MCU) -DNANODE=$(NANODE) -DATMEGA32_DEV_BOARD=$(ATMEGA32_DEV_BOARD)
+ALL_CFLAGS = -mmcu=$(MCU) -I. $(CFLAGS) $(GENDEPFLAGS) $(EXTRAS)
+ALL_CPPFLAGS = -mmcu=$(MCU) -I. -x c++ $(CPPFLAGS) $(GENDEPFLAGS) $(EXTRAS)
+ALL_ASFLAGS = -mmcu=$(MCU) -I. -x assembler-with-cpp $(ASFLAGS) $(EXTRAS)
 
 
 

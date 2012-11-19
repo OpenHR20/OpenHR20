@@ -77,12 +77,23 @@ In this file we define only configuration parameters, for example what kind of c
 /* Our default Adress, if not set or invalid */
 /* #define COM_DEF_ADR 1 */
 
+#if (NANODE == 1)
+ #define LED_RX_on() (PORTD |= _BV(PD5))
+ #define LED_RX_off() (PORTD &= ~_BV(PD5))
 
-#define LED_RX_on() (PORTD |= _BV(PD7))
-#define LED_RX_off() (PORTD &= ~_BV(PD7))
-
-#define LED_sync_on()	(PORTA |= _BV(PA2))
-#define LED_sync_off()  (PORTA &= ~_BV(PA2))
+ #define LED_sync_on()        (PORTD |= _BV(PD6))
+ #define LED_sync_off()  (PORTD &= ~_BV(PD6))
+#else
+ #if (ATMEGA32_DEV_BOARD == 1)
+  #define LED_RX_on() (PORTA |= _BV(PA1))
+  #define LED_RX_off() (PORTA &= ~_BV(PA1))
+ #else
+  #define LED_RX_on() (PORTD |= _BV(PD7))
+  #define LED_RX_off() (PORTD &= ~_BV(PD7))
+ #endif
+ #define LED_sync_on()        (PORTA |= _BV(PA2))
+ #define LED_sync_off()  (PORTA &= ~_BV(PA2))
+#endif
 
 #define RFM 1 //!< define RFM to 1 if you want to have support for the RFM Radio Moodule in the Code
 

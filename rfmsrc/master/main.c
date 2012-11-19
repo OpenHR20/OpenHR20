@@ -86,7 +86,12 @@ int __attribute__ ((noreturn)) main(void)
     RFM_SPI_16(RFM_LOW_BATT_DETECT_D_10MHZ);
     RFM_RX_ON();
 	rfm_mode = rfmmode_rx;
-	MCUCSR |= _BV(ISC2);
+#if (NANODE == 1)
+      EICRA |= ((1<<ISC10) | (1<<ISC11));
+      EIMSK |= _BV(INT1);
+#else
+      MCUCSR |= _BV(ISC2); // rising edge
+#endif
 
    	COM_init();
 
@@ -226,15 +231,26 @@ static inline void init(void)
     //! Disable Analog Comparator (power save)
     ACSR = (1<<ACD);
 
-	DDRA = _BV(PA2);	//Green LED for Sync
+#if (NANODE == 1)
+	DDRB = 0x2f;
+	DDRD = _BV(PD1) | _BV(PD2) | _BV(PD5) | _BV(PD6);
+	PORTB = 0xff; // 0x7?
+#else
+ #if (ATMEGA32_DEV_BOARD == 1)
+	DDRA = _BV(PA2)|_BV(PA1);       //Green LED for Sync
+    DDRD = _BV(PD1);
+ #else
+	DDRA = _BV(PA2);        //Green LED for Sync
+    DDRD = _BV(PD1) | _BV(PD7);
+ #endif
     DDRB = _BV(PB4)|_BV(PB5)|_BV(PB7);
+    PORTA = 0xff;
+    PORTB = ~_BV(PB2); 
+#endif
     DDRC = 0;
-	DDRD = _BV(PD1) | _BV(PD7);
-	PORTA = 0xff;
-	PORTB = ~_BV(PB2); 
 	PORTC = 0xff; 
 	PORTD = 0xff;
-	
+
 	RTC_Init();
 
 #if (RFM==1)
@@ -276,10 +292,18 @@ FUSES =
  * \note level interrupt is better, but I want to have same code for master as for HR20 (jdobry)
  ******************************************************************************/
 #if (RFM==1)
+#if (NANODE == 1)
+ISR (INT1_vect){
+#else
 ISR (INT2_vect){
+#endif
   // RFM module interupt
   while (RFM_SDO_PIN & _BV(RFM_SDO_BITPOS)) {
+#if (NANODE == 1)
+    EIMSK &= ~_BV(INT1);
+#else
     GICR &= ~_BV(INT2); // disable RFM interrupt
+#endif
     sei(); // enable global interrupts
     if (rfm_mode == rfmmode_tx) {
         RFM_WRITE(rfm_framebuf[rfm_framepos++]);
@@ -298,7 +322,11 @@ ISR (INT2_vect){
 	}
     cli(); // disable global interrupts
     asm volatile("nop"); // we must have one instruction after cli() 
+#if (NANODE == 1)
+    EIMSK |= _BV(INT1);
+#else
     GICR |= _BV(INT2); // enable RFM interrupt
+#endif
     asm volatile("nop"); // we must have one instruction after
   }
   // do NOT add anything after RFM part
