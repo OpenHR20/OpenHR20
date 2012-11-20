@@ -406,7 +406,7 @@ GENDEPFLAGS = -MMD -MP -MF .dep/$(@F).d
 
 # Combine all necessary flags and optional flags.
 # Add target processor to flags.
-EXTRAS=-DMCU=$(MCU) -DNANODE=$(NANODE) -DATMEGA32_DEV_BOARD=$(ATMEGA32_DEV_BOARD)
+EXTRAS=-DMCU=$(MCU) -DNANODE=$(NANODE) -DATMEGA32_DEV_BOARD=$(ATMEGA32_DEV_BOARD) $(FLAGS)
 ALL_CFLAGS = -mmcu=$(MCU) -I. $(CFLAGS) $(GENDEPFLAGS) $(EXTRAS)
 ALL_CPPFLAGS = -mmcu=$(MCU) -I. -x c++ $(CPPFLAGS) $(GENDEPFLAGS) $(EXTRAS)
 ALL_ASFLAGS = -mmcu=$(MCU) -I. -x assembler-with-cpp $(ASFLAGS) $(EXTRAS)
