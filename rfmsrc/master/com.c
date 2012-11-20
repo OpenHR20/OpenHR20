@@ -415,6 +415,30 @@ void COM_commad_parse (void) {
 			wl_force_addr1=0xff;
             print_s_p(PSTR("OK"));
 			break;
+		case ':': // intel hex for writing eeprom
+		  if (COM_hex_parse(4*2,false)!='\0') { break; }
+		  uint8_t byteCount = com_hex[0];
+		  uint16_t address = (com_hex[1] << 8) | com_hex[2]; 
+		  uint8_t recordType = com_hex[3];
+		  if (recordType != 0) {
+			COM_hex_parse(2*1,true); // soak up the checksum and newline
+			break; // not a data record - we'll guess it is an end record
+		  }
+		  uint8_t len = 0;
+		  while (len != byteCount) {
+			if (COM_hex_parse(2*1,false)!='\0') { break; }
+			EEPROM_write(address + len, com_hex[0]);
+			len++;
+		  }
+		  com_hex[0] = address & 0xff;
+		  print_idx(c);
+		  COM_hex_parse(2*1,true); // soak up the checksum and newline
+		  byteCount = 0;
+		  while (len != byteCount) {
+			print_hexXX(EEPROM_read(address + byteCount));
+			byteCount++;
+		  }
+		  break;
 		case 'G':
 		case 'S':
 			if (c=='G') {
