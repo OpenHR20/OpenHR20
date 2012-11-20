@@ -52,8 +52,8 @@ extern uint16_t kb_events;
 #define KB_EVENT_UPDATE_LCD		(1 << 14)
 
 
-#define LONG_PRESS_THLD 4
-#define LONG_QUIET_THLD 20
+#define LONG_PRESS_THLD 3
+#define LONG_QUIET_THLD 8
 
 #define KEYBOARD_NOISE_CANCELATION 50 //!< unit is 1/256s depend to RTC
 
