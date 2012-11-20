@@ -215,7 +215,8 @@
 #define RFM_DATA_RATE_38400      0xC608
 #define RFM_DATA_RATE_57600      0xC605
 
-#define RFM_SET_DATARATE(baud)		( ((baud)<5400) ? (RFM_DATA_RATE_CS|((43104/(baud))-1)) : (RFM_DATA_RATE|((344828UL/(baud))-1)) )
+// Using this formula as specified in the datasheet results in a slightly inflated data rate due to rounding. Original: #define RFM_SET_DATARATE_ORIG(baud)		( ((baud)<5400) ? (RFM_DATA_RATE_CS|((43104/(baud))-1)) : (RFM_DATA_RATE|((344828UL/(baud))-1)) )
+#define RFM_SET_DATARATE(baud)		( ((baud)<4800) ? (RFM_DATA_RATE_CS|((43104/(baud)))) : (RFM_DATA_RATE|((344828UL/(baud)))) )
 
 ///////////////////////////////////////////////////////////////////////////////
 //
