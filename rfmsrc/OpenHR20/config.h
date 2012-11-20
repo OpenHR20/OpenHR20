@@ -119,7 +119,9 @@ In this file we define only configuration parameters, for example what kind of c
 	#endif
 
 	#define RFM12 1 // just a synonym
-	#define RFM_DEVICE_ADDRESS 0x00
+    #ifndef RFM_DEVICE_ADDRESS
+	  #define RFM_DEVICE_ADDRESS 0x00
+    #endif
 
 	#if (RFM_WIRE_MARIOJTAG == 1)
 		#define DISABLE_JTAG 1 //!< define DISABLE_JTAG if your RFM's connection uses any JTAG pins
@@ -127,14 +129,30 @@ In this file we define only configuration parameters, for example what kind of c
 			#error HW_WINDOW_DETECTION is not compatible with RFM_WIRE_MARIOJTAG
 		#endif
 	#endif
+    #ifndef SECURITY_KEY_0
 	#define SECURITY_KEY_0		0x01
+    #endif
+    #ifndef SECURITY_KEY_1
 	#define SECURITY_KEY_1		0x23
+    #endif
+    #ifndef SECURITY_KEY_2
 	#define SECURITY_KEY_2		0x45
+    #endif
+    #ifndef SECURITY_KEY_3
 	#define SECURITY_KEY_3		0x67
+    #endif
+    #ifndef SECURITY_KEY_4
 	#define SECURITY_KEY_4		0x89
+    #endif
+    #ifndef SECURITY_KEY_5
 	#define SECURITY_KEY_5     	0xab
+    #endif
+    #ifndef SECURITY_KEY_6
 	#define SECURITY_KEY_6		0xcd
+    #endif
+    #ifndef SECURITY_KEY_7
 	#define SECURITY_KEY_7		0xef
+    #endif
 #else
 	#define RFM12                  0
 	#define RFM_WIRE_MARIOJTAG     0
