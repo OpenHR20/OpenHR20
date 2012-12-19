@@ -47,8 +47,8 @@
 // for wiring see file wiring.txt
 
 #if (NANODE == 1)
-// nanode has the following pins used: (D=0-7, B=8-13)
-// D3 = RFM12B Interrupt (INT 1) - connect to SDO (B12)
+// nanode has the following pins used: (PORT D=digital 0-7, PORT B=digital 8-13)
+// D3 (digital 3) = RFM12B Interrupt (INT 1) - connect to SDO (B4, digital 12)
 // B2 Digital 10	 Slave Select for RFM12B - if installed
 // B3 Digital 11	 SPI bus: Shared MOSI (Master Output, Slave Input)
 // B4 Digital 12	 SPI bus: Shared MISO (Master Input, Slave Output)
