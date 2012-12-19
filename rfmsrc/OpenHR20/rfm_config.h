@@ -99,3 +99,11 @@ void PCINT0_vect(void);
 
 #define RFM_INT_EN() (PCMSK0 |= _BV(RFM_SDO_PCINT), PCINT0_vect())
 #define RFM_INT_DIS() (PCMSK0 &= ~_BV(RFM_SDO_PCINT))
+
+#ifndef RFM_TUNING
+#define RFM_TUNING 0
+#endif
+
+#ifndef RFM_TUNING_MODE
+#define RFM_TUNING_MODE 0
+#endif
