@@ -69,7 +69,7 @@ while(($line=fgets($fp,256))!==FALSE) {
     	$date = sprintf("Y%02x%02x%02x\n",
     	    $items['year']-2000, $items['mon'], $items['mday']);
     	echo $time ." ". $date;
-    	fwrite($fp,$time); fwrite($fp,$date);
+    	fwrite($fp,$date); fwrite($fp,$time);
     	$debug=false;
     } else if (($line=="OK") || (($line{0}=='d') && ($line{2}==' '))) {
         $debug=false;
