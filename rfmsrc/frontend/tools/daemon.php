@@ -35,7 +35,7 @@ while(($line=fgets($fp,256))!==FALSE) {
     $line=trim($line);
     if ($line == "") continue; // ignore empty lines
     $debug=true;
-
+    echo " < ".$line;
 	$force=false;
     $ts=microtime(true);
     if ($line{0}=='(' && $line{3}==')') {
