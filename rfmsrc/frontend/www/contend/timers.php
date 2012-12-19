@@ -13,7 +13,7 @@ class contend_timers extends contend {
       global $db;
       parent::__construct($addr);
       $result = $db->query("SELECT * FROM eeprom WHERE addr=$this->addr AND idx=255");
-      $row = $result->fetch();
+      $row = $result->fetchArray();
       if ($row) {
 	include 'ee_layouts/'.sprintf("%02x",$row['value']).'.php';
 	$this->layout_names = $layout_names;
@@ -26,7 +26,7 @@ class contend_timers extends contend {
     global $db,$timer_names,$symbols;
     $result = $db->query("SELECT idx,value FROM timers WHERE addr=$this->addr");
 
-    while ($row = $result->fetch()) {
+    while ($row = $result->fetchArray()) {
 	$d = ($row['idx'])>>4;
 	$t = ($row['idx'])&0xf;
 	$this->timers[$d][$t]=$row['value'];

@@ -1,6 +1,6 @@
 <?php
 
-$db = new SQLiteDatabase("/usb/home/db.sqlite");
+$db = new SQLite3("/usb/home/db.sqlite");
 
 
   // translation table for valve names

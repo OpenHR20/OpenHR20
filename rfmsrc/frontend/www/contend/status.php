@@ -10,7 +10,7 @@ class contend_status extends contend {
     if ($_POST['type'] == 'addr') {
       $result = $db->query("SELECT * FROM log WHERE addr=$this->addr ORDER BY TIME DESC LIMIT 1");
       // foreach ($_POST as $k=>$p) echo "<div>$k => $p</div>";
-      if ($row = $result->fetch()) {
+      if ($row = $result->fetchArray()) {
 	if ((isset($_POST['auto_mode']) && ($row['mode']!=$_POST['auto_mode']))) {
 	  switch ($_POST['auto_mode']) {
 	    case 'AUTO':
@@ -31,7 +31,7 @@ class contend_status extends contend {
     } else if ($_POST['type'] == 'all') {
       foreach ($room_name as $k=>$v) {
 	$result = $db->query("SELECT * FROM log WHERE addr=$k ORDER BY time DESC LIMIT 1");
-	if ($row = $result->fetch()) {
+	if ($row = $result->fetchArray()) {
 	  if ((isset($_POST["auto_mode_$k"]) && ($row['mode']!=$_POST["auto_mode_$k"]))) {
 	    switch ($_POST["auto_mode_$k"]) {
 	      case 'AUTO':
@@ -60,7 +60,7 @@ class contend_status extends contend {
       echo ('<div><a href="?page=queue&read_info=1&addr='.$this->addr.'">Make refresh requests for all values</a></div>');
       $result = $db->query("SELECT * FROM log WHERE addr=$this->addr ORDER BY time DESC LIMIT 1");
 
-      if ($row = $result->fetch()) {
+      if ($row = $result->fetchArray()) {
 	echo '<form method="post" action="?page=status&amp;addr='.$this->addr.'" />';
 	echo "<div>Last update: ".format_time($row['time'])."</div>";
 	echo "<div>Mode: ";
@@ -98,7 +98,7 @@ class contend_status extends contend {
 	    $real=array();$wanted=array();$valve=array();$markings=array();
 	    $off=date_offset_get(new DateTime);
 	    $window=-1; $win_pos=0;
-	    while ($row = $result->fetch()) {                                                                                            
+	    while ($row = $result->fetchArray()) {                                                                                            
 		$t = ($row['time']+$off)."000";
 	        array_push($real,array($t,$row['real']/100));                                                                              
 	        array_push($wanted,array($t,$row['wanted']/100));                                                                              
@@ -187,7 +187,7 @@ class contend_status extends contend {
       echo "<noscript><div><img src=\"/chart.php?addr=$this->addr&real=1&wanted=1&valve=1&hours=$chart_hours\" \></div></noscript>";
       echo '<div><span style="color: red;">Real temperature</span> <span style="color: green;">Wanted temperature</span> <span style="color: blue;">Valve position</span></div>';
       $result = $db->query("SELECT * FROM versions WHERE addr=$this->addr LIMIT 1");
-      if ($row = $result->fetch()) {
+      if ($row = $result->fetchArray()) {
 	echo "<div>SW version: ".$row['data']."</div>";
 	echo "<div>SW version last update: ".format_time($row['time'])."</div>";
       }
@@ -203,7 +203,7 @@ class contend_status extends contend {
 	foreach ($room_name as $k=>$v) {
 	  $result = $db->query("SELECT * FROM log WHERE addr=$k ORDER BY time DESC LIMIT 1");
 	  echo "<tr><td><a href=\"?page=status&amp;addr=$k\">$v</a></td>";
-	  if ($row = $result->fetch()) {
+	  if ($row = $result->fetchArray()) {
 	    $age=time()-$row['time'];
 	    if ($age > $GLOBALS['error_age']) {
         $age_t=' class="error"';

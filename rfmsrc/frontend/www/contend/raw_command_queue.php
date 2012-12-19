@@ -33,7 +33,7 @@ class contend_raw_command_queue extends contend {
 
     echo "<table>\n";
     echo "<tr><th>addr</th><th>time</th><th>data</th><th>send</th><th></th></tr>";
-    while ($row = $result->fetch()) {
+    while ($row = $result->fetchArray()) {
 	echo "<tr><td>".$row['addr']."</td>";
 	echo "<td>".format_time($row['time'])."</td>";
 	echo "<td>".$row['data']."</td>";

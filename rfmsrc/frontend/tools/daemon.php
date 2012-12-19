@@ -20,7 +20,7 @@ function weights($char) {
         return 10;
 }
 
-$db = new SQLiteDatabase("/home/db.sqlite");
+$db = new SQLite3("/home/db.sqlite");
 $db->query("PRAGMA synchronous=OFF");
 
 //$fp=fsockopen("192.168.62.230",3531);
@@ -79,7 +79,7 @@ while(($line=fgets($fp,256))!==FALSE) {
     	$req = array(0,0,0,0);
     	$v = "O0000\n";
 	$pr = 0;
-        while ($row = $result->fetch()) {
+        while ($row = $result->fetchArray()) {
             $addr = $row['addr'];
             if (($addr>0) && ($addr<30)) {
                 unset($v);
@@ -106,7 +106,7 @@ while(($line=fgets($fp,256))!==FALSE) {
     	    $bank=0;
     	    $send=0;
     	    $q='';
-    	    while ($row = $result->fetch()) {
+    	    while ($row = $result->fetchArray()) {
     	       $cw = weights($row['data']{0});
     	       $weight += $cw;
                weights($row['data']{0});
