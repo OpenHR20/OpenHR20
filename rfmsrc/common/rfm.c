@@ -100,6 +100,11 @@ uint16_t rfm_spi16(uint16_t outval)
 
 void RFM_init(void)
 {
+#if (NANODE==1)
+	// disable SPI
+	SPCR &= ~(1<<SPE);
+#endif
+
 	// 0. Init the SPI backend
 	//RFM_TESTPIN_INIT;
 
