@@ -46,3 +46,5 @@ void COM_print_datetime(void);
 void COM_req_RTC(void);
 
 void COM_commad_parse (void);
+
+void print_s_p(const char * s);

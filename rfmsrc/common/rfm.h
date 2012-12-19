@@ -204,7 +204,13 @@
 //
 /////////////////////////////////////////////////////////////////////////////////
 
-#define RFM_BAUD_RATE            19200
+#ifndef RFM_BAUD_RATE
+ #define RFM_BAUD_RATE           19200
+#endif
+
+#ifndef RFM_FREQ
+ #define RFM_FREQ                868.35
+#endif
 
 #define RFM_DATA_RATE            0xC600
 

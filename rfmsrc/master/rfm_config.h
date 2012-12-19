@@ -106,3 +106,11 @@ void INT2_vect(void);
 #define RFM_INT_EN() (GICR |= _BV(INT2), INT2_vect())
 #define RFM_INT_DIS() (GICR &= ~_BV(INT2))
 #endif
+
+#ifndef RFM_TUNING
+#define RFM_TUNING 0
+#endif
+
+#ifndef RFM_TUNING_MODE
+#define RFM_TUNING_MODE 0
+#endif
