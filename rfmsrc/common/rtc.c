@@ -84,7 +84,7 @@ static bool    RTC_IsLastSunday(void);     // check actual date if last sun in m
 // Progmem constants
 
 //! day of month for each month from january to december
-uint8_t RTC_DayOfMonthTablePrgMem[] PROGMEM =
+const uint8_t RTC_DayOfMonthTablePrgMem[] PROGMEM =
 {
     31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
 };
