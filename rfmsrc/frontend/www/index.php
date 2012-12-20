@@ -42,7 +42,7 @@ $refresh=false;
 	$result = $db->query("SELECT count(*) AS cnt FROM command_queue WHERE addr=$addr");
       else
 	$result = $db->query("SELECT count(*) AS cnt FROM command_queue");
-      $row = $result->fetch();
+      $row = $result->fetchArray();
       if ($row['cnt']>0) {
 	// header('Location: http://'.$_SERVER['HTTP_HOST']."/?page=queue&addr=$addr");
 	// It need absolute address (RFC) but it can't work with tunnels

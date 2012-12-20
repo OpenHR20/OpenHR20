@@ -25,7 +25,7 @@ class contend_debug_log extends contend {
 
     echo "</div>";
     echo "<pre>\n";
-    while ($row = $result->fetch()) {
+    while ($row = $result->fetchArray()) {
 	if ($row['addr']>0) $x=sprintf("<%02d>",$row['addr']);
 	else $x="    ";
 	printf("%s %s %s\n",format_time($row['time']),$x,$row['data']);

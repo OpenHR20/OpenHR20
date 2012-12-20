@@ -20,7 +20,7 @@ function weights($char) {
         return 10;
 }
 
-$db = new SQLiteDatabase("/home/db.sqlite");
+$db = new SQLite3("/home/db.sqlite");
 $db->query("PRAGMA synchronous=OFF");
 
 //$fp=fsockopen("192.168.62.230",3531);
@@ -35,7 +35,7 @@ while(($line=fgets($fp,256))!==FALSE) {
     $line=trim($line);
     if ($line == "") continue; // ignore empty lines
     $debug=true;
-
+    echo " < ".$line;
 	$force=false;
     $ts=microtime(true);
     if ($line{0}=='(' && $line{3}==')') {
@@ -69,7 +69,7 @@ while(($line=fgets($fp,256))!==FALSE) {
     	$date = sprintf("Y%02x%02x%02x\n",
     	    $items['year']-2000, $items['mon'], $items['mday']);
     	echo $time ." ". $date;
-    	fwrite($fp,$time); fwrite($fp,$date);
+    	fwrite($fp,$date); fwrite($fp,$time);
     	$debug=false;
     } else if (($line=="OK") || (($line{0}=='d') && ($line{2}==' '))) {
         $debug=false;
@@ -79,7 +79,7 @@ while(($line=fgets($fp,256))!==FALSE) {
     	$req = array(0,0,0,0);
     	$v = "O0000\n";
 	$pr = 0;
-        while ($row = $result->fetch()) {
+        while ($row = $result->fetchArray()) {
             $addr = $row['addr'];
             if (($addr>0) && ($addr<30)) {
                 unset($v);
@@ -106,7 +106,7 @@ while(($line=fgets($fp,256))!==FALSE) {
     	    $bank=0;
     	    $send=0;
     	    $q='';
-    	    while ($row = $result->fetch()) {
+    	    while ($row = $result->fetchArray()) {
     	       $cw = weights($row['data']{0});
     	       $weight += $cw;
                weights($row['data']{0});

@@ -14,7 +14,7 @@ function get_config ($layout_names,$addr, $id) {
   if (isset($layout_names[$id])) {
     $idx = $layout_names[$id];
     $result = $db->query("SELECT * FROM eeprom WHERE addr=$addr AND idx=$idx");
-    $row = $result->fetch();
+    $row = $result->fetchArray();
     if ($row)
       return $row['value'];
   }

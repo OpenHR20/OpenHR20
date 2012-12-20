@@ -39,6 +39,7 @@
 
 
 #include "config.h"
+#include "main.h"
 #include "com.h"
 #include "../common/rs232_485.h"
 #include "../common/rtc.h"
@@ -239,7 +240,7 @@ static void print_hexXXXX(uint16_t i) {
  *
  *  \note only unsigned numbers
  ******************************************************************************/
-static void print_s_p(const char * s) {
+void print_s_p(const char * s) {
 	char c;
 	for (c = pgm_read_byte(s); c; ++s, c = pgm_read_byte(s)) {
       COM_putchar(c);
@@ -535,6 +536,18 @@ void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok) {
     if (mac_ok && (len>=(2+4))) {
         print_s_p(PSTR(" PKT"));
         print_hexXXXX(seq++);
+#if (RFM_TUNING>0)
+		COM_putchar(' ');
+		COM_putchar('A');
+		COM_putchar('F');
+		COM_putchar('C');
+		// manipulate afc to be in a form suitable to store in the openhr20
+		// eeprom. AFC 0x10 = sign bit. 0xf = value
+		if (afc > 0xf) {
+		  afc |= 0xf0;
+		}
+		print_hexXX(0-afc);
+#endif
         len-=6; // mac is correct and not needed
         d+=2;
         COM_putchar('\n');

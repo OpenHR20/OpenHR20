@@ -37,6 +37,7 @@
 #include "config.h"
 #include "rfm_config.h"
 #include "../common/rfm.h"
+#include "eeprom.h"
 
 
 #if (RFM==1)
@@ -124,9 +125,14 @@ void RFM_init(void)
 	//	 );
 
 	// 3. Frequency Setting Command
+#if (RFM_TUNING>0)
+	int8_t adjust = config.RFM_freqAdjust;
+#else
+	int8_t adjust = 0;
+#endif
 	RFM_SPI_16(
 		RFM_FREQUENCY            | 
-		RFM_FREQ_868Band(868.35)
+		(RFM_FREQ_868Band(RFM_FREQ) + adjust)
 	 );
 
 	// 4. Data Rate Command

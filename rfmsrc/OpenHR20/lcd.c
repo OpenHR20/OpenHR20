@@ -82,7 +82,7 @@ volatile uint8_t LCD_Data[LCD_BITPLANES][LCD_REGISTER_COUNT];
 
 // Look-up table to convert value to LCD display data (segment control)
 // Get value with: bitmap = pgm_read_byte(&LCD_CharTablePrgMem[position]);
-uint8_t LCD_CharTablePrgMem[] PROGMEM =
+const uint8_t LCD_CharTablePrgMem[] PROGMEM =
 {
     0x77, //      0:0x77   1:0x06   2:0x6B   3:0x4F   4:0x1e   5:0x5D   6:0x7D
     0x06, // 1    ******        *   ******   ******   *    *   ******   ******
@@ -135,7 +135,7 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
 
 #if LANG==LANG_uni
   // Look-up chars table for LCD strings (universal/numbers)
-  uint8_t LCD_StringTable[][4] PROGMEM =
+  const uint8_t LCD_StringTable[][4] PROGMEM =
   {
       {32, 1,22, 7},    //!<  " 1-7" 
       {32,22, 1,22},    //!<  " -1-" MO
@@ -160,7 +160,7 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
   };
 #elif LANG==LANG_de
   // Look-up chars table for LCD strings (german)
-  uint8_t LCD_StringTable[][4] PROGMEM =
+  const uint8_t LCD_StringTable[][4] PROGMEM =
   {
       {32, 1,22, 7},    //!<  " 1-7" 
       {33,34,31,32},    //!<  Montag:     'rno '
@@ -185,7 +185,7 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
   };
 #elif LANG==LANG_cs
   // Look-up chars table for LCD strings (czech)
-  uint8_t LCD_StringTable[][4] PROGMEM =
+  const uint8_t LCD_StringTable[][4] PROGMEM =
   {
       {32, 1,22, 7},    //!<  " 1-7" 
       {32,18,31,22},    //!<  " Po "
@@ -213,7 +213,7 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
 
 
 // Look-up table to adress element F for one Position. ( 32 : 10 )
-uint8_t LCD_FieldOffsetTablePrgMem[] PROGMEM =
+const uint8_t LCD_FieldOffsetTablePrgMem[] PROGMEM =
 {
 #if THERMOTRONIC==1
     39,    //!<  Field 0
@@ -236,7 +236,7 @@ uint8_t LCD_FieldOffsetTablePrgMem[] PROGMEM =
 
 #ifdef HR25
 // Look-up table to adress a segment inside a field
-uint8_t LCD_SegOffsetTablePrgMem[] PROGMEM =
+const uint8_t LCD_SegOffsetTablePrgMem[] PROGMEM =
 {
      2,    //  Seg A            AAAA
      3,    //  Seg B           E    B
@@ -248,7 +248,7 @@ uint8_t LCD_SegOffsetTablePrgMem[] PROGMEM =
 };
 #else
 // Look-up table to adress a segment inside a field
-uint8_t LCD_SegOffsetTablePrgMem[] PROGMEM =
+const uint8_t LCD_SegOffsetTablePrgMem[] PROGMEM =
 {
      2,    //  Seg A            AAAA
      3,    //  Seg B           E    B
@@ -261,7 +261,7 @@ uint8_t LCD_SegOffsetTablePrgMem[] PROGMEM =
 #endif
 
 //! Look-up table for adress hour-bar segments
-uint8_t LCD_SegHourBarOffsetTablePrgMem[] PROGMEM =
+const uint8_t LCD_SegHourBarOffsetTablePrgMem[] PROGMEM =
 {
     LCD_SEG_B0,    LCD_SEG_B1,    LCD_SEG_B2,    LCD_SEG_B3,    LCD_SEG_B4,
     LCD_SEG_B5,    LCD_SEG_B6,    LCD_SEG_B7,    LCD_SEG_B8,    LCD_SEG_B9,
