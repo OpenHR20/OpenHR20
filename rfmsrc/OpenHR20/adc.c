@@ -68,7 +68,7 @@ bool sleep_with_ADC=0;
 static int16_t ring_buf[2][AVERAGE_LEN];
 #if ! HW_WINDOW_DETECTION
 	int16_t ring_buf_temp_avgs [AVGS_BUFFER_LEN];
-	uint8_t ring_buf_temp_avgs_pos;
+	uint8_t ring_buf_temp_avgs_pos = 0;
 #endif
 
 static uint8_t ring_pos=0;
