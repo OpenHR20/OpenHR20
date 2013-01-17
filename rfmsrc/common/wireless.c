@@ -354,7 +354,9 @@ void wirelessReceivePacket(void) {
 			#endif
 		
             RFM_INT_DIS(); // disable RFM interrupt
-            if (rfm_framepos>(rfm_framebuf[0]&0x7f)) rfm_framepos=(rfm_framebuf[0]&0x7f);
+            if (rfm_framepos>(rfm_framebuf[0]&0x7f)) {
+              rfm_framepos=(rfm_framebuf[0]&0x7f);
+            }
             
             {
                 bool mac_ok;
