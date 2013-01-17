@@ -23,4 +23,6 @@
 *.elf
 *.bin
 *.eep
-.dep
+*.dep
+*.sym
+trunk/source/obj
