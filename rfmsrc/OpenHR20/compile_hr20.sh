@@ -6,6 +6,7 @@ ADDR=10
 make clean
 make RFM="\
 -DRFM=1 \
+-DRFM_TUNING=1 \
 -DRFM_FREQ=868 \
 -DRFM_BAUD_RATE=9600 \
 -DSECURITY_KEY_0=0x01 \
