@@ -26,3 +26,5 @@
 *.dep
 *.sym
 trunk/source/obj
+rfmsrc/OpenHR20/obj
+rfmsrc/OpenHR20/hr20.txt
