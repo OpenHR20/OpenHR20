@@ -2,11 +2,12 @@
 
 
 function format_time($timestamp) {
+    date_default_timezone_set("Europe/Warsaw");
     return date("Y-m-d H:i:s",$timestamp);
 }
 
 function cleanString($wild) {
-    return ereg_replace("[^[_:alnum:]+]","",$wild);
+    return preg_replace("/[^[_:alnum:]+]/","",$wild);
 }
 
 function get_config ($layout_names,$addr, $id) {

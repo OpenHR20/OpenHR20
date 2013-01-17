@@ -74,7 +74,7 @@ if ($refresh) {
 echo '<meta http-equiv="content-type" content="text/html; charset=utf-8" />
   <style media="screen" type="text/css"> @import url(';
 
-echo "'/css/$css'";
+echo "'css/$css'";
 echo '); </style></head><body>';
 
 echo '<div id="content">';

@@ -2,7 +2,7 @@
 
 
 // NOTE: this file is hudge dirty hack, will be rewriteln
-
+date_default_timezone_set('Europe/Warsaw');
 $maxDebugLines = 1000;
 
 function weights($char) {
@@ -155,7 +155,7 @@ while(($line=fgets($fp,256))!==FALSE) {
     	      if ($changes==0)
     	        $db->query("INSERT INTO versions (addr,time,data) VALUES ($addr,".time().",'$data')");
 	  } else if (($data{0}=='D'||$data{0}=='A') && $data{1}==' ') {
-    	    $items = split(' ',$data);
+    	    $items = explode(' ',$data);
     	    unset($items[0]);
     	    $t=0;
     	    $st=array();

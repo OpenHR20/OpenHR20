@@ -55,7 +55,7 @@ class contend_timers extends contend {
 	  $time[0] = (int)((0xfff)/60);
 	  $time[1] = (int)((0xfff)%60);
 	} else {
-	  $time = split(":",trim($_POST["timer_v_$i$j"]));
+	  $time = explode(":",trim($_POST["timer_v_$i$j"]));
 	}
 	$type = (int)($_POST["timer_t_$i$j"]);
 	if(( $type != $t)  || ((int)($time[0]) != $h) || ((int)($time[1]) != $m)) {
