@@ -2,7 +2,7 @@
 
 
 // NOTE: this file is hudge dirty hack, will be rewriteln
-
+date_default_timezone_set('Europe/Warsaw');
 $maxDebugLines = 1000;
 
 function weights($char) {
@@ -20,12 +20,12 @@ function weights($char) {
         return 10;
 }
 
-$db = new SQLite3("/home/db.sqlite");
+$db = new SQLite3("/tmp/openhr20.sqlite");
 $db->query("PRAGMA synchronous=OFF");
 
 //$fp=fsockopen("192.168.62.230",3531);
 //$fp=fopen("php://stdin","r"); 
-$fp=fopen("/dev/tts/1","w+"); 
+$fp=fopen("/dev/ttyACM0","w+"); 
 
 //while(($line=stream_get_line($fp,256,"\n"))!=FALSE) {
 
@@ -35,7 +35,7 @@ while(($line=fgets($fp,256))!==FALSE) {
     $line=trim($line);
     if ($line == "") continue; // ignore empty lines
     $debug=true;
-    echo " < ".$line;
+    echo " < ".$line."\n";
 	$force=false;
     $ts=microtime(true);
     if ($line{0}=='(' && $line{3}==')') {
@@ -155,7 +155,7 @@ while(($line=fgets($fp,256))!==FALSE) {
     	      if ($changes==0)
     	        $db->query("INSERT INTO versions (addr,time,data) VALUES ($addr,".time().",'$data')");
 	  } else if (($data{0}=='D'||$data{0}=='A') && $data{1}==' ') {
-    	    $items = split(' ',$data);
+    	    $items = explode(' ',$data);
     	    unset($items[0]);
     	    $t=0;
     	    $st=array();

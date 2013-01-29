@@ -1,38 +1,33 @@
 <?php
 
-$db = new SQLite3("/usb/home/db.sqlite");
+$db = new SQLite3("/tmp/openhr20.sqlite");
 
 
   // translation table for valve names
   // example:
-  /* $room_name = array (
-    0x04 => 'test', // default setting in valves
-    0x11 => 'room 1',
-    0x12 => 'room 2',
-    0x13 => 'room 3',
-    0x14 => 'room 4',
-    0x15 => 'room 5'
-  ); */
-  $room_name = array (
+   $room_name = array (
+    0x0a => 'sypialnia', // default setting in valves
+  ); 
+/*  $room_name = array (
     0x11 => 'decak',
     0x12 => 'obyvak',
     0x13 => 'loznice',
     0x14 => 'kuchyne',
     0x15 => 'koupelna'
-  );
+  );*/
 
   // translation table for timers name (weekdays)
-  /*$timer_names =  array (
+  $timer_names =  array (
     'Week',
-    'Monday'
+    'Monday',
     'Tuesday',
     'Wednesday',
-    'Thursday'.
+    'Thursday',
     'Friday',
     'Saturday',
     'Sunday'
-  );*/
-  $timer_names =  array (
+  );
+  /*$timer_names =  array (
     'tyden',
     'pondeli',
     'utery',
@@ -41,17 +36,17 @@ $db = new SQLite3("/usb/home/db.sqlite");
     'patek',
     'sobota',
     'nedele'
-  );
+  );*/
 
   // symbols for 4 temperature mode
   // unicode version with nice moon/sun symbols, have problem on mobile Opera browser
   
-  /* $symbols = array (
+   $symbols = array (
       'x',		//off
       '&#x263e;',	//Night
       '&#x2600;',	//Day
       '&#x263c;		//Comfort
-    '); */
+    '); 
 
   // universal symbols, but not nice // english
   /* $symbols = array (
@@ -61,16 +56,16 @@ $db = new SQLite3("/usb/home/db.sqlite");
       '+++' 		//Comfort
   ); */
 
-  $symbols = array (
+/*  $symbols = array (
       'off',
       'Noc',
       'Den',
       '+++'
-  );
+  );*/
 
   $refresh_value=15; // refresh time for command queue pending wait 
 
-  $chart_hours = 12; // chart contain values from last 12 hours
+  $chart_hours = 48; // chart contain values from last 12 hours
 
   $warning_age = 8*60; // maximum data age for warning
 

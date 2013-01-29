@@ -633,7 +633,7 @@ clean_list :
 	@echo
 	@echo $(MSG_CLEANING)
 #	$(REMOVE) $(TARGET).hex
-	$(REMOVE) $(TARGET).eep
+#	$(REMOVE) $(TARGET).eep
 	$(REMOVE) $(TARGET).bin
 	$(REMOVE) $(TARGET).cof
 	$(REMOVE) $(TARGET).elf

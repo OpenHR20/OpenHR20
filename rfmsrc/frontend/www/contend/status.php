@@ -81,10 +81,10 @@ class contend_status extends contend {
 	echo "</form>";
       }
       ?>
-      <!--[if IE]><script language="javascript" type="text/javascript" src="/js/excanvas.min.js"></script><![endif]-->
-      <script language="javascript" type="text/javascript" src="/js/jquery.min.js"></script>
-      <script language="javascript" type="text/javascript" src="/js/jquery.flot.min.js"></script>
-      <script language="javascript" type="text/javascript" src="/js/jquery.flot.selection.min.js"></script>
+      <!--[if IE]><script language="javascript" type="text/javascript" src="js/excanvas.min.js"></script><![endif]-->
+      <script language="javascript" type="text/javascript" src="js/jquery.min.js"></script>
+      <script language="javascript" type="text/javascript" src="js/jquery.flot.min.js"></script>
+      <script language="javascript" type="text/javascript" src="js/jquery.flot.selection.min.js"></script>
       
       
       <script id="source" language="javascript" type="text/javascript">
