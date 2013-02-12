@@ -1,8 +1,11 @@
 <?php
 
+// config part
+$TIMEZONE="Europe/Warsaw";
 
 // NOTE: this file is hudge dirty hack, will be rewriteln
-date_default_timezone_set('Europe/Warsaw');
+echo "OpenHR20 PHP Daemon\n";
+date_default_timezone_set($TIMEZONE);
 $maxDebugLines = 1000;
 
 function weights($char) {

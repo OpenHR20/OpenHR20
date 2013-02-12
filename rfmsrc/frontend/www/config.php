@@ -1,6 +1,7 @@
 <?php
 
 $db = new SQLite3("/tmp/openhr20.sqlite");
+$TIMEZONE="Europe/Warsaw";
 
 
   // translation table for valve names
