@@ -8,10 +8,13 @@
     array( 0 => true, 'page'=>'queue', 'text' => 'queue'),
     array( 0 => true, 'page'=>'debug_log', 'text' => 'Debug LOG'),
     array( 0 => false, 'page'=>'raw_command_queue', 'text' => 'command queue - RAW'),
-    array( 0 => true, 'page'=>'phpinfo', 'text' => 'PHP info')
   );
 
+global $RRD_ENABLE;
+if ($RRD_ENABLE)
+	$actions[] = array( 0 => true, 'page'=>'rrd', 'text' => 'RRD info');
 ?>
+
 
 
 <h2>Action</h2>

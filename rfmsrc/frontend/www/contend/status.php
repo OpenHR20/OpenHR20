@@ -248,6 +248,19 @@ class contend_status extends contend {
 	echo '</table><input type="reset" value="Reset">';
 	echo '<input type="submit" value="Submit">';
 	echo "</form>";
+    	global $PLOTS_DIR, $RRD_DAYS, $RRD_ENABLE;
+
+	if ($RRD_ENABLE) {
+		foreach ($room_name as $k=>$v) {
+			$rrdgraph = $PLOTS_DIR.'/openhr20_'.$k.'_'.$RRD_DAYS[0].'.png';
+			if (file_exists ($rrdgraph)) {
+		  		echo '<p>';
+		  		echo '<div>RRD for last '.$RRD_DAYS[0].' days: '.$v.'</div>';
+		  		echo '<img src="'.$rrdgraph.'"/>'; 
+		  		echo '</p>';
+			}
+		}
+	}
      }  
   }
 }

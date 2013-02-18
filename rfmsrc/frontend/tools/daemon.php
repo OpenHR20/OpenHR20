@@ -1,6 +1,7 @@
 <?php
 
 // config part
+$RRD_HOME="/tmp/openhr20/";
 $TIMEZONE="Europe/Warsaw";
 
 // NOTE: this file is hudge dirty hack, will be rewriteln
@@ -28,7 +29,7 @@ $db->query("PRAGMA synchronous=OFF");
 
 //$fp=fsockopen("192.168.62.230",3531);
 //$fp=fopen("php://stdin","r"); 
-$fp=fopen("/dev/ttyACM0","w+"); 
+$fp=fopen("/dev/ttyUSB0","w+"); 
 
 //while(($line=stream_get_line($fp,256,"\n"))!=FALSE) {
 
@@ -213,6 +214,12 @@ while(($line=fgets($fp,256))!==FALSE) {
             if (($time % 3600)<$t) $time-=3600;
             $time = (int)($time/3600)*3600+$t;
         	$db->query("INSERT INTO log (time,addr$vars) VALUES ($time,$addr$val)\n");
+		$rrd_file = $RRD_HOME."/openhr20_".$addr.".rrd";
+		if (file_exists ($rrd_file)) {
+        		$cmnd = "rrdtool update ".$rrd_file." ".$time.":".(int)$st['real'].":".(int)$st['wanted'].":".(int)$st['valve'].":".(int)$st['window'];
+        		echo $cmnd."\n";
+			system($cmnd); 
+		}
     	  }
     	}
     }
