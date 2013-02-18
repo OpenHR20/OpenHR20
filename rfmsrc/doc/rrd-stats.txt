@@ -1,0 +1,61 @@
+= RRD stats guide (not only) for OpenWrt users =
+== author: Łukasz Piątkowski (piontec@gmail.com) ==
+== v.1.0 2013-02-18 ==
+
+If you want to enable long-term statistics for your openhr20, follow these steps:
+
+1) 
+Choose directory for *.rrd file storage. Because each of them will be written every 4 min,
+it should not be placed on flash storage. For OpeenWRT router, I'm using /tmp, which is a ramdisk 
+(a virtual storage kept only in RAM memory). When your staorge dir is ready, adjust path in 
+frontend/tools/create_rrd
+and set RRD_PATH variable.
+
+and run the script for every radio ID you want the stats to be collected, for example:
+./create_rrd 10
+
+2)
+From the statistics collected in *.rrd files, nice *.png plots can be generated - and that's
+what we want. So, adjust the
+frontend/tools/plot
+script. Set:
+RRD_HOME=/tmp/openhr20/
+IDS="10 11 12"
+PLOTS="${RRD_HOME}/plots"
+RRD_HOME must point to the same directory as in create_rrd script. IDS must include space separated
+list of radio IDs of thermostats, which you want the plots to be created. PLOTS shows where png with 
+plots will be kept. The only argument needed to run the script is the number of days, which is to be
+plotted.
+
+3)
+Check the path for RRD files in daemon.php
+$RRD_HOME="/tmp/openhr20/";
+It must point to the same directory as before. Make sure, that rrd is installed in your system. Now,
+when you start the daemon, the data will be logged to RRD databases.
+
+4)
+Configure WWW frontend. Edit config.php and set:
+$RRD_ENABLE=true;
+$PLOTS_DIR = "plots";
+$RRD_DAYS = array (3, 7, 30, 90);
+RRD_ENABLE enables the RRD plots in frontend. PLOTS_DIR must point to a directory (on OpenWRT it must be
+relative to the www root path) with *.png plots. So, on OpenWRT make a symlinc in root ww dir, like:
+ln -s /tmp/openhr20/plots .
+RRD_DAYS is a list of ranges (in days), for which plots will be related. This must be consistent with
+settings from 5).
+
+5)
+Last, but not least: setup cron to generate plots periodically. Enter:
+crontab -e
+and adjust everything to your liking. For example:
+*/15 * * * * /home/root/frontend/tools/plot 3
+@hourly /home/root/frontend/tools/plot 7
+0 4 * * * /home/root/frontend/tools/plot 30
+0 5 * * * /home/root/frontend/tools/plot 90
+means, that a 3 day plot should be generated every 15 minutes, 7 days plot every hour, and 30 and 90 days
+plots once a day, at 4 am and 5 am, respectively.
+
+6) You're done. Keep in mind, that create_rrd script creates a database in such way, that full resolution
+(every sample, every 4 minutes) is kept for 3 months, then 1:4 (4 samples agregated into 1) are kept for
+1 year and 1:15 databse is kept ofr 3 years. And it takes only 5.9MB per radio ID! 
+Have fun!
