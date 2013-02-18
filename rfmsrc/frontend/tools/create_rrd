@@ -1,0 +1,31 @@
+#!/bin/sh
+
+# config part
+RRD_HOME=/tmp/openhr20/
+
+# exec part
+if [ $# -ne 1 ]; then
+	echo "Usage: $0 [radio_id]"
+	exit 1
+fi
+# 1:1 for 0.25 year
+# 1:4 for 1 year
+# 1:15 for 3 years
+if [ ! -d $RRD_HOME ]; then
+	mkdir $RRD_HOME
+fi
+echo -n "Creating RRD databes for radio ID ${1}... "
+rrdtool create $RRD_HOME/openhr20_${1}.rrd \
+--step 240 \
+DS:real:GAUGE:480:-500:5000 \
+DS:wanted:GAUGE:480:-500:5000 \
+DS:valve:GAUGE:480:0:100 \
+DS:window:GAUGE:480:0:1 \
+RRA:AVERAGE:0.5:1:32850 \
+RRA:MAX:0.5:1:32850 \
+RRA:AVERAGE:0.5:4:32850 \
+RRA:MAX:0.5:4:32850 \
+RRA:AVERAGE:0.5:15:26280 \
+RRA:MAX:0.5:15:26280 
+
+echo "done!"
