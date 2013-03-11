@@ -1,8 +1,9 @@
 <?php
 
+include "config.php";
+date_default_timezone_set($TIMEZONE);
 
 function format_time($timestamp) {
-    date_default_timezone_set("Europe/Warsaw");
     return date("Y-m-d H:i:s",$timestamp);
 }
 

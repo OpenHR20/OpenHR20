@@ -1,12 +1,19 @@
 <?php
 
 $db = new SQLite3("/tmp/openhr20.sqlite");
+$TIMEZONE="Europe/Warsaw";
+$RRD_ENABLE=true;
+$PLOTS_DIR = "plots";
+$RRD_DAYS = array (3, 7, 30, 90);
+
 
 
   // translation table for valve names
   // example:
    $room_name = array (
     0x0a => 'sypialnia', // default setting in valves
+    0x0b => 'salon', // default setting in valves
+    0x0c => 'dzieciecy', // default setting in valves
   ); 
 /*  $room_name = array (
     0x11 => 'decak',
