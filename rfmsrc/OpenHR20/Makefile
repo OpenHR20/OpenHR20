@@ -160,6 +160,7 @@ CFLAGS = -g$(DEBUG)
 CFLAGS += $(CDEFS)
 CFLAGS += $(REV)
 CFLAGS += $(RFM)
+CFLAGS += $(HRFLAGS)
 CFLAGS += $(TEMP_COMPENSATE_OPTION)
 CFLAGS += $(HW_WINDOW_DETECTION)
 CFLAGS += $(MENU_SHOW_BATTERY)
@@ -520,6 +521,7 @@ extcoff: $(TARGET).elf
 	@echo "Configuration" >> $@
 	@echo "Hardware type $(HW)" >> $@
 	@echo "RFM=$(RFM)" >> $@
+	@echo "HRFLAGS=$(HRFLAGS)" >> $@
 	@echo "HW_WINDOW_DETECTION=$(HW_WINDOW_DETECTION)" >> $@
 	@echo "==================================" >> $@
 	@echo >> $@
