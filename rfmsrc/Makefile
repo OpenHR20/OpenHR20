@@ -17,6 +17,12 @@ HRFLAGS += -DSECURITY_KEY_5=0x01
 HRFLAGS += -DSECURITY_KEY_6=0x23
 HRFLAGS += -DSECURITY_KEY_7=0x45
 
+# Main RFM frequency (depends on RFM variant)
+HRFLAGS += -DRFM_FREQ_MAIN=433
+
+# Decimal part of the RFM frequency
+HRFLAGS += -DRFM_FREQ_FINE=0.35
+
 # Enable slave programming also via buttons/wheel
 #HRFLAGS += -DREMOTE_SETTING_ONLY=0
 

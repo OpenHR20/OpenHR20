@@ -113,9 +113,9 @@ void RFM_init(void)
 
 	// 1. Configuration Setting Command
 	RFM_SPI_16(
-		RFM_CONFIG_EL           |
-		RFM_CONFIG_EF           |
-		RFM_CONFIG_BAND_868     |
+		RFM_CONFIG_EL                  |
+		RFM_CONFIG_EF                  |
+		RFM_CONFIG_Band(RFM_FREQ_MAIN) |
 		RFM_CONFIG_X_12_0pf  
 	 );
 
@@ -132,7 +132,7 @@ void RFM_init(void)
 #endif
 	RFM_SPI_16(
 		RFM_FREQUENCY            | 
-		(RFM_FREQ_868Band(RFM_FREQ) + adjust)
+		(RFM_FREQ_Band(RFM_FREQ_MAIN)(RFM_FREQ_DEC) + adjust)
 	 );
 
 	// 4. Data Rate Command

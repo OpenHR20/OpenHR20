@@ -198,6 +198,12 @@
 #define RFM_FREQ_868Band(v) (uint16_t)((v/20.0-43)*4000)
 #define RFM_FREQ_915Band(v) (uint16_t)((v/30.0-30)*4000)
 
+// helper macros to derive macro name from main frequency
+#define IntRFM_FREQ_Band(v) RFM_FREQ_ ## v ## Band
+#define IntRFM_CONFIG_Band(v) RFM_CONFIG_BAND_ ## v
+#define RFM_FREQ_Band(v) IntRFM_FREQ_Band(v)
+#define RFM_CONFIG_Band(v) IntRFM_CONFIG_Band(v)
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 // 4. Data Rate Command
@@ -208,9 +214,15 @@
  #define RFM_BAUD_RATE           19200
 #endif
 
-#ifndef RFM_FREQ
- #define RFM_FREQ                868.35
+#ifndef RFM_FREQ_MAIN
+ #define RFM_FREQ_MAIN           868
 #endif
+
+#ifndef RFM_FREQ_FINE
+ #define RFM_FREQ_FINE           0.35
+#endif
+
+#define RFM_FREQ_DEC            (RFM_FREQ_MAIN + RFM_FREQ_FINE)
 
 #define RFM_DATA_RATE            0xC600
 
