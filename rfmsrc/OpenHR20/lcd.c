@@ -295,14 +295,19 @@ void LCD_Init(void)
     //   - SEG0:22 connected
 #ifdef HR25
 	LCDCRB = (1<<LCDCS) | (1<<LCDMUX1) | (1<<LCDMUX0) | (1<<LCDPM2) | (1<<LCDPM0);
+    // LCD Frame Rate Register
+    //   - LCD Prescaler Select N=16       @32.768Hz ->   2048Hz
+    //   - LCD Duty Cycle 1/4 (K=8)       2048Hz / 8 ->    256Hz
+    //   - LCD Clock Divider  (D=5)        256Hz / 5 ->   51,2Hz
+    LCDFRR = ((1<<LCDCD2));
 #else
 	LCDCRB = (1<<LCDCS) | (1<<LCDMUX1) | (1<<LCDPM2)| (1<<LCDPM0);
-#endif
     // LCD Frame Rate Register
     //   - LCD Prescaler Select N=16       @32.768Hz ->   2048Hz
     //   - LCD Duty Cycle 1/3 (K=6)       2048Hz / 6 -> 341,33Hz
-    //   - LCD Clock Divider  (D=5)     341,33Hz / 7 ->  47,76Hz
+    //   - LCD Clock Divider  (D=7)     341,33Hz / 7 ->  47,76Hz
     LCDFRR = ((1<<LCDCD2)|(1<<LCDCD1));
+#endif
 
     // LCD Control and Status Register A
     //  - Enable LCD
