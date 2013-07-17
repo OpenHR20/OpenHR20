@@ -159,7 +159,8 @@ CPPDEFS = -DF_CPU=$(F_CPU)UL
 CFLAGS = -g$(DEBUG)
 CFLAGS += $(CDEFS)
 CFLAGS += $(REV)
-CFLAGS += $(HRFLAGS)
+CFLAGS += $(RFMFLAGS)
+CFLAGS += $(MASTERFLAGS)
 CFLAGS += -O$(OPT)
 CFLAGS += -funsigned-char
 CFLAGS += -funsigned-bitfields

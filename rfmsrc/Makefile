@@ -1,33 +1,42 @@
 #############
-# RFM settings - adjust as needed
-
-# Enable diagnostic to fine tune RFM frequency
-#HRFLAGS += -DRFM_TUNING=1
-
-# Set default HR slave address, valid range is 1-28
-HRFLAGS += -DRFM_DEVICE_ADDRESS=28
-
-# Set default security keys, shared by master and slave
-HRFLAGS += -DSECURITY_KEY_0=0x01
-HRFLAGS += -DSECURITY_KEY_1=0x23
-HRFLAGS += -DSECURITY_KEY_2=0x45
-HRFLAGS += -DSECURITY_KEY_3=0x67
-HRFLAGS += -DSECURITY_KEY_4=0x89
-HRFLAGS += -DSECURITY_KEY_5=0x01
-HRFLAGS += -DSECURITY_KEY_6=0x23
-HRFLAGS += -DSECURITY_KEY_7=0x45
-
-# Main RFM frequency (depends on RFM variant)
-HRFLAGS += -DRFM_FREQ_MAIN=868
-
-# Decimal part of the RFM frequency
-HRFLAGS += -DRFM_FREQ_FINE=0.35
+# Thermostat settings
 
 # Enable slave programming also via buttons/wheel
 #HRFLAGS += -DREMOTE_SETTING_ONLY=0
 
 # Enable slave motor startup battery compensation
 #HRFLAGS += -DMOTOR_COMPENSATE_BATTERY=1
+
+#############
+# Master settings
+
+# TBD
+#MASTERFLAGS += -DTBD
+
+#############
+# RFM settings
+
+# Enable diagnostic to fine tune RFM frequency
+#RFMFLAGS += -DRFM_TUNING=1
+
+# Set default HR slave address, valid range is 1-28
+RFMFLAGS += -DRFM_DEVICE_ADDRESS=28
+
+# Set default security keys, shared by master and slave
+RFMFLAGS += -DSECURITY_KEY_0=0x01
+RFMFLAGS += -DSECURITY_KEY_1=0x23
+RFMFLAGS += -DSECURITY_KEY_2=0x45
+RFMFLAGS += -DSECURITY_KEY_3=0x67
+RFMFLAGS += -DSECURITY_KEY_4=0x89
+RFMFLAGS += -DSECURITY_KEY_5=0x01
+RFMFLAGS += -DSECURITY_KEY_6=0x23
+RFMFLAGS += -DSECURITY_KEY_7=0x45
+
+# Main RFM frequency (depends on RFM variant)
+RFMFLAGS += -DRFM_FREQ_MAIN=868
+
+# Decimal part of the RFM frequency
+RFMFLAGS += -DRFM_FREQ_FINE=0.35
 
 #############
 
@@ -58,6 +67,7 @@ HR20_rfm_int_sww:
 		TARGET=../$(DEST)/$@/hr20 \
 		OBJDIR=$@ \
 		HW_WINDOW_DETECTION=-DHW_WINDOW_DETECTION=0 \
+		RFMFLAGS='${RFMFLAGS}' \
 		HRFLAGS='${HRFLAGS}' \
 		REV=-DREVISION=\\\"$(REV)\\\"
 
@@ -67,6 +77,7 @@ HR20_rfm_int_hww:
 		TARGET=../$(DEST)/$@/hr20 \
 		OBJDIR=$@ \
 		HW_WINDOW_DETECTION=-DHW_WINDOW_DETECTION=1 \
+		RFMFLAGS='${RFMFLAGS}' \
 		HRFLAGS='${HRFLAGS}' \
 		REV=-DREVISION=\\\"$(REV)\\\"
 
@@ -77,6 +88,7 @@ HR20_rfm_ext_sww:
 		OBJDIR=$@ \
 		HW_WINDOW_DETECTION=-DHW_WINDOW_DETECTION=0\
 		RFM=-DRFM_WIRE_MARIOJTAG=1 \
+		RFMFLAGS='${RFMFLAGS}' \
 		HRFLAGS='${HRFLAGS}' \
 		REV=-DREVISION=\\\"$(REV)\\\"
 	 
@@ -87,6 +99,7 @@ HR20_original_sww:
 		OBJDIR=$@ \
 		HW_WINDOW_DETECTION=-DHW_WINDOW_DETECTION=0 \
 		RFM=-DRFM=0 \
+		RFMFLAGS='${RFMFLAGS}' \
 		HRFLAGS='${HRFLAGS}' \
 		REV=-DREVISION=\\\"$(REV)\\\"
 
@@ -97,6 +110,7 @@ HR20_original_hww:
 		OBJDIR=$@ \
 		HW_WINDOW_DETECTION=-DHW_WINDOW_DETECTION=1 \
 		RFM=-DRFM=0 \
+		RFMFLAGS='${RFMFLAGS}' \
 		HRFLAGS='${HRFLAGS}' \
 		REV=-DREVISION=\\\"$(REV)\\\"
 
@@ -108,6 +122,7 @@ HR25_original_sww:
 		HW_WINDOW_DETECTION=-DHW_WINDOW_DETECTION=0 \
 		RFM=-DRFM=0 \
 		HW=HR25 \
+		RFMFLAGS='${RFMFLAGS}' \
 		HRFLAGS='${HRFLAGS}' \
 		REV=-DREVISION=\\\"$(REV)\\\"
 
@@ -119,6 +134,7 @@ HR25_rfm_int_sww:
 		HW_WINDOW_DETECTION=-DHW_WINDOW_DETECTION=0 \
 		RFM=-DRFM_WIRE_TK_INTERNAL=1 \
 		HW=HR25 \
+		RFMFLAGS='${RFMFLAGS}' \
 		HRFLAGS='${HRFLAGS}' \
 		REV=-DREVISION=\\\"$(REV)\\\"
 
@@ -130,6 +146,7 @@ thermotronic_sww:
 		HW_WINDOW_DETECTION=-DHW_WINDOW_DETECTION=0 \
 		RFM=-DRFM=0 \
 		HW=THERMOTRONIC \
+		RFMFLAGS='${RFMFLAGS}' \
 		HRFLAGS='${HRFLAGS}' \
 		REV=-DREVISION=\\\"$(REV)\\\"
 
@@ -138,6 +155,6 @@ master1:
 	 $(MAKE) -C master \
 		TARGET=../$(DEST)/$@/master \
 		OBJDIR=$@ \
-		HRFLAGS='${HRFLAGS}' \
+		RFMFLAGS='${RFMFLAGS}' \
+		MASTERFLAGS='${MASTERFLAGS}' \
 		REV=-DREVISION=\\\"$(REV)\\\"
-		
