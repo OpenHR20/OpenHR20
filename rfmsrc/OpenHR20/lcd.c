@@ -284,7 +284,7 @@ static void LCD_calc_used_bitplanes(uint8_t mode);
 void LCD_Init(void)
 {
     // Clear segment buffer.
-    LCD_AllSegments(false);
+    LCD_AllSegments(LCD_MODE_OFF);
 
     //Set the initial LCD contrast level
     LCDCCR = (config.lcd_contrast << LCDCC0);
