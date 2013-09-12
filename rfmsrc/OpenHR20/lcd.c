@@ -289,11 +289,11 @@ void LCD_Init(void)
     //Set the initial LCD contrast level
     LCDCCR = (config.lcd_contrast << LCDCC0);
 
+#ifdef HR25
     // LCD Control and Status Register B
     //   - clock source is TOSC1 pin
-    //   - COM0:2 connected (HR25 also has COM3)
+    //   - COM0:2 connected
     //   - SEG0:22 connected
-#ifdef HR25
 	LCDCRB = (1<<LCDCS) | (1<<LCDMUX1) | (1<<LCDMUX0) | (1<<LCDPM2) | (1<<LCDPM0);
     // LCD Frame Rate Register
     //   - LCD Prescaler Select N=16       @32.768Hz ->   2048Hz
@@ -301,6 +301,10 @@ void LCD_Init(void)
     //   - LCD Clock Divider  (D=5)        256Hz / 5 ->   51,2Hz
     LCDFRR = ((1<<LCDCD2));
 #else
+    // LCD Control and Status Register B
+    //   - clock source is TOSC1 pin
+    //   - COM0:3 connected
+    //   - SEG0:22 connected
 	LCDCRB = (1<<LCDCS) | (1<<LCDMUX1) | (1<<LCDPM2)| (1<<LCDPM0);
     // LCD Frame Rate Register
     //   - LCD Prescaler Select N=16       @32.768Hz ->   2048Hz
