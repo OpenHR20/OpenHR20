@@ -591,7 +591,8 @@ void LCD_PrintTempInt(int16_t temp, uint8_t mode)
         // Temp < 10°C
         LCD_PrintChar(LCD_CHAR_NULL, 3, mode);
     }                             
-
+    // decimal point
+    LCD_SetSeg(LCD_SEG_COL1, mode);
     // Print C on last segment
     LCD_PrintChar(LCD_CHAR_C, 0, mode);
 }

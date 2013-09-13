@@ -301,7 +301,6 @@ int __attribute__ ((noreturn)) main(void)
                     menu_auto_update_timeout--;
                 }
                 menu_view(false); // TODO: move it, it is wrong place
-                LCD_Update(); // TODO: move it, it is wrong place
             }
             #if RFM
               if (RTC_timer_done&_BV(RTC_TIMER_RFM))
@@ -320,8 +319,7 @@ int __attribute__ ((noreturn)) main(void)
                menu_controller(true); // menu updated, call it again
            }
            menu_view(update); // TODO: move it, it is wrong place
-	       LCD_Update(); // TODO: move it, it is wrong place
-			continue; // on most case we have only 1 task, improve time to sleep
+	        continue; // on most case we have only 1 task, improve time to sleep
 		}
 
         // update motor PWM
