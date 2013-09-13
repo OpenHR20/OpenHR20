@@ -542,13 +542,22 @@ void LCD_PrintTemp(uint8_t temp, uint8_t mode)
         // Error -E rr
         LCD_PrintStringID(LCD_STRING_Err,mode); 
     } else {
-        LCD_PrintDec(temp>>1, 2, mode);
-        LCD_PrintChar(((temp&1)?5:0), 1, mode);        
+#ifdef HR25
+        #define START_POS 0
+        LCD_PrintChar(LCD_CHAR_NULL, 3, mode);
+        LCD_SetSeg(LCD_DEGREE, mode);      // Display degrees sign
+        LCD_SetSeg(LCD_SEG_CELCIUS, mode); // Display celsius sign
+        LCD_SetSeg(LCD_SEG_COL5, mode);    // decimal point
+#else
+        #define START_POS 1
+        LCD_PrintChar(LCD_CHAR_C, 0, mode);// Print C on last segment
+        LCD_SetSeg(LCD_SEG_COL1, mode);    // decimal point
+#endif
+        LCD_PrintDec(temp>>1, START_POS + 1, mode);
+        LCD_PrintChar(((temp&1)?5:0), START_POS, mode);
         if (temp < (100/5)) {
-            LCD_PrintChar(LCD_CHAR_NULL, 3, mode);
-        }        
-        LCD_PrintChar(LCD_CHAR_C, 0, mode);
-        LCD_SetSeg(LCD_SEG_COL1, mode);
+            LCD_PrintChar(LCD_CHAR_NULL, START_POS + 2, mode);
+        }
     }
 }
 
@@ -581,20 +590,28 @@ void LCD_PrintTempInt(int16_t temp, uint8_t mode)
         temp = -temp;    
     } 
 
+#ifdef HR25
+    #define START_POS 0
+    LCD_PrintChar(LCD_CHAR_NULL, 3, mode);
+    LCD_SetSeg(LCD_DEGREE, mode);      // Display degrees sign
+    LCD_SetSeg(LCD_SEG_CELCIUS, mode); // Display celsius sign
+    LCD_SetSeg(LCD_SEG_COL5, mode);    // decimal point
+#else
+    #define START_POS 1
+    LCD_PrintChar(LCD_CHAR_C, 0, mode);// Print C on last segment
+    LCD_SetSeg(LCD_SEG_COL1, mode);    // decimal point
+#endif
+
     // 1/100°C not printed
-    LCD_PrintDec3(temp/10, 1, mode);
+    LCD_PrintDec3(temp/10, START_POS, mode);
     
     if (neg){
         // negative Temp      
-        LCD_PrintChar(LCD_CHAR_neg, 3, mode);
+        LCD_PrintChar(LCD_CHAR_neg, START_POS + 2, mode);
     } else if (temp < 1000){
         // Temp < 10°C
-        LCD_PrintChar(LCD_CHAR_NULL, 3, mode);
+        LCD_PrintChar(LCD_CHAR_NULL, START_POS + 2, mode);
     }                             
-    // decimal point
-    LCD_SetSeg(LCD_SEG_COL1, mode);
-    // Print C on last segment
-    LCD_PrintChar(LCD_CHAR_C, 0, mode);
 }
 
 /*!
