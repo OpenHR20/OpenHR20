@@ -112,7 +112,11 @@ In this file we define only configuration parameters, for example what kind of c
 	#ifndef RFM_WIRE_MARIOJTAG 
 		#define RFM_WIRE_MARIOJTAG 0 //!< define that if you want to wire your RFM to external JTAG pins
 	#endif
-    #if RFM_WIRE_MARIOJTAG
+	#ifndef RFM_WIRE_TK_INTERNAL 
+		#define RFM_WIRE_TK_INTERNAL 0 //!< define if you want to wire RFM to free internal HR25 pins
+	#endif
+	
+    #if RFM_WIRE_MARIOJTAG || RFM_WIRE_TK_INTERNAL
 		#define RFM_WIRE_JD_INTERNAL 0 //!< define that if you want to wire your RFM to free internal pins
 	#else 
 		#define RFM_WIRE_JD_INTERNAL 1 //!< define that if you want to wire your RFM to free internal pins
@@ -129,6 +133,10 @@ In this file we define only configuration parameters, for example what kind of c
 			#error HW_WINDOW_DETECTION is not compatible with RFM_WIRE_MARIOJTAG
 		#endif
 	#endif
+	#if (RFM_WIRE_TK_INTERNAL == 1)
+		#define DISABLE_JTAG 1 //!< define DISABLE_JTAG if your RFM's connection uses any JTAG pins
+	#endif
+
     #ifndef SECURITY_KEY_0
 	#define SECURITY_KEY_0		0x01
     #endif
@@ -157,6 +165,7 @@ In this file we define only configuration parameters, for example what kind of c
 	#define RFM12                  0
 	#define RFM_WIRE_MARIOJTAG     0
 	#define RFM_WIRE_JD_INTERNAL   0
+	#define RFM_WIRE_TK_INTERNAL   0
 	#define DISABLE_JTAG           0
 #endif
 
