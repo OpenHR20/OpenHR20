@@ -111,6 +111,10 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
 #if (RFM==1)
 	/*    */ uint8_t RFM_devaddr; //!< HR20's own device address in RFM radio networking. =0 mean disable radio
 	/*    */ uint8_t security_key[8]; //!< key for encrypted radio messasges
+ #if (RFM_TUNING>0)
+	/*    */ int8_t RFM_freqAdjust; //!< RFM12 Frequency adjustment
+	/*    */ uint8_t RFM_tuning; //!< RFM12 tuning mode
+ #endif
     /* unused */ 
 #endif
 
@@ -274,13 +278,19 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /*    */  {SECURITY_KEY_5, SECURITY_KEY_5, 0x00, 0xff},   //!< security_key[5] for encrypted radio messasges
   /*    */  {SECURITY_KEY_6, SECURITY_KEY_6, 0x00, 0xff},   //!< security_key[6] for encrypted radio messasges
   /*    */  {SECURITY_KEY_7, SECURITY_KEY_7, 0x00, 0xff},   //!< security_key[7] for encrypted radio messasges
+ #if (RFM_TUNING>0)
+  /*    */  {0, 0, 0x00, 0xff},   //!< RFM12 Frequency adjustment, 2's complement
+  /*    */  {RFM_TUNING_MODE, 0, 0x00, 0x01},   //!< RFM12 tuning mode, 0 = tuning mode off (narrow, high data rate), 1 = tuning mode on (wide, low data rate)
+ #endif
 #endif
 };
+
 #endif //__EEPROM_C__
 
 
 uint8_t config_read(uint8_t cfg_address, uint8_t cfg_type);
 uint8_t EEPROM_read(uint16_t address);
+void EEPROM_write(uint16_t address, uint8_t data);
 void eeprom_config_init(bool restore_default);
 void eeprom_config_save(uint8_t idx);
 

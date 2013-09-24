@@ -1,8 +1,12 @@
 <?php
 
+// config part
+$RRD_HOME="/tmp/openhr20/";
+$TIMEZONE="Europe/Warsaw";
 
 // NOTE: this file is hudge dirty hack, will be rewriteln
-
+echo "OpenHR20 PHP Daemon\n";
+date_default_timezone_set($TIMEZONE);
 $maxDebugLines = 1000;
 
 function weights($char) {
@@ -20,12 +24,12 @@ function weights($char) {
         return 10;
 }
 
-$db = new SQLiteDatabase("/home/db.sqlite");
+$db = new SQLite3("/tmp/openhr20.sqlite");
 $db->query("PRAGMA synchronous=OFF");
 
 //$fp=fsockopen("192.168.62.230",3531);
 //$fp=fopen("php://stdin","r"); 
-$fp=fopen("/dev/tts/1","w+"); 
+$fp=fopen("/dev/ttyUSB0","w+"); 
 
 //while(($line=stream_get_line($fp,256,"\n"))!=FALSE) {
 
@@ -35,7 +39,7 @@ while(($line=fgets($fp,256))!==FALSE) {
     $line=trim($line);
     if ($line == "") continue; // ignore empty lines
     $debug=true;
-
+    echo " < ".$line."\n";
 	$force=false;
     $ts=microtime(true);
     if ($line{0}=='(' && $line{3}==')') {
@@ -69,7 +73,7 @@ while(($line=fgets($fp,256))!==FALSE) {
     	$date = sprintf("Y%02x%02x%02x\n",
     	    $items['year']-2000, $items['mon'], $items['mday']);
     	echo $time ." ". $date;
-    	fwrite($fp,$time); fwrite($fp,$date);
+    	fwrite($fp,$date); fwrite($fp,$time);
     	$debug=false;
     } else if (($line=="OK") || (($line{0}=='d') && ($line{2}==' '))) {
         $debug=false;
@@ -79,7 +83,7 @@ while(($line=fgets($fp,256))!==FALSE) {
     	$req = array(0,0,0,0);
     	$v = "O0000\n";
 	$pr = 0;
-        while ($row = $result->fetch()) {
+        while ($row = $result->fetchArray()) {
             $addr = $row['addr'];
             if (($addr>0) && ($addr<30)) {
                 unset($v);
@@ -106,7 +110,7 @@ while(($line=fgets($fp,256))!==FALSE) {
     	    $bank=0;
     	    $send=0;
     	    $q='';
-    	    while ($row = $result->fetch()) {
+    	    while ($row = $result->fetchArray()) {
     	       $cw = weights($row['data']{0});
     	       $weight += $cw;
                weights($row['data']{0});
@@ -155,7 +159,7 @@ while(($line=fgets($fp,256))!==FALSE) {
     	      if ($changes==0)
     	        $db->query("INSERT INTO versions (addr,time,data) VALUES ($addr,".time().",'$data')");
 	  } else if (($data{0}=='D'||$data{0}=='A') && $data{1}==' ') {
-    	    $items = split(' ',$data);
+    	    $items = explode(' ',$data);
     	    unset($items[0]);
     	    $t=0;
     	    $st=array();
@@ -210,6 +214,12 @@ while(($line=fgets($fp,256))!==FALSE) {
             if (($time % 3600)<$t) $time-=3600;
             $time = (int)($time/3600)*3600+$t;
         	$db->query("INSERT INTO log (time,addr$vars) VALUES ($time,$addr$val)\n");
+		$rrd_file = $RRD_HOME."/openhr20_".$addr.".rrd";
+		if (file_exists ($rrd_file)) {
+        		$cmnd = "rrdtool update ".$rrd_file." ".$time.":".(int)$st['real'].":".(int)$st['wanted'].":".(int)$st['valve'].":".(int)$st['window'];
+        		echo $cmnd."\n";
+			system($cmnd); 
+		}
     	  }
     	}
     }

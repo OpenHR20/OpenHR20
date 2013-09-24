@@ -1,12 +1,14 @@
 <?php
 
+include "config.php";
+date_default_timezone_set($TIMEZONE);
 
 function format_time($timestamp) {
     return date("Y-m-d H:i:s",$timestamp);
 }
 
 function cleanString($wild) {
-    return ereg_replace("[^[_:alnum:]+]","",$wild);
+    return preg_replace("/[^[_:alnum:]+]/","",$wild);
 }
 
 function get_config ($layout_names,$addr, $id) {
@@ -14,7 +16,7 @@ function get_config ($layout_names,$addr, $id) {
   if (isset($layout_names[$id])) {
     $idx = $layout_names[$id];
     $result = $db->query("SELECT * FROM eeprom WHERE addr=$addr AND idx=$idx");
-    $row = $result->fetch();
+    $row = $result->fetchArray();
     if ($row)
       return $row['value'];
   }

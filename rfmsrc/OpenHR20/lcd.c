@@ -82,7 +82,7 @@ volatile uint8_t LCD_Data[LCD_BITPLANES][LCD_REGISTER_COUNT];
 
 // Look-up table to convert value to LCD display data (segment control)
 // Get value with: bitmap = pgm_read_byte(&LCD_CharTablePrgMem[position]);
-uint8_t LCD_CharTablePrgMem[] PROGMEM =
+const uint8_t LCD_CharTablePrgMem[] PROGMEM =
 {
     0x77, //      0:0x77   1:0x06   2:0x6B   3:0x4F   4:0x1e   5:0x5D   6:0x7D
     0x06, // 1    ******        *   ******   ******   *    *   ******   ******
@@ -135,7 +135,7 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
 
 #if LANG==LANG_uni
   // Look-up chars table for LCD strings (universal/numbers)
-  uint8_t LCD_StringTable[][4] PROGMEM =
+  const uint8_t LCD_StringTable[][4] PROGMEM =
   {
       {32, 1,22, 7},    //!<  " 1-7" 
       {32,22, 1,22},    //!<  " -1-" MO
@@ -160,7 +160,7 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
   };
 #elif LANG==LANG_de
   // Look-up chars table for LCD strings (german)
-  uint8_t LCD_StringTable[][4] PROGMEM =
+  const uint8_t LCD_StringTable[][4] PROGMEM =
   {
       {32, 1,22, 7},    //!<  " 1-7" 
       {33,34,31,32},    //!<  Montag:     'rno '
@@ -185,7 +185,7 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
   };
 #elif LANG==LANG_cs
   // Look-up chars table for LCD strings (czech)
-  uint8_t LCD_StringTable[][4] PROGMEM =
+  const uint8_t LCD_StringTable[][4] PROGMEM =
   {
       {32, 1,22, 7},    //!<  " 1-7" 
       {32,18,31,22},    //!<  " Po "
@@ -213,7 +213,7 @@ uint8_t LCD_CharTablePrgMem[] PROGMEM =
 
 
 // Look-up table to adress element F for one Position. ( 32 : 10 )
-uint8_t LCD_FieldOffsetTablePrgMem[] PROGMEM =
+const uint8_t LCD_FieldOffsetTablePrgMem[] PROGMEM =
 {
 #if THERMOTRONIC==1
     39,    //!<  Field 0
@@ -236,7 +236,7 @@ uint8_t LCD_FieldOffsetTablePrgMem[] PROGMEM =
 
 #ifdef HR25
 // Look-up table to adress a segment inside a field
-uint8_t LCD_SegOffsetTablePrgMem[] PROGMEM =
+const uint8_t LCD_SegOffsetTablePrgMem[] PROGMEM =
 {
      2,    //  Seg A            AAAA
      3,    //  Seg B           E    B
@@ -248,7 +248,7 @@ uint8_t LCD_SegOffsetTablePrgMem[] PROGMEM =
 };
 #else
 // Look-up table to adress a segment inside a field
-uint8_t LCD_SegOffsetTablePrgMem[] PROGMEM =
+const uint8_t LCD_SegOffsetTablePrgMem[] PROGMEM =
 {
      2,    //  Seg A            AAAA
      3,    //  Seg B           E    B
@@ -261,7 +261,7 @@ uint8_t LCD_SegOffsetTablePrgMem[] PROGMEM =
 #endif
 
 //! Look-up table for adress hour-bar segments
-uint8_t LCD_SegHourBarOffsetTablePrgMem[] PROGMEM =
+const uint8_t LCD_SegHourBarOffsetTablePrgMem[] PROGMEM =
 {
     LCD_SEG_B0,    LCD_SEG_B1,    LCD_SEG_B2,    LCD_SEG_B3,    LCD_SEG_B4,
     LCD_SEG_B5,    LCD_SEG_B6,    LCD_SEG_B7,    LCD_SEG_B8,    LCD_SEG_B9,
@@ -284,25 +284,34 @@ static void LCD_calc_used_bitplanes(uint8_t mode);
 void LCD_Init(void)
 {
     // Clear segment buffer.
-    LCD_AllSegments(false);
+    LCD_AllSegments(LCD_MODE_OFF);
 
     //Set the initial LCD contrast level
     LCDCCR = (config.lcd_contrast << LCDCC0);
 
+#ifdef HR25
     // LCD Control and Status Register B
     //   - clock source is TOSC1 pin
-    //   - COM0:2 connected (HR25 also has COM3)
+    //   - COM0:2 connected
     //   - SEG0:22 connected
-#ifdef HR25
 	LCDCRB = (1<<LCDCS) | (1<<LCDMUX1) | (1<<LCDMUX0) | (1<<LCDPM2) | (1<<LCDPM0);
+    // LCD Frame Rate Register
+    //   - LCD Prescaler Select N=16       @32.768Hz ->   2048Hz
+    //   - LCD Duty Cycle 1/4 (K=8)       2048Hz / 8 ->    256Hz
+    //   - LCD Clock Divider  (D=5)        256Hz / 5 ->   51,2Hz
+    LCDFRR = ((1<<LCDCD2));
 #else
+    // LCD Control and Status Register B
+    //   - clock source is TOSC1 pin
+    //   - COM0:3 connected
+    //   - SEG0:22 connected
 	LCDCRB = (1<<LCDCS) | (1<<LCDMUX1) | (1<<LCDPM2)| (1<<LCDPM0);
-#endif
     // LCD Frame Rate Register
     //   - LCD Prescaler Select N=16       @32.768Hz ->   2048Hz
     //   - LCD Duty Cycle 1/3 (K=6)       2048Hz / 6 -> 341,33Hz
-    //   - LCD Clock Divider  (D=5)     341,33Hz / 7 ->  47,76Hz
+    //   - LCD Clock Divider  (D=7)     341,33Hz / 7 ->  47,76Hz
     LCDFRR = ((1<<LCDCD2)|(1<<LCDCD1));
+#endif
 
     // LCD Control and Status Register A
     //  - Enable LCD
@@ -533,13 +542,22 @@ void LCD_PrintTemp(uint8_t temp, uint8_t mode)
         // Error -E rr
         LCD_PrintStringID(LCD_STRING_Err,mode); 
     } else {
-        LCD_PrintDec(temp>>1, 2, mode);
-        LCD_PrintChar(((temp&1)?5:0), 1, mode);        
+#ifdef HR25
+        #define START_POS 0
+        LCD_PrintChar(LCD_CHAR_NULL, 3, mode);
+        LCD_SetSeg(LCD_DEGREE, mode);      // Display degrees sign
+        LCD_SetSeg(LCD_SEG_CELCIUS, mode); // Display celsius sign
+        LCD_SetSeg(LCD_SEG_COL5, mode);    // decimal point
+#else
+        #define START_POS 1
+        LCD_PrintChar(LCD_CHAR_C, 0, mode);// Print C on last segment
+        LCD_SetSeg(LCD_SEG_COL1, mode);    // decimal point
+#endif
+        LCD_PrintDec(temp>>1, START_POS + 1, mode);
+        LCD_PrintChar(((temp&1)?5:0), START_POS, mode);
         if (temp < (100/5)) {
-            LCD_PrintChar(LCD_CHAR_NULL, 3, mode);
-        }        
-        LCD_PrintChar(LCD_CHAR_C, 0, mode);
-        LCD_SetSeg(LCD_SEG_COL1, mode);
+            LCD_PrintChar(LCD_CHAR_NULL, START_POS + 2, mode);
+        }
     }
 }
 
@@ -572,19 +590,28 @@ void LCD_PrintTempInt(int16_t temp, uint8_t mode)
         temp = -temp;    
     } 
 
+#ifdef HR25
+    #define START_POS 0
+    LCD_PrintChar(LCD_CHAR_NULL, 3, mode);
+    LCD_SetSeg(LCD_DEGREE, mode);      // Display degrees sign
+    LCD_SetSeg(LCD_SEG_CELCIUS, mode); // Display celsius sign
+    LCD_SetSeg(LCD_SEG_COL5, mode);    // decimal point
+#else
+    #define START_POS 1
+    LCD_PrintChar(LCD_CHAR_C, 0, mode);// Print C on last segment
+    LCD_SetSeg(LCD_SEG_COL1, mode);    // decimal point
+#endif
+
     // 1/100°C not printed
-    LCD_PrintDec3(temp/10, 1, mode);
+    LCD_PrintDec3(temp/10, START_POS, mode);
     
     if (neg){
         // negative Temp      
-        LCD_PrintChar(LCD_CHAR_neg, 3, mode);
+        LCD_PrintChar(LCD_CHAR_neg, START_POS + 2, mode);
     } else if (temp < 1000){
         // Temp < 10°C
-        LCD_PrintChar(LCD_CHAR_NULL, 3, mode);
+        LCD_PrintChar(LCD_CHAR_NULL, START_POS + 2, mode);
     }                             
-
-    // Print C on last segment
-    LCD_PrintChar(LCD_CHAR_C, 0, mode);
 }
 
 /*!

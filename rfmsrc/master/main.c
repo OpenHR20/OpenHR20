@@ -44,6 +44,7 @@
 
 // HR20 Project includes
 #include "config.h"
+#include "main.h"
 #include "com.h"
 #include "task.h"
 #include "eeprom.h"
@@ -53,6 +54,7 @@
 #include "../common/wireless.h"
 
 #if (RFM == 1)
+    volatile uint8_t afc = 0;
 	#include "rfm_config.h"
 	#include "../common/rfm.h"
 #endif
@@ -104,7 +106,11 @@ int __attribute__ ((noreturn)) main(void)
     wdt_enable(WDTO_2S);
 
 	// We should do the following once here to have valid data from the start
-
+#if (RFM_TUNING>0)
+	if (config.RFM_tuning) {
+	  print_s_p(PSTR(" RFM Tuning mode enabled."));
+	}
+#endif
 		
     /*!
     ****************************************************************************
@@ -314,6 +320,11 @@ ISR (INT2_vect){
     	}
     } else if (rfm_mode == rfmmode_rx) {
         rfm_framebuf[rfm_framepos++]=RFM_READ_FIFO();
+#if (RFM_TUNING>0)
+		if (rfm_framepos == 6) { // get AFC value
+		  afc = RFM_READ_STATUS() & 0x1f;
+		}
+#endif
         if (rfm_framepos >= RFM_FRAME_MAX) rfm_mode = rfmmode_rx_owf;
     	task |= TASK_RFM; // inform the rfm task about next RX byte
     } else if (rfm_mode == rfmmode_rx_owf) {

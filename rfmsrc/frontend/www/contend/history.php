@@ -19,7 +19,7 @@ class contend_history extends contend {
     echo "<table>\n";
     echo "<tr><th>time</th><th>mode</th><th>valve</th><th>real</th><th>wanted</th><th>battery</th>";
     echo "<th>error</th><th>window</th><th>force</th></tr>";
-    while ($row = $result->fetch()) {
+    while ($row = $result->fetchArray()) {
 	echo "<tr><td>".format_time($row['time'])."</td>";
 	echo "<td>".$row['mode']."</td>";
 	echo "<td>".$row['valve']."</td>";

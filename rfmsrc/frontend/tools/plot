@@ -1,0 +1,45 @@
+#!/bin/sh
+
+# config part
+RRD_HOME=/tmp/openhr20/
+IDS="10 11 12"
+PLOTS="${RRD_HOME}/plots"
+
+# check params
+if [ $# -ne 1 ]; then
+        echo "Usage: $0 [history_in_days]"
+        exit 1
+fi
+
+if [ ! -d $PLOTS ]; then
+	mkdir $PLOTS || exit 1
+fi
+
+days=$1
+seconds=$(($days * 24 * 3600))
+
+# plot it
+for id in $IDS; do
+	rrdtool graph $PLOTS/openhr20_${id}_${days}.png \
+	--start -${seconds} \
+	--width 580 --height 150 \
+	--title "OpenHR20: $id" \
+	--vertical-label "Celsius" \
+	--right-axis 20:-320 \
+	--right-axis-label "Valve [%]" \
+	--slope-mode \
+	-A \
+	--watermark "`date`" \
+	COMMENT:"Status\:" \
+	DEF:v=${RRD_HOME}/openhr20_${id}.rrd:valve:MAX \
+	DEF:r=${RRD_HOME}/openhr20_${id}.rrd:real:AVERAGE \
+	DEF:w=${RRD_HOME}/openhr20_${id}.rrd:wanted:MAX \
+	CDEF:nr=r,100,/ \
+	CDEF:nw=w,100,/ \
+	CDEF:nv=v,20,/,16,+ \
+	GPRINT:nr:AVERAGE:"Avg. Temp\: %6.2lf %s" \
+	GPRINT:nw:AVERAGE:"Avg. Wanted\: %6.2lf %s" \
+	GPRINT:v:AVERAGE:"Avg. Valve\: %6.2lf %s\n" \
+	COMMENT:"Legend\:" \
+	AREA:nw#b9FFb9 LINE1:nw#00FF00:"Wanted" LINE2:nv#0000FF:"Valve" LINE2:nr#FF0000:"Real"
+done

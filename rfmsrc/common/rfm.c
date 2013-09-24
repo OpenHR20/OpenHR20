@@ -37,6 +37,7 @@
 #include "config.h"
 #include "rfm_config.h"
 #include "../common/rfm.h"
+#include "eeprom.h"
 
 
 #if (RFM==1)
@@ -100,6 +101,11 @@ uint16_t rfm_spi16(uint16_t outval)
 
 void RFM_init(void)
 {
+#if (NANODE==1)
+	// disable SPI
+	SPCR &= ~(1<<SPE);
+#endif
+
 	// 0. Init the SPI backend
 	//RFM_TESTPIN_INIT;
 
@@ -107,9 +113,9 @@ void RFM_init(void)
 
 	// 1. Configuration Setting Command
 	RFM_SPI_16(
-		RFM_CONFIG_EL           |
-		RFM_CONFIG_EF           |
-		RFM_CONFIG_BAND_868     |
+		RFM_CONFIG_EL                  |
+		RFM_CONFIG_EF                  |
+		RFM_CONFIG_Band(RFM_FREQ_MAIN) |
 		RFM_CONFIG_X_12_0pf  
 	 );
 
@@ -119,9 +125,14 @@ void RFM_init(void)
 	//	 );
 
 	// 3. Frequency Setting Command
+#if (RFM_TUNING>0)
+	int8_t adjust = config.RFM_freqAdjust;
+#else
+	int8_t adjust = 0;
+#endif
 	RFM_SPI_16(
 		RFM_FREQUENCY            | 
-		RFM_FREQ_868Band(868.35)
+		(RFM_FREQ_Band(RFM_FREQ_MAIN)(RFM_FREQ_DEC) + adjust)
 	 );
 
 	// 4. Data Rate Command

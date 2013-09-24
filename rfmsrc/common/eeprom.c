@@ -102,12 +102,8 @@ uint8_t config_read(uint8_t cfg_address, uint8_t cfg_type) {
  ******************************************************************************/
 #define config_write(cfg_address,data) (EEPROM_write((((uint16_t) cfg_address) << 2) + CONFIG_VALUE + (uint16_t)(&ee_config),data))
 
-static void EEPROM_write(uint16_t address, uint8_t data) {
-	/* Wait for completion of previous write */
-	if ((address >= (uint16_t)&ee_config) && (address & 3)) {
-	  // write to eeconfig area is allowed only to column 0 / alligned to 4
-    return; // write protection for configuration default/min/max data
-  }
+void EEPROM_write(uint16_t address, uint8_t data) {
+  /* Wait for completion of previous write */
   while(EECR & (1<<EEWE))
 		;
 	EEAR = address;

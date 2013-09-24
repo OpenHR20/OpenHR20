@@ -65,11 +65,11 @@ static uint8_t wireless_framebuf[WIRELESS_BUF_MAX];
       
 uint8_t wireless_buf_ptr=0;
 
-static uint8_t Km_upper[8] PROGMEM = {
+static const uint8_t Km_upper[8] PROGMEM = {
     0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef
 };
 
-static uint8_t wl_header[4] PROGMEM = {
+static const uint8_t wl_header[4] PROGMEM = {
     0xaa, 0xaa, 0x2d, 0xd4
 };
 

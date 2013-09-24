@@ -30,7 +30,7 @@ $g->yr_title='V [%]';
 
 $result = $db->query("SELECT * FROM log WHERE addr=$addr AND time>$min_time ORDER BY time DESC");
 
-while ($row = $result->fetch()) {
+while ($row = $result->fetchArray()) {
     if ($real) $g->add(0,$row['time']-$now,$row['real']/100);
     if ($wanted) $g->add(1,$row['time']-$now,$row['wanted']/100);
     if ($valve) $g->add(2,$row['time']-$now,$row['valve']);

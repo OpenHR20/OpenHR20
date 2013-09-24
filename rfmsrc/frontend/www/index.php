@@ -42,7 +42,7 @@ $refresh=false;
 	$result = $db->query("SELECT count(*) AS cnt FROM command_queue WHERE addr=$addr");
       else
 	$result = $db->query("SELECT count(*) AS cnt FROM command_queue");
-      $row = $result->fetch();
+      $row = $result->fetchArray();
       if ($row['cnt']>0) {
 	// header('Location: http://'.$_SERVER['HTTP_HOST']."/?page=queue&addr=$addr");
 	// It need absolute address (RFC) but it can't work with tunnels
@@ -74,7 +74,7 @@ if ($refresh) {
 echo '<meta http-equiv="content-type" content="text/html; charset=utf-8" />
   <style media="screen" type="text/css"> @import url(';
 
-echo "'/css/$css'";
+echo "'css/$css'";
 echo '); </style></head><body>';
 
 echo '<div id="content">';

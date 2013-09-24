@@ -56,7 +56,7 @@ int16_t MOTOR_PosMax;
 #endif
 
 
-static uint16_t watch_map[WATCH_N] PROGMEM = {
+static const uint16_t watch_map[WATCH_N] PROGMEM = {
     /* 00 */ ((uint16_t) &sumError) + B16,
     /* 01 */ ((uint16_t) &sumError)+ 2 + B16,
     /* 02 */ ((uint16_t) &CTL_interatorCredit)+ B8,

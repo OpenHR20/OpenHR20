@@ -39,6 +39,7 @@
 
 
 #include "config.h"
+#include "main.h"
 #include "com.h"
 #include "../common/rs232_485.h"
 #include "../common/rtc.h"
@@ -239,7 +240,7 @@ static void print_hexXXXX(uint16_t i) {
  *
  *  \note only unsigned numbers
  ******************************************************************************/
-static void print_s_p(const char * s) {
+void print_s_p(const char * s) {
 	char c;
 	for (c = pgm_read_byte(s); c; ++s, c = pgm_read_byte(s)) {
       COM_putchar(c);
@@ -415,6 +416,30 @@ void COM_commad_parse (void) {
 			wl_force_addr1=0xff;
             print_s_p(PSTR("OK"));
 			break;
+		case ':': // intel hex for writing eeprom
+		  if (COM_hex_parse(4*2,false)!='\0') { break; }
+		  uint8_t byteCount = com_hex[0];
+		  uint16_t address = (com_hex[1] << 8) | com_hex[2]; 
+		  uint8_t recordType = com_hex[3];
+		  if (recordType != 0) {
+			COM_hex_parse(2*1,true); // soak up the checksum and newline
+			break; // not a data record - we'll guess it is an end record
+		  }
+		  uint8_t len = 0;
+		  while (len != byteCount) {
+			if (COM_hex_parse(2*1,false)!='\0') { break; }
+			EEPROM_write(address + len, com_hex[0]);
+			len++;
+		  }
+		  com_hex[0] = address & 0xff;
+		  print_idx(c);
+		  COM_hex_parse(2*1,true); // soak up the checksum and newline
+		  byteCount = 0;
+		  while (len != byteCount) {
+			print_hexXX(EEPROM_read(address + byteCount));
+			byteCount++;
+		  }
+		  break;
 		case 'G':
 		case 'S':
 			if (c=='G') {
@@ -511,6 +536,18 @@ void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok) {
     if (mac_ok && (len>=(2+4))) {
         print_s_p(PSTR(" PKT"));
         print_hexXXXX(seq++);
+#if (RFM_TUNING>0)
+		COM_putchar(' ');
+		COM_putchar('A');
+		COM_putchar('F');
+		COM_putchar('C');
+		// manipulate afc to be in a form suitable to store in the openhr20
+		// eeprom. AFC 0x10 = sign bit. 0xf = value
+		if (afc > 0xf) {
+		  afc |= 0xf0;
+		}
+		print_hexXX(0-afc);
+#endif
         len-=6; // mac is correct and not needed
         d+=2;
         COM_putchar('\n');

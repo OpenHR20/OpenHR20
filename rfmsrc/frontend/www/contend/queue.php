@@ -64,7 +64,7 @@ class contend_queue extends contend {
       $result = $db->query("SELECT count(*) AS cnt FROM command_queue WHERE addr=$this->addr");
     else
       $result = $db->query("SELECT count(*) AS cnt FROM command_queue");
-    $row = $result->fetch();
+    $row = $result->fetchArray();
     if ($row['cnt']>0) {
       echo '<h1>waiting commands: ';
       echo $row['cnt']."</h1>";
