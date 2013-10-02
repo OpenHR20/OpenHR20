@@ -314,12 +314,9 @@ int __attribute__ ((noreturn)) main(void)
 
 		// menu state machine
 		if (kb_events || (menu_auto_update_timeout==0)) {
-           bool update = menu_controller(false);
-           if (update) {
-               menu_controller(true); // menu updated, call it again
-           }
-           menu_view(update); // TODO: move it, it is wrong place
-	        continue; // on most case we have only 1 task, improve time to sleep
+            bool update = menu_controller();
+            menu_view(update); // TODO: move it, it is wrong place
+            continue; // on most case we have only 1 task, improve time to sleep
 		}
 
         // update motor PWM

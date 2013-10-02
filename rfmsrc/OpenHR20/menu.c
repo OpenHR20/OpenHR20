@@ -46,8 +46,6 @@
 #include "menu.h"
 #include "watch.h"
 
-static uint8_t service_idx=CONFIG_RAW_SIZE;
-
 /*!
  *******************************************************************************
  * \brief menu_auto_update_timeout is timer for autoupdates of menu
@@ -55,6 +53,16 @@ static uint8_t service_idx=CONFIG_RAW_SIZE;
  ******************************************************************************/
 int8_t menu_auto_update_timeout = 2;
 
+/*!
+ *******************************************************************************
+ * \brief flag for locking keys of the unit
+ ******************************************************************************/
+bool menu_locked = false; 
+
+/*!
+ *******************************************************************************
+ * \brief possible states for the menu state machine
+ ******************************************************************************/
 typedef enum {
     // startup
     menu_startup, menu_version,
@@ -76,14 +84,10 @@ typedef enum {
     menu_set_year, menu_set_month, menu_set_day, menu_set_hour, menu_set_minute,
 
     // timmers setting
-    menu_set_timmer_dow_start, menu_set_timmer_dow, menu_set_timmer
+    menu_set_timmer_dow, menu_set_timmer
 #endif
     
 } menu_t;
-
-menu_t menu_state;
-bool menu_locked = false; 
-uint32_t hourbar_buff;
 
 /*!
  *******************************************************************************
@@ -104,82 +108,79 @@ static int8_t wheel_proccess(void) {
 
 /*!
  *******************************************************************************
- * \brief kb_events common reactions
+ * local menu static variables
+ ******************************************************************************/
+static menu_t menu_state;
+static uint8_t menu_set_dow;
+#define menu_set_temp menu_set_dow //reuse variable in another part of menu
+static uint16_t menu_set_time;
+static timermode_t menu_set_mode;
+static uint8_t menu_set_slot;
+static uint8_t service_idx = 0;
+static uint8_t service_watch_n = 0;
+static uint32_t hourbar_buff;
+
+/*!
+ *******************************************************************************
+ * \brief kb_events common reactions to key presses
  * 
- * \returns true for controler restart
+ * \returns true to request display update
  ******************************************************************************/
 
 static bool events_common(void) {
     bool ret=false;
-    if (kb_events & KB_EVENT_LOCK_LONG) {
+    if (kb_events & KB_EVENT_LOCK_LONG) {               // key lock
         menu_auto_update_timeout=LONG_PRESS_THLD+1;
         menu_locked = ! menu_locked;
         menu_state = (menu_locked)?menu_lock:menu_home;
         ret=true;
     } else if (!menu_locked) {    
-        if (kb_events & KB_EVENT_ALL_LONG) { // service menu
+        if (kb_events & KB_EVENT_ALL_LONG) {            // service menu
             menu_state = menu_service1;
             ret=true;
 #if (! REMOTE_SETTING_ONLY)
-        } else if ( kb_events & KB_EVENT_AUTO_LONG ) {
+        } else if ( kb_events & KB_EVENT_AUTO_LONG ) {  // set unit date/time
     		menu_state=menu_set_year;
             ret=true; 
-        } else if ( kb_events & KB_EVENT_PROG_LONG ) {
-			menu_state=menu_set_timmer_dow_start;
+        } else if ( kb_events & KB_EVENT_PROG_LONG ) {  // set switching times
+            menu_set_dow=((config.timer_mode==1)?RTC_GetDayOfWeek():0);
+            menu_state = menu_set_timmer_dow;
             ret=true; 
+        } else if ( kb_events & KB_EVENT_C_LONG ) {     // set temperatures
+            menu_state=menu_preset_temp0;
+            menu_set_temp=temperature_table[0];
+            ret=true;
 #endif
-        } else if (( kb_events & KB_EVENT_NONE_LONG ) 
+        } else if (( kb_events & KB_EVENT_NONE_LONG )   // retun to main home screen on timeout
 #if NO_AUTORETURN_FROM_ALT_MENUES 
            && ! (((menu_state>=menu_home2) && (menu_state<=menu_home5)) || menu_state==menu_service_watch)
 #endif  
 		   ) {
-	        menu_state=menu_home; // retun to main home screen
+	        menu_state=menu_home;
             ret=true;
-#if (! REMOTE_SETTING_ONLY)
-        } else if ( kb_events & KB_EVENT_C_LONG ) {
-            menu_state=menu_preset_temp0; 
-            ret=true;
-#endif
         }
-
 	}
     return ret;
 }
 
 /*!
  *******************************************************************************
- * local menu static variables
- ******************************************************************************/
-static uint8_t menu_set_dow;
-#define menu_set_temp menu_set_dow //reuse variable in another part of menu
-static uint16_t menu_set_time;
-static timermode_t menu_set_mode;
-static uint8_t menu_set_slot;
-static uint8_t service_watch_n = 0;
-
-/*!
- *******************************************************************************
- * \brief menu Controller
+ * \brief menu Controller: state transitions in the menu state machine
  * 
- * \returns true for controler restart  
+ * \returns true to request display update
  ******************************************************************************/
-bool menu_controller(bool new_state) {
+bool menu_controller(void) {
     int8_t wheel = wheel_proccess(); //signed number
 	bool ret = false;
     switch (menu_state) {
     case menu_startup:
-        if (new_state) {
-            menu_auto_update_timeout=2;
-        }
         if (menu_auto_update_timeout==0) {
             menu_state = menu_version;
+            menu_auto_update_timeout=2;
             ret=true;
         }
         break;
     case menu_version:
-        if (new_state) {
-            menu_auto_update_timeout=2;
-        }
         if (menu_auto_update_timeout==0) {
             #if (DEBUG_SKIP_DATETIME_SETTING_AFTER_RESET) || (REMOTE_SETTING_ONLY)
                 menu_state = menu_home;
@@ -233,12 +234,71 @@ bool menu_controller(bool new_state) {
             ret=true;
         }
         break;
+    case menu_set_timmer_dow:
+        if (wheel != 0) menu_set_dow=(menu_set_dow+wheel+8)%8;
+        if ( kb_events & KB_EVENT_PROG ) {        // confirm
+            menu_state=menu_set_timmer;
+            menu_set_slot=0;
+            config.timer_mode = (menu_set_dow>0);
+            eeprom_config_save((uint16_t)(&config.timer_mode)-(uint16_t)(&config)); // save value to eeprom
+            menu_update_hourbar((config.timer_mode==1)?RTC_GetDayOfWeek():0);
+            menu_set_time= RTC_DowTimerGet(menu_set_dow, menu_set_slot, &menu_set_mode);
+            if (menu_set_time>24*60) menu_set_time=24*60;
+            ret=true; 
+        } else if ( kb_events & KB_EVENT_AUTO ) { // exit without save
+            menu_state=menu_home;
+            ret=true; 
+        }
+        break;        
+    case menu_set_timmer:
+        if (wheel != 0) {
+            menu_set_time=((menu_set_time/10+(24*6+1)+wheel)%(24*6+1))*10;
+        }
+        if ( kb_events & KB_EVENT_C ) {           // select temperature mode
+            menu_set_mode=(menu_set_mode+5)%4;
+        } else if ( kb_events & KB_EVENT_PROG ) { // confirm
+            RTC_DowTimerSet(menu_set_dow, menu_set_slot, menu_set_time, menu_set_mode);
+            if (++menu_set_slot>=RTC_TIMERS_PER_DOW) {
+                if (menu_set_dow!=0) menu_set_dow=menu_set_dow%7+1; 
+                menu_state=menu_set_timmer_dow;
+            }
+            CTL_update_temp_auto();
+            menu_update_hourbar((config.timer_mode==1)?RTC_GetDayOfWeek():0);
+            ret=true; 
+        } else if ( kb_events & KB_EVENT_AUTO ) { // exit without save
+            menu_state=menu_home;
+            ret=true; 
+        }
+        break;
+    case menu_preset_temp0:
+    case menu_preset_temp1:
+    case menu_preset_temp2:
+    case menu_preset_temp3:
+        if (wheel != 0) {
+            menu_set_temp+=wheel;
+            if (menu_set_temp > TEMP_MAX+1) menu_set_temp = TEMP_MAX+1;
+            if (menu_set_temp < TEMP_MIN-1) menu_set_temp = TEMP_MIN-1;
+        }
+        if ( kb_events & KB_EVENT_PROG ) {        // confirm
+            temperature_table[menu_state-menu_preset_temp0]=menu_set_temp;
+            eeprom_config_save(menu_state+((temperature_table-config_raw)-menu_preset_temp0));
+            menu_state++; // menu_preset_temp3+1 == menu_home
+            CTL_update_temp_auto();
+            if (menu_state <= menu_preset_temp3) {
+                menu_set_temp=temperature_table[menu_state-menu_preset_temp0];
+            }
+            ret=true; 
+        } else if ( kb_events & KB_EVENT_AUTO ) { // exit without save
+            menu_state=menu_home;
+            ret=true; 
+        }
+        break;
 #endif
-    case menu_home_no_alter: // same as home screen, but without alternate contend
+    case menu_home_no_alter: // same as home screen, but without alternate content
     case menu_home:         // home screen
     case menu_home2:        // alternate version, real temperature
     case menu_home3:        // alternate version, valve pos
-    case menu_home4:        // alternate version, time    
+    case menu_home4:        // alternate version, time
 #if MENU_SHOW_BATTERY
     case menu_home5:        // alternate version, battery    
 #endif
@@ -289,94 +349,29 @@ bool menu_controller(bool new_state) {
             }
         } 
         break;
-#if (! REMOTE_SETTING_ONLY)
-    case menu_set_timmer_dow_start:
-        if (new_state) menu_set_dow=((config.timer_mode==1)?RTC_GetDayOfWeek():0);
-        menu_state = menu_set_timmer_dow;
-        // do not use break here
-    case menu_set_timmer_dow:
-        if (wheel != 0) menu_set_dow=(menu_set_dow+wheel+8)%8;
-        if ( kb_events & KB_EVENT_PROG ) {
-            menu_state=menu_set_timmer;
-            menu_set_slot=0;
-            config.timer_mode = (menu_set_dow>0);
-            eeprom_config_save((uint16_t)(&config.timer_mode)-(uint16_t)(&config)); // save value to eeprom
-                // update hourbar
-            menu_update_hourbar((config.timer_mode==1)?RTC_GetDayOfWeek():0);
-            ret=true; 
-        } else if ( kb_events & KB_EVENT_AUTO ) { // exit without save
-            menu_state=menu_home;
-            ret=true; 
-        }
-        break;        
-    case menu_set_timmer:
-        if (new_state) {
-            menu_set_time= RTC_DowTimerGet(menu_set_dow, menu_set_slot, &menu_set_mode);
-            if (menu_set_time>24*60) menu_set_time=24*60;
-        }
-        if (wheel != 0) {
-            menu_set_time=((menu_set_time/10+(24*6+1)+wheel)%(24*6+1))*10;
-        }
-        if ( kb_events & KB_EVENT_C ) {
-            menu_set_mode=(menu_set_mode+5)%4;
-        } else if ( kb_events & KB_EVENT_PROG ) {
-            RTC_DowTimerSet(menu_set_dow, menu_set_slot, menu_set_time, menu_set_mode);
-            if (++menu_set_slot>=RTC_TIMERS_PER_DOW) {
-                if (menu_set_dow!=0) menu_set_dow=menu_set_dow%7+1; 
-                menu_state=menu_set_timmer_dow;
-            }
-            CTL_update_temp_auto();
-            menu_update_hourbar((config.timer_mode==1)?RTC_GetDayOfWeek():0);
-            ret=true; 
-        } else if ( kb_events & KB_EVENT_AUTO ) { // exit without save
-            menu_state=menu_home;
-            ret=true; 
-        }
-        break;
-#endif
-#if (! REMOTE_SETTING_ONLY)
-    case menu_preset_temp0:
-    case menu_preset_temp1:
-    case menu_preset_temp2:
-    case menu_preset_temp3:
-        if (new_state) menu_set_temp=temperature_table[menu_state-menu_preset_temp0];
-        if (wheel != 0) {
-            menu_set_temp+=wheel;
-            if (menu_set_temp > TEMP_MAX+1) menu_set_temp = TEMP_MAX+1;
-            if (menu_set_temp < TEMP_MIN-1) menu_set_temp = TEMP_MIN-1;
-        }
-        if ( kb_events & KB_EVENT_PROG ) {
-            temperature_table[menu_state-menu_preset_temp0]=menu_set_temp;
-            eeprom_config_save(menu_state+((temperature_table-config_raw)-menu_preset_temp0));
-            menu_state++; // menu_preset_temp3+1 == menu_home
-            CTL_update_temp_auto();
-            ret=true; 
-        } else if ( kb_events & KB_EVENT_AUTO ) { // exit without save
-            menu_state=menu_home;
-            ret=true; 
-        }
-        break;
-#endif
     default:
     case menu_lock:        // "bloc" message
         if (menu_auto_update_timeout==0) { menu_state=menu_home; ret=true; } 
         break;        
-    case menu_service1:     // service menu        
-    case menu_service2:        
-        if (kb_events & KB_EVENT_AUTO) { 
-            menu_state=menu_home; 
+    case menu_service1:     // service menu
+    case menu_service2:
+        if (kb_events & (KB_EVENT_AUTO | KB_EVENT_C)) {
+            // leaving service menu, revert config to default value
+            config_raw[service_idx] = config_value(service_idx);
+            if (kb_events & KB_EVENT_AUTO) {
+                menu_state=menu_home;
+            } else {
+                menu_state=menu_service_watch;
+            }
             ret=true;
-        } else if (kb_events & KB_EVENT_C) { 
-            menu_state=menu_service_watch; 
-            ret=true;
-        } else if (kb_events & KB_EVENT_PROG) {
+        } else if (kb_events & KB_EVENT_PROG) {  // confirm selection
             if (menu_state == menu_service2) {
                 eeprom_config_save(service_idx); // save current value
                 menu_state = menu_service1;
             } else {
                 menu_state = menu_service2;
             }
-        } else {
+        } else {                                 // wheel movement
             if (menu_state == menu_service1) {
                 // change index
                 service_idx = (service_idx+wheel+CONFIG_RAW_SIZE)%CONFIG_RAW_SIZE;
@@ -404,11 +399,6 @@ bool menu_controller(bool new_state) {
         break;
     }
     if (events_common()) ret=true;
-    if (ret && (service_idx<CONFIG_RAW_SIZE)) {
-        // back config to default value
-        config_raw[service_idx] = config_value(service_idx);
-        service_idx = CONFIG_RAW_SIZE;
-    }
     kb_events = 0; // clear unused keys
     return ret;
 } 
@@ -465,6 +455,16 @@ static void show_selected_temperature_type (uint8_t type, uint8_t mode) {
 
 /*!
  *******************************************************************************
+ * \brief Update hourbar bitmap buffer to be used by LCD update
+ * 
+ * \returns true for controler restart
+ ******************************************************************************/
+void menu_update_hourbar(uint8_t dow) {
+    hourbar_buff = RTC_DowTimerGetHourBar(dow);
+}
+
+/*!
+ *******************************************************************************
  * \brief menu View
  ******************************************************************************/
 void menu_view(bool clear) {
@@ -494,6 +494,35 @@ void menu_view(bool clear) {
         LCD_PrintDec(RTC_GetHour(), 2, ((menu_state == menu_set_hour) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));
         LCD_PrintDec(RTC_GetMinute(), 0, ((menu_state == menu_set_minute) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));
        break;                                       
+    case menu_set_timmer_dow:
+        clr_show1(LCD_SEG_PROG); // all segments off
+        LCD_PrintDayOfWeek(menu_set_dow, LCD_MODE_BLINK_1);
+        break;
+    case menu_set_timmer:
+        //! \todo calculate "hourbar" status, actual position in mode LCD_MODE_BLINK_1
+        
+        clr_show3(LCD_SEG_COL1,LCD_SEG_COL2,LCD_SEG_PROG);
+        timmers_patch_offset=timers_get_raw_index(menu_set_dow, menu_set_slot);
+        timmers_patch_data = menu_set_time +  ((uint16_t)menu_set_mode<<12);
+        LCD_HourBarBitmap(RTC_DowTimerGetHourBar(menu_set_dow));
+        timmers_patch_offset=0xff;
+        LCD_SetHourBarSeg(menu_set_time/60, LCD_MODE_BLINK_1);
+        if (menu_set_time < 24*60) {
+            LCD_PrintDec(menu_set_time/60, 2, LCD_MODE_BLINK_1);
+            LCD_PrintDec(menu_set_time%60, 0, LCD_MODE_BLINK_1);        
+        } else {
+            LCD_PrintStringID(LCD_STRING_4xminus,LCD_MODE_BLINK_1);
+        }
+        show_selected_temperature_type(menu_set_mode,LCD_MODE_BLINK_1);
+        break;                                                             
+    case menu_preset_temp0:
+    case menu_preset_temp1:
+    case menu_preset_temp2:
+    case menu_preset_temp3:
+        LCD_AllSegments(LCD_MODE_OFF);
+        LCD_PrintTemp(menu_set_temp,LCD_MODE_BLINK_1);
+        show_selected_temperature_type(menu_state-menu_preset_temp0,LCD_MODE_ON);
+        break;
 #else
     case menu_home4: // time
         if (clear) clr_show2(LCD_SEG_COL1,LCD_SEG_COL2);
@@ -566,29 +595,6 @@ void menu_view(bool clear) {
             }
         }
         break;
-#if (! REMOTE_SETTING_ONLY)
-    case menu_set_timmer_dow:
-        clr_show1(LCD_SEG_PROG); // all segments off
-        LCD_PrintDayOfWeek(menu_set_dow, LCD_MODE_BLINK_1);
-        break;
-    case menu_set_timmer:
-        //! \todo calculate "hourbar" status, actual position in mode LCD_MODE_BLINK_1
-        
-        clr_show3(LCD_SEG_COL1,LCD_SEG_COL2,LCD_SEG_PROG);
-        timmers_patch_offset=timers_get_raw_index(menu_set_dow, menu_set_slot);
-        timmers_patch_data = menu_set_time +  ((uint16_t)menu_set_mode<<12);
-        LCD_HourBarBitmap(RTC_DowTimerGetHourBar(menu_set_dow));
-        timmers_patch_offset=0xff;
-        LCD_SetHourBarSeg(menu_set_time/60, LCD_MODE_BLINK_1);
-        if (menu_set_time < 24*60) {
-            LCD_PrintDec(menu_set_time/60, 2, LCD_MODE_BLINK_1);
-            LCD_PrintDec(menu_set_time%60, 0, LCD_MODE_BLINK_1);        
-        } else {
-            LCD_PrintStringID(LCD_STRING_4xminus,LCD_MODE_BLINK_1);
-        }
-        show_selected_temperature_type(menu_set_mode,LCD_MODE_BLINK_1);
-        break;                                                             
-#endif
     case menu_lock:        // "bloc" message
         LCD_AllSegments(LCD_MODE_OFF); // all segments off
         LCD_PrintStringID(LCD_STRING_bloc,LCD_MODE_ON);
@@ -605,15 +611,6 @@ void menu_view(bool clear) {
         LCD_PrintHexW(watch(service_watch_n),LCD_MODE_ON);
         LCD_SetHourBarSeg(service_watch_n, LCD_MODE_BLINK_1);
         break;
-#if (! REMOTE_SETTING_ONLY)
-    case menu_preset_temp0:
-    case menu_preset_temp1:
-    case menu_preset_temp2:
-    case menu_preset_temp3:
-        LCD_AllSegments(LCD_MODE_OFF);
-        LCD_PrintTemp(menu_set_temp,LCD_MODE_BLINK_1);
-        show_selected_temperature_type(menu_state-menu_preset_temp0,LCD_MODE_ON);
-#endif
     default:
         break;                   
     }

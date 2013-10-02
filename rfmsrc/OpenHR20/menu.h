@@ -34,15 +34,8 @@
 #pragma once
 
 extern int8_t menu_auto_update_timeout;
-bool menu_controller(bool new_state); 
-void menu_view(bool update);
-
 extern bool menu_locked; 
 
-extern uint32_t hourbar_buff;
-
-static inline void menu_update_hourbar(uint8_t dow) {
-    hourbar_buff = RTC_DowTimerGetHourBar(dow);
-}
-
- 
+bool menu_controller(void); 
+void menu_view(bool update);
+void menu_update_hourbar(uint8_t dow);
