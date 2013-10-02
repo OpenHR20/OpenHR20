@@ -490,7 +490,7 @@ ISR (TIMER0_OVF_vect){
 		TCCR0A = (1<<WGM00) | (1<<WGM01); // 0b 0000 0011
         PCMSK0 &= ~(1<<PCINT4); // disable eye interrupt
 #endif
-        TIMSK0 = 0; // disable timmer 1 interrupt 
+        TIMSK0 = 0; // disable timer 1 interrupt 
 
         // photo eye
         MOTOR_eye_disable();

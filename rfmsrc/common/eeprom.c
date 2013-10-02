@@ -167,8 +167,8 @@ void eeprom_config_save(uint8_t idx) {
 
 #if !defined(MASTER_CONFIG_H)
 
-uint8_t  timmers_patch_offset=0xff;
-uint16_t timmers_patch_data;
+uint8_t  timers_patch_offset=0xff;
+uint16_t timers_patch_data;
 
 /*!
  *******************************************************************************
@@ -178,11 +178,11 @@ uint16_t timmers_patch_data;
  ******************************************************************************/
 
 uint16_t eeprom_timers_read_raw(uint8_t offset) {
-    if (offset != timmers_patch_offset) {
+    if (offset != timers_patch_offset) {
         uint16_t eeaddr = (uint16_t)offset * (uint16_t)sizeof(ee_timers[0][0]) + (uint16_t)ee_timers;
     	return (EEPROM_read(eeaddr+1)<<8) + EEPROM_read(eeaddr); //litle endian
     } else {
-        return timmers_patch_data;
+        return timers_patch_data;
     }
 }
 

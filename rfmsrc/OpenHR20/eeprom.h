@@ -299,8 +299,8 @@ uint16_t eeprom_timers_read_raw(uint8_t offset);
 void eeprom_timers_write_raw(uint8_t offset, uint16_t value);
 #define eeprom_timers_write(dow,slot,value) (eeprom_timers_write_raw((dow*RTC_TIMERS_PER_DOW+slot),value))
 
-extern uint8_t  timmers_patch_offset;
-extern uint16_t timmers_patch_data;
+extern uint8_t  timers_patch_offset;
+extern uint16_t timers_patch_data;
 
 
 #define CONFIG_VALUE 0

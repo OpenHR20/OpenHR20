@@ -49,7 +49,7 @@ uint8_t CTL_temp_wanted=0;   // actual desired temperature
 uint8_t CTL_temp_wanted_last=0xff;   // desired temperature value used for last PID control
 uint8_t CTL_temp_auto=0;   // actual desired temperature by timer
 bool CTL_mode_auto=true;   // actual desired temperature by timer
-uint8_t CTL_mode_window = 0; // open window (0=closed, >0 open-timmer)
+uint8_t CTL_mode_window = 0; // open window (0=closed, >0 open-timer)
 #if (HW_WINDOW_DETECTION)
 	static uint8_t window_timer=AVERAGE_LEN+1;
 #else
