@@ -46,6 +46,12 @@
 #include "menu.h"
 #include "watch.h"
 
+#if HR25
+  #define DISPLAY_HAS_LOCK_ICON 1
+#else
+  #define DISPLAY_HAS_LOCK_ICON 0
+#endif
+
 /*!
  *******************************************************************************
  * \brief menu_auto_update_timeout is timer for autoupdates of menu
@@ -75,8 +81,10 @@ typedef enum {
 #if MENU_SHOW_BATTERY
     menu_home5,
 #endif
+#if !DISPLAY_HAS_LOCK_ICON
     // lock message
     menu_lock,
+#endif
     // service menu
     menu_service1, menu_service2, menu_service_watch,
 #if (! REMOTE_SETTING_ONLY)
@@ -130,9 +138,13 @@ static uint32_t hourbar_buff;
 static bool events_common(void) {
     bool ret=false;
     if (kb_events & KB_EVENT_LOCK_LONG) {               // key lock
-        menu_auto_update_timeout=LONG_PRESS_THLD+1;
         menu_locked = ! menu_locked;
+#if !DISPLAY_HAS_LOCK_ICON
+        menu_auto_update_timeout=LONG_PRESS_THLD+1;
         menu_state = (menu_locked)?menu_lock:menu_home;
+#else
+        menu_state = menu_home;
+#endif
         ret=true;
     } else if (!menu_locked) {    
         if (kb_events & KB_EVENT_ALL_LONG) {            // service menu
@@ -311,16 +323,7 @@ bool menu_controller(void) {
 #endif
             ret=true; 
         } else {
-            if (menu_locked) {
-                if ( kb_events & (
-                        KB_EVENT_WHEEL_PLUS  | KB_EVENT_WHEEL_MINUS | KB_EVENT_PROG
-                        | KB_EVENT_AUTO | KB_EVENT_PROG_REWOKE | KB_EVENT_C_REWOKE | KB_EVENT_AUTO_REWOKE
-                        | KB_EVENT_PROG_LONG | KB_EVENT_C_LONG | KB_EVENT_AUTO_LONG )) {
-                    menu_auto_update_timeout=LONG_PRESS_THLD+1;
-                    menu_state=menu_lock;
-                    ret=true;
-                    }
-            } else { // not locked
+            if (!menu_locked) {
                 if ((menu_state == menu_home) || (menu_state == menu_home_no_alter)) {
                     if (wheel != 0) {
                         CTL_temp_change_inc(wheel);
@@ -346,13 +349,26 @@ bool menu_controller(void) {
                     }
                 }
                 // TODO ....  
+#if !DISPLAY_HAS_LOCK_ICON
+            } else { // locked
+                if ( kb_events & (
+                        KB_EVENT_WHEEL_PLUS  | KB_EVENT_WHEEL_MINUS | KB_EVENT_PROG
+                        | KB_EVENT_AUTO | KB_EVENT_PROG_REWOKE | KB_EVENT_C_REWOKE | KB_EVENT_AUTO_REWOKE
+                        | KB_EVENT_PROG_LONG | KB_EVENT_C_LONG | KB_EVENT_AUTO_LONG )) {
+                    menu_auto_update_timeout=LONG_PRESS_THLD+1;
+                    menu_state=menu_lock;
+                    ret=true;
+                }
+#endif
             }
         } 
         break;
-    default:
+#if !DISPLAY_HAS_LOCK_ICON
+    default:  // should never happen
     case menu_lock:        // "bloc" message
         if (menu_auto_update_timeout==0) { menu_state=menu_home; ret=true; } 
         break;        
+#endif
     case menu_service1:     // service menu
     case menu_service2:
         if (kb_events & (KB_EVENT_AUTO | KB_EVENT_C)) {
@@ -493,6 +509,9 @@ void menu_view(bool clear) {
         if (clear) clr_show2(LCD_SEG_COL1,LCD_SEG_COL2);
         LCD_PrintDec(RTC_GetHour(), 2, ((menu_state == menu_set_hour) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));
         LCD_PrintDec(RTC_GetMinute(), 0, ((menu_state == menu_set_minute) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));
+#if DISPLAY_HAS_LOCK_ICON
+        if (menu_locked) { LCD_SetSeg(LCD_PADLOCK, LCD_MODE_ON); }
+#endif        
        break;                                       
     case menu_set_timer_dow:
         clr_show1(LCD_SEG_PROG); // all segments off
@@ -528,6 +547,9 @@ void menu_view(bool clear) {
         if (clear) clr_show2(LCD_SEG_COL1,LCD_SEG_COL2);
         LCD_PrintDec(RTC_GetHour(), 2,  LCD_MODE_ON);
         LCD_PrintDec(RTC_GetMinute(), 0, LCD_MODE_ON);
+#if DISPLAY_HAS_LOCK_ICON
+        if (menu_locked) { LCD_SetSeg(LCD_PADLOCK, LCD_MODE_ON); }
+#endif        
        break;                                       
 #endif
 #if MENU_SHOW_BATTERY
@@ -535,6 +557,9 @@ void menu_view(bool clear) {
 		LCD_AllSegments(LCD_MODE_OFF);
         LCD_PrintDec(bat_average/100, 2, LCD_MODE_ON);
         LCD_PrintDec(bat_average%100, 0, LCD_MODE_ON);
+#if DISPLAY_HAS_LOCK_ICON
+        if (menu_locked) { LCD_SetSeg(LCD_PADLOCK, LCD_MODE_ON); }
+#endif        
        break;        
 #endif                                                       
 		
@@ -577,10 +602,16 @@ void menu_view(bool clear) {
         LCD_SetSeg(LCD_SEG_AUTO, (CTL_test_auto()?LCD_MODE_ON:LCD_MODE_OFF));
         LCD_SetSeg(LCD_SEG_MANU, (CTL_mode_auto?LCD_MODE_OFF:LCD_MODE_ON));
         LCD_HourBarBitmap(hourbar_buff);
+#if DISPLAY_HAS_LOCK_ICON
+        if (menu_locked) { LCD_SetSeg(LCD_PADLOCK, LCD_MODE_ON); }
+#endif        
        break;
     case menu_home2: // real temperature
         if (clear) LCD_AllSegments(LCD_MODE_OFF);
         LCD_PrintTempInt(temp_average,LCD_MODE_ON);
+#if DISPLAY_HAS_LOCK_ICON
+        if (menu_locked) { LCD_SetSeg(LCD_PADLOCK, LCD_MODE_ON); }
+#endif        
         break;
     case menu_home3: // valve pos
         if (clear) LCD_AllSegments(LCD_MODE_OFF);
@@ -594,11 +625,16 @@ void menu_view(bool clear) {
                 LCD_PrintStringID(LCD_STRING_minusCminus,LCD_MODE_ON);
             }
         }
+#if DISPLAY_HAS_LOCK_ICON
+        if (menu_locked) { LCD_SetSeg(LCD_PADLOCK, LCD_MODE_ON); }
+        break;
+#else
         break;
     case menu_lock:        // "bloc" message
         LCD_AllSegments(LCD_MODE_OFF); // all segments off
         LCD_PrintStringID(LCD_STRING_bloc,LCD_MODE_ON);
         break;
+#endif
     case menu_service1: 
     case menu_service2:
         // service menu; left side index, right value
