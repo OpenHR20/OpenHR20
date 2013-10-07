@@ -72,7 +72,7 @@ static int16_t ring_buf[2][AVERAGE_LEN];
 #endif
 
 static uint8_t ring_pos=0;
-static uint8_t ring_used=0; 
+static uint8_t ring_used=1; 
 static int32_t ring_sum [2] = {0,0};
 int16_t ring_average [2] = {0,0};
 
@@ -90,13 +90,10 @@ static void shift_ring(void) {
 }
 
 static void update_ring(uint8_t type, int16_t value) {
-
 	ring_sum[type]+=value;
 	ring_sum[type]-=ring_buf[type][ring_pos]; // note for boot: it is OK, ring_buf is initialized to zeroes
 	ring_buf[type][ring_pos]=value;
-	if (ring_used>=AVERAGE_LEN-1) { // note for "-1", last measurement can update ring_average
-		ring_average[type] = (int16_t) (ring_sum[type]/(int32_t)(AVERAGE_LEN));
-	}
+	ring_average[type] = (int16_t) (ring_sum[type]/(int32_t)(ring_used));
 }
 
 
