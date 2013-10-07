@@ -509,9 +509,6 @@ void menu_view(bool clear) {
         if (clear) clr_show2(LCD_SEG_COL1,LCD_SEG_COL2);
         LCD_PrintDec(RTC_GetHour(), 2, ((menu_state == menu_set_hour) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));
         LCD_PrintDec(RTC_GetMinute(), 0, ((menu_state == menu_set_minute) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));
-#if DISPLAY_HAS_LOCK_ICON
-        if (menu_locked) { LCD_SetSeg(LCD_PADLOCK, LCD_MODE_ON); }
-#endif        
        break;                                       
     case menu_set_timer_dow:
         clr_show1(LCD_SEG_PROG); // all segments off
@@ -547,9 +544,6 @@ void menu_view(bool clear) {
         if (clear) clr_show2(LCD_SEG_COL1,LCD_SEG_COL2);
         LCD_PrintDec(RTC_GetHour(), 2,  LCD_MODE_ON);
         LCD_PrintDec(RTC_GetMinute(), 0, LCD_MODE_ON);
-#if DISPLAY_HAS_LOCK_ICON
-        if (menu_locked) { LCD_SetSeg(LCD_PADLOCK, LCD_MODE_ON); }
-#endif        
        break;                                       
 #endif
 #if MENU_SHOW_BATTERY
@@ -557,9 +551,6 @@ void menu_view(bool clear) {
 		LCD_AllSegments(LCD_MODE_OFF);
         LCD_PrintDec(bat_average/100, 2, LCD_MODE_ON);
         LCD_PrintDec(bat_average%100, 0, LCD_MODE_ON);
-#if DISPLAY_HAS_LOCK_ICON
-        if (menu_locked) { LCD_SetSeg(LCD_PADLOCK, LCD_MODE_ON); }
-#endif        
        break;        
 #endif                                                       
 		
@@ -602,16 +593,10 @@ void menu_view(bool clear) {
         LCD_SetSeg(LCD_SEG_AUTO, (CTL_test_auto()?LCD_MODE_ON:LCD_MODE_OFF));
         LCD_SetSeg(LCD_SEG_MANU, (CTL_mode_auto?LCD_MODE_OFF:LCD_MODE_ON));
         LCD_HourBarBitmap(hourbar_buff);
-#if DISPLAY_HAS_LOCK_ICON
-        if (menu_locked) { LCD_SetSeg(LCD_PADLOCK, LCD_MODE_ON); }
-#endif        
        break;
     case menu_home2: // real temperature
         if (clear) LCD_AllSegments(LCD_MODE_OFF);
         LCD_PrintTempInt(temp_average,LCD_MODE_ON);
-#if DISPLAY_HAS_LOCK_ICON
-        if (menu_locked) { LCD_SetSeg(LCD_PADLOCK, LCD_MODE_ON); }
-#endif        
         break;
     case menu_home3: // valve pos
         if (clear) LCD_AllSegments(LCD_MODE_OFF);
@@ -625,16 +610,13 @@ void menu_view(bool clear) {
                 LCD_PrintStringID(LCD_STRING_minusCminus,LCD_MODE_ON);
             }
         }
-#if DISPLAY_HAS_LOCK_ICON
-        if (menu_locked) { LCD_SetSeg(LCD_PADLOCK, LCD_MODE_ON); }
         break;
-#else
-        break;
+#if !DISPLAY_HAS_LOCK_ICON
     case menu_lock:        // "bloc" message
         LCD_AllSegments(LCD_MODE_OFF); // all segments off
         LCD_PrintStringID(LCD_STRING_bloc,LCD_MODE_ON);
         break;
-#endif
+#endif        
     case menu_service1: 
     case menu_service2:
         // service menu; left side index, right value
@@ -651,6 +633,10 @@ void menu_view(bool clear) {
         break;                   
     }
     
+#if DISPLAY_HAS_LOCK_ICON
+    if (menu_locked) { LCD_SetSeg(LCD_PADLOCK, LCD_MODE_ON); }
+#endif        
+
     LCD_Update();
 }
 
