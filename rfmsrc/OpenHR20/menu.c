@@ -564,15 +564,21 @@ void menu_view(bool clear) {
             goto MENU_COMMON_STATUS; // optimization
         } else {
             if (clear) clr_show1(LCD_SEG_BAR24);
+#if HR25
+            // HR25 reports battery by special LCD segments
+            if ((CTL_error & ~(CTL_ERR_BATT_LOW | CTL_ERR_BATT_WARNING))!=0) {
+#else
             if (CTL_error!=0) {
                 if (CTL_error & CTL_ERR_BATT_LOW) {
                     LCD_PrintStringID(LCD_STRING_BAtt,LCD_MODE_BLINK_1);
-                } else if (CTL_error & CTL_ERR_MONTAGE) {
+                } else if (CTL_error & CTL_ERR_BATT_WARNING) {
+                    LCD_PrintStringID(LCD_STRING_BAtt,LCD_MODE_ON);
+                } else
+#endif
+                if (CTL_error & CTL_ERR_MONTAGE) {
                     LCD_PrintStringID(LCD_STRING_E2,LCD_MODE_ON);
                 } else if (CTL_error & CTL_ERR_MOTOR) {
                     LCD_PrintStringID(LCD_STRING_E3,LCD_MODE_ON);
-                } else if (CTL_error & CTL_ERR_BATT_WARNING) {
-                    LCD_PrintStringID(LCD_STRING_BAtt,LCD_MODE_ON);
                 } else if (CTL_error & CTL_ERR_RFM_SYNC) {
                     LCD_PrintStringID(LCD_STRING_E4,LCD_MODE_ON);
                 }
@@ -636,7 +642,23 @@ void menu_view(bool clear) {
 #if DISPLAY_HAS_LOCK_ICON
     if (menu_locked) { LCD_SetSeg(LCD_PADLOCK, LCD_MODE_ON); }
 #endif        
-
+#if HR25
+    if (bat_average < 20*(uint16_t)config.bat_low_thld) {
+        // do not blink outline when all segments are on
+        if (menu_state != menu_startup &&
+            (menu_state < menu_service1 || menu_state > menu_service_watch)) {
+            LCD_SetSeg(LCD_SEG_BAT_OUTLINE, LCD_MODE_BLINK_1);
+        }
+    } else {
+        LCD_SetSeg(LCD_SEG_BAT_OUTLINE, LCD_MODE_ON);
+        if (bat_average > 20*(uint16_t)config.bat_warning_thld) {
+            LCD_SetSeg(LCD_SEG_BAT_BOTTOM, LCD_MODE_ON);
+        }
+        if (bat_average > 20*(uint16_t)config.bat_half_thld) {
+            LCD_SetSeg(LCD_SEG_BAT_TOP, LCD_MODE_ON);
+        }
+    }
+#endif
     LCD_Update();
 }
 
