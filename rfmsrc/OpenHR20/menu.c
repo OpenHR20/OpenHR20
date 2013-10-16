@@ -613,6 +613,9 @@ void menu_view(bool clear) {
 #else
         if (clear) clr_show1(LCD_SEG_BAR24);
 #endif
+        // display active temperature type in automatic mode
+        if (CTL_test_auto()) show_selected_temperature_type(CTL_temp_auto_type, LCD_MODE_ON);
+
         LCD_PrintTemp(CTL_temp_wanted,LCD_MODE_ON);
         //! \note hourbar status calculation is complex we don't want calculate it every view, use chache
         MENU_COMMON_STATUS:

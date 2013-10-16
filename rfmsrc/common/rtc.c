@@ -352,17 +352,17 @@ int32_t RTC_DowTimerGetHourBar(uint8_t dow) {
  *
  ******************************************************************************/
 
-uint8_t RTC_ActualTimerTemperature(bool exact) {
+uint8_t RTC_ActualTimerTemperatureType(bool exact) {
     uint16_t minutes=RTC.hh*60 + RTC.mm;
     int8_t dow=((config.timer_mode==1)?RTC.DOW:0);
     int8_t raw_index=RTC_FindTimerRawIndex(dow,minutes);
     uint16_t data = eeprom_timers_read_raw(raw_index);
-    if (raw_index<0) return 0; //not found
+    if (raw_index<0) return TEMP_TYPE_INVALID; //not found
     if (exact) {
-        if ((data&0xfff) != minutes) return 0;
-        if ((raw_index/RTC_TIMERS_PER_DOW) != dow) return 0;
+        if ((data&0xfff) != minutes) return TEMP_TYPE_INVALID;
+        if ((raw_index/RTC_TIMERS_PER_DOW) != dow) return TEMP_TYPE_INVALID;
     }
-    return temperature_table[(data >> 12) & 3];
+    return (data >> 12) & 3;
 }
 #endif // !defined(MASTER_CONFIG_H)
 

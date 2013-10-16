@@ -300,6 +300,9 @@ void EEPROM_write(uint16_t address, uint8_t data);
 void eeprom_config_init(bool restore_default);
 void eeprom_config_save(uint8_t idx);
 
+// valid temperature types are 0-3, use next value to indicate invalid type
+#define TEMP_TYPE_INVALID 4
+
 uint16_t eeprom_timers_read_raw(uint8_t offset);
 #define timers_get_raw_index(dow,slot) (dow*RTC_TIMERS_PER_DOW+slot)
 void eeprom_timers_write_raw(uint8_t offset, uint16_t value);
