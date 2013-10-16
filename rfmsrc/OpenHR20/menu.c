@@ -416,11 +416,12 @@ bool menu_controller(void) {
     }
     if (events_common()) ret=true;
     // turn off LCD blinking on wheel activity
-    if (wheel != 0 && menu_state != menu_startup && menu_state != menu_version
-#if !DISPLAY_HAS_LOCK_ICON
-        && menu_state != menu_lock
+    if (wheel != 0 && (
+#if (! REMOTE_SETTING_ONLY)
+         (menu_state >= menu_set_year && menu_state <= menu_set_timer) ||
+         (menu_state >= menu_preset_temp0 && menu_state <= menu_preset_temp3) ||
 #endif
-        ) {
+         (menu_state >= menu_service1 && menu_state <= menu_service_watch))) {
         menu_auto_update_timeout=2;
     }
     kb_events = 0; // clear unused keys
