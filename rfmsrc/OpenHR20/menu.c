@@ -149,10 +149,12 @@ static bool events_common(void) {
     } else if (!menu_locked) {    
         if (kb_events & KB_EVENT_ALL_LONG) {            // service menu
             menu_state = menu_service1;
+            menu_auto_update_timeout=0;
             ret=true;
 #if (! REMOTE_SETTING_ONLY)
         } else if ( kb_events & KB_EVENT_AUTO_LONG ) {  // set unit date/time
     		menu_state=menu_set_year;
+            menu_auto_update_timeout=0;
             ret=true; 
         } else if ( kb_events & KB_EVENT_PROG_LONG ) {  // set switching times
             menu_set_dow=((config.timer_mode==1)?RTC_GetDayOfWeek():0);
@@ -161,6 +163,7 @@ static bool events_common(void) {
         } else if ( kb_events & KB_EVENT_C_LONG ) {     // set temperatures
             menu_state=menu_preset_temp0;
             menu_set_temp=temperature_table[0];
+            menu_auto_update_timeout=0;
             ret=true;
 #endif
         } else if (( kb_events & KB_EVENT_NONE_LONG )   // retun to main home screen on timeout
@@ -207,6 +210,7 @@ bool menu_controller(void) {
         if (wheel != 0) RTC_SetYear(RTC_GetYearYY()+wheel);
         if ( kb_events & KB_EVENT_PROG) {
             menu_state = menu_set_month;
+            menu_auto_update_timeout=0;
             CTL_update_temp_auto();
             ret=true;
         }
@@ -215,6 +219,7 @@ bool menu_controller(void) {
         if (wheel != 0) RTC_SetMonth(RTC_GetMonth()+wheel);
         if ( kb_events & KB_EVENT_PROG ) {
             menu_state = menu_set_day;
+            menu_auto_update_timeout=0;
             CTL_update_temp_auto();
             ret=true;
         }
@@ -223,6 +228,7 @@ bool menu_controller(void) {
         if (wheel != 0) RTC_SetDay(RTC_GetDay()+wheel);
         if ( kb_events & KB_EVENT_PROG ) {
             menu_state = menu_set_hour;
+            menu_auto_update_timeout=0;
             CTL_update_temp_auto();
             ret=true;
         }
@@ -231,6 +237,7 @@ bool menu_controller(void) {
         if (wheel != 0) RTC_SetHour(RTC_GetHour()+wheel);
         if ( kb_events & KB_EVENT_PROG ) {
             menu_state = menu_set_minute;
+            menu_auto_update_timeout=0;
             CTL_update_temp_auto();
             ret=true;
         }
@@ -295,6 +302,7 @@ bool menu_controller(void) {
             temperature_table[menu_state-menu_preset_temp0]=menu_set_temp;
             eeprom_config_save(menu_state+((temperature_table-config_raw)-menu_preset_temp0));
             menu_state++; // menu_preset_temp3+1 == menu_home
+            menu_auto_update_timeout=0;
             CTL_update_temp_auto();
             if (menu_state <= menu_preset_temp3) {
                 menu_set_temp=temperature_table[menu_state-menu_preset_temp0];
@@ -378,14 +386,17 @@ bool menu_controller(void) {
                 menu_state=menu_home;
             } else {
                 menu_state=menu_service_watch;
+                menu_auto_update_timeout=0;
             }
             ret=true;
         } else if (kb_events & KB_EVENT_PROG) {  // confirm selection
             if (menu_state == menu_service2) {
                 eeprom_config_save(service_idx); // save current value
                 menu_state = menu_service1;
+                menu_auto_update_timeout=0;
             } else {
                 menu_state = menu_service2;
+                menu_auto_update_timeout=0;
             }
         } else {                                 // wheel movement
             if (menu_state == menu_service1) {
@@ -406,7 +417,8 @@ bool menu_controller(void) {
             menu_state=menu_home; 
             ret=true;
         } else if (kb_events & KB_EVENT_C) { 
-            menu_state=menu_service1; 
+            menu_state=menu_service1;
+            menu_auto_update_timeout=0;
             ret=true;
         } else {
             service_watch_n=(service_watch_n+wheel+WATCH_N)%WATCH_N;
