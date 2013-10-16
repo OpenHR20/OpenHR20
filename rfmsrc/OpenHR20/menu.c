@@ -599,6 +599,8 @@ void menu_view(bool clear) {
     case menu_home_no_alter: // wanted temp
 #if HR25
         if (clear) clr_show2(LCD_SEG_BAR24, LCD_SEG_BAR_SUB);
+        // day of week icon
+        LCD_SetSeg(LCD_SEG_D1 + RTC_GetDayOfWeek() - 1, LCD_MODE_ON);
 #else
         if (clear) clr_show1(LCD_SEG_BAR24);
 #endif
@@ -608,7 +610,7 @@ void menu_view(bool clear) {
         LCD_SetSeg(LCD_SEG_AUTO, (CTL_test_auto()?LCD_MODE_ON:LCD_MODE_OFF));
         LCD_SetSeg(LCD_SEG_MANU, (CTL_mode_auto?LCD_MODE_OFF:LCD_MODE_ON));
         LCD_HourBarBitmap(hourbar_buff);
-       break;
+        break;
     case menu_home2: // real temperature
         if (clear) LCD_AllSegments(LCD_MODE_OFF);
         LCD_PrintTempInt(temp_average,LCD_MODE_ON);
