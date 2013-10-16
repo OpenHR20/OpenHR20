@@ -415,6 +415,14 @@ bool menu_controller(void) {
         break;
     }
     if (events_common()) ret=true;
+    // turn off LCD blinking on wheel activity
+    if (wheel != 0 && menu_state != menu_startup && menu_state != menu_version
+#if !DISPLAY_HAS_LOCK_ICON
+        && menu_state != menu_lock
+#endif
+        ) {
+        menu_auto_update_timeout=2;
+    }
     kb_events = 0; // clear unused keys
     return ret;
 } 
@@ -484,6 +492,7 @@ void menu_update_hourbar(uint8_t dow) {
  * \brief menu View
  ******************************************************************************/
 void menu_view(bool clear) {
+  uint8_t lcd_blink_mode = menu_auto_update_timeout>0?LCD_MODE_ON:LCD_MODE_BLINK_1;
   switch (menu_state) {
     case menu_startup:
         LCD_AllSegments(LCD_MODE_ON);                   // all segments on
@@ -495,48 +504,47 @@ void menu_view(bool clear) {
 #if (! REMOTE_SETTING_ONLY)
 	case menu_set_year:
         LCD_AllSegments(LCD_MODE_OFF); // all segments off
-        LCD_PrintDecW(RTC_GetYearYYYY(),LCD_MODE_BLINK_1);
+        LCD_PrintDecW(RTC_GetYearYYYY(),lcd_blink_mode);
        break;
     case menu_set_month:
     case menu_set_day:
         clr_show1(LCD_SEG_COL1);           // decimal point
-        LCD_PrintDec(RTC_GetMonth(), 0, ((menu_state==menu_set_month)?LCD_MODE_BLINK_1:LCD_MODE_ON));
-        LCD_PrintDec(RTC_GetDay(), 2, ((menu_state==menu_set_day)?LCD_MODE_BLINK_1:LCD_MODE_ON));
+        LCD_PrintDec(RTC_GetMonth(), 0, ((menu_state==menu_set_month)?lcd_blink_mode:LCD_MODE_ON));
+        LCD_PrintDec(RTC_GetDay(), 2, ((menu_state==menu_set_day)?lcd_blink_mode:LCD_MODE_ON));
        break;
     case menu_set_hour:
     case menu_set_minute: 
     case menu_home4: // time
         if (clear) clr_show2(LCD_SEG_COL1,LCD_SEG_COL2);
-        LCD_PrintDec(RTC_GetHour(), 2, ((menu_state == menu_set_hour) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));
-        LCD_PrintDec(RTC_GetMinute(), 0, ((menu_state == menu_set_minute) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));
+        LCD_PrintDec(RTC_GetHour(), 2, ((menu_state == menu_set_hour) ? lcd_blink_mode : LCD_MODE_ON));
+        LCD_PrintDec(RTC_GetMinute(), 0, ((menu_state == menu_set_minute) ? lcd_blink_mode : LCD_MODE_ON));
        break;                                       
     case menu_set_timer_dow:
         clr_show1(LCD_SEG_PROG); // all segments off
-        LCD_PrintDayOfWeek(menu_set_dow, LCD_MODE_BLINK_1);
+        LCD_PrintDayOfWeek(menu_set_dow, lcd_blink_mode);
         break;
     case menu_set_timer:
         //! \todo calculate "hourbar" status, actual position in mode LCD_MODE_BLINK_1
-        
         clr_show3(LCD_SEG_COL1,LCD_SEG_COL2,LCD_SEG_PROG);
         timers_patch_offset=timers_get_raw_index(menu_set_dow, menu_set_slot);
         timers_patch_data = menu_set_time +  ((uint16_t)menu_set_mode<<12);
         LCD_HourBarBitmap(RTC_DowTimerGetHourBar(menu_set_dow));
         timers_patch_offset=0xff;
-        LCD_SetHourBarSeg(menu_set_time/60, LCD_MODE_BLINK_1);
+        LCD_SetHourBarSeg(menu_set_time/60, lcd_blink_mode);
         if (menu_set_time < 24*60) {
-            LCD_PrintDec(menu_set_time/60, 2, LCD_MODE_BLINK_1);
-            LCD_PrintDec(menu_set_time%60, 0, LCD_MODE_BLINK_1);        
+            LCD_PrintDec(menu_set_time/60, 2, lcd_blink_mode);
+            LCD_PrintDec(menu_set_time%60, 0, lcd_blink_mode);
         } else {
-            LCD_PrintStringID(LCD_STRING_4xminus,LCD_MODE_BLINK_1);
+            LCD_PrintStringID(LCD_STRING_4xminus,lcd_blink_mode);
         }
-        show_selected_temperature_type(menu_set_mode,LCD_MODE_BLINK_1);
+        show_selected_temperature_type(menu_set_mode,lcd_blink_mode);
         break;                                                             
     case menu_preset_temp0:
     case menu_preset_temp1:
     case menu_preset_temp2:
     case menu_preset_temp3:
         LCD_AllSegments(LCD_MODE_OFF);
-        LCD_PrintTemp(menu_set_temp,LCD_MODE_BLINK_1);
+        LCD_PrintTemp(menu_set_temp,lcd_blink_mode);
         show_selected_temperature_type(menu_state-menu_preset_temp0,LCD_MODE_ON);
         break;
 #else
@@ -638,13 +646,13 @@ void menu_view(bool clear) {
     case menu_service2:
         // service menu; left side index, right value
         LCD_AllSegments(LCD_MODE_ON);
-        LCD_PrintHex(service_idx, 2, ((menu_state == menu_service1) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));
-        LCD_PrintHex(config_raw[service_idx], 0, ((menu_state == menu_service2) ? LCD_MODE_BLINK_1 : LCD_MODE_ON));
+        LCD_PrintHex(service_idx, 2, ((menu_state == menu_service1) ? lcd_blink_mode : LCD_MODE_ON));
+        LCD_PrintHex(config_raw[service_idx], 0, ((menu_state == menu_service2) ? lcd_blink_mode : LCD_MODE_ON));
        break;
     case menu_service_watch:
         LCD_AllSegments(LCD_MODE_ON);
         LCD_PrintHexW(watch(service_watch_n),LCD_MODE_ON);
-        LCD_SetHourBarSeg(service_watch_n, LCD_MODE_BLINK_1);
+        LCD_SetHourBarSeg(service_watch_n, lcd_blink_mode);
         break;
     default:
         break;                   
