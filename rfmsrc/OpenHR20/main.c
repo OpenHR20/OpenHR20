@@ -253,10 +253,9 @@ int __attribute__ ((noreturn)) main(void)
                     #endif
                 }
                 #if RFM
-    				if ((config.RFM_devaddr!=0)
-    				    && (time_sync_tmo>1)
-                        && (
-                            ((RTC_GetSecond() == config.RFM_devaddr) && (wireless_buf_ptr)) ||
+                    if ((config.RFM_devaddr!=0) && (time_sync_tmo>1))
+                    {
+                        if (((RTC_GetSecond() == config.RFM_devaddr) && (wireless_buf_ptr)) ||
                             (
                                 (
                                     (RTC_GetSecond()>30) &&
@@ -271,24 +270,23 @@ int __attribute__ ((noreturn)) main(void)
                                     ((wl_force_flags>>config.RFM_devaddr)&1)
                                 )
                             )
-                        )) // collission protection: every HR20 shall send when the second counter is equal to it's own address.
-    				{
-                        wirelessTimerCase = WL_TIMER_FIRST;
-                        RTC_timer_set(RTC_TIMER_RFM, WLTIME_START);
-    				}
-    				if ((config.RFM_devaddr!=0)
-    				    && (time_sync_tmo>1)
-                        && ((RTC_GetSecond() == 59) || (RTC_GetSecond() == 29)))
-                    {
-						#if (WL_SKIP_SYNC)
-							if (wl_skip_sync!=0) {
-								wl_skip_sync--;
-							} else
-						#endif
-							{
-								wirelessTimerCase = WL_TIMER_SYNC;
-                        		RTC_timer_set(RTC_TIMER_RFM, WLTIME_SYNC);
-							}
+                        ) // collission protection: every HR20 shall send when the second counter is equal to it's own address.
+                        {
+                            wirelessTimerCase = WL_TIMER_FIRST;
+                            RTC_timer_set(RTC_TIMER_RFM, WLTIME_START);
+                        }
+                        if ((RTC_GetSecond() == 59) || (RTC_GetSecond() == 29))
+                        {
+                            #if (WL_SKIP_SYNC)
+                                if (wl_skip_sync!=0) {
+                                    wl_skip_sync--;
+                                } else
+                            #endif
+                                {
+                                    wirelessTimerCase = WL_TIMER_SYNC;
+                                    RTC_timer_set(RTC_TIMER_RFM, WLTIME_SYNC);
+                                }
+                        }
                     }
                 #endif
                 if (bat_average>0) {
