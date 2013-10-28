@@ -281,6 +281,8 @@ bool menu_controller(void) {
             if (++menu_set_slot>=RTC_TIMERS_PER_DOW) {
                 if (menu_set_dow!=0) menu_set_dow=menu_set_dow%7+1; 
                 menu_state=menu_set_timer_dow;
+            } else {
+                menu_set_time = RTC_DowTimerGet(menu_set_dow, menu_set_slot, &menu_set_mode);
             }
             CTL_update_temp_auto();
             menu_update_hourbar((config.timer_mode==1)?RTC_GetDayOfWeek():0);
@@ -555,10 +557,12 @@ void menu_view(bool clear) {
 #else
         clr_show2(LCD_SEG_BAR24, LCD_SEG_PROG);
 #endif
-        timers_patch_offset=timers_get_raw_index(menu_set_dow, menu_set_slot);
-        timers_patch_data = menu_set_time +  ((uint16_t)menu_set_mode<<12);
+        // "patch" eeprom to show the value selected by used, not saved to eeprom yet
+        timers_patch_offset = timers_get_raw_index(menu_set_dow, menu_set_slot);
+        timers_patch_data = menu_set_time + ((uint16_t)menu_set_mode<<12);
         LCD_HourBarBitmap(RTC_DowTimerGetHourBar(menu_set_dow));
         timers_patch_offset=0xff;
+
         LCD_SetHourBarSeg(menu_set_time/60, lcd_blink_mode);
         LCD_SetSeg(LCD_SEG_COL1, lcd_blink_mode);
         LCD_SetSeg(LCD_SEG_COL2, lcd_blink_mode);
