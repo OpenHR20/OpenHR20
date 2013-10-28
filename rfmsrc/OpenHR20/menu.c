@@ -536,22 +536,50 @@ void menu_view(bool clear) {
     case menu_set_timer_dow:
         clr_show1(LCD_SEG_PROG); // all segments off
         LCD_PrintDayOfWeek(menu_set_dow, lcd_blink_mode);
+#if HR25
+        // day of week icon
+        if (menu_set_dow == 0)
+        {
+            // TODO: optimize
+            for (uint8_t i = 0; i < 7; ++i)
+                LCD_SetSeg(LCD_SEG_D1 + i, LCD_MODE_ON);
+        }
+        else
+            LCD_SetSeg(LCD_SEG_D1 + menu_set_dow - 1, LCD_MODE_ON);
+#endif
         break;
     case menu_set_timer:
         //! \todo calculate "hourbar" status, actual position in mode LCD_MODE_BLINK_1
-        clr_show3(LCD_SEG_COL1,LCD_SEG_COL2,LCD_SEG_PROG);
+#if HR25
+        clr_show3(LCD_SEG_BAR24, LCD_SEG_BAR_SUB, LCD_SEG_PROG);
+#else
+        clr_show2(LCD_SEG_BAR24, LCD_SEG_PROG);
+#endif
         timers_patch_offset=timers_get_raw_index(menu_set_dow, menu_set_slot);
         timers_patch_data = menu_set_time +  ((uint16_t)menu_set_mode<<12);
         LCD_HourBarBitmap(RTC_DowTimerGetHourBar(menu_set_dow));
         timers_patch_offset=0xff;
         LCD_SetHourBarSeg(menu_set_time/60, lcd_blink_mode);
+        LCD_SetSeg(LCD_SEG_COL1, lcd_blink_mode);
+        LCD_SetSeg(LCD_SEG_COL2, lcd_blink_mode);
         if (menu_set_time < 24*60) {
             LCD_PrintDec(menu_set_time/60, 2, lcd_blink_mode);
             LCD_PrintDec(menu_set_time%60, 0, lcd_blink_mode);
         } else {
             LCD_PrintStringID(LCD_STRING_4xminus,lcd_blink_mode);
         }
-        show_selected_temperature_type(menu_set_mode,lcd_blink_mode);
+        show_selected_temperature_type(menu_set_mode, LCD_MODE_ON);
+#if HR25
+        // day of week icon
+        if (menu_set_dow == 0)
+        {
+            // TODO: optimize
+            for (uint8_t i = 0; i < 7; ++i)
+                LCD_SetSeg(LCD_SEG_D1 + i, LCD_MODE_ON);
+        }
+        else
+            LCD_SetSeg(LCD_SEG_D1 + menu_set_dow - 1, LCD_MODE_ON);
+#endif
         break;                                                             
     case menu_preset_temp0:
     case menu_preset_temp1:
