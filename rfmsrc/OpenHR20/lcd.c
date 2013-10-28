@@ -630,7 +630,6 @@ void LCD_PrintStringID(uint8_t id, uint8_t mode) {
         tmp = pgm_read_byte(&LCD_StringTable[id][i]);
         LCD_PrintChar(tmp, 3-i, mode);
     }
-    LCD_SetSeg(LCD_SEG_COL1, LCD_MODE_OFF);
 }
 
 

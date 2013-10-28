@@ -127,6 +127,7 @@ static uint8_t menu_set_slot;
 static uint8_t service_idx = 0;
 static uint8_t service_watch_n = 0;
 static uint32_t hourbar_buff;
+static uint8_t old_ctl_error = 0;
 
 /*!
  *******************************************************************************
@@ -577,23 +578,25 @@ void menu_view(bool clear) {
 		
 
     case menu_home: // wanted temp / error code / adaptation status
-        if (MOTOR_calibration_step>0) {
+        if (clear || old_ctl_error != CTL_error ||  MOTOR_calibration_step > 0) {
 #if HR25
             clr_show2(LCD_SEG_BAR24, LCD_SEG_BAR_SUB);
 #else
             clr_show1(LCD_SEG_BAR24);
 #endif
+        }
+        old_ctl_error = CTL_error;
+
+        if (MOTOR_calibration_step>0) {
             LCD_PrintChar(LCD_CHAR_A,3,LCD_MODE_ON);
             if (MOTOR_ManuCalibration==-1) LCD_PrintChar(LCD_CHAR_d,2,LCD_MODE_ON);
             LCD_PrintChar(MOTOR_calibration_step%10, 0, LCD_MODE_ON);
             goto MENU_COMMON_STATUS; // optimization
         } else {
 #if HR25
-            if (clear) clr_show2(LCD_SEG_BAR24, LCD_SEG_BAR_SUB);
             // HR25 reports battery by special LCD segments
             if ((CTL_error & ~(CTL_ERR_BATT_LOW | CTL_ERR_BATT_WARNING))!=0) {
 #else
-            if (clear) clr_show1(LCD_SEG_BAR24);
             if (CTL_error!=0) {
                 if (CTL_error & CTL_ERR_BATT_LOW) {
                     LCD_PrintStringID(LCD_STRING_BAtt,LCD_MODE_BLINK_1);
