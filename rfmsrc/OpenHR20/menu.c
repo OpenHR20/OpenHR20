@@ -648,20 +648,26 @@ void menu_view(bool clear) {
         }
         // do not use break at this position / optimization
     case menu_home_no_alter: // wanted temp
+        if (clear) {
+            if (CTL_mode_auto) {
 #if HR25
-        if (clear) clr_show3(CTL_mode_auto ? LCD_SEG_AUTO : LCD_SEG_MANU, LCD_SEG_BAR24, LCD_SEG_BAR_SUB);
+                clr_show3(LCD_SEG_AUTO, LCD_SEG_BAR24, LCD_SEG_BAR_SUB);
+#else
+                clr_show2(LCD_SEG_AUTO, LCD_SEG_BAR24);
+#endif
+                //! \note hourbar status calculation is complex we don't want calculate it every view, use cache
+                LCD_HourBarBitmap(hourbar_buff);
+            } else {
+                clr_show1(LCD_SEG_MANU);
+            }
+        }
+#if HR25
         // day of week icon
         LCD_SetSeg(LCD_SEG_D1 + RTC_GetDayOfWeek() - 1, LCD_MODE_ON);
-#else
-        if (clear) clr_show2(CTL_mode_auto ? LCD_SEG_AUTO : LCD_SEG_MANU, LCD_SEG_BAR24);
 #endif
         // display active temperature type in automatic mode
         if (CTL_test_auto()) show_selected_temperature_type(CTL_temp_auto_type, LCD_MODE_ON);
-
         LCD_PrintTemp(CTL_temp_wanted,LCD_MODE_ON);
-
-        //! \note hourbar status calculation is complex we don't want calculate it every view, use cache
-        LCD_HourBarBitmap(hourbar_buff);
         break;
     case menu_home2: // real temperature
         if (clear) LCD_AllSegments(LCD_MODE_OFF);
