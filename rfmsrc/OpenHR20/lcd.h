@@ -217,6 +217,9 @@ void task_lcd_update(void);
                                 // 12, 4 |  SEG220   |  [8], BIT 4
 #define LCD_SEG_MOON       68   // 12, 5 |  SEG221   |  [8], BIT 5
 //*****************************************************************
+
+#define LCD_DECIMAL_DOT     LCD_SEG_COL1
+
 #else
 
 #ifdef HR25
@@ -337,6 +340,7 @@ void task_lcd_update(void);
 #define LCD_SEG_B22         90
 #define LCD_SEG_BAR24       91
 
+#define LCD_DECIMAL_DOT     LCD_SEG_COL4
 
 #else /* HR20 */
 
@@ -410,6 +414,9 @@ void task_lcd_update(void);
                                 // 12, 4 |  SEG220   |  [8], BIT 4
 #define LCD_SEG_MOON       69   // 12, 5 |  SEG221   |  [8], BIT 5
 //*****************************************************************
+
+#define LCD_DECIMAL_DOT     LCD_SEG_COL1
+
 #endif /*HR25*/
 #endif /*!THERMOTRONIC*/
 

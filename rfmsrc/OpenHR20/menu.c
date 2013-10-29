@@ -514,7 +514,7 @@ void menu_view(bool clear) {
         LCD_AllSegments(LCD_MODE_ON);                   // all segments on
         break;
     case menu_version:
-        clr_show1(LCD_SEG_COL1);
+        clr_show1(LCD_DECIMAL_DOT);
         LCD_PrintHexW(VERSION_N,LCD_MODE_ON);
         break; 
 #if (! REMOTE_SETTING_ONLY)
@@ -524,7 +524,7 @@ void menu_view(bool clear) {
        break;
     case menu_set_month:
     case menu_set_day:
-        clr_show1(LCD_SEG_COL1);           // decimal point
+        clr_show1(LCD_DECIMAL_DOT);           // decimal point
         LCD_PrintDec(RTC_GetMonth(), 0, ((menu_state==menu_set_month)?lcd_blink_mode:LCD_MODE_ON));
         LCD_PrintDec(RTC_GetDay(), 2, ((menu_state==menu_set_day)?lcd_blink_mode:LCD_MODE_ON));
        break;
