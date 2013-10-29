@@ -610,20 +610,15 @@ void menu_view(bool clear) {
 		
 
     case menu_home: // wanted temp / error code / adaptation status
-        if (clear || old_ctl_error != CTL_error ||  MOTOR_calibration_step > 0) {
-#if HR25
-            clr_show2(LCD_SEG_BAR24, LCD_SEG_BAR_SUB);
-#else
-            clr_show1(LCD_SEG_BAR24);
-#endif
-        }
+        if (clear || old_ctl_error != CTL_error ||  MOTOR_calibration_step > 0)
+            clr_show1(CTL_mode_auto ? LCD_SEG_AUTO : LCD_SEG_MANU);
         old_ctl_error = CTL_error;
 
         if (MOTOR_calibration_step>0) {
             LCD_PrintChar(LCD_CHAR_A,3,LCD_MODE_ON);
             if (MOTOR_ManuCalibration==-1) LCD_PrintChar(LCD_CHAR_d,2,LCD_MODE_ON);
             LCD_PrintChar(MOTOR_calibration_step%10, 0, LCD_MODE_ON);
-            goto MENU_COMMON_STATUS; // optimization
+            break;
         } else {
 #if HR25
             // HR25 reports battery by special LCD segments
@@ -643,31 +638,29 @@ void menu_view(bool clear) {
                 } else if (CTL_error & CTL_ERR_RFM_SYNC) {
                     LCD_PrintStringID(LCD_STRING_E4,LCD_MODE_ON);
                 }
-                goto MENU_COMMON_STATUS; // optimization
+                break;
             } else {
                 if (mode_window()) {
                     LCD_PrintStringID(LCD_STRING_OPEn,LCD_MODE_ON);
-                    goto MENU_COMMON_STATUS; // optimization
+                    break;
                 }
             }
-        } 
+        }
         // do not use break at this position / optimization
     case menu_home_no_alter: // wanted temp
 #if HR25
-        if (clear) clr_show2(LCD_SEG_BAR24, LCD_SEG_BAR_SUB);
+        if (clear) clr_show3(CTL_mode_auto ? LCD_SEG_AUTO : LCD_SEG_MANU, LCD_SEG_BAR24, LCD_SEG_BAR_SUB);
         // day of week icon
         LCD_SetSeg(LCD_SEG_D1 + RTC_GetDayOfWeek() - 1, LCD_MODE_ON);
 #else
-        if (clear) clr_show1(LCD_SEG_BAR24);
+        if (clear) clr_show2(CTL_mode_auto ? LCD_SEG_AUTO : LCD_SEG_MANU, LCD_SEG_BAR24);
 #endif
         // display active temperature type in automatic mode
         if (CTL_test_auto()) show_selected_temperature_type(CTL_temp_auto_type, LCD_MODE_ON);
 
         LCD_PrintTemp(CTL_temp_wanted,LCD_MODE_ON);
-        //! \note hourbar status calculation is complex we don't want calculate it every view, use chache
-        MENU_COMMON_STATUS:
-        LCD_SetSeg(LCD_SEG_AUTO, (CTL_test_auto()?LCD_MODE_ON:LCD_MODE_OFF));
-        LCD_SetSeg(LCD_SEG_MANU, (CTL_mode_auto?LCD_MODE_OFF:LCD_MODE_ON));
+
+        //! \note hourbar status calculation is complex we don't want calculate it every view, use cache
         LCD_HourBarBitmap(hourbar_buff);
         break;
     case menu_home2: // real temperature
