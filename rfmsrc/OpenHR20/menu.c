@@ -677,6 +677,10 @@ void menu_view(bool clear) {
             uint8_t prc = MOTOR_GetPosPercent();
             if (prc<=100) {
                 LCD_PrintDec3(MOTOR_GetPosPercent(), 0 ,LCD_MODE_ON);
+#if HR25
+                // percent sign
+                LCD_SetSeg(LCD_SEG_PERCENT, LCD_MODE_ON);
+#endif
             } else {
                 LCD_PrintStringID(LCD_STRING_minusCminus,LCD_MODE_ON);
             }
