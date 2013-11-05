@@ -65,3 +65,11 @@
   #define TASK_RFM		     (1 << TASK_RFM_BIT)
 #endif
 
+// task bits are fully used, define extension
+#define  display_task   GPIOR1
+
+#define DISP_TASK_UPDATE_BIT        0
+#define DISP_TASK_CLEAR_BIT         1
+
+#define DISP_TASK_UPDATE            (1 << DISP_TASK_UPDATE_BIT)
+#define DISP_TASK_CLEAR             (1 << DISP_TASK_CLEAR_BIT)

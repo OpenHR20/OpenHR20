@@ -127,8 +127,6 @@ static uint8_t menu_set_slot;
 static uint8_t service_idx = 0;
 static uint8_t service_watch_n = 0;
 static uint32_t hourbar_buff;
-static uint8_t old_ctl_error = 0;
-static uint8_t old_calib_step = 0;
 
 /*!
  *******************************************************************************
@@ -611,15 +609,7 @@ void menu_view(bool clear) {
 		
 
     case menu_home: // wanted temp / error code / adaptation status
-        // in case error or calibration changed, clear the screen as well
-        if (old_ctl_error != CTL_error ||  old_calib_step != MOTOR_calibration_step)
-            clear = true;
-        old_ctl_error = CTL_error;
-        old_calib_step = MOTOR_calibration_step;
-    
-        if (clear)
-            clr_show1(CTL_mode_auto ? LCD_SEG_AUTO : LCD_SEG_MANU);
-
+        if (clear) clr_show1(CTL_mode_auto ? LCD_SEG_AUTO : LCD_SEG_MANU);
         if (MOTOR_calibration_step>0) {
             LCD_PrintChar(LCD_CHAR_A,3,LCD_MODE_ON);
             if (MOTOR_ManuCalibration==-1) LCD_PrintChar(LCD_CHAR_d,2,LCD_MODE_ON);

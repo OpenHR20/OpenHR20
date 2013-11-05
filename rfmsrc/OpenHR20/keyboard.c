@@ -205,11 +205,11 @@ bool mont_contact_pooling(void){
       // low active
     disable_mont_input();
     if (mont_contact & KBI_MONT) { 
-        CTL_error |=  CTL_ERR_MONTAGE;
+        CTL_set_error(CTL_ERR_MONTAGE);
 		sumError=0;
         return 0;
     } else {
-        CTL_error &= ~CTL_ERR_MONTAGE;
+        CTL_clear_error(CTL_ERR_MONTAGE);
         if (mont_contact & KBI_C) return 2;
         if (mont_contact & KBI_PROG) return 3;
         return 1;

@@ -45,21 +45,14 @@
 
 #define nop() asm("nop;")
 
-// global vars
-extern uint16_t serialNumber;	//!< Unique serial number \todo move to CONFIG.H
-
 #define c2temp(c) (c*2)
 #define calc_temp(t) (((uint16_t)t)*50)   // result unit is 1/100 C
 #define TEMP_MIN    c2temp (5)   // 5�C
 #define TEMP_DEFAULT    c2temp (20) // 20�C
 #define TEMP_MAX    c2temp (30) // 30�C
 
-
 // public prototypes
 void delay(uint16_t);                   // delay
-
-extern bool mode_auto;
-
 
 #define power_up_ADC() (PRR = (1<<PRTIM1)|(1<<PRSPI))  
 #define power_down_ADC() (PRR = (1<<PRTIM1)|(1<<PRSPI)|(1<<PRADC))  

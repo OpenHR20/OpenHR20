@@ -405,8 +405,8 @@ void wirelessReceivePacket(void) {
                             // wait for clock sync
                             // it can take 2*1/32768 sec = 61us
                             // ATmega169 datasheet chapter 17.8.1
-                        } 
-            		    CTL_error &= ~CTL_ERR_RFM_SYNC;
+                        }
+                        CTL_clear_error(CTL_ERR_RFM_SYNC);
                         RTC_SetYear(rfm_framebuf[1]);
                         RTC_SetMonth(rfm_framebuf[2]>>4);
                         RTC_SetDay((rfm_framebuf[3]>>5)+((rfm_framebuf[2]<<3)&0x18));
@@ -497,7 +497,7 @@ void wirelesTimeSyncCheck(void) {
         } else if (time_sync_tmo<-4) {
 			RFM_INT_DIS();
 		    RFM_OFF();		// turn everything off
-		    CTL_error |= CTL_ERR_RFM_SYNC;
+            CTL_set_error(CTL_ERR_RFM_SYNC);
         } 
     }
 }

@@ -37,6 +37,7 @@
 
 #include "config.h"
 #include "main.h"
+#include "task.h"
 #include "com.h"
 #include "../common/rtc.h"
 #include "adc.h"
@@ -67,6 +68,22 @@ uint8_t valveHistory[VALVE_HISTORY_LEN];
 static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t old_result, bool updateNow);
 
 uint8_t CTL_error=0;
+
+__attribute__((noinline))    // do not inline in this file
+void CTL_set_error(int8_t err_code)
+{
+    int8_t old_err = CTL_error;
+    CTL_error |= err_code;
+    if (CTL_error != old_err) display_task = DISP_TASK_CLEAR | DISP_TASK_UPDATE;
+}
+
+__attribute__((noinline))    // do not inline in this file
+void CTL_clear_error(int8_t err_code)
+{
+    int8_t old_err = CTL_error;
+    CTL_error &= ~err_code;
+    if (CTL_error != old_err) display_task = DISP_TASK_CLEAR | DISP_TASK_UPDATE;
+}
 
 #if (HW_WINDOW_DETECTION)
 static void CTL_window_detection(void) {
@@ -201,16 +218,16 @@ void CTL_update(bool minute_ch) {
     // batt error detection
     if (bat_average) {
 		if (bat_average < 20*(uint16_t)config.bat_low_thld) {
-    	    CTL_error |=  CTL_ERR_BATT_LOW | CTL_ERR_BATT_WARNING;
+            CTL_set_error(CTL_ERR_BATT_LOW | CTL_ERR_BATT_WARNING);
 	    } else {
 	        if (bat_average < 20*(uint16_t)config.bat_warning_thld) {
-	            CTL_error |=  CTL_ERR_BATT_WARNING;
+                CTL_set_error(CTL_ERR_BATT_WARNING);
 				#if (BATT_ERROR_REVERSIBLE)
-	            	CTL_error &= ~CTL_ERR_BATT_LOW;
+                    CTL_clear_error(CTL_ERR_BATT_LOW);
 				#endif
 	        } else {
 				#if (BATT_ERROR_REVERSIBLE)
-	            	CTL_error &= ~(CTL_ERR_BATT_WARNING|CTL_ERR_BATT_LOW);
+                    CTL_clear_error(CTL_ERR_BATT_WARNING|CTL_ERR_BATT_LOW);
 				#endif
 	        }
 	    }

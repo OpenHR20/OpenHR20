@@ -51,6 +51,9 @@ extern uint8_t valveHistory[VALVE_HISTORY_LEN];
 #define CTL_test_auto() (CTL_mode_auto && (CTL_temp_auto_type != TEMP_TYPE_INVALID) && (temperature_table[CTL_temp_auto_type]==CTL_temp_wanted))
 #define CTL_set_temp(t) (PID_force_update = 10, CTL_temp_wanted=t)
 
+void CTL_set_error(int8_t err_code);
+void CTL_clear_error(int8_t err_code);
+
 void CTL_update(bool minute_ch);
 void CTL_temp_change_inc (int8_t ch);
 

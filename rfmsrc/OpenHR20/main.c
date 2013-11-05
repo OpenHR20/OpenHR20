@@ -96,7 +96,8 @@ int __attribute__ ((noreturn)) main(void)
     //! initalization
     init();
 
-	task=0;
+	task = 0;
+    display_task = 0;
 
     //! Enable interrupts
     sei();
@@ -298,7 +299,7 @@ int __attribute__ ((noreturn)) main(void)
                 if (menu_auto_update_timeout>=0) {
                     menu_auto_update_timeout--;
                 }
-                menu_view(false); // TODO: move it, it is wrong place
+                display_task |= DISP_TASK_UPDATE;
             }
             #if RFM
               if (RTC_timer_done&_BV(RTC_TIMER_RFM))
@@ -310,12 +311,11 @@ int __attribute__ ((noreturn)) main(void)
             // do not use continue here (menu_auto_update_timeout==0)
         }
 
-		// menu state machine
-		if (kb_events || (menu_auto_update_timeout==0)) {
-            bool update = menu_controller();
-            menu_view(update); // TODO: move it, it is wrong place
-            continue; // on most case we have only 1 task, improve time to sleep
-		}
+        // menu state machine
+        if (kb_events || (menu_auto_update_timeout==0)) {
+            display_task |= DISP_TASK_UPDATE;
+            if (menu_controller()) display_task = DISP_TASK_CLEAR | DISP_TASK_UPDATE;
+        }
 
         // update motor PWM
         if (task & TASK_MOTOR_PULSE) {
@@ -323,6 +323,13 @@ int __attribute__ ((noreturn)) main(void)
             MOTOR_updateCalibration(mont_contact_pooling());
             MOTOR_timer_pulse();
         }
+        
+        if (display_task)
+        {
+            menu_view(display_task & DISP_TASK_CLEAR);
+            display_task = 0;
+        }
+
     } //End Main loop
 }
 

@@ -44,7 +44,6 @@
 // HR20 Project includes
 #include "main.h"
 #include "motor.h"
-#include "lcd.h"
 #include "../common/rtc.h"
 #include "eeprom.h"
 #include "task.h"
@@ -102,9 +101,10 @@ void MOTOR_updateCalibration(uint8_t cal_type)
         MOTOR_Control(stop);       // stop motor
         MOTOR_PosAct=0;                  // not calibrated
         MOTOR_PosMax=0;                  // not calibrated
+        if (MOTOR_calibration_step > 0) display_task = DISP_TASK_CLEAR | DISP_TASK_UPDATE;
         MOTOR_calibration_step=-2;     // not calibrated
         MOTOR_wait_for_new_calibration = 5;
-        CTL_error &= ~CTL_ERR_MOTOR;
+        CTL_clear_error(CTL_ERR_MOTOR);
 		#if CALIBRATION_RESETS_sumError
 			sumError=0; // new calibration need found new sumError
 		#endif
@@ -130,6 +130,7 @@ void MOTOR_updateCalibration(uint8_t cal_type)
                 MOTOR_ManuCalibration=0;               // not calibrated
             }
             MOTOR_calibration_step=1;
+            display_task = DISP_TASK_CLEAR | DISP_TASK_UPDATE;
         }
     }
 }
@@ -331,7 +332,7 @@ void MOTOR_timer_stop(void) {
     if (motor_timer>0) { // normal stop on wanted position 
             if (MOTOR_calibration_step != 0) {
                 MOTOR_calibration_step = -1;     // calibration error
-                CTL_error |=  CTL_ERR_MOTOR;
+                CTL_set_error(CTL_ERR_MOTOR);
             }
     } else { // stop on timeout
         if (d == open) { // stopped on end
@@ -345,9 +346,10 @@ void MOTOR_timer_stop(void) {
                             eeprom_config_save((uint16_t)(&config.MOTOR_ManuCalibration_L)-(uint16_t)(&config));
                             eeprom_config_save((uint16_t)(&config.MOTOR_ManuCalibration_H)-(uint16_t)(&config));
                             MOTOR_calibration_step = 0;
+                            display_task = DISP_TASK_CLEAR | DISP_TASK_UPDATE;
                         } else {
                             MOTOR_calibration_step = -1;     // calibration error
-                            CTL_error |=  CTL_ERR_MOTOR;
+                            CTL_set_error(CTL_ERR_MOTOR);
                         }
                     } else {
                         MOTOR_Control(close);
@@ -362,10 +364,11 @@ void MOTOR_timer_stop(void) {
             {
                 if (MOTOR_calibration_step == 3 ) {
                     MOTOR_calibration_step = 0;     // calibration DONE
+                    display_task = DISP_TASK_CLEAR | DISP_TASK_UPDATE;
                     MOTOR_PosMax -= MOTOR_PosAct;
                 } else if (MOTOR_PosAct>MOTOR_MIN_IMPULSES) {
                     MOTOR_calibration_step = -1;     // calibration error
-                    CTL_error |=  CTL_ERR_MOTOR;
+                    CTL_set_error(CTL_ERR_MOTOR);
                 }
                 MOTOR_PosAct = 0; // cleanup position
             }
@@ -374,7 +377,7 @@ void MOTOR_timer_stop(void) {
     if ((MOTOR_calibration_step == 0) &&
         (MOTOR_PosMax<MOTOR_MIN_IMPULSES)) {
         MOTOR_calibration_step = -1;     // calibration error
-        CTL_error |=  CTL_ERR_MOTOR;
+        CTL_set_error(CTL_ERR_MOTOR);
     } 
 }
 
