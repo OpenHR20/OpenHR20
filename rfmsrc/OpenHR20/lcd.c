@@ -839,6 +839,24 @@ void LCD_ClearNumbers(void)
  ******************************************************************************/
 void LCD_SetSeg(uint8_t seg, uint8_t mode)
 {
+#if HR25
+    LCD_SetSegReg(seg / 8, 1<<(seg % 8), mode);
+}
+
+/*!
+ *******************************************************************************
+ *  Set segment of LCD
+ *
+ *  \note  You have to call \ref LCD_Update() to trigger update on LCD if not
+ *         it is triggered automatically at change of bitframe
+ *
+ *  \param Register = segment DIV 8 to be set see \ref LCD_SEG_B0 ...
+ *  \param Bitposition = segment mod 8
+ *  \param mode  \ref LCD_MODE_ON, \ref LCD_MODE_OFF, \ref LCD_MODE_BLINK_1
+ ******************************************************************************/
+void LCD_SetSegReg(uint8_t r, uint8_t b, uint8_t mode)
+{
+#else
     uint8_t r;
     uint8_t b;
 
@@ -846,6 +864,8 @@ void LCD_SetSeg(uint8_t seg, uint8_t mode)
     r = seg / 8;
     // Bitposition = segment mod 8
     b = 1<<(seg % 8);
+
+#endif
 
     // Set bits in each bitplane
 	#if LCD_BITPLANES == 2

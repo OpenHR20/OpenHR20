@@ -541,9 +541,8 @@ void menu_view(bool clear) {
         // day of week icon
         if (menu_set_dow == 0)
         {
-            // TODO: optimize
-            for (uint8_t i = 0; i < 7; ++i)
-                LCD_SetSeg(LCD_SEG_D1 + i, LCD_MODE_ON);
+            // we rely on the fact that all day segments are in the same register!
+            LCD_SetSegReg(LCD_SEG_D1 / 8, 0x7F, LCD_MODE_ON);
         }
         else
             LCD_SetSeg(LCD_SEG_D1 + menu_set_dow - 1, LCD_MODE_ON);
@@ -576,9 +575,8 @@ void menu_view(bool clear) {
         // day of week icon
         if (menu_set_dow == 0)
         {
-            // TODO: optimize
-            for (uint8_t i = 0; i < 7; ++i)
-                LCD_SetSeg(LCD_SEG_D1 + i, LCD_MODE_ON);
+            // we rely on the fact that all day segments are in the same register!
+            LCD_SetSegReg(LCD_SEG_D1 / 8, 0x7F, LCD_MODE_ON);
         }
         else
             LCD_SetSeg(LCD_SEG_D1 + menu_set_dow - 1, LCD_MODE_ON);

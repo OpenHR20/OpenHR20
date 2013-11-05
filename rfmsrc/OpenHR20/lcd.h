@@ -78,6 +78,9 @@ void LCD_PrintStringID(uint8_t id, uint8_t mode); // Print LCD string ID
 #define LCD_PrintDayOfWeek(dow,mode) (LCD_PrintStringID(dow,mode))
 
 void LCD_SetSeg(uint8_t, uint8_t);         // Set one Segment (0-69) 
+#if HR25
+void LCD_SetSegReg(uint8_t, uint8_t, uint8_t); // Set LCD Segment(s) (0-69) 
+#endif
 void LCD_SetHourBarSeg(uint8_t, uint8_t);  // Set HBS (0-23) (Hour-Bar-Segment)
 void LCD_HourBarBitmap(uint32_t bitmap);   // Set HBS like bitmap
 void task_lcd_update(void);
