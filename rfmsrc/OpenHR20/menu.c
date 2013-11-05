@@ -616,16 +616,21 @@ void menu_view(bool clear) {
             LCD_PrintChar(MOTOR_calibration_step%10, 0, LCD_MODE_ON);
             break;
         } else {
-#if HR25
-            // HR25 reports battery by special LCD segments
-            if ((CTL_error & ~(CTL_ERR_BATT_LOW | CTL_ERR_BATT_WARNING))!=0) {
-#else
-            if (CTL_error!=0) {
+#if !HR25
+            if (CTL_error == 0) {
+                if (mode_window()) {
+                    LCD_PrintStringID(LCD_STRING_OPEn,LCD_MODE_ON);
+                    break;
+                }
+            } else {
                 if (CTL_error & CTL_ERR_BATT_LOW) {
                     LCD_PrintStringID(LCD_STRING_BAtt,LCD_MODE_BLINK_1);
                 } else if (CTL_error & CTL_ERR_BATT_WARNING) {
                     LCD_PrintStringID(LCD_STRING_BAtt,LCD_MODE_ON);
                 } else
+#else
+            // HR25 reports battery and open window by special LCD segments
+            if ((CTL_error & ~(CTL_ERR_BATT_LOW | CTL_ERR_BATT_WARNING))!=0) {
 #endif
                 if (CTL_error & CTL_ERR_MONTAGE) {
                     LCD_PrintStringID(LCD_STRING_E2,LCD_MODE_ON);
@@ -635,11 +640,6 @@ void menu_view(bool clear) {
                     LCD_PrintStringID(LCD_STRING_E4,LCD_MODE_ON);
                 }
                 break;
-            } else {
-                if (mode_window()) {
-                    LCD_PrintStringID(LCD_STRING_OPEn,LCD_MODE_ON);
-                    break;
-                }
             }
         }
         // do not use break at this position / optimization
@@ -705,9 +705,10 @@ void menu_view(bool clear) {
     }
     
 #if DISPLAY_HAS_LOCK_ICON
-    if (menu_locked) { LCD_SetSeg(LCD_PADLOCK, LCD_MODE_ON); }
+    if (menu_locked) LCD_SetSeg(LCD_PADLOCK, LCD_MODE_ON);
 #endif        
 #if HR25
+    if (mode_window()) LCD_SetSeg(LCD_SEG_DOOR_OPEN, LCD_MODE_ON);
     if (bat_average < 20*(uint16_t)config.bat_low_thld) {
         // do not blink outline when all segments are on
         if (menu_state != menu_startup &&
