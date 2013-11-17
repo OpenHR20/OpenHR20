@@ -47,43 +47,66 @@
 // for wiring see file wiring.txt
 
 #if (NANODE == 1)
-// nanode has the following pins used: (PORT D=digital 0-7, PORT B=digital 8-13)
-// D3 (digital 3) = RFM12B Interrupt (INT 1) - connect to SDO (B4, digital 12)
-// B2 Digital 10	 Slave Select for RFM12B - if installed
-// B3 Digital 11	 SPI bus: Shared MOSI (Master Output, Slave Input)
-// B4 Digital 12	 SPI bus: Shared MISO (Master Input, Slave Output)
-// B5 Digital 13	 SPI bus: Shared Serial Clock (output from master)
-#define RFM_SCK_DDR			DDRB
-#define RFM_SCK_PORT		PORTB
-#define RFM_SCK_BITPOS		5
+    // nanode has the following pins used: (PORT D=digital 0-7, PORT B=digital 8-13)
+    // D3 (digital 3) = RFM12B Interrupt (INT 1) - connect to SDO (B4, digital 12)
+    // B2 Digital 10	 Slave Select for RFM12B - if installed
+    // B3 Digital 11	 SPI bus: Shared MOSI (Master Output, Slave Input)
+    // B4 Digital 12	 SPI bus: Shared MISO (Master Input, Slave Output)
+    // B5 Digital 13	 SPI bus: Shared Serial Clock (output from master)
+    #define RFM_SCK_DDR			DDRB
+    #define RFM_SCK_PORT		PORTB
+    #define RFM_SCK_BITPOS		5
 
-#define RFM_SDI_DDR			DDRB
-#define RFM_SDI_PORT		PORTB
-#define RFM_SDI_BITPOS		3
+    #define RFM_SDI_DDR			DDRB
+    #define RFM_SDI_PORT		PORTB
+    #define RFM_SDI_BITPOS		3
 
-#define RFM_NSEL_DDR		DDRB
-#define RFM_NSEL_PORT		PORTB
-#define RFM_NSEL_BITPOS		2
+    #define RFM_NSEL_DDR		DDRB
+    #define RFM_NSEL_PORT		PORTB
+    #define RFM_NSEL_BITPOS		2
 
-#define RFM_SDO_DDR			DDRB
-#define RFM_SDO_PIN			PINB
-#define RFM_SDO_BITPOS		4
+    #define RFM_SDO_DDR			DDRB
+    #define RFM_SDO_PIN			PINB
+    #define RFM_SDO_BITPOS		4
+#elif (JEENODE == 1)
+    // jeenode (http://www.jeelabs.org/; Atmega328P) has the following pins used:
+    // D2 Digital 3      RFM12B Interrupt (INT 0)
+    // B2 Digital 10	 Slave Select for RFM12B
+    // B3 Digital 11	 SPI bus: Shared MOSI (Master Output, Slave Input)
+    // B4 Digital 12	 SPI bus: Shared MISO (Master Input, Slave Output)
+    // B5 Digital 13	 SPI bus: Shared Serial Clock (output from master)
+    #define RFM_SCK_DDR			DDRB
+    #define RFM_SCK_PORT		PORTB
+    #define RFM_SCK_BITPOS		5
+
+    #define RFM_SDI_DDR			DDRB
+    #define RFM_SDI_PORT		PORTB
+    #define RFM_SDI_BITPOS		3
+
+    #define RFM_NSEL_DDR		DDRB
+    #define RFM_NSEL_PORT		PORTB
+    #define RFM_NSEL_BITPOS		2
+
+    #define RFM_SDO_DDR			DDRB
+    #define RFM_SDO_PIN			PINB
+    #define RFM_SDO_BITPOS		4
 #else
-#define RFM_SCK_DDR			DDRB
-#define RFM_SCK_PORT		PORTB
-#define RFM_SCK_BITPOS		7
+    // original master
+    #define RFM_SCK_DDR			DDRB
+    #define RFM_SCK_PORT		PORTB
+    #define RFM_SCK_BITPOS		7
 
-#define RFM_SDI_DDR			DDRB
-#define RFM_SDI_PORT		PORTB
-#define RFM_SDI_BITPOS		5
+    #define RFM_SDI_DDR			DDRB
+    #define RFM_SDI_PORT		PORTB
+    #define RFM_SDI_BITPOS		5
 
-#define RFM_NSEL_DDR		DDRB
-#define RFM_NSEL_PORT		PORTB
-#define RFM_NSEL_BITPOS		4
+    #define RFM_NSEL_DDR		DDRB
+    #define RFM_NSEL_PORT		PORTB
+    #define RFM_NSEL_BITPOS		4
 
-#define RFM_SDO_DDR			DDRB
-#define RFM_SDO_PIN			PINB
-#define RFM_SDO_BITPOS		6
+    #define RFM_SDO_DDR			DDRB
+    #define RFM_SDO_PIN			PINB
+    #define RFM_SDO_BITPOS		6
 #endif
 /*
 #define RFM_NIRQ_DDR		DDRE
@@ -92,25 +115,31 @@
 */
 
 #if (NANODE == 1)
-#define RFM_CLK_OUTPUT 1
-void INT1_vect(void); // should be able to disable clock output?
+    #define RFM_CLK_OUTPUT 1
+    void INT1_vect(void); // should be able to disable clock output?
+    #define RFM_INT_vect INT1_vect
+    #define RFM_INT_EN_NOCALL() (EIMSK |= _BV(INT1))
+    #define RFM_INT_DIS() (EIMSK &= ~_BV(INT1))
+#elif (JEENODE == 1)
+    #define RFM_CLK_OUTPUT 0
+    void INT0_vect(void);
+    #define RFM_INT_vect INT0_vect
+    #define RFM_INT_EN_NOCALL() (EIMSK |= _BV(INT0))
+    #define RFM_INT_DIS() (EIMSK &= ~_BV(INT0))
 #else
-#define RFM_CLK_OUTPUT 1
-void INT2_vect(void);
+    #define RFM_CLK_OUTPUT 1
+    void INT2_vect(void);
+    #define RFM_INT_vect INT2_vect
+    #define RFM_INT_EN_NOCALL() (GICR |= _BV(INT2))
+    #define RFM_INT_DIS() (GICR &= ~_BV(INT2))
 #endif
 
-#if (NANODE == 1)
-#define RFM_INT_EN() (EIMSK |= _BV(INT1), INT1_vect())
-#define RFM_INT_DIS() (EIMSK &= ~_BV(INT1))
-#else
-#define RFM_INT_EN() (GICR |= _BV(INT2), INT2_vect())
-#define RFM_INT_DIS() (GICR &= ~_BV(INT2))
-#endif
+#define RFM_INT_EN() (RFM_INT_EN_NOCALL(), RFM_INT_vect())
 
 #ifndef RFM_TUNING
-#define RFM_TUNING 0
+    #define RFM_TUNING 0
 #endif
 
 #ifndef RFM_TUNING_MODE
-#define RFM_TUNING_MODE 0
+    #define RFM_TUNING_MODE 0
 #endif

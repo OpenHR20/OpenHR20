@@ -91,6 +91,9 @@ int __attribute__ ((noreturn)) main(void)
 #if (NANODE == 1)
       EICRA |= ((1<<ISC10) | (1<<ISC11));
       EIMSK |= _BV(INT1);
+#elif (JEENODE == 1)
+      EICRA |= ((1<<ISC00) | (1<<ISC01));
+      EIMSK |= _BV(INT0);
 #else
       MCUCSR |= _BV(ISC2); // rising edge
 #endif
@@ -241,6 +244,15 @@ static inline void init(void)
 	DDRB = 0x2f;
 	DDRD = _BV(PD1) | _BV(PD2) | _BV(PD5) | _BV(PD6);
 	PORTB = 0xff; // 0x7?
+#elif (JEENODE == 1)
+    // OUT: PB1 (led), PB2 (nSEL), PB3 (MOSI), PB5 (SCK)
+    //  IN: PB4 (MISO), PB6,7 (XTal)
+    DDRB = _BV(PB1) | _BV(PB2) | _BV(PB3) | _BV(PB5);       // outputs
+    PORTB = _BV(PB4);                                       // pull-ups
+    // OUT: PD1 (Tx)
+    //  IN: PD0 (Rx), PD2 (RFM-IRQ)
+    DDRD = _BV(PD1);                                        // outputs
+    PORTD = _BV(PD0) | _BV(PD2) | _BV(PD3) | 0xF0;
 #else
  #if (ATMEGA32_DEV_BOARD == 1)
 	DDRA = _BV(PA2)|_BV(PA1);       //Green LED for Sync
@@ -298,18 +310,11 @@ FUSES =
  * \note level interrupt is better, but I want to have same code for master as for HR20 (jdobry)
  ******************************************************************************/
 #if (RFM==1)
-#if (NANODE == 1)
-ISR (INT1_vect){
-#else
-ISR (INT2_vect){
-#endif
+ISR (RFM_INT_vect){
+  int RFM_INT_vect = 0;
   // RFM module interupt
   while (RFM_SDO_PIN & _BV(RFM_SDO_BITPOS)) {
-#if (NANODE == 1)
-    EIMSK &= ~_BV(INT1);
-#else
-    GICR &= ~_BV(INT2); // disable RFM interrupt
-#endif
+    RFM_INT_DIS();  // disable RFM interrupt
     sei(); // enable global interrupts
     if (rfm_mode == rfmmode_tx) {
         RFM_WRITE(rfm_framebuf[rfm_framepos++]);
@@ -333,11 +338,7 @@ ISR (INT2_vect){
 	}
     cli(); // disable global interrupts
     asm volatile("nop"); // we must have one instruction after cli() 
-#if (NANODE == 1)
-    EIMSK |= _BV(INT1);
-#else
-    GICR |= _BV(INT2); // enable RFM interrupt
-#endif
+    RFM_INT_EN_NOCALL();
     asm volatile("nop"); // we must have one instruction after
   }
   // do NOT add anything after RFM part

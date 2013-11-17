@@ -117,8 +117,11 @@ void RTC_Init(void)
         TIMSK2 |= (1<<TOIE2);               // enable Timer2 overflow interrupt
     #else
 #if (NANODE == 1)
-#define TIFR TIFR1
-#define TIMSK TIMSK1
+    #define TIFR TIFR1
+    #define TIMSK TIMSK1
+#elif (JEENODE == 1)
+    #define TIFR TIFR0
+    #define TIMSK TIMSK0
 #endif
 		OCR1A = (F_CPU/800)-1; // 1/100s interrupt
     	TCCR1B= _BV(CS11) | _BV(WGM12); // clk/8 CTC mode

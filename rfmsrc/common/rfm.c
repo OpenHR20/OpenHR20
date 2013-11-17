@@ -101,7 +101,7 @@ uint16_t rfm_spi16(uint16_t outval)
 
 void RFM_init(void)
 {
-#if (NANODE==1)
+#if (NANODE==1 || JEENODE == 1)
 	// disable SPI
 	SPCR &= ~(1<<SPE);
 #endif

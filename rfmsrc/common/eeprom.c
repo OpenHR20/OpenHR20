@@ -127,7 +127,7 @@ void eeprom_config_init(bool restore_default) {
 	
 	uint16_t i;
 	uint8_t *config_ptr = config_raw;
-#if (NANODE == 1)
+#if (NANODE == 1 || JEENODE == 1)
         // set to allow erase and write in one operation
         EECR |= (EEPM1 | EEPM0);
 #endif

@@ -83,6 +83,13 @@ In this file we define only configuration parameters, for example what kind of c
 
  #define LED_sync_on()        (PORTD |= _BV(PD6))
  #define LED_sync_off()  (PORTD &= ~_BV(PD6))
+#elif (JEENODE == 1)
+ // jeenode has only one LED, use it for both functions
+ #define LED_RX_on()    (PORTB |= _BV(PB1))
+ #define LED_RX_off()   (PORTB &= ~_BV(PB1))
+
+ #define LED_sync_on()  (PORTB |= _BV(PB1))
+ #define LED_sync_off() (PORTB &= ~_BV(PB1))
 #else
  #if (ATMEGA32_DEV_BOARD == 1)
   #define LED_RX_on() (PORTA |= _BV(PA1))
