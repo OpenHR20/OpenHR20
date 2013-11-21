@@ -135,6 +135,7 @@ In this file we define only configuration parameters, for example what kind of c
 #else
 	#define RFM12                  0
 	#define DISABLE_JTAG           0
+    #define RFM_TUNING             0
 #endif
 
 /* compiler compatibility */
