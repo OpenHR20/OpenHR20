@@ -103,7 +103,7 @@ const uint8_t RTC_DayOfMonthTablePrgMem[] PROGMEM =
  ******************************************************************************/
 void RTC_Init(void)
 {
-    #if !defined(MASTER_CONFIG_H)
+#if !defined(MASTER_CONFIG_H)
         TIMSK2 &= ~(1<<TOIE2);              // disable OCIE2A and TOIE2
         ASSR = (1<<AS2);                    // Timer2 asynchronous operation
         TCNT2 = 0;                          // clear TCNT2A
@@ -115,19 +115,16 @@ void RTC_Init(void)
     
         TIFR2 = 0xFF;                       // clear interrupt-flags
         TIMSK2 |= (1<<TOIE2);               // enable Timer2 overflow interrupt
-    #else
-#if (NANODE == 1)
+#else
+  #if (NANODE == 1 || JEENODE == 1)
     #define TIFR TIFR1
     #define TIMSK TIMSK1
-#elif (JEENODE == 1)
-    #define TIFR TIFR0
-    #define TIMSK TIMSK0
-#endif
+  #endif
 		OCR1A = (F_CPU/800)-1; // 1/100s interrupt
     	TCCR1B= _BV(CS11) | _BV(WGM12); // clk/8 CTC mode
     	TIFR  = _BV(OCF1A);                       // clear interrupt-flags
     	TIMSK |= _BV(OCIE1A);
-    #endif
+#endif
 
     // day of week
     RTC_SetDayOfWeek();
