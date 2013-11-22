@@ -160,9 +160,11 @@ void RFM_init(void)
 		RFM_FIFO_DR
 	 );
 
-	// 8. Receiver FIFO Read
+	// 8. Synchron Pattern Command
+    
+	// 9. Receiver FIFO Read
 
-	// 9. AFC Command
+	// 10. AFC Command
 	RFM_SPI_16(
 		RFM_AFC_AUTO_VDI        |
 		RFM_AFC_RANGE_LIMIT_7_8 |
@@ -171,26 +173,28 @@ void RFM_init(void)
 		RFM_AFC_FI     
 	 );
 
-	// 10. TX Configuration Control Command
+	// 11. TX Configuration Control Command
 	RFM_SPI_16(
 		RFM_TX_CONTROL_MOD(RFM_BAUD_RATE) |
 		RFM_TX_CONTROL_POW_0
 	 );
 
-	// 11. Transmitter Register Write Command
+    // 12. PLL Setting Command
+    
+	// 13. Transmitter Register Write Command
 
-	// 12. Wake-Up Timer Command
+	// 14. Wake-Up Timer Command
 
-	// 13. Low Duty-Cycle Command
+	// 15. Low Duty-Cycle Command
 
-	// 14. Low Battery Detector Command
+	// 16. Low Battery Detector Command
 
 	//RFM_SPI_16(
 	//	 RFM_LOW_BATT_DETECT |
 	//	 3      // 2.2V + v * 0.1V
 	//	 );
 
-	// 15. Status Read Command
+	// 17. Status Read Command
 }
 
 ///////////////////////////////////////////////////////////////////////////////
