@@ -328,7 +328,7 @@ FUSES =
 // RFM module interupt
 ISR (RFM_INT_vect){
   uint16_t status = RFM_READ_STATUS();  // this also clears most interrupt sources
-#elif (JEENODE == 1)
+#if (JEENODE == 1)
   if (status & RFM_STATUS_RGIT) {       // we are using level interrupt on jeenode
 #else
   while (RFM_SDO_PIN & _BV(RFM_SDO_BITPOS)) {
