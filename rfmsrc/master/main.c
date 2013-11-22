@@ -84,6 +84,7 @@ int __attribute__ ((noreturn)) main(void)
 {
     //! initalization
     init();
+#if (RFM==1)
     RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
     RFM_SPI_16(RFM_LOW_BATT_DETECT_D_10MHZ);
     RFM_RX_ON();
@@ -98,13 +99,17 @@ int __attribute__ ((noreturn)) main(void)
       MCUCSR |= _BV(ISC2); // rising edge
 #endif
 
+#endif
+
    	COM_init();
 
     //! Enable interrupts
     sei();
+#if (RFM==1)
     RFM_INT_EN();
 
 	rfm_framebuf[ 5] = 0; // DEBUG !!!!!!!!!
+#endif
 
     wdt_enable(WDTO_2S);
 
@@ -134,12 +139,12 @@ int __attribute__ ((noreturn)) main(void)
 			asm volatile ("sei");
 		}
 
-		#if (RFM==1)
+#if (RFM==1)
 		  // RFM12
 		  if (task & TASK_RFM) {
   			task &= ~TASK_RFM;
   			// PORTE |= (1<<PE2);
-  
+
 			if (rfm_mode == rfmmode_tx_done)
 			{
                 wirelessSendDone();
@@ -150,17 +155,20 @@ int __attribute__ ((noreturn)) main(void)
   			}
 			continue; // on most case we have only 1 task, iprove time to sleep
         }
-		#endif
+#endif
         if (task & TASK_RTC) {
             task&=~TASK_RTC;
             {
+#if (RFM==1)
                 wl_packet_bank=0;
+#endif
                 RTC_AddOneSecond();
                 bool minute=(RTC_GetSecond()==0);
                 if (RTC_GetSecond()<30) {
                     Q_clean(RTC_GetSecond());
                 } else {
                     wdt_reset();  // spare WDT reset (notmaly it is in send data interrupt)
+#if (RFM==1)
                     if (wl_force_addr1!=0) {
                         if (wl_force_addr1==0xff) {
                             Q_clean(RTC_GetSecond()-30);
@@ -169,9 +177,11 @@ int __attribute__ ((noreturn)) main(void)
                             else Q_clean(wl_force_addr2); 
                         }
                     }
+#endif
                 }
                 if ((onsync)&&(minute || RTC_GetSecond()==30)) {
                     onsync--;
+#if (RFM==1)
 					rfm_mode = rfmmode_stop;
 					wireless_buf_ptr = 0;
                     wireless_putchar(RTC_GetYearYY());
@@ -191,6 +201,7 @@ int __attribute__ ((noreturn)) main(void)
                         }
                     }
                     wirelessSendSync();
+#endif
                     COM_print_datetime();
                 }
                 COM_req_RTC();
@@ -198,6 +209,7 @@ int __attribute__ ((noreturn)) main(void)
         }
 		if (task & TASK_TIMER) {
 		    task &= ~TASK_TIMER;
+#if (RFM==1)
             if (RTC_timer_done&_BV(RTC_TIMER_RFM))
             {   
                 cli(); RTC_timer_done&=~_BV(RTC_TIMER_RFM); sei();
@@ -208,6 +220,7 @@ int __attribute__ ((noreturn)) main(void)
                 cli(); RTC_timer_done&=~_BV(RTC_TIMER_RFM2); sei();
                 wirelessTimer2();
             }  			
+#endif
         }
         // serial communication
 		if (task & TASK_COM) {
@@ -278,7 +291,9 @@ static inline void init(void)
 
     eeprom_config_init(false);
     
+#if (RFM==1)
    	crypto_init();
+#endif
 }
 
 
@@ -316,26 +331,26 @@ ISR (RFM_INT_vect){
   while (RFM_SDO_PIN & _BV(RFM_SDO_BITPOS)) {
     RFM_INT_DIS();  // disable RFM interrupt
     sei(); // enable global interrupts
-    if (rfm_mode == rfmmode_tx) {
-        RFM_WRITE(rfm_framebuf[rfm_framepos++]);
-        if (rfm_framepos >= rfm_framesize) {
-          rfm_mode = rfmmode_tx_done;
-    	  task |= TASK_RFM; // inform the rfm task about end of transmition
-    	  return; // \note !!WARNING!!
-    	}
-    } else if (rfm_mode == rfmmode_rx) {
-        rfm_framebuf[rfm_framepos++]=RFM_READ_FIFO();
+      if (rfm_mode == rfmmode_tx) {
+            RFM_WRITE(rfm_framebuf[rfm_framepos++]);
+            if (rfm_framepos >= rfm_framesize) {
+                rfm_mode = rfmmode_tx_done;
+                task |= TASK_RFM; // inform the rfm task about end of transmition
+                return; // \note !!WARNING!!
+            }
+      } else if (rfm_mode == rfmmode_rx) {
+            rfm_framebuf[rfm_framepos++]=RFM_READ_FIFO();
 #if (RFM_TUNING>0)
-		if (rfm_framepos == 6) { // get AFC value
+            if (rfm_framepos == 6) { // get AFC value
 		  afc = RFM_READ_STATUS() & 0x1f;
-		}
+		    }
 #endif
-        if (rfm_framepos >= RFM_FRAME_MAX) rfm_mode = rfmmode_rx_owf;
-    	task |= TASK_RFM; // inform the rfm task about next RX byte
-    } else if (rfm_mode == rfmmode_rx_owf) {
-        RFM_READ_FIFO();
-    	task |= TASK_RFM; // inform the rfm task about next RX byte
-	}
+            if (rfm_framepos >= RFM_FRAME_MAX) rfm_mode = rfmmode_rx_owf;
+    	    task |= TASK_RFM; // inform the rfm task about next RX byte
+      } else if (rfm_mode == rfmmode_rx_owf) {
+            RFM_READ_FIFO();
+        	task |= TASK_RFM; // inform the rfm task about next RX byte
+      }
     cli(); // disable global interrupts
     asm volatile("nop"); // we must have one instruction after cli() 
     RFM_INT_EN_NOCALL();

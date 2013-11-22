@@ -404,6 +404,7 @@ void COM_commad_parse (void) {
 			sei();
             print_s_p(PSTR("OK"));
 			break;
+#if (RFM==1)
 		case 'O':
 			if (COM_hex_parse(2*2,true)!='\0') { break; }
 			wl_force_addr1=com_hex[0];
@@ -416,6 +417,7 @@ void COM_commad_parse (void) {
 			wl_force_addr1=0xff;
             print_s_p(PSTR("OK"));
 			break;
+#endif
 		case ':': // intel hex for writing eeprom
 		  if (COM_hex_parse(4*2,false)!='\0') { break; }
 		  uint8_t byteCount = com_hex[0];
@@ -711,12 +713,15 @@ void COM_req_RTC(void) {
         COM_putchar((s==59)?'0':'1');
         COM_putchar('?');
         COM_putchar('\n');
+        COM_flush();
+#if (RFM==1)
         wl_force_addr1=0;
         wl_force_addr2=0;
-    	COM_flush();
+#endif
         return;
     }
     if (s>=30) {
+#if (RFM==1)
         if (wl_force_addr1>0) {
             if (wl_force_addr1 == 0xff) {
                 s-=29;
@@ -725,8 +730,9 @@ void COM_req_RTC(void) {
                 if (RTC_GetSecond()&1) s=wl_force_addr2;
                 else s=wl_force_addr1;
             }
-        } else return;
-        
+        } else
+#endif
+            return;
     } else {
         s++;
     }
