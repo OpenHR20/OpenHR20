@@ -90,13 +90,13 @@ int __attribute__ ((noreturn)) main(void)
     RFM_RX_ON();
 	rfm_mode = rfmmode_rx;
 #if (NANODE == 1)
-      EICRA |= ((1<<ISC10) | (1<<ISC11));
+      EICRA |= ((1<<ISC10) | (1<<ISC11)); // rising edge interrupt
       EIMSK |= _BV(INT1);
 #elif (JEENODE == 1)
-      EICRA |= ((1<<ISC00) | (1<<ISC01));
+      EICRA |= ((1<<ISC00) | (0<<ISC00)); // low-level interrupt
       EIMSK |= _BV(INT0);
 #else
-      MCUCSR |= _BV(ISC2); // rising edge
+      MCUCSR |= _BV(ISC2);                // rising edge interrupt
 #endif
 
 #endif
@@ -325,12 +325,16 @@ FUSES =
  * \note level interrupt is better, but I want to have same code for master as for HR20 (jdobry)
  ******************************************************************************/
 #if (RFM==1)
+// RFM module interupt
 ISR (RFM_INT_vect){
-  int RFM_INT_vect = 0;
-  // RFM module interupt
+  uint16_t status = RFM_READ_STATUS();  // this also clears most interrupt sources
+#elif (JEENODE == 1)
+  if (status & RFM_STATUS_RGIT) {       // we are using level interrupt on jeenode
+#else
   while (RFM_SDO_PIN & _BV(RFM_SDO_BITPOS)) {
-    RFM_INT_DIS();  // disable RFM interrupt
-    sei(); // enable global interrupts
+#endif
+      RFM_INT_DIS();  // disable RFM interrupt
+      sei(); // enable global interrupts
       if (rfm_mode == rfmmode_tx) {
             RFM_WRITE(rfm_framebuf[rfm_framepos++]);
             if (rfm_framepos >= rfm_framesize) {
@@ -342,7 +346,7 @@ ISR (RFM_INT_vect){
             rfm_framebuf[rfm_framepos++]=RFM_READ_FIFO();
 #if (RFM_TUNING>0)
             if (rfm_framepos == 6) { // get AFC value
-		  afc = RFM_READ_STATUS() & 0x1f;
+                afc = status & 0x1f;
 		    }
 #endif
             if (rfm_framepos >= RFM_FRAME_MAX) rfm_mode = rfmmode_rx_owf;
