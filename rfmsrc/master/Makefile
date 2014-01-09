@@ -545,9 +545,12 @@ extcoff: $(TARGET).elf
 #create info file
 %.txt: %.elf
 	$(REMOVE) $@
-	#@echo "Configuration" >> $@
-	#@echo "==================================" >> $@
-	#@echo >> $@
+	@echo "Configuration" >> $@
+	@echo "Hardware type: MCU $(MCU) at $(F_CPU)Hz" >> $@
+	@echo "RFMFLAGS=$(RFMFLAGS)" >> $@
+	@echo "MASTERFLAGS=$(MASTERFLAGS)" >> $@
+	@echo "==================================" >> $@
+	@echo >> $@
 	$(ELFSIZE) >> $@
 
 # Create final output files (.hex, .eep) from ELF output file.
