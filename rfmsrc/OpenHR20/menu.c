@@ -555,7 +555,7 @@ void menu_view(bool clear) {
 #else
         clr_show2(LCD_SEG_BAR24, LCD_SEG_PROG);
 #endif
-        // "patch" eeprom to show the value selected by used, not saved to eeprom yet
+        // "patch" eeprom to show the value selected by user, not saved to eeprom yet
         timers_patch_offset = timers_get_raw_index(menu_set_dow, menu_set_slot);
         timers_patch_data = menu_set_time + ((uint16_t)menu_set_mode<<12);
         LCD_HourBarBitmap(RTC_DowTimerGetHourBar(menu_set_dow));
