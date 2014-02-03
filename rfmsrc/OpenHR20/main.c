@@ -121,7 +121,7 @@ int __attribute__ ((noreturn)) main(void)
     #endif
 
 	// We should do the following once here to have valid data from the start
-
+    
 
     /*!
     ****************************************************************************
@@ -366,15 +366,13 @@ static inline void init(void)
 	}
 #endif
 
-
-
-    //! Calibrate the internal RC Oszillator
-    //! \todo test calibrate_rco();
-
     //! set Clock to 4 Mhz
     CLKPR = (1<<CLKPCE);            // prescaler change enable
     CLKPR = (1<<CLKPS0);            // prescaler = 2 (internal RC runs @ 8MHz)
 
+    //! Calibrate the internal RC Oscillator
+    calibrate_rco();
+    
     //! Disable Analog Comparator (power save)
     ACSR = (1<<ACD);
 
