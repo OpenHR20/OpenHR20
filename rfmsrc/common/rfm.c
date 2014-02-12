@@ -189,6 +189,9 @@ void RFM_init(void)
 	// 15. Low Duty-Cycle Command
 
 	// 16. Low Battery Detector Command
+#if RFM_CLK_OUTPUT
+    RFM_SPI_16(RFM_LOW_BATT_DETECT_D_10MHZ);
+#endif
 
 	//RFM_SPI_16(
 	//	 RFM_LOW_BATT_DETECT |

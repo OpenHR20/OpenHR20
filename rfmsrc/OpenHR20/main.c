@@ -113,8 +113,7 @@ int __attribute__ ((noreturn)) main(void)
 #endif
     #if RFM
         // enable persistent RX for initial sync
-        RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
-        RFM_SPI_16(RFM_LOW_BATT_DETECT_D_10MHZ);
+        RFM_FIFO_ON();
         RFM_RX_ON();
 		RFM_INT_EN(); // enable RFM interrupt
     	rfm_mode = rfmmode_rx;

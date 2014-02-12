@@ -279,8 +279,7 @@ static inline void init(void)
 #endif
 
 #if (RFM==1)
-    RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
-    RFM_SPI_16(RFM_LOW_BATT_DETECT_D_10MHZ);
+    RFM_FIFO_ON();
     RFM_RX_ON();
 	rfm_mode = rfmmode_rx;
 #if (NANODE == 1)
