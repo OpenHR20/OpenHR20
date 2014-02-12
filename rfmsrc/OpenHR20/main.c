@@ -56,13 +56,12 @@
 #include "menu.h"
 #include "com.h"
 #include "../common/rs232_485.h"
-#include "../common/rfm.h"
 #include "controller.h"
-#include "../common/wireless.h"
 
 #if RFM
 	#include "rfm_config.h"
 	#include "../common/rfm.h"
+    #include "../common/wireless.h"
 #endif
 
 // global Vars

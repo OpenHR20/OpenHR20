@@ -276,9 +276,6 @@ static inline void init(void)
     
 #if (RFM==1)
    	crypto_init();
-#endif
-
-#if (RFM==1)
     RFM_FIFO_ON();
     RFM_RX_ON();
 	rfm_mode = rfmmode_rx;
