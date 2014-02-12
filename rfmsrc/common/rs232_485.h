@@ -44,6 +44,7 @@
 	#endif
 	void RS_startSend(void);
 	void RS_Init(void);
+    void RS_interrupt(uint8_t pine);
 #else 
 	#define RS_need_clock() (0)
 #endif

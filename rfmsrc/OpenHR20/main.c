@@ -468,3 +468,24 @@ static inline void init(void)
 	// init keyboard
     state_wheel_prev = ~PINB & (KBI_ROT1 | KBI_ROT2);
 }
+
+// interrupts: 
+
+/*!
+ *******************************************************************************
+ * Pinchange Interupt INT0
+ ******************************************************************************/
+ISR (PCINT0_vect){
+    uint8_t pine=PINE;
+
+    #if (defined COM_RS232) || (defined COM_RS485)
+        RS_interrupt(pine);
+    #endif
+
+    MOTOR_interrupt(pine);
+    
+    #if (RFM==1)
+        RFM_interrupt(pine);
+    #endif
+    // do NOT add anything after RFM part
+}

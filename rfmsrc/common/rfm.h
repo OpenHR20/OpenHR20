@@ -519,6 +519,10 @@ extern uint8_t rfm_framesize;
 extern uint8_t rfm_framepos;
 extern rfm_mode_t rfm_mode;
 
+#if !defined(MASTER_CONFIG_H)
+  void RFM_interrupt(uint8_t pine);
+#endif // !defined(MASTER_CONFIG_H)
+
 #define rfm_start_tx()
 // (rfm_mode=rfmmode_start_tx)
 #endif // RFM
