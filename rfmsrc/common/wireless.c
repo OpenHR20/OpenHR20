@@ -168,8 +168,8 @@ void wirelessSendDone(void) {
     #endif
     rfm_framepos=0;
 
-    RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
-    RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
+    RFM_FIFO_OFF();
+    RFM_FIFO_ON();
     RFM_RX_ON();    //re-enable RX
     rfm_mode = rfmmode_rx;
     RFM_INT_EN(); // enable RFM interrupt
@@ -197,8 +197,8 @@ void wirelessTimer(void) {
         RFM_INT_DIS();
         wl_force_addr1=0;
         wl_force_addr2=0;
-        RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
-        RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
+        RFM_FIFO_OFF();
+        RFM_FIFO_ON();
         RFM_RX_ON();
         RFM_SPI_SELECT; // set nSEL low: from this moment SDO indicate FFIT or RGIT
         RFM_INT_EN(); // enable RFM interrupt
@@ -470,10 +470,10 @@ void wirelessReceivePacket(void) {
             }
             rfm_framepos=0;
 		    rfm_mode = rfmmode_rx;
-          	RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
-            RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
+          	RFM_FIFO_OFF();
+            RFM_FIFO_ON();
             RFM_INT_EN(); // enable RFM interrupt
-        }
+        }        
     }
 }
 
@@ -488,8 +488,8 @@ void wirelesTimeSyncCheck(void) {
         if ((time_sync_tmo==0) || (time_sync_tmo<-30)) {
                 time_sync_tmo=0;
         		RFM_INT_DIS();
-			    RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
-                RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
+			    RFM_FIFO_OFF();
+                RFM_FIFO_ON();
                 RFM_RX_ON();    //re-enable RX
 				rfm_framepos=0;
 				rfm_mode = rfmmode_rx;
