@@ -154,7 +154,7 @@ void RTC_timer_set(uint8_t timer_id, uint8_t time);
 #if	HAS_CALIBRATE_RCO
 void calibrate_rco(void);
 #else
-#define calibrate_rco()
+inline void calibrate_rco(void) {}
 #endif
 
 #endif /* RTC_H */
