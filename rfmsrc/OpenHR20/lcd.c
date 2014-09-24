@@ -630,7 +630,6 @@ void LCD_PrintStringID(uint8_t id, uint8_t mode) {
         tmp = pgm_read_byte(&LCD_StringTable[id][i]);
         LCD_PrintChar(tmp, 3-i, mode);
     }
-    LCD_SetSeg(LCD_SEG_COL1, LCD_MODE_OFF);
 }
 
 
@@ -840,14 +839,22 @@ void LCD_ClearNumbers(void)
  ******************************************************************************/
 void LCD_SetSeg(uint8_t seg, uint8_t mode)
 {
-    uint8_t r;
-    uint8_t b;
+    LCD_SetSegReg(seg / 8, 1<<(seg % 8), mode);
+}
 
-    // Register = segment DIV 8
-    r = seg / 8;
-    // Bitposition = segment mod 8
-    b = 1<<(seg % 8);
-
+/*!
+ *******************************************************************************
+ *  Set segment of LCD
+ *
+ *  \note  You have to call \ref LCD_Update() to trigger update on LCD if not
+ *         it is triggered automatically at change of bitframe
+ *
+ *  \param Register = segment DIV 8 to be set see \ref LCD_SEG_B0 ...
+ *  \param Bitposition = segment mod 8
+ *  \param mode  \ref LCD_MODE_ON, \ref LCD_MODE_OFF, \ref LCD_MODE_BLINK_1
+ ******************************************************************************/
+void LCD_SetSegReg(uint8_t r, uint8_t b, uint8_t mode)
+{
     // Set bits in each bitplane
 	#if LCD_BITPLANES == 2
         if (mode & 1){

@@ -46,19 +46,25 @@
 #           command line parameters for "avr-size" on Linux and Windows.
 
 # MCU name
-MCU = atmega32
-
 # Processor frequency.
 #     This will define a symbol, F_CPU, in all source code files equal to the 
 #     processor frequency. You can then use this symbol in your source code to 
 #     calculate timings. Do NOT tack on a 'UL' at the end, this will be done
 #     automatically to create a 32-bit value in your source code.
-F_CPU = 10000000
-ifeq ($(MCU), atmega328p)
-      NANODE:=1
-      F_CPU:=16000000
+ifeq ($(NANODE), 1)
+    MCU = atmega328p
+    F_CPU:=16000000
+    MASTERFLAGS += -DNANODE=1 -DJEENODE=0
 else
-      NANODE:=0
+  ifeq ($(JEENODE), 1)
+    MCU = atmega328p
+    F_CPU:=16000000
+    MASTERFLAGS += -DNANODE=0 -DJEENODE=1
+  else
+    MCU = atmega32
+    F_CPU = 10000000
+    MASTERFLAGS += -DNANODE=0 -DJEENODE=0
+  endif
 endif
 
 # define for ATMEGA_DEVELOPMENT_BOARD with LEDs on PA
@@ -408,7 +414,7 @@ GENDEPFLAGS = -MMD -MP -MF .dep/$(@F).d
 
 # Combine all necessary flags and optional flags.
 # Add target processor to flags.
-EXTRAS=-DMCU=$(MCU) -DNANODE=$(NANODE) -DATMEGA32_DEV_BOARD=$(ATMEGA32_DEV_BOARD) $(FLAGS)
+EXTRAS=-DMCU=$(MCU) -DATMEGA32_DEV_BOARD=$(ATMEGA32_DEV_BOARD) $(FLAGS)
 ALL_CFLAGS = -mmcu=$(MCU) -I. $(CFLAGS) $(GENDEPFLAGS) $(EXTRAS)
 ALL_CPPFLAGS = -mmcu=$(MCU) -I. -x c++ $(CPPFLAGS) $(GENDEPFLAGS) $(EXTRAS)
 ALL_ASFLAGS = -mmcu=$(MCU) -I. -x assembler-with-cpp $(ASFLAGS) $(EXTRAS)
@@ -539,9 +545,12 @@ extcoff: $(TARGET).elf
 #create info file
 %.txt: %.elf
 	$(REMOVE) $@
-	#@echo "Configuration" >> $@
-	#@echo "==================================" >> $@
-	#@echo >> $@
+	@echo "Configuration" >> $@
+	@echo "Hardware type: MCU $(MCU) at $(F_CPU)Hz" >> $@
+	@echo "RFMFLAGS=$(RFMFLAGS)" >> $@
+	@echo "MASTERFLAGS=$(MASTERFLAGS)" >> $@
+	@echo "==================================" >> $@
+	@echo >> $@
 	$(ELFSIZE) >> $@
 
 # Create final output files (.hex, .eep) from ELF output file.

@@ -168,8 +168,8 @@ void wirelessSendDone(void) {
     #endif
     rfm_framepos=0;
 
-    RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
-    RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
+    RFM_FIFO_OFF();
+    RFM_FIFO_ON();
     RFM_RX_ON();    //re-enable RX
     rfm_mode = rfmmode_rx;
     RFM_INT_EN(); // enable RFM interrupt
@@ -197,8 +197,8 @@ void wirelessTimer(void) {
         RFM_INT_DIS();
         wl_force_addr1=0;
         wl_force_addr2=0;
-        RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
-        RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
+        RFM_FIFO_OFF();
+        RFM_FIFO_ON();
         RFM_RX_ON();
         RFM_SPI_SELECT; // set nSEL low: from this moment SDO indicate FFIT or RGIT
         RFM_INT_EN(); // enable RFM interrupt
@@ -405,8 +405,8 @@ void wirelessReceivePacket(void) {
                             // wait for clock sync
                             // it can take 2*1/32768 sec = 61us
                             // ATmega169 datasheet chapter 17.8.1
-                        } 
-            		    CTL_error &= ~CTL_ERR_RFM_SYNC;
+                        }
+                        CTL_clear_error(CTL_ERR_RFM_SYNC);
                         RTC_SetYear(rfm_framebuf[1]);
                         RTC_SetMonth(rfm_framebuf[2]>>4);
                         RTC_SetDay((rfm_framebuf[3]>>5)+((rfm_framebuf[2]<<3)&0x18));
@@ -470,10 +470,10 @@ void wirelessReceivePacket(void) {
             }
             rfm_framepos=0;
 		    rfm_mode = rfmmode_rx;
-          	RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
-            RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
+          	RFM_FIFO_OFF();
+            RFM_FIFO_ON();
             RFM_INT_EN(); // enable RFM interrupt
-        }
+        }        
     }
 }
 
@@ -488,8 +488,8 @@ void wirelesTimeSyncCheck(void) {
         if ((time_sync_tmo==0) || (time_sync_tmo<-30)) {
                 time_sync_tmo=0;
         		RFM_INT_DIS();
-			    RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
-                RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
+			    RFM_FIFO_OFF();
+                RFM_FIFO_ON();
                 RFM_RX_ON();    //re-enable RX
 				rfm_framepos=0;
 				rfm_mode = rfmmode_rx;
@@ -497,7 +497,7 @@ void wirelesTimeSyncCheck(void) {
         } else if (time_sync_tmo<-4) {
 			RFM_INT_DIS();
 		    RFM_OFF();		// turn everything off
-		    CTL_error |= CTL_ERR_RFM_SYNC;
+            CTL_set_error(CTL_ERR_RFM_SYNC);
         } 
     }
 }

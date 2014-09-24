@@ -83,6 +83,13 @@ In this file we define only configuration parameters, for example what kind of c
 
  #define LED_sync_on()        (PORTD |= _BV(PD6))
  #define LED_sync_off()  (PORTD &= ~_BV(PD6))
+#elif (JEENODE == 1)
+ // jeenode has only one LED, use it for both functions
+ #define LED_RX_on()   (PORTB &= ~_BV(PB1))
+ #define LED_RX_off()    (PORTB |= _BV(PB1))
+
+ #define LED_sync_on() (PORTB &= ~_BV(PB1))
+ #define LED_sync_off()  (PORTB |= _BV(PB1))
 #else
  #if (ATMEGA32_DEV_BOARD == 1)
   #define LED_RX_on() (PORTA |= _BV(PA1))
@@ -128,6 +135,7 @@ In this file we define only configuration parameters, for example what kind of c
 #else
 	#define RFM12                  0
 	#define DISABLE_JTAG           0
+    #define RFM_TUNING             0
 #endif
 
 /* compiler compatibility */
@@ -165,6 +173,6 @@ typedef enum { false, true } bool;
 // Some default Values
 #define BOOT_DD         1  //!< Boot-Up date: day
 #define BOOT_MM         1  //!< Boot-Up date: month
-#define BOOT_YY         9  //!< Boot-Up date: year
+#define BOOT_YY        13  //!< Boot-Up date: year
 #define BOOT_hh        12  //!< Boot-Up time: hour
 #define BOOT_mm        00  //!< Boot-Up time: minutes

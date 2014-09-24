@@ -474,8 +474,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #define RFM_READ_STATUS()       RFM_SPI_16(0x0000)
-#define RFM_READ_STATUS_FFIT()  SPI_1 (0x00)
-#define RFM_READ_STATUS_RGIT    RFM_READ_STATUS_FFIT
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -520,6 +518,10 @@ extern uint8_t rfm_framebuf[RFM_FRAME_MAX];
 extern uint8_t rfm_framesize;
 extern uint8_t rfm_framepos;
 extern rfm_mode_t rfm_mode;
+
+#if !defined(MASTER_CONFIG_H)
+  void RFM_interrupt(uint8_t pine);
+#endif // !defined(MASTER_CONFIG_H)
 
 #define rfm_start_tx()
 // (rfm_mode=rfmmode_start_tx)

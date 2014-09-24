@@ -54,7 +54,6 @@
 #include "../common/wireless.h"
 
 #if (RFM == 1)
-    volatile uint8_t afc = 0;
 	#include "rfm_config.h"
 	#include "../common/rfm.h"
 #endif
@@ -84,24 +83,16 @@ int __attribute__ ((noreturn)) main(void)
 {
     //! initalization
     init();
-    RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
-    RFM_SPI_16(RFM_LOW_BATT_DETECT_D_10MHZ);
-    RFM_RX_ON();
-	rfm_mode = rfmmode_rx;
-#if (NANODE == 1)
-      EICRA |= ((1<<ISC10) | (1<<ISC11));
-      EIMSK |= _BV(INT1);
-#else
-      MCUCSR |= _BV(ISC2); // rising edge
-#endif
 
    	COM_init();
 
     //! Enable interrupts
     sei();
+#if (RFM==1)
     RFM_INT_EN();
 
 	rfm_framebuf[ 5] = 0; // DEBUG !!!!!!!!!
+#endif
 
     wdt_enable(WDTO_2S);
 
@@ -131,12 +122,12 @@ int __attribute__ ((noreturn)) main(void)
 			asm volatile ("sei");
 		}
 
-		#if (RFM==1)
+#if (RFM==1)
 		  // RFM12
 		  if (task & TASK_RFM) {
   			task &= ~TASK_RFM;
   			// PORTE |= (1<<PE2);
-  
+
 			if (rfm_mode == rfmmode_tx_done)
 			{
                 wirelessSendDone();
@@ -147,17 +138,20 @@ int __attribute__ ((noreturn)) main(void)
   			}
 			continue; // on most case we have only 1 task, iprove time to sleep
         }
-		#endif
+#endif
         if (task & TASK_RTC) {
             task&=~TASK_RTC;
             {
+#if (RFM==1)
                 wl_packet_bank=0;
+#endif
                 RTC_AddOneSecond();
                 bool minute=(RTC_GetSecond()==0);
                 if (RTC_GetSecond()<30) {
                     Q_clean(RTC_GetSecond());
                 } else {
                     wdt_reset();  // spare WDT reset (notmaly it is in send data interrupt)
+#if (RFM==1)
                     if (wl_force_addr1!=0) {
                         if (wl_force_addr1==0xff) {
                             Q_clean(RTC_GetSecond()-30);
@@ -166,9 +160,11 @@ int __attribute__ ((noreturn)) main(void)
                             else Q_clean(wl_force_addr2); 
                         }
                     }
+#endif
                 }
                 if ((onsync)&&(minute || RTC_GetSecond()==30)) {
                     onsync--;
+#if (RFM==1)
 					rfm_mode = rfmmode_stop;
 					wireless_buf_ptr = 0;
                     wireless_putchar(RTC_GetYearYY());
@@ -188,6 +184,7 @@ int __attribute__ ((noreturn)) main(void)
                         }
                     }
                     wirelessSendSync();
+#endif
                     COM_print_datetime();
                 }
                 COM_req_RTC();
@@ -195,6 +192,7 @@ int __attribute__ ((noreturn)) main(void)
         }
 		if (task & TASK_TIMER) {
 		    task &= ~TASK_TIMER;
+#if (RFM==1)
             if (RTC_timer_done&_BV(RTC_TIMER_RFM))
             {   
                 cli(); RTC_timer_done&=~_BV(RTC_TIMER_RFM); sei();
@@ -205,6 +203,7 @@ int __attribute__ ((noreturn)) main(void)
                 cli(); RTC_timer_done&=~_BV(RTC_TIMER_RFM2); sei();
                 wirelessTimer2();
             }  			
+#endif
         }
         // serial communication
 		if (task & TASK_COM) {
@@ -241,6 +240,15 @@ static inline void init(void)
 	DDRB = 0x2f;
 	DDRD = _BV(PD1) | _BV(PD2) | _BV(PD5) | _BV(PD6);
 	PORTB = 0xff; // 0x7?
+#elif (JEENODE == 1)
+    // OUT: PB1 (led), PB2 (nSEL), PB3 (MOSI), PB5 (SCK)
+    //  IN: PB4 (MISO), PB6,7 (XTal)
+    DDRB = _BV(PB1) | _BV(PB2) | _BV(PB3) | _BV(PB5);       // outputs
+    PORTB = _BV(PB4);                                       // pull-ups
+    // OUT: PD1 (Tx)
+    //  IN: PD0 (Rx), PD2 (RFM-IRQ)
+    DDRD = _BV(PD1);                                        // outputs
+    PORTD = _BV(PD0) | _BV(PD2) | _BV(PD3) | 0xF0;
 #else
  #if (ATMEGA32_DEV_BOARD == 1)
 	DDRA = _BV(PA2)|_BV(PA1);       //Green LED for Sync
@@ -266,7 +274,22 @@ static inline void init(void)
 
     eeprom_config_init(false);
     
+#if (RFM==1)
    	crypto_init();
+    RFM_FIFO_ON();
+    RFM_RX_ON();
+	rfm_mode = rfmmode_rx;
+#if (NANODE == 1)
+      EICRA |= ((1<<ISC10) | (1<<ISC11)); // rising edge interrupt
+      EIMSK |= _BV(INT1);
+#elif (JEENODE == 1)
+      EICRA |= ((1<<ISC00) | (0<<ISC00)); // low-level interrupt
+      EIMSK |= _BV(INT0);
+#else
+      MCUCSR |= _BV(ISC2);                // rising edge interrupt
+#endif
+
+#endif
 }
 
 
@@ -290,56 +313,3 @@ FUSES =
     .low = 0xA0,
     .high = 0x91,
 };
-
-/*!
- *******************************************************************************
- * Pinchange Interupt INT2
- *  
- * \note level interrupt is better, but I want to have same code for master as for HR20 (jdobry)
- ******************************************************************************/
-#if (RFM==1)
-#if (NANODE == 1)
-ISR (INT1_vect){
-#else
-ISR (INT2_vect){
-#endif
-  // RFM module interupt
-  while (RFM_SDO_PIN & _BV(RFM_SDO_BITPOS)) {
-#if (NANODE == 1)
-    EIMSK &= ~_BV(INT1);
-#else
-    GICR &= ~_BV(INT2); // disable RFM interrupt
-#endif
-    sei(); // enable global interrupts
-    if (rfm_mode == rfmmode_tx) {
-        RFM_WRITE(rfm_framebuf[rfm_framepos++]);
-        if (rfm_framepos >= rfm_framesize) {
-          rfm_mode = rfmmode_tx_done;
-    	  task |= TASK_RFM; // inform the rfm task about end of transmition
-    	  return; // \note !!WARNING!!
-    	}
-    } else if (rfm_mode == rfmmode_rx) {
-        rfm_framebuf[rfm_framepos++]=RFM_READ_FIFO();
-#if (RFM_TUNING>0)
-		if (rfm_framepos == 6) { // get AFC value
-		  afc = RFM_READ_STATUS() & 0x1f;
-		}
-#endif
-        if (rfm_framepos >= RFM_FRAME_MAX) rfm_mode = rfmmode_rx_owf;
-    	task |= TASK_RFM; // inform the rfm task about next RX byte
-    } else if (rfm_mode == rfmmode_rx_owf) {
-        RFM_READ_FIFO();
-    	task |= TASK_RFM; // inform the rfm task about next RX byte
-	}
-    cli(); // disable global interrupts
-    asm volatile("nop"); // we must have one instruction after cli() 
-#if (NANODE == 1)
-    EIMSK |= _BV(INT1);
-#else
-    GICR |= _BV(INT2); // enable RFM interrupt
-#endif
-    asm volatile("nop"); // we must have one instruction after
-  }
-  // do NOT add anything after RFM part
-}
-#endif

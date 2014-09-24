@@ -177,7 +177,7 @@ In this file we define only configuration parameters, for example what kind of c
 // Some default Values
 #define BOOT_DD         1  //!< Boot-Up date: day
 #define BOOT_MM         1  //!< Boot-Up date: month
-#define BOOT_YY        10  //!< Boot-Up date: year
+#define BOOT_YY        13  //!< Boot-Up date: year
 #define BOOT_hh        12  //!< Boot-Up time: hour
 #define BOOT_mm        00  //!< Boot-Up time: minutes
 

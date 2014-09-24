@@ -42,17 +42,10 @@
 
 
 // HR20 Project includes
-#include "main.h"
 #include "motor.h"
-#include "lcd.h"
-#include "../common/rtc.h"
 #include "eeprom.h"
 #include "task.h"
-#include "../common/rs232_485.h"
-#include "../common/rfm.h"
 #include "controller.h"
-#include "com.h"
-#include "debug.h"
 
 // typedefs
 
@@ -102,9 +95,10 @@ void MOTOR_updateCalibration(uint8_t cal_type)
         MOTOR_Control(stop);       // stop motor
         MOTOR_PosAct=0;                  // not calibrated
         MOTOR_PosMax=0;                  // not calibrated
+        if (MOTOR_calibration_step > 0) display_task = DISP_TASK_CLEAR | DISP_TASK_UPDATE;
         MOTOR_calibration_step=-2;     // not calibrated
         MOTOR_wait_for_new_calibration = 5;
-        CTL_error &= ~CTL_ERR_MOTOR;
+        CTL_clear_error(CTL_ERR_MOTOR);
 		#if CALIBRATION_RESETS_sumError
 			sumError=0; // new calibration need found new sumError
 		#endif
@@ -130,6 +124,7 @@ void MOTOR_updateCalibration(uint8_t cal_type)
                 MOTOR_ManuCalibration=0;               // not calibrated
             }
             MOTOR_calibration_step=1;
+            display_task = DISP_TASK_CLEAR | DISP_TASK_UPDATE;
         }
     }
 }
@@ -331,7 +326,7 @@ void MOTOR_timer_stop(void) {
     if (motor_timer>0) { // normal stop on wanted position 
             if (MOTOR_calibration_step != 0) {
                 MOTOR_calibration_step = -1;     // calibration error
-                CTL_error |=  CTL_ERR_MOTOR;
+                CTL_set_error(CTL_ERR_MOTOR);
             }
     } else { // stop on timeout
         if (d == open) { // stopped on end
@@ -345,9 +340,10 @@ void MOTOR_timer_stop(void) {
                             eeprom_config_save((uint16_t)(&config.MOTOR_ManuCalibration_L)-(uint16_t)(&config));
                             eeprom_config_save((uint16_t)(&config.MOTOR_ManuCalibration_H)-(uint16_t)(&config));
                             MOTOR_calibration_step = 0;
+                            display_task = DISP_TASK_CLEAR | DISP_TASK_UPDATE;
                         } else {
                             MOTOR_calibration_step = -1;     // calibration error
-                            CTL_error |=  CTL_ERR_MOTOR;
+                            CTL_set_error(CTL_ERR_MOTOR);
                         }
                     } else {
                         MOTOR_Control(close);
@@ -362,10 +358,11 @@ void MOTOR_timer_stop(void) {
             {
                 if (MOTOR_calibration_step == 3 ) {
                     MOTOR_calibration_step = 0;     // calibration DONE
+                    display_task = DISP_TASK_CLEAR | DISP_TASK_UPDATE;
                     MOTOR_PosMax -= MOTOR_PosAct;
                 } else if (MOTOR_PosAct>MOTOR_MIN_IMPULSES) {
                     MOTOR_calibration_step = -1;     // calibration error
-                    CTL_error |=  CTL_ERR_MOTOR;
+                    CTL_set_error(CTL_ERR_MOTOR);
                 }
                 MOTOR_PosAct = 0; // cleanup position
             }
@@ -374,7 +371,7 @@ void MOTOR_timer_stop(void) {
     if ((MOTOR_calibration_step == 0) &&
         (MOTOR_PosMax<MOTOR_MIN_IMPULSES)) {
         MOTOR_calibration_step = -1;     // calibration error
-        CTL_error |=  CTL_ERR_MOTOR;
+        CTL_set_error(CTL_ERR_MOTOR);
     } 
 }
 
@@ -382,20 +379,14 @@ void MOTOR_timer_stop(void) {
 
 /*!
  *******************************************************************************
- * Pinchange Interupt INT0
+ * Pinchange Interupt, motor handling part
  *
  * \note count light eye impulss: \ref MOTOR_PosAct
  *
  * \note create TASK_UPDATE_MOTOR_POS
  ******************************************************************************/
-ISR (PCINT0_vect){
-    uint8_t pine=PINE;
-    #if (defined COM_RS232) || (defined COM_RS485)
-        if ((pine & (1<<PE0)) == 0) {
-            RS_enable_rx(); // it is macro, not function
-            PCMSK0 &= ~(1<<PCINT0); // deactivate interrupt
-        }
-    #endif
+void MOTOR_interrupt(uint8_t pine)
+{
     // motor eye
     // count  HIGH impulses for HR20 and LOW Pulses for THERMOTRONIC
 #if THERMOTRONIC==1
@@ -441,36 +432,6 @@ ISR (PCINT0_vect){
         }
     }
     pine_last=pine;
-    #if (RFM==1)
-      if (PCMSK0 & _BV(RFM_SDO_PCINT)) {
-      // RFM module interupt
-        while (RFM_SDO_PIN & _BV(RFM_SDO_BITPOS)) {
-          PCMSK0 &= ~_BV(RFM_SDO_PCINT); // disable RFM interrupt
-          sei(); // enable global interrupts
-          if (rfm_mode == rfmmode_tx) {
-            RFM_WRITE(rfm_framebuf[rfm_framepos++]);
-            if (rfm_framepos >= rfm_framesize) {
-              rfm_mode = rfmmode_tx_done;
-              task |= TASK_RFM; // inform the rfm task about end of transmition
-              return; // \note !!WARNING!!
-            }
-		  } else if (rfm_mode == rfmmode_rx) {
-	        rfm_framebuf[rfm_framepos++]=RFM_READ_FIFO();
-    		task |= TASK_RFM; // inform the rfm task about next RX byte
-        	if (rfm_framepos >= RFM_FRAME_MAX) {
-				rfm_mode = rfmmode_rx_owf;
-				// ignore any data in buffer
-				return; // RFM interrupt disabled 
- 			}
-    	  } 
-          cli(); // disable global interrupts
-          asm volatile("nop"); // we must have one instruction after cli() 
-          PCMSK0 |= _BV(RFM_SDO_PCINT); // enable RFM interrupt
-          asm volatile("nop"); // we must have one instruction after
-        }
-    }
-  #endif
-  // do NOT add anything after RFM part
 }
 
 /*! 
@@ -490,7 +451,7 @@ ISR (TIMER0_OVF_vect){
 		TCCR0A = (1<<WGM00) | (1<<WGM01); // 0b 0000 0011
         PCMSK0 &= ~(1<<PCINT4); // disable eye interrupt
 #endif
-        TIMSK0 = 0; // disable timmer 1 interrupt 
+        TIMSK0 = 0; // disable timer 1 interrupt 
 
         // photo eye
         MOTOR_eye_disable();

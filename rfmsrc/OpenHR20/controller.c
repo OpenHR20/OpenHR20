@@ -37,6 +37,7 @@
 
 #include "config.h"
 #include "main.h"
+#include "task.h"
 #include "com.h"
 #include "../common/rtc.h"
 #include "adc.h"
@@ -47,9 +48,9 @@
 // global Vars for default values: temperatures and speed
 uint8_t CTL_temp_wanted=0;   // actual desired temperature
 uint8_t CTL_temp_wanted_last=0xff;   // desired temperature value used for last PID control
-uint8_t CTL_temp_auto=0;   // actual desired temperature by timer
+uint8_t CTL_temp_auto_type=TEMP_TYPE_INVALID;   // actual desired temperature type by timer
 bool CTL_mode_auto=true;   // actual desired temperature by timer
-uint8_t CTL_mode_window = 0; // open window (0=closed, >0 open-timmer)
+uint8_t CTL_mode_window = 0; // open window (0=closed, >0 open-timer)
 #if (HW_WINDOW_DETECTION)
 	static uint8_t window_timer=AVERAGE_LEN+1;
 #else
@@ -67,6 +68,22 @@ uint8_t valveHistory[VALVE_HISTORY_LEN];
 static uint8_t pid_Controller(int16_t setPoint, int16_t processValue, uint8_t old_result, bool updateNow);
 
 uint8_t CTL_error=0;
+
+__attribute__((noinline))    // do not inline in this file
+void CTL_set_error(int8_t err_code)
+{
+    int8_t old_err = CTL_error;
+    CTL_error |= err_code;
+    if (CTL_error != old_err) display_task = DISP_TASK_CLEAR | DISP_TASK_UPDATE;
+}
+
+__attribute__((noinline))    // do not inline in this file
+void CTL_clear_error(int8_t err_code)
+{
+    int8_t old_err = CTL_error;
+    CTL_error &= ~err_code;
+    if (CTL_error != old_err) display_task = DISP_TASK_CLEAR | DISP_TASK_UPDATE;
+}
 
 #if (HW_WINDOW_DETECTION)
 static void CTL_window_detection(void) {
@@ -133,13 +150,13 @@ void CTL_update(bool minute_ch) {
 	PORTE |= _BV(PE2); // enable pull-up
 #endif
 
-    if ( minute_ch || (CTL_temp_auto==0) ) {
+    if ( minute_ch || (CTL_temp_auto_type==TEMP_TYPE_INVALID) ) {
         // minutes changed or we need return to timers
-        uint8_t t=RTC_ActualTimerTemperature(!(CTL_temp_auto==0));
-        if (t!=0) {
-            CTL_temp_auto=t;
+        uint8_t t=RTC_ActualTimerTemperatureType(!(CTL_temp_auto_type==TEMP_TYPE_INVALID));
+        if (t!=TEMP_TYPE_INVALID) {
+            CTL_temp_auto_type=t;
             if (CTL_mode_auto) {
-                CTL_temp_wanted=CTL_temp_auto;
+                CTL_temp_wanted=temperature_table[CTL_temp_auto_type];
                 if ((PID_force_update<0)&&(CTL_temp_wanted!=CTL_temp_wanted_last)) {
                     PID_force_update=0;
                 }
@@ -201,16 +218,16 @@ void CTL_update(bool minute_ch) {
     // batt error detection
     if (bat_average) {
 		if (bat_average < 20*(uint16_t)config.bat_low_thld) {
-    	    CTL_error |=  CTL_ERR_BATT_LOW | CTL_ERR_BATT_WARNING;
+            CTL_set_error(CTL_ERR_BATT_LOW | CTL_ERR_BATT_WARNING);
 	    } else {
 	        if (bat_average < 20*(uint16_t)config.bat_warning_thld) {
-	            CTL_error |=  CTL_ERR_BATT_WARNING;
+                CTL_set_error(CTL_ERR_BATT_WARNING);
 				#if (BATT_ERROR_REVERSIBLE)
-	            	CTL_error &= ~CTL_ERR_BATT_LOW;
+                    CTL_clear_error(CTL_ERR_BATT_LOW);
 				#endif
 	        } else {
 				#if (BATT_ERROR_REVERSIBLE)
-	            	CTL_error &= ~(CTL_ERR_BATT_WARNING|CTL_ERR_BATT_LOW);
+                    CTL_clear_error(CTL_ERR_BATT_WARNING|CTL_ERR_BATT_LOW);
 				#endif
 	        }
 	    }
@@ -234,7 +251,7 @@ void CTL_temp_change_inc (int8_t ch) {
     PID_force_update = 9;
 }
 
-static uint8_t menu_temp_rewoke;
+static uint8_t menu_temp_rewoke_type;
 /*!
  *******************************************************************************
  *  Change controller mode
@@ -243,7 +260,7 @@ static uint8_t menu_temp_rewoke;
 void CTL_change_mode(int8_t m) {
     if (m == CTL_CHANGE_MODE) {
         // change
-  		menu_temp_rewoke=CTL_temp_auto;
+  		menu_temp_rewoke_type=CTL_temp_auto_type;
 		#if BOOST_CONTROLER_AFTER_CHANGE
 			PID_boost_timeout = 0; //jr disable boost
 		#endif
@@ -251,7 +268,7 @@ void CTL_change_mode(int8_t m) {
         PID_force_update = 9;
     } else if (m == CTL_CHANGE_MODE_REWOKE) {
         //rewoke
-  		CTL_temp_auto=menu_temp_rewoke;
+  		CTL_temp_auto_type=menu_temp_rewoke_type;
         CTL_mode_auto=!CTL_mode_auto;
         PID_force_update = 9;
     } else {
@@ -259,8 +276,8 @@ void CTL_change_mode(int8_t m) {
         PID_force_update = 0;
     }
     if (CTL_mode_auto && (m != CTL_CHANGE_MODE_REWOKE)) {
-    	CTL_temp_wanted=(CTL_temp_auto=RTC_ActualTimerTemperature(false));
-    	// CTL_temp_auto=0;  //refresh wanted temperature in next step
+        CTL_temp_auto_type = RTC_ActualTimerTemperatureType(false);
+        CTL_temp_wanted=(CTL_temp_auto_type != TEMP_TYPE_INVALID ? temperature_table[CTL_temp_auto_type] : 0);
     }
     CTL_mode_window = 0;
 }

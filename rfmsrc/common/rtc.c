@@ -103,7 +103,7 @@ const uint8_t RTC_DayOfMonthTablePrgMem[] PROGMEM =
  ******************************************************************************/
 void RTC_Init(void)
 {
-    #if !defined(MASTER_CONFIG_H)
+#if !defined(MASTER_CONFIG_H)
         TIMSK2 &= ~(1<<TOIE2);              // disable OCIE2A and TOIE2
         ASSR = (1<<AS2);                    // Timer2 asynchronous operation
         TCNT2 = 0;                          // clear TCNT2A
@@ -115,16 +115,16 @@ void RTC_Init(void)
     
         TIFR2 = 0xFF;                       // clear interrupt-flags
         TIMSK2 |= (1<<TOIE2);               // enable Timer2 overflow interrupt
-    #else
-#if (NANODE == 1)
-#define TIFR TIFR1
-#define TIMSK TIMSK1
-#endif
+#else
+  #if (NANODE == 1 || JEENODE == 1)
+    #define TIFR TIFR1
+    #define TIMSK TIMSK1
+  #endif
 		OCR1A = (F_CPU/800)-1; // 1/100s interrupt
     	TCCR1B= _BV(CS11) | _BV(WGM12); // clk/8 CTC mode
     	TIFR  = _BV(OCF1A);                       // clear interrupt-flags
     	TIMSK |= _BV(OCIE1A);
-    #endif
+#endif
 
     // day of week
     RTC_SetDayOfWeek();
@@ -352,17 +352,17 @@ int32_t RTC_DowTimerGetHourBar(uint8_t dow) {
  *
  ******************************************************************************/
 
-uint8_t RTC_ActualTimerTemperature(bool exact) {
+uint8_t RTC_ActualTimerTemperatureType(bool exact) {
     uint16_t minutes=RTC.hh*60 + RTC.mm;
     int8_t dow=((config.timer_mode==1)?RTC.DOW:0);
     int8_t raw_index=RTC_FindTimerRawIndex(dow,minutes);
     uint16_t data = eeprom_timers_read_raw(raw_index);
-    if (raw_index<0) return 0; //not found
+    if (raw_index<0) return TEMP_TYPE_INVALID; //not found
     if (exact) {
-        if ((data&0xfff) != minutes) return 0;
-        if ((raw_index/RTC_TIMERS_PER_DOW) != dow) return 0;
+        if ((data&0xfff) != minutes) return TEMP_TYPE_INVALID;
+        if ((raw_index/RTC_TIMERS_PER_DOW) != dow) return TEMP_TYPE_INVALID;
     }
-    return temperature_table[(data >> 12) & 3];
+    return (data >> 12) & 3;
 }
 #endif // !defined(MASTER_CONFIG_H)
 
@@ -737,62 +737,56 @@ void RTC_timer_set(uint8_t timer_id, uint8_t time) {
 #endif 
 
 
-#if HAS_CALIBRATE_RCO && !defined(MASTER_CONFIG_H)
+#if HAS_CALIBRATE_RCO
 /*!
  *******************************************************************************
  *
  *  Calibrate the internal OSCCAL byte,
  *  using the external 32,768 kHz crystal as reference
+ *  Implementation taken from Atmel AVR055 application note.
  *
  *  \note
  *     global interrupt has to be disabled before if not if will be
  *     disabled by this function.
  *
  ******************************************************************************/
+#define EXTERNAL_TICKS 200   // ticks on XTAL. Modify to increase/decrease accuracy
+#define XTAL_FREQUENCY 32768 // Frequency of the external oscillator
+#define LOOP_CYCLES    7     // Number of CPU cycles the loop takes to execute
 void calibrate_rco(void)
 {
-    unsigned char calibrate = FALSE;
-    int temp;
+    // Computes countVal for use in the calibration
+    static const uint16_t countVal = (EXTERNAL_TICKS * F_CPU) / (XTAL_FREQUENCY * LOOP_CYCLES);
 
-    cli();                               // disable global interrupt
-    CLKPR = (1<<CLKPCE);                 // set Clock Prescaler Change Enable
-    CLKPR = (1<<CLKPS1) | (1<<CLKPS0);   // set prescaler = 8  =>  1Mhz
-    TIMSK2 = 0;                          // disable OCIE2A and TOIE2
-    ASSR = (1<<AS2);                     // timer2 asynchronous 32,768kHz)
-    OCR2A = 200;                         // set timer2 compare value
-    TIMSK0 = 0;                          // delete any interrupt sources
-    TCCR1B = (1<<CS10);                  // start timer1 with no prescaling
-    TCCR2A = (1<<CS20);                  // start timer2 with no prescaling
+    cli();
+    
+    // Set up timer to be ASYNCHRONOUS from the CPU clock with a second
+    // EXTERNAL 32,768kHz CRYSTAL driving it. No prescaling on asynchronous timer.
+    ASSR = (1 << AS2);
+    TCCR2A = (1 << CS20);
 
-    while((ASSR & 0x01) | (ASSR & 0x04));// wait for clear TCN2UB and TCR2UB
-    // delay(1000);                      // wait for external crystal stabilise
+    // Calibrate using 128(0x80) calibration cycles
+    uint8_t cycles = 0x80;
+    uint16_t count;
+    do {
+        count = 0;
+        TCNT2 = 0x00;       // Reset async timer/counter
 
-    while(!calibrate)
-    {
-        TIFR1 = 0xFF;   // delete TIFR1 flags
-        TIFR2 = 0xFF;   // delete TIFR2 flags
-        TCNT1H = 0;     // clear timer1 counter
-        TCNT1L = 0;
-        TCNT2 = 0;      // clear timer2 counter
+        // Wait until async timer is updated  (Async Status reg. busy flags).
+        while (ASSR & ((1 << OCR2UB) | (1 << TCN2UB) | (1 << TCR2UB)));
 
-        while ( !(TIFR2 & (1<<OCF2A)) );   // wait for timer2 compareflag
+        // this loop needs to take exactly LOOP_CYCLES CPU cycles!
+        // make sure your compiler does not mess with it!
+        do {
+            count++;
+        } while (TCNT2 < EXTERNAL_TICKS);
 
-        TCCR1B = 0;     // stop timer1
-
-        if (TIFR1 & (1<<TOV1))  {
-            temp = 0xFFFF;                // timer1 overflow, set temp to 0xFFFF
-        } else {
-            temp = (TCNT1H << 8) | TCNT1L;  // read out the timer1 counter value
-        }
-
-        if (temp > 6250) {
-            OSCCAL--;   // internRC oscillator to fast, decrease the OSCCAL
-        } else if (temp < 6120) {
-            OSCCAL++;   // internRC oscillator to slow, increase the OSCCAL
-        } else {
-            calibrate = TRUE;   // the interRC is correct
-        }
-        TCCR1B = (1<<CS10); // start timer1
-    }
+        if (count > countVal)
+            OSCCAL--;
+        else if (count < countVal)
+            OSCCAL++;
+        else
+            break; //cycles=0xFF;
+    } while (--cycles);
 }
 #endif

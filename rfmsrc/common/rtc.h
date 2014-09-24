@@ -43,9 +43,6 @@
 //! How many timers per day of week, original 4 we use 8
 #define RTC_TIMERS_PER_DOW    8
 
-//! Do we support calibrate_rco
-#define	HAS_CALIBRATE_RCO     0
-
 //! RTC high precision timers
 #define RTC_TIMER_OVF 0 //
 #define RTC_TIMER_RTC 7 //
@@ -58,6 +55,9 @@
         #define RTC_TIMERS 0
     #endif    
     #define RTC_TIMER_CALC(t) ((uint8_t)(t/10))
+    
+    //! Do we support calibrate_rco
+    #define	HAS_CALIBRATE_RCO     0
 #else
     #define RTC_TIMER_KB  1 // keyboard timer
     #if (RFM==1)
@@ -69,6 +69,8 @@
     #define RTC_TIMER_CALC(t) ((uint8_t)((t*256L)/1000L))
     #define TCCR2A_INIT ((1<<CS22) | (1<<CS20))     // select precaler: 32.768 kHz / 128 =
                                         // => 1 sec between each overflow
+    //! Do we support calibrate_rco
+    #define	HAS_CALIBRATE_RCO     0
 #endif
 
 /*****************************************************************************
@@ -140,7 +142,7 @@ void RTC_SetYear(uint8_t);                     // Set year
 
 bool RTC_DowTimerSet(rtc_dow_t, uint8_t, uint16_t, timermode_t timermode); // set day of week timer
 uint16_t RTC_DowTimerGet(rtc_dow_t dow, uint8_t slot, timermode_t *timermode);
-uint8_t RTC_ActualTimerTemperature(bool exact);
+uint8_t RTC_ActualTimerTemperatureType(bool exact);
 int32_t RTC_DowTimerGetHourBar(uint8_t dow);
 void RTC_AddOneSecond(void);
 
@@ -151,6 +153,8 @@ void RTC_timer_set(uint8_t timer_id, uint8_t time);
 
 #if	HAS_CALIBRATE_RCO
 void calibrate_rco(void);
+#else
+inline void calibrate_rco(void) {}
 #endif
 
 #endif /* RTC_H */

@@ -104,6 +104,7 @@ void MOTOR_updateCalibration(uint8_t cal_type);            // reset the calibrat
 uint8_t MOTOR_GetPosPercent(void);  // get percental position of motor (0-100%)
 void MOTOR_timer_stop(void);
 void MOTOR_timer_pulse(void);
+void MOTOR_interrupt(uint8_t pine);
 
 #define timer0_need_clock() (TCCR0A & ((1<<CS02)|(1<<CS01)|(1<<CS00)))
 

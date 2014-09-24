@@ -35,7 +35,7 @@
 
 extern uint8_t CTL_temp_wanted; //!< wanted temperature
 extern uint8_t CTL_temp_wanted_last;   // desired temperatur value used for last PID control
-extern uint8_t CTL_temp_auto;
+extern uint8_t CTL_temp_auto_type;
 extern uint8_t CTL_mode_auto;
 extern int8_t PID_force_update;      // signed value, val<0 means disable force updates
 extern uint8_t CTL_error;
@@ -47,9 +47,12 @@ extern uint8_t CTL_mode_window;
 extern uint8_t valveHistory[VALVE_HISTORY_LEN];
 #define valve_wanted (valveHistory[0])
 
-#define CTL_update_temp_auto() (CTL_temp_auto=0)
-#define CTL_test_auto() (CTL_mode_auto && (CTL_temp_auto==CTL_temp_wanted))
+#define CTL_update_temp_auto() (CTL_temp_auto_type=TEMP_TYPE_INVALID)
+#define CTL_test_auto() (CTL_mode_auto && (CTL_temp_auto_type != TEMP_TYPE_INVALID) && (temperature_table[CTL_temp_auto_type]==CTL_temp_wanted))
 #define CTL_set_temp(t) (PID_force_update = 10, CTL_temp_wanted=t)
+
+void CTL_set_error(int8_t err_code);
+void CTL_clear_error(int8_t err_code);
 
 void CTL_update(bool minute_ch);
 void CTL_temp_change_inc (int8_t ch);

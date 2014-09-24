@@ -56,13 +56,12 @@
 #include "menu.h"
 #include "com.h"
 #include "../common/rs232_485.h"
-#include "../common/rfm.h"
 #include "controller.h"
-#include "../common/wireless.h"
 
 #if RFM
 	#include "rfm_config.h"
 	#include "../common/rfm.h"
+    #include "../common/wireless.h"
 #endif
 
 // global Vars
@@ -96,7 +95,8 @@ int __attribute__ ((noreturn)) main(void)
     //! initalization
     init();
 
-	task=0;
+	task = 0;
+    display_task = 0;
 
     //! Enable interrupts
     sei();
@@ -112,15 +112,14 @@ int __attribute__ ((noreturn)) main(void)
 #endif
     #if RFM
         // enable persistent RX for initial sync
-        RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
-        RFM_SPI_16(RFM_LOW_BATT_DETECT_D_10MHZ);
+        RFM_FIFO_ON();
         RFM_RX_ON();
 		RFM_INT_EN(); // enable RFM interrupt
     	rfm_mode = rfmmode_rx;
     #endif
 
 	// We should do the following once here to have valid data from the start
-
+    
 
     /*!
     ****************************************************************************
@@ -253,10 +252,9 @@ int __attribute__ ((noreturn)) main(void)
                     #endif
                 }
                 #if RFM
-    				if ((config.RFM_devaddr!=0)
-    				    && (time_sync_tmo>1)
-                        && (
-                            ((RTC_GetSecond() == config.RFM_devaddr) && (wireless_buf_ptr)) ||
+                    if ((config.RFM_devaddr!=0) && (time_sync_tmo>1))
+                    {
+                        if (((RTC_GetSecond() == config.RFM_devaddr) && (wireless_buf_ptr)) ||
                             (
                                 (
                                     (RTC_GetSecond()>30) &&
@@ -271,24 +269,23 @@ int __attribute__ ((noreturn)) main(void)
                                     ((wl_force_flags>>config.RFM_devaddr)&1)
                                 )
                             )
-                        )) // collission protection: every HR20 shall send when the second counter is equal to it's own address.
-    				{
-                        wirelessTimerCase = WL_TIMER_FIRST;
-                        RTC_timer_set(RTC_TIMER_RFM, WLTIME_START);
-    				}
-    				if ((config.RFM_devaddr!=0)
-    				    && (time_sync_tmo>1)
-                        && ((RTC_GetSecond() == 59) || (RTC_GetSecond() == 29)))
-                    {
-						#if (WL_SKIP_SYNC)
-							if (wl_skip_sync!=0) {
-								wl_skip_sync--;
-							} else
-						#endif
-							{
-								wirelessTimerCase = WL_TIMER_SYNC;
-                        		RTC_timer_set(RTC_TIMER_RFM, WLTIME_SYNC);
-							}
+                        ) // collission protection: every HR20 shall send when the second counter is equal to it's own address.
+                        {
+                            wirelessTimerCase = WL_TIMER_FIRST;
+                            RTC_timer_set(RTC_TIMER_RFM, WLTIME_START);
+                        }
+                        if ((RTC_GetSecond() == 59) || (RTC_GetSecond() == 29))
+                        {
+                            #if (WL_SKIP_SYNC)
+                                if (wl_skip_sync!=0) {
+                                    wl_skip_sync--;
+                                } else
+                            #endif
+                                {
+                                    wirelessTimerCase = WL_TIMER_SYNC;
+                                    RTC_timer_set(RTC_TIMER_RFM, WLTIME_SYNC);
+                                }
+                        }
                     }
                 #endif
                 if (bat_average>0) {
@@ -300,7 +297,7 @@ int __attribute__ ((noreturn)) main(void)
                 if (menu_auto_update_timeout>=0) {
                     menu_auto_update_timeout--;
                 }
-                menu_view(false); // TODO: move it, it is wrong place
+                display_task |= DISP_TASK_UPDATE;
             }
             #if RFM
               if (RTC_timer_done&_BV(RTC_TIMER_RFM))
@@ -312,15 +309,11 @@ int __attribute__ ((noreturn)) main(void)
             // do not use continue here (menu_auto_update_timeout==0)
         }
 
-		// menu state machine
-		if (kb_events || (menu_auto_update_timeout==0)) {
-           bool update = menu_controller(false);
-           if (update) {
-               menu_controller(true); // menu updated, call it again
-           }
-           menu_view(update); // TODO: move it, it is wrong place
-	        continue; // on most case we have only 1 task, improve time to sleep
-		}
+        // menu state machine
+        if (kb_events || (menu_auto_update_timeout==0)) {
+            display_task |= DISP_TASK_UPDATE;
+            if (menu_controller()) display_task = DISP_TASK_CLEAR | DISP_TASK_UPDATE;
+        }
 
         // update motor PWM
         if (task & TASK_MOTOR_PULSE) {
@@ -328,6 +321,13 @@ int __attribute__ ((noreturn)) main(void)
             MOTOR_updateCalibration(mont_contact_pooling());
             MOTOR_timer_pulse();
         }
+        
+        if (display_task)
+        {
+            menu_view(display_task & DISP_TASK_CLEAR);
+            display_task = 0;
+        }
+
     } //End Main loop
 }
 
@@ -364,15 +364,13 @@ static inline void init(void)
 	}
 #endif
 
-
-
-    //! Calibrate the internal RC Oszillator
-    //! \todo test calibrate_rco();
-
     //! set Clock to 4 Mhz
     CLKPR = (1<<CLKPCE);            // prescaler change enable
     CLKPR = (1<<CLKPS0);            // prescaler = 2 (internal RC runs @ 8MHz)
 
+    //! Calibrate the internal RC Oscillator
+    calibrate_rco();
+    
     //! Disable Analog Comparator (power save)
     ACSR = (1<<ACD);
 
@@ -467,4 +465,25 @@ static inline void init(void)
 
 	// init keyboard
     state_wheel_prev = ~PINB & (KBI_ROT1 | KBI_ROT2);
+}
+
+// interrupts: 
+
+/*!
+ *******************************************************************************
+ * Pinchange Interupt INT0
+ ******************************************************************************/
+ISR (PCINT0_vect){
+    uint8_t pine=PINE;
+
+    #if (defined COM_RS232) || (defined COM_RS485)
+        RS_interrupt(pine);
+    #endif
+
+    MOTOR_interrupt(pine);
+    
+    #if (RFM==1)
+        RFM_interrupt(pine);
+    #endif
+    // do NOT add anything after RFM part
 }

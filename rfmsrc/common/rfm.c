@@ -38,6 +38,7 @@
 #include "rfm_config.h"
 #include "../common/rfm.h"
 #include "eeprom.h"
+#include "task.h"
 
 
 #if (RFM==1)
@@ -101,7 +102,7 @@ uint16_t rfm_spi16(uint16_t outval)
 
 void RFM_init(void)
 {
-#if (NANODE==1)
+#if (NANODE==1 || JEENODE == 1)
 	// disable SPI
 	SPCR &= ~(1<<SPE);
 #endif
@@ -160,9 +161,11 @@ void RFM_init(void)
 		RFM_FIFO_DR
 	 );
 
-	// 8. Receiver FIFO Read
+	// 8. Synchron Pattern Command
+    
+	// 9. Receiver FIFO Read
 
-	// 9. AFC Command
+	// 10. AFC Command
 	RFM_SPI_16(
 		RFM_AFC_AUTO_VDI        |
 		RFM_AFC_RANGE_LIMIT_7_8 |
@@ -171,30 +174,117 @@ void RFM_init(void)
 		RFM_AFC_FI     
 	 );
 
-	// 10. TX Configuration Control Command
+	// 11. TX Configuration Control Command
 	RFM_SPI_16(
 		RFM_TX_CONTROL_MOD(RFM_BAUD_RATE) |
 		RFM_TX_CONTROL_POW_0
 	 );
 
-	// 11. Transmitter Register Write Command
+    // 12. PLL Setting Command
+    
+	// 13. Transmitter Register Write Command
 
-	// 12. Wake-Up Timer Command
+	// 14. Wake-Up Timer Command
 
-	// 13. Low Duty-Cycle Command
+	// 15. Low Duty-Cycle Command
 
-	// 14. Low Battery Detector Command
+	// 16. Low Battery Detector Command
+#if RFM_CLK_OUTPUT
+    RFM_SPI_16(RFM_LOW_BATT_DETECT_D_10MHZ);
+#endif
 
 	//RFM_SPI_16(
 	//	 RFM_LOW_BATT_DETECT |
 	//	 3      // 2.2V + v * 0.1V
 	//	 );
 
-	// 15. Status Read Command
+	// 17. Status Read Command
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
+/*!
+ *******************************************************************************
+ * Pinchange Interupt, RFM handling part
+ ******************************************************************************/
+#if !defined(MASTER_CONFIG_H)
+void RFM_interrupt(uint8_t pine)
+{
+    if (PCMSK0 & _BV(RFM_SDO_PCINT)) {
+      // RFM module interupt
+        while (RFM_SDO_PIN & _BV(RFM_SDO_BITPOS)) {
+          PCMSK0 &= ~_BV(RFM_SDO_PCINT); // disable RFM interrupt
+          sei(); // enable global interrupts
+          if (rfm_mode == rfmmode_tx) {
+            RFM_WRITE(rfm_framebuf[rfm_framepos++]);
+            if (rfm_framepos >= rfm_framesize) {
+              rfm_mode = rfmmode_tx_done;
+              task |= TASK_RFM; // inform the rfm task about end of transmition
+              return; // \note !!WARNING!!
+            }
+		  } else if (rfm_mode == rfmmode_rx) {
+	        rfm_framebuf[rfm_framepos++]=RFM_READ_FIFO();
+    		task |= TASK_RFM; // inform the rfm task about next RX byte
+        	if (rfm_framepos >= RFM_FRAME_MAX) {
+				rfm_mode = rfmmode_rx_owf;
+				// ignore any data in buffer
+				return; // RFM interrupt disabled 
+ 			}
+    	  } 
+          cli(); // disable global interrupts
+          asm volatile("nop"); // we must have one instruction after cli() 
+          PCMSK0 |= _BV(RFM_SDO_PCINT); // enable RFM interrupt
+          asm volatile("nop"); // we must have one instruction after
+        }
+    }
+}
+
+#else // !defined(MASTER_CONFIG_H)
+
+/*!
+ *******************************************************************************
+ * Pinchange Interupt INT2
+ *  
+ * \note level interrupt is better, but I want to have same code for master as for HR20 (jdobry)
+ ******************************************************************************/
+// RFM module interupt
+volatile uint8_t afc = 0;
+ISR (RFM_INT_vect){
+  uint16_t status = RFM_READ_STATUS();  // this also clears most interrupt sources
+#if (JEENODE == 1)
+  if (status & RFM_STATUS_RGIT) {       // we are using level interrupt on jeenode
+#else
+  while (RFM_SDO_PIN & _BV(RFM_SDO_BITPOS)) {
+#endif
+      RFM_INT_DIS();  // disable RFM interrupt
+      sei(); // enable global interrupts
+      if (rfm_mode == rfmmode_tx) {
+            RFM_WRITE(rfm_framebuf[rfm_framepos++]);
+            if (rfm_framepos >= rfm_framesize) {
+                rfm_mode = rfmmode_tx_done;
+                task |= TASK_RFM; // inform the rfm task about end of transmition
+                return; // \note !!WARNING!!
+            }
+      } else if (rfm_mode == rfmmode_rx) {
+            rfm_framebuf[rfm_framepos++]=RFM_READ_FIFO();
+#if (RFM_TUNING>0)
+            if (rfm_framepos == 6) { // get AFC value
+                afc = status & 0x1f;
+		    }
+#endif
+            if (rfm_framepos >= RFM_FRAME_MAX) rfm_mode = rfmmode_rx_owf;
+    	    task |= TASK_RFM; // inform the rfm task about next RX byte
+      } else if (rfm_mode == rfmmode_rx_owf) {
+            RFM_READ_FIFO();
+        	task |= TASK_RFM; // inform the rfm task about next RX byte
+      }
+    cli(); // disable global interrupts
+    asm volatile("nop"); // we must have one instruction after cli() 
+    RFM_INT_EN_NOCALL();
+    asm volatile("nop"); // we must have one instruction after
+  }
+  // do NOT add anything after RFM part
+}
+#endif // !defined(MASTER_CONFIG_H)
 
 #endif // ifdef RFM
-

@@ -41,6 +41,7 @@
 #include "config.h"
 #include "main.h"
 #include "com.h"
+#include "rs232_485.h"
 
 /* The following must be AFTER the last include line */
 #if (defined COM_RS232) || (defined COM_RS485)
@@ -192,5 +193,19 @@ void RS_startSend(void)
 		}
 	sei();
 }
+
+#if !defined(MASTER_CONFIG_H)
+/*!
+ *******************************************************************************
+ * Pinchange Interupt, RS handling part
+ ******************************************************************************/
+void RS_interrupt(uint8_t pine)
+{
+    if ((pine & (1<<PE0)) == 0) {
+        RS_enable_rx(); // it is macro, not function
+        PCMSK0 &= ~(1<<PCINT0); // deactivate interrupt
+    }
+}
+#endif
 
 #endif /* COM_RS232 */

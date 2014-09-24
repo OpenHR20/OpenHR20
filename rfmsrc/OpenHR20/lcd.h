@@ -77,9 +77,10 @@ void LCD_PrintDayOfWeek(uint8_t, uint8_t);     // Print Day of Week (german)
 void LCD_PrintStringID(uint8_t id, uint8_t mode); // Print LCD string ID
 #define LCD_PrintDayOfWeek(dow,mode) (LCD_PrintStringID(dow,mode))
 
-void LCD_SetSeg(uint8_t, uint8_t);         // Set one Segment (0-69) 
-void LCD_SetHourBarSeg(uint8_t, uint8_t);  // Set HBS (0-23) (Hour-Bar-Segment)
-void LCD_HourBarBitmap(uint32_t bitmap);   // Set HBS like bitmap
+void LCD_SetSeg(uint8_t, uint8_t);              // Set one Segment (0-69)
+void LCD_SetSegReg(uint8_t, uint8_t, uint8_t);  // Set multiple LCD Segment(s) with common register 
+void LCD_SetHourBarSeg(uint8_t, uint8_t);       // Set HBS (0-23) (Hour-Bar-Segment)
+void LCD_HourBarBitmap(uint32_t bitmap);        // Set HBS like bitmap
 void task_lcd_update(void);
 
 #define  LCD_Update()  ((LCDCRA |= (1<<LCDIE)),(LCD_force_update=1))
@@ -217,6 +218,9 @@ void task_lcd_update(void);
                                 // 12, 4 |  SEG220   |  [8], BIT 4
 #define LCD_SEG_MOON       68   // 12, 5 |  SEG221   |  [8], BIT 5
 //*****************************************************************
+
+#define LCD_DECIMAL_DOT     LCD_SEG_COL1
+
 #else
 
 #ifdef HR25
@@ -337,6 +341,7 @@ void task_lcd_update(void);
 #define LCD_SEG_B22         90
 #define LCD_SEG_BAR24       91
 
+#define LCD_DECIMAL_DOT     LCD_SEG_COL4
 
 #else /* HR20 */
 
@@ -410,6 +415,9 @@ void task_lcd_update(void);
                                 // 12, 4 |  SEG220   |  [8], BIT 4
 #define LCD_SEG_MOON       69   // 12, 5 |  SEG221   |  [8], BIT 5
 //*****************************************************************
+
+#define LCD_DECIMAL_DOT     LCD_SEG_COL1
+
 #endif /*HR25*/
 #endif /*!THERMOTRONIC*/
 

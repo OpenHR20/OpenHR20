@@ -10,8 +10,9 @@
 #############
 # Master settings
 
-# TBD
-#MASTERFLAGS += -DTBD
+# Set the proper master type
+#MASTERTYPE=JEENODE=1
+#MASTERTYPE=NANODE=1
 
 #############
 # RFM settings
@@ -20,7 +21,8 @@
 #RFMFLAGS += -DRFM_TUNING=1
 
 # Set default HR slave address, valid range is 1-28
-RFMFLAGS += -DRFM_DEVICE_ADDRESS=28
+# Do not set on master, thus use HRFLAGS
+HRFLAGS += -DRFM_DEVICE_ADDRESS=28
 
 # Set default security keys, shared by master and slave
 RFMFLAGS += -DSECURITY_KEY_0=0x01
@@ -40,7 +42,7 @@ RFMFLAGS += -DRFM_FREQ_FINE=0.35
 
 #############
 
-default: HR20_rfm_int_sww
+default: HR20_rfm_int_sww master1
 
 all: HR20_rfm_int_sww HR20_rfm_int_hww HR20_rfm_ext_sww HR20_original_sww HR20_original_hww HR25_original_sww HR25_rfm_int_sww thermotronic_sww master1
 	 cp OpenHR20/license.txt $(DEST)/
@@ -156,5 +158,5 @@ master1:
 		TARGET=../$(DEST)/$@/master \
 		OBJDIR=$@ \
 		RFMFLAGS='${RFMFLAGS}' \
-		MASTERFLAGS='${MASTERFLAGS}' \
+		${MASTERTYPE} \
 		REV=-DREVISION=\\\"$(REV)\\\"
