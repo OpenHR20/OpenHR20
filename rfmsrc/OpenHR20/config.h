@@ -204,9 +204,6 @@ In this file we define only configuration parameters, for example what kind of c
 /* code configuration */
 /**********************/
 
-// enable D part of PID controller
-#define CONFIG_ENABLE_D 0
-
 
 /* compiler compatibility */
 #ifndef ISR_NAKED
