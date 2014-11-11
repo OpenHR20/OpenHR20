@@ -49,20 +49,20 @@
 #include "adc.h"
 #include "lcd.h"
 #include "motor.h"
-#include "../common/rtc.h"
+#include "common/rtc.h"
 #include "task.h"
 #include "keyboard.h"
 #include "eeprom.h"
 #include "debug.h"
 #include "menu.h"
 #include "com.h"
-#include "../common/rs232_485.h"
+#include "common/rs232_485.h"
 #include "controller.h"
 
 #if RFM
 	#include "rfm_config.h"
-	#include "../common/rfm.h"
-    #include "../common/wireless.h"
+	#include "common/rfm.h"
+    #include "common/wireless.h"
 #endif
 
 // global Vars

@@ -39,7 +39,7 @@
 #include "main.h"
 #include "task.h"
 #include "com.h"
-#include "../common/rtc.h"
+#include "common/rtc.h"
 #include "adc.h"
 #include "eeprom.h"
 #include "controller.h"

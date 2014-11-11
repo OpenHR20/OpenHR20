@@ -49,13 +49,13 @@
 #include "task.h"
 #include "eeprom.h"
 #include "queue.h"
-#include "../common/rtc.h"
-#include "../common/cmac.h"
-#include "../common/wireless.h"
+#include "common/rtc.h"
+#include "common/cmac.h"
+#include "common/wireless.h"
 
 #if (RFM == 1)
 	#include "rfm_config.h"
-	#include "../common/rfm.h"
+	#include "common/rfm.h"
 #endif
 
 int main(void);                            // main with main loop
