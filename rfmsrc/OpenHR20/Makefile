@@ -88,19 +88,22 @@ SRC =  \
     controller.c \
     watch.c \
     com.c \
-    wireless.c \
-    rfm.c \
-    cmac.c \
-
-SRC_B =  \
-    rtc.c \
     main.c \
     keyboard.c \
     adc.c \
-    eeprom.c \
     menu.c \
-    lcd.c \
+    lcd.c 
+
+SRC_B_DIR=../common
+
+SRC_B =  \
+    rtc.c \
+    cmac.c \
+    eeprom.c \
+    rfm.c \
     rs232_485_hw.c \
+    wireless.c
+
 
 
 # List Assembler source files here.
@@ -146,7 +149,9 @@ CDEFS = -DF_CPU=$(F_CPU)UL
 
 
 # Place -D or -U options here for ASM sources
-ADEFS = -DF_CPU=$(F_CPU)
+ADEFS = -DF_CPU=$(F_CPU) -DXTEA_ENC
+# We need only encryption
+# ADEFS+=-DXTEA_DEC
 
 
 #---------------- Compiler Options C ----------------
@@ -585,6 +590,11 @@ $(OBJDIR)/%.o : %.c
 	@echo $(MSG_COMPILING) $<
 	$(CC) -c $(ALL_CFLAGS) $< -o $@ 
 
+$(OBJDIR)/%.o : $(SRC_B_DIR)/%.c
+	@echo
+	@echo $(MSG_COMPILING) $<
+	$(CC) -c $(ALL_CFLAGS) $< -o $@ 
+
 
 # Compile: create assembler files from C source files.
 %.s : %.c
@@ -592,11 +602,15 @@ $(OBJDIR)/%.o : %.c
 
 
 # Assemble: create object files from assembler source files.
-$(OBJDIR)/%.o : %.S
+$(OBJDIR)/%.o : $(SRC_B_DIR)/%.S
 	@echo
 	@echo $(MSG_ASSEMBLING) $<
 	$(CC) -c $(ALL_ASFLAGS) $< -o $@
 
+$(OBJDIR)/%.o : %.S
+	@echo
+	@echo $(MSG_ASSEMBLING) $<
+	$(CC) -c $(ALL_ASFLAGS) $< -o $@
 
 # Create preprocessed source for use in sending a bug report.
 %.i : %.c

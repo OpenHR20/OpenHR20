@@ -88,15 +88,18 @@ OBJDIR = obj
 
 # List C source files here. (C dependencies are automatically generated.)
 SRC = main.c \
-rs232_485_hw.c \
 com.c \
-rfm.c \
-rtc.c \
-cmac.c \
-eeprom.c \
-wireless.c \
 queue.c
 
+SRC_B_DIR=../common
+
+SRC_B =  \
+    rtc.c \
+    cmac.c \
+    eeprom.c \
+    rfm.c \
+    rs232_485_hw.c \
+    wireless.c
 
 # List C++ source files here. (C dependencies are automatically generated.)
 CPPSRC = 
@@ -145,8 +148,9 @@ CDEFS = -DF_CPU=$(F_CPU)UL
 
 
 # Place -D or -U options here for ASM sources
-ADEFS = -DF_CPU=$(F_CPU)
-
+ADEFS = -DF_CPU=$(F_CPU) -DXTEA_ENC
+# We need only encryption
+# ADEFS+=-DXTEA_DEC
 
 # Place -D or -U options here for C++ sources
 CPPDEFS = -DF_CPU=$(F_CPU)UL
@@ -403,10 +407,10 @@ MSG_CREATING_LIBRARY = Creating library:
 
 
 # Define all object files.
-OBJ = $(SRC:%.c=$(OBJDIR)/%.o) $(CPPSRC:%.cpp=$(OBJDIR)/%.o) $(ASRC:%.S=$(OBJDIR)/%.o) 
+OBJ = $(SRC:%.c=$(OBJDIR)/%.o) $(CPPSRC:%.cpp=$(OBJDIR)/%.o) $(ASRC:%.S=$(OBJDIR)/%.o) $(SRC_B:%.c=$(OBJDIR)/%.o)
 
 # Define all listing files.
-LST = $(SRC:%.c=$(OBJDIR)/%.lst) $(CPPSRC:%.cpp=$(OBJDIR)/%.lst) $(ASRC:%.S=$(OBJDIR)/%.lst) 
+LST = $(SRC:%.c=$(OBJDIR)/%.lst) $(CPPSRC:%.cpp=$(OBJDIR)/%.lst) $(ASRC:%.S=$(OBJDIR)/%.lst) $(SRC_B:%.c=$(OBJDIR)/%.lst)
 
 
 # Compiler flags to generate dependency files.
@@ -608,6 +612,10 @@ $(OBJDIR)/%.o : %.c
 	@echo $(MSG_COMPILING) $<
 	$(CC) -c $(ALL_CFLAGS) $< -o $@ 
 
+$(OBJDIR)/%.o : $(SRC_B_DIR)/%.c
+	@echo
+	@echo $(MSG_COMPILING) $<
+	$(CC) -c $(ALL_CFLAGS) $< -o $@
 
 # Compile: create object files from C++ source files.
 $(OBJDIR)/%.o : %.cpp
@@ -627,11 +635,15 @@ $(OBJDIR)/%.o : %.cpp
 
 
 # Assemble: create object files from assembler source files.
-$(OBJDIR)/%.o : %.S
+$(OBJDIR)/%.o : $(SRC_B_DIR)/%.S
 	@echo
 	@echo $(MSG_ASSEMBLING) $<
 	$(CC) -c $(ALL_ASFLAGS) $< -o $@
 
+$(OBJDIR)/%.o : %.S
+	@echo
+	@echo $(MSG_ASSEMBLING) $<
+	$(CC) -c $(ALL_ASFLAGS) $< -o $@
 
 # Create preprocessed source for use in sending a bug report.
 %.i : %.c
