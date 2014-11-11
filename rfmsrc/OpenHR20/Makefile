@@ -154,6 +154,35 @@ ADEFS = -DF_CPU=$(F_CPU) -DXTEA_ENC
 # ADEFS+=-DXTEA_DEC
 
 
+# Default options values, no manual flag overidden because of incompatibilites
+# Incompatibilities handled in configCheck rule instead
+# Define RFM to 0 to disable support for the RFM Radio Moodule in the Code
+ifeq ($(HW),THERMOTRONIC)
+ RFM?=0
+else
+ RFM?=1
+endif
+TEMP_COMPENSATE_OPTION?=0
+REMOTE_SETTING_ONLY?=$(RFM)
+HW_WINDOW_DETECTION?=0
+MENU_SHOW_BATTERY?=1
+MOTOR_COMPENSATE_BATTERY?=0
+NO_AUTORETURN_FROM_ALT_MENUES?=0
+CALIBRATION_RESETS_sumError?=0
+BLOCK_INTEGRATOR_AFTER_VALVE_CHANGE?=0
+BOOST_CONTROLER_AFTER_CHANGE?=0
+ifeq ($(RFM),1)
+ RFM_WIRE?=JD_INTERNAL
+endif
+ifeq ($(RFM_WIRE),MARIOJTAG)
+ DISABLE_JTAG?=1
+endif
+ifeq ($(RFM_WIRE),TK_INTERNAL)
+ DISABLE_JTAG?=1
+endif
+# Define to 1 to disable JTAG
+DISABLE_JTAG?=0
+
 #---------------- Compiler Options C ----------------
 #  -g*:          generate debugging information
 #  -O*:          optimization level
@@ -164,18 +193,28 @@ ADEFS = -DF_CPU=$(F_CPU) -DXTEA_ENC
 CFLAGS = -g$(DEBUG)
 CFLAGS += $(CDEFS)
 CFLAGS += $(REV)
-CFLAGS += $(RFM)
-CFLAGS += $(RFMFLAGS)
-CFLAGS += $(HRFLAGS)
-CFLAGS += $(TEMP_COMPENSATE_OPTION)
-CFLAGS += $(HW_WINDOW_DETECTION)
-CFLAGS += $(MENU_SHOW_BATTERY)
-CFLAGS += $(MOTOR_COMPENSATE_BATTERY)
-CFLAGS += $(NO_AUTORETURN_FROM_ALT_MENUES)
-CFLAGS += $(CALIBRATION_RESETS_sumError)
-CFLAGS += $(REMOTE_SETTING_ONLY)
-CFLAGS += $(BLOCK_INTEGRATOR_AFTER_VALVE_CHANGE)
-CFLAGS += $(BOOST_CONTROLER_AFTER_CHANGE)
+CFLAGS += -DRFM=$(RFM)
+CFLAGS += -DTEMP_COMPENSATE_OPTION=$(TEMP_COMPENSATE_OPTION)
+CFLAGS += -DHW_WINDOW_DETECTION=$(HW_WINDOW_DETECTION)
+CFLAGS += -DMENU_SHOW_BATTERY=$(MENU_SHOW_BATTERY)
+CFLAGS += -DMOTOR_COMPENSATE_BATTERY=$(MOTOR_COMPENSATE_BATTERY)
+CFLAGS += -DNO_AUTORETURN_FROM_ALT_MENUES=$(NO_AUTORETURN_FROM_ALT_MENUES)
+CFLAGS += -DCALIBRATION_RESETS_sumError=$(CALIBRATION_RESETS_sumError)
+CFLAGS += -DREMOTE_SETTING_ONLY=$(REMOTE_SETTING_ONLY)
+CFLAGS += -DBLOCK_INTEGRATOR_AFTER_VALVE_CHANGE=$(BLOCK_INTEGRATOR_AFTER_VALVE_CHANGE)
+CFLAGS += -DBOOST_CONTROLER_AFTER_CHANGE=$(BOOST_CONTROLER_AFTER_CHANGE)
+ifeq ($(RFM_WIRE),MARIOJTAG)
+ CFLAGS += -DRFM_WIRE_MARIOJTAG=1
+else
+ ifeq ($(RFM_WIRE),TK_INTERNAL)
+  CFLAGS += -DRFM_WIRE_TK_INTERNAL=1
+ else
+  ifeq ($(RFM_WIRE),JD_INTERNAL)
+   CFLAGS += -DRFM_WIRE_JD_INTERNAL=1
+  endif
+ endif
+endif
+CFLAGS += -DDISABLE_JTAG=$(DISABLE_JTAG)
 CFLAGS += $(FLAGS)
 CFLAGS += -O$(OPT)
 CFLAGS += -funsigned-char
@@ -414,6 +453,51 @@ ALL_ASFLAGS = -mmcu=$(MCU) -I. -x assembler-with-cpp $(ASFLAGS)
 # Default target.
 all: begin gccversion sizebefore build sizeafter end
 
+# Check options and issue an error if consistent (rather than silently forcing compatible options)
+configCheck:
+ifeq ($(RFM),1)
+ ifeq ($(HW),THERMOTRONIC)
+	@echo "ERROR: THERMOTRONIC with RFM12 not implemented."
+	@exit 1
+ endif
+ ifneq ($(RFM_WIRE),JD_INTERNAL)
+  ifeq ($(RFM_WIRE),TK_INTERNAL)
+   ifneq ($(HW),HR25)
+	@echo "ERROR: RFM_WIRE_TK_INTERNAL applicable for HR25 hardware only."
+	@exit 2
+   endif
+  else
+   ifeq ($(RFM_WIRE),MARIOJTAG)
+    ifeq ($(HW_WINDOW_DETECTION),1)
+	@echo "ERROR: HW_WINDOW_DETECTION incompatible with MARIOJTAG wiring."
+	@exit 3
+    endif
+   else
+	@echo "ERROR: Unknown wiring option."
+	@exit 4
+   endif
+  endif
+  ifeq ($(DISABLE_JTAG),0)
+	@echo "ERROR: JTAG must be disabled to use MARIOJTAG or TK_INTERNAL wiring."
+	@exit 5
+   endif
+ endif
+else
+ ifneq ($(RFM_WIRE),)
+	@echo "ERROR: Enable RFM to use RFM_WIRE_... options."
+	@exit 6
+ endif
+ ifeq ($(REMOTE_SETTING_ONLY),1)
+	@echo "ERROR: Enable RFM to use REMOTE_SETTING_ONLY."
+	@exit 7
+ endif
+endif
+
+# Make sure config is checked before building any object
+# Lacks efficiency (called for every object)
+$(OBJ): configCheck
+
+
 # Change the build target to build a HEX file or a library.
 #build: elf hex eep bin lss sym info
 build: elf hex eep bin lss info
@@ -528,9 +612,17 @@ extcoff: $(TARGET).elf
 	@echo "Configuration" >> $@
 	@echo "Hardware type $(HW)" >> $@
 	@echo "RFM=$(RFM)" >> $@
-	@echo "RFMFLAGS=$(RFMFLAGS)" >> $@
-	@echo "HRFLAGS=$(HRFLAGS)" >> $@
+	@echo "TEMP_COMPENSATE_OPTION=$(TEMP_COMPENSATE_OPTION)" >> $@
+	@echo "REMOTE_SETTING_ONLY=$(REMOTE_SETTING_ONLY)" >> $@
 	@echo "HW_WINDOW_DETECTION=$(HW_WINDOW_DETECTION)" >> $@
+	@echo "MENU_SHOW_BATTERY=$(MENU_SHOW_BATTERY)" >> $@
+	@echo "MOTOR_COMPENSATE_BATTERY=$(MOTOR_COMPENSATE_BATTERY)" >> $@
+	@echo "NO_AUTORETURN_FROM_ALT_MENUES=$(NO_AUTORETURN_FROM_ALT_MENUES)" >> $@
+	@echo "CALIBRATION_RESETS_sumError=$(CALIBRATION_RESETS_sumError)" >> $@
+	@echo "BLOCK_INTEGRATOR_AFTER_VALVE_CHANGE=$(BLOCK_INTEGRATOR_AFTER_VALVE_CHANGE)" >> $@
+	@echo "BOOST_CONTROLER_AFTER_CHANGE=$(BOOST_CONTROLER_AFTER_CHANGE)" >> $@
+	@echo "RFM_WIRE=$(RFM_WIRE)" >> $@
+	@echo "DISABLE_JTAG=$(DISABLE_JTAG)" >> $@
 	@echo "==================================" >> $@
 	@echo >> $@
 	$(ELFSIZE) >> $@
@@ -581,7 +673,7 @@ extcoff: $(TARGET).elf
 %.elf: $(OBJ)
 	@echo
 	@echo $(MSG_LINKING) $@
-	$(CC) $(ALL_CFLAGS) $^ --output $@ $(LDFLAGS)
+	$(CC) $(ALL_CFLAGS) $(OBJ) --output $@ $(LDFLAGS)
 
 
 # Compile: create object files from C source files.

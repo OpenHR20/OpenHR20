@@ -87,55 +87,11 @@ In this file we define only configuration parameters, for example what kind of c
 
 #define DEFAULT_TEMPERATURE 2000
 
-#ifndef HW_WINDOW_DETECTION
-	#define HW_WINDOW_DETECTION 0
-#endif
-#ifndef TEMP_COMPENSATE_OPTION
-	#define TEMP_COMPENSATE_OPTION 0
-#endif
-
-#if THERMOTRONIC
-    #ifdef RFM
-        #if RFM
-            #error "THERMOTRONIC with RFM12 not implemented"
-        #endif
-    #else
-        #define RFM 0
-    #endif
-#else
-    #ifndef RFM
-        #define RFM 1 //!< define RFM to 1 if you want to have support for the RFM Radio Moodule in the Code
-    #endif
-#endif
 
 #if (RFM == 1)
-	#ifndef RFM_WIRE_MARIOJTAG 
-		#define RFM_WIRE_MARIOJTAG 0 //!< define that if you want to wire your RFM to external JTAG pins
-	#endif
-	#ifndef RFM_WIRE_TK_INTERNAL 
-		#define RFM_WIRE_TK_INTERNAL 0 //!< define if you want to wire RFM to free internal HR25 pins
-	#endif
-	
-    #if RFM_WIRE_MARIOJTAG || RFM_WIRE_TK_INTERNAL
-		#define RFM_WIRE_JD_INTERNAL 0 //!< define that if you want to wire your RFM to free internal pins
-	#else 
-		#define RFM_WIRE_JD_INTERNAL 1 //!< define that if you want to wire your RFM to free internal pins
-	#endif
-
-	#define RFM12 1 // just a synonym
     #ifndef RFM_DEVICE_ADDRESS
 	  #define RFM_DEVICE_ADDRESS 0x00
     #endif
-
-	#if (RFM_WIRE_MARIOJTAG == 1)
-		#define DISABLE_JTAG 1 //!< define DISABLE_JTAG if your RFM's connection uses any JTAG pins
-		#if (HW_WINDOW_DETECTION)
-			#error HW_WINDOW_DETECTION is not compatible with RFM_WIRE_MARIOJTAG
-		#endif
-	#endif
-	#if (RFM_WIRE_TK_INTERNAL == 1)
-		#define DISABLE_JTAG 1 //!< define DISABLE_JTAG if your RFM's connection uses any JTAG pins
-	#endif
 
     #ifndef SECURITY_KEY_0
 	#define SECURITY_KEY_0		0x01
@@ -161,17 +117,6 @@ In this file we define only configuration parameters, for example what kind of c
     #ifndef SECURITY_KEY_7
 	#define SECURITY_KEY_7		0xef
     #endif
-#else
-	#define RFM12                  0
-	#define RFM_WIRE_MARIOJTAG     0
-	#define RFM_WIRE_JD_INTERNAL   0
-	#define RFM_WIRE_TK_INTERNAL   0
-	#define DISABLE_JTAG           0
-#endif
-
-#ifndef REMOTE_SETTING_ONLY
-	#define REMOTE_SETTING_ONLY	(RFM12)
-	// #define REMOTE_SETTING_ONLY	0
 #endif
 
 // Some default Values
@@ -180,25 +125,6 @@ In this file we define only configuration parameters, for example what kind of c
 #define BOOT_YY        13  //!< Boot-Up date: year
 #define BOOT_hh        12  //!< Boot-Up time: hour
 #define BOOT_mm        00  //!< Boot-Up time: minutes
-
-#ifndef MENU_SHOW_BATTERY
-	#define MENU_SHOW_BATTERY 1
-#endif
-#ifndef MOTOR_COMPENSATE_BATTERY
-	#define MOTOR_COMPENSATE_BATTERY 0
-#endif
-#ifndef NO_AUTORETURN_FROM_ALT_MENUES
-	#define NO_AUTORETURN_FROM_ALT_MENUES 0
-#endif
-#ifndef CALIBRATION_RESETS_sumError
-	#define CALIBRATION_RESETS_sumError 0
-#endif
-#ifndef BLOCK_INTEGRATOR_AFTER_VALVE_CHANGE
-	#define BLOCK_INTEGRATOR_AFTER_VALVE_CHANGE 0
-#endif
-#ifndef BOOST_CONTROLER_AFTER_CHANGE
-	#define BOOST_CONTROLER_AFTER_CHANGE 0
-#endif
 
 /**********************/
 /* code configuration */
