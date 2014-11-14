@@ -36,7 +36,7 @@
 
 #include "config.h"
 #include "rfm_config.h"
-#include "../common/rfm.h"
+#include "rfm.h"
 #include "eeprom.h"
 #include "task.h"
 

@@ -35,10 +35,10 @@
 #include "config.h"
 #include <avr/pgmspace.h>
 #include <string.h>
-#include "../common/xtea.h"
+#include "xtea.h"
 #include "eeprom.h"
-#include "../common/wireless.h"
-#include "../common/cmac.h"
+#include "wireless.h"
+#include "cmac.h"
 #include "com.h"
 #include "debug.h"
 #if defined(MASTER_CONFIG_H)
