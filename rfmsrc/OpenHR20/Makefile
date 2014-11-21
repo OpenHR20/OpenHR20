@@ -80,7 +80,6 @@ FORMAT = ihex
 OBJDIR = obj
 
 
-
 # List C source files here. (C dependencies are automatically generated.)
 # order of this files have effect on code size (relaxing), therefore it divided to 2 parts
 SRC =  \
@@ -155,7 +154,7 @@ ADEFS = -DF_CPU=$(F_CPU) -DXTEA_ENC
 
 
 # Default options values, no manual flag overidden because of incompatibilites
-# Incompatibilities handled in configCheck rule instead
+# Incompatibilities handled below with $(error ...)
 # Define RFM to 0 to disable support for the RFM Radio Moodule in the Code
 ifeq ($(HW),THERMOTRONIC)
  RFM?=0
@@ -182,6 +181,40 @@ ifeq ($(RFM_WIRE),TK_INTERNAL)
 endif
 # Define to 1 to disable JTAG
 DISABLE_JTAG?=0
+
+# Check options and issue an error if consistent (rather than silently forcing compatible options)
+ifeq ($(RFM),1)
+ ifeq ($(HW),THERMOTRONIC)
+  $(error ERROR: THERMOTRONIC with RFM12 not implemented.)
+  $(error This is an error)
+ endif
+ ifneq ($(RFM_WIRE),JD_INTERNAL)
+  ifeq ($(RFM_WIRE),TK_INTERNAL)
+   ifneq ($(HW),HR25)
+    $(error ERROR: RFM_WIRE_TK_INTERNAL applicable for HR25 hardware only.)
+   endif
+  else
+   ifeq ($(RFM_WIRE),MARIOJTAG)
+    ifeq ($(HW_WINDOW_DETECTION),1)
+     $(error ERROR: HW_WINDOW_DETECTION incompatible with MARIOJTAG wiring.)
+    endif
+   else
+    $(error ERROR: Unknown wiring option.)
+   endif
+  endif
+  ifeq ($(DISABLE_JTAG),0)
+   $(error ERROR: JTAG must be disabled to use MARIOJTAG or TK_INTERNAL wiring.)
+  endif
+ endif
+else
+ ifneq ($(RFM_WIRE),)
+  $(error ERROR: Enable RFM to use RFM_WIRE_... options.)
+ endif
+ ifeq ($(REMOTE_SETTING_ONLY),1)
+  $(error ERROR: Enable RFM to use REMOTE_SETTING_ONLY.)
+ endif
+endif
+
 
 #---------------- Compiler Options C ----------------
 #  -g*:          generate debugging information
@@ -454,51 +487,6 @@ ALL_ASFLAGS = -mmcu=$(MCU) -I. -x assembler-with-cpp $(ASFLAGS)
 
 # Default target.
 all: begin gccversion sizebefore build sizeafter end
-
-# Check options and issue an error if consistent (rather than silently forcing compatible options)
-configCheck:
-ifeq ($(RFM),1)
- ifeq ($(HW),THERMOTRONIC)
-	@echo "ERROR: THERMOTRONIC with RFM12 not implemented."
-	@exit 1
- endif
- ifneq ($(RFM_WIRE),JD_INTERNAL)
-  ifeq ($(RFM_WIRE),TK_INTERNAL)
-   ifneq ($(HW),HR25)
-	@echo "ERROR: RFM_WIRE_TK_INTERNAL applicable for HR25 hardware only."
-	@exit 2
-   endif
-  else
-   ifeq ($(RFM_WIRE),MARIOJTAG)
-    ifeq ($(HW_WINDOW_DETECTION),1)
-	@echo "ERROR: HW_WINDOW_DETECTION incompatible with MARIOJTAG wiring."
-	@exit 3
-    endif
-   else
-	@echo "ERROR: Unknown wiring option."
-	@exit 4
-   endif
-  endif
-  ifeq ($(DISABLE_JTAG),0)
-	@echo "ERROR: JTAG must be disabled to use MARIOJTAG or TK_INTERNAL wiring."
-	@exit 5
-   endif
- endif
-else
- ifneq ($(RFM_WIRE),)
-	@echo "ERROR: Enable RFM to use RFM_WIRE_... options."
-	@exit 6
- endif
- ifeq ($(REMOTE_SETTING_ONLY),1)
-	@echo "ERROR: Enable RFM to use REMOTE_SETTING_ONLY."
-	@exit 7
- endif
-endif
-
-# Make sure config is checked before building any object
-# Lacks efficiency (called for every object)
-$(OBJ): configCheck
-
 
 # Change the build target to build a HEX file or a library.
 #build: elf hex eep bin lss sym info
