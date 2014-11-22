@@ -105,7 +105,6 @@ In this file we define only configuration parameters, for example what kind of c
 #define RFM 1 //!< define RFM to 1 if you want to have support for the RFM Radio Moodule in the Code
 
 #if (RFM == 1)
-	#define RFM12 1 // just a synonym
 	#define RFM_DEVICE_ADDRESS 0x00
 	#define DISABLE_JTAG           0
     #ifndef SECURITY_KEY_0
@@ -133,7 +132,6 @@ In this file we define only configuration parameters, for example what kind of c
 	#define SECURITY_KEY_7		0xef
     #endif
 #else
-	#define RFM12                  0
 	#define DISABLE_JTAG           0
     #define RFM_TUNING             0
 #endif
