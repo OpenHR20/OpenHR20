@@ -158,6 +158,21 @@ CPPDEFS = -DF_CPU=$(F_CPU)UL
 #CPPDEFS += -D__STDC_CONSTANT_MACROS
 
 
+# Set default security keys
+SECURITY_KEY_0?=0x01
+SECURITY_KEY_1?=0x23
+SECURITY_KEY_2?=0x45
+SECURITY_KEY_3?=0x67
+SECURITY_KEY_4?=0x89
+SECURITY_KEY_5?=0xab
+SECURITY_KEY_6?=0xcd
+SECURITY_KEY_7?=0xef
+# Main RFM frequency (depends on RFM variant)
+RFM_FREQ_MAIN?=868
+# Decimal part of the RFM frequency
+RFM_FREQ_FINE?=0.35
+# Enable diagnostic (RFM_TUNING=1) to fine tune RFM frequency
+RFM_TUNING?=0
 
 #---------------- Compiler Options C ----------------
 #  -g*:          generate debugging information
@@ -169,7 +184,17 @@ CPPDEFS = -DF_CPU=$(F_CPU)UL
 CFLAGS = -g$(DEBUG)
 CFLAGS += $(CDEFS)
 CFLAGS += $(REV)
-CFLAGS += $(RFMFLAGS)
+CFLAGS += -DSECURITY_KEY_0=$(SECURITY_KEY_0)
+CFLAGS += -DSECURITY_KEY_1=$(SECURITY_KEY_1)
+CFLAGS += -DSECURITY_KEY_2=$(SECURITY_KEY_2)
+CFLAGS += -DSECURITY_KEY_3=$(SECURITY_KEY_3)
+CFLAGS += -DSECURITY_KEY_4=$(SECURITY_KEY_4)
+CFLAGS += -DSECURITY_KEY_5=$(SECURITY_KEY_5)
+CFLAGS += -DSECURITY_KEY_6=$(SECURITY_KEY_6)
+CFLAGS += -DSECURITY_KEY_7=$(SECURITY_KEY_7)
+CFLAGS += -DRFM_FREQ_MAIN=$(RFM_FREQ_MAIN)
+CFLAGS += -DRFM_FREQ_FINE=$(RFM_FREQ_FINE)
+CFLAGS += -DRFM_TUNING=$(RFM_TUNING)
 CFLAGS += $(MASTERFLAGS)
 CFLAGS += -O$(OPT)
 CFLAGS += -funsigned-char
@@ -552,7 +577,10 @@ extcoff: $(TARGET).elf
 	$(REMOVE) $@
 	@echo "Configuration" >> $@
 	@echo "Hardware type: MCU $(MCU) at $(F_CPU)Hz" >> $@
-	@echo "RFMFLAGS=$(RFMFLAGS)" >> $@
+	@echo "SECURITY_KEY=$(SECURITY_KEY_0) $(SECURITY_KEY_1) $(SECURITY_KEY_2) $(SECURITY_KEY_3) $(SECURITY_KEY_4) $(SECURITY_KEY_5) $(SECURITY_KEY_6) $(SECURITY_KEY_7)" >> $@
+	@echo "RFM_FREQ_MAIN=$(RFM_FREQ_MAIN)" >> $@
+	@echo "RFM_FREQ_FINE=$(RFM_FREQ_FINE)" >> $@
+	@echo "RFM_TUNING=$(RFM_TUNING)" >> $@
 	@echo "MASTERFLAGS=$(MASTERFLAGS)" >> $@
 	@echo "==================================" >> $@
 	@echo >> $@
