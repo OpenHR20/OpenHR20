@@ -7,7 +7,7 @@ set -o errexit
 # defaults
 ADDR=
 REMOTE_ONLY=0
-HW=hr20
+HW=HONEYWELL
 KEY0=01
 KEY1=23
 KEY2=45
