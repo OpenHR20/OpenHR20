@@ -23,6 +23,16 @@ function weights($char) {
     else 
         return 10;
 }
+function sendRTC($fp) {
+        list($usec, $sec) = explode(" ", microtime());
+        $items = getdate($sec);
+        $time = sprintf("H%02x%02x%02x%02x\n",
+            $items['hours'], $items['minutes'], $items['seconds'], round($usec*100));
+        $date = sprintf("Y%02x%02x%02x\n",
+            $items['year']-2000, $items['mon'], $items['mday']);
+        echo $time ." ". $date;
+        fwrite($fp,$date); fwrite($fp,$time);  // was other way around
+}
 
 $db = new SQLite3("/tmp/openhr20.sqlite");
 $db->query("PRAGMA synchronous=OFF");
@@ -34,6 +44,9 @@ $fp=fopen("/dev/ttyUSB0","w+");
 //while(($line=stream_get_line($fp,256,"\n"))!=FALSE) {
 
 $addr=-1;
+
+echo " <Starting>..\n";
+sendRTC($fp);
 
 while(($line=fgets($fp,256))!==FALSE) {
     $line=trim($line);
@@ -66,14 +79,7 @@ while(($line=fgets($fp,256))!==FALSE) {
     }
     
     if ($line=="RTC?") {
-    	list($usec, $sec) = explode(" ", microtime());
-    	$items = getdate($sec);
-    	$time = sprintf("H%02x%02x%02x%02x\n",
-    	    $items['hours'], $items['minutes'], $items['seconds'], round($usec*100));
-    	$date = sprintf("Y%02x%02x%02x\n",
-    	    $items['year']-2000, $items['mon'], $items['mday']);
-    	echo $time ." ". $date;
-    	fwrite($fp,$date); fwrite($fp,$time);
+        sendRTC($fp);
     	$debug=false;
     } else if (($line=="OK") || (($line{0}=='d') && ($line{2}==' '))) {
         $debug=false;
@@ -233,3 +239,4 @@ while(($line=fgets($fp,256))!==FALSE) {
     }
 	// echo "         duration ".(microtime(true)-$ts)."\n";
 } 
+echo " <STOPPED>";
