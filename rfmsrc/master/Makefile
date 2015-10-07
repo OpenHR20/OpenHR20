@@ -189,6 +189,7 @@ CFLAGS += -ffreestanding
 #CFLAGS += --param inline-call-cost=2 
 #CFLAGS += -ffunction-sections
 CFLAGS += -fdata-sections
+CFLAGS += -fno-toplevel-reorder
 
 
 #---------------- Compiler Options C++ ----------------

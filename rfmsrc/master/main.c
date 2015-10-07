@@ -307,9 +307,5 @@ void get_mcusr(void)
 }
 
 // default fuses for ELF file
-
-FUSES = 
-{
-    .low = 0xA0,
-    .high = 0x91,
-};
+// commented out, since averdude chokes on them with "illegal address"
+//FUSES = { .low = 0xA0, .high = 0x91, };
