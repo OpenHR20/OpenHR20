@@ -194,6 +194,7 @@ CFLAGS += -Wl,--relax
 #CFLAGS += --param inline-call-cost=2 
 #CFLAGS += -ffunction-sections
 CFLAGS += -fdata-sections
+CFLAGS += -fno-toplevel-reorder
 
 ifeq ($(HW),THERMOTRONIC)
     CFLAGS += -DTHERMOTRONIC=1
