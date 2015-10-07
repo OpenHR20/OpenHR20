@@ -250,14 +250,17 @@ void RFM_interrupt(uint8_t pine)
 // RFM module interupt
 volatile uint8_t afc = 0;
 ISR (RFM_INT_vect){
-  uint16_t status = RFM_READ_STATUS();  // this also clears most interrupt sources
 #if (JEENODE == 1)
+  uint16_t status = RFM_READ_STATUS();  // this also clears most interrupt sources
   if (status & RFM_STATUS_RGIT) {       // we are using level interrupt on jeenode
 #else
   while (RFM_SDO_PIN & _BV(RFM_SDO_BITPOS)) {
 #endif
       RFM_INT_DIS();  // disable RFM interrupt
       sei(); // enable global interrupts
+#if (JEENODE == 0)
+      uint16_t status = RFM_READ_STATUS();  // this also clears most interrupt sources
+#endif
       if (rfm_mode == rfmmode_tx) {
             RFM_WRITE(rfm_framebuf[rfm_framepos++]);
             if (rfm_framepos >= rfm_framesize) {
