@@ -78,7 +78,7 @@ In this file we define only configuration parameters, for example what kind of c
 #if THERMOTRONIC!=1 //No serialport implementet yet
 // Note we should only enable of of the following at one time
 /* we support RS232 */
-#define COM_RS232 1
+//#define COM_RS232 1
 /* we support RS485 */
 /* #define COM_RS485  */
 /* Our default Adress, if not set or invalid */
