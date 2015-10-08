@@ -44,6 +44,7 @@ $fp=fopen("/dev/ttyUSB0","w+");
 //while(($line=stream_get_line($fp,256,"\n"))!=FALSE) {
 
 $addr=-1;
+$trans=false;
 
 echo " <Starting>..\n";
 sendRTC($fp);
@@ -134,7 +135,7 @@ while(($line=fgets($fp,256))!==FALSE) {
     	    $db->query("COMMIT");
     
     	    //$debug=false;
-    	  } else if ($data{1}=='[' && $data{4}==']' && $data{5}=='=') {
+    	  } else if (strlen($data) >= 5 && $data{1}=='[' && $data{4}==']' && $data{5}=='=') {
     	    $idx=hexdec(substr($data,2,2));
     	    $value=hexdec(substr($data,6));
     	    switch ($data{0}) {
