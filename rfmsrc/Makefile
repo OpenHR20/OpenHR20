@@ -18,7 +18,7 @@
 # RFM settings
 
 # Enable diagnostic to fine tune RFM frequency
-#RFMFLAGS += -DRFM_TUNING=1
+RFMFLAGS += -DRFM_TUNING=1
 
 # Set default HR slave address, valid range is 1-28
 # Do not set on master, thus use HRFLAGS

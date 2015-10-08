@@ -10,7 +10,7 @@ $layout_ids_double = array (
     array( 'P_Factor' , 'Proportional tuning constant, multiplied with 256' ),
     array( 'I_Factor' , 'Integral tuning constant, multiplied with 256' ),
     array( 'I_max_credit' , 'credit for interator limitation' ),
-	array( 'I_credit_expiration' , 'credit expiration, unit is PID_interval' ),
+    array( 'I_credit_expiration' , 'credit expiration, unit is PID_interval' ),
     array( 'PID_interval' , 'PID_interval*5 = interval in seconds' ),
     array( 'valve_min' , 'valve position limiter min' ),
     array( 'valve_center' , 'default valve position for "zero - error" - improve stabilization after change temperature' ),
@@ -53,6 +53,8 @@ $layout_ids_double = array (
     array( 'security_key5' , 'key for encrypted radio messasges' ),
     array( 'security_key6' , 'key for encrypted radio messasges' ),
     array( 'security_key7' , 'key for encrypted radio messasges' ),
+    array( 'afc_value' , 'afc correction value, binary complement for <0' ),
+    array( 'afc_enable' , 'afc correction enable' ),
     0xff => array( 'LAYOUT_VERSION' , '' )
 
 );
