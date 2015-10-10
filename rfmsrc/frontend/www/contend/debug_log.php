@@ -20,8 +20,8 @@ class contend_debug_log extends contend {
     $result = $db->query("SELECT * FROM debug_log$where ORDER BY time DESC LIMIT $offset,$limit");
     
     echo "<div>";
-    if ($offset>0) echo "<a href=\"?page=debug_log&addr=$this->addr&offset=".($offset-50)."&limit=$limit\">previous $limit</a>";
-    echo " <a href=\"?page=debug_log&addr=$this->addr&offset=".($offset+50)."&limit=$limit\">next $limit</a>";
+    if ($offset>0) echo "<a href=\"?page=debug_log&addr=$this->addr&offset=".($offset-$limit)."&limit=$limit\">previous $limit</a>";
+    echo " <a href=\"?page=debug_log&addr=$this->addr&offset=".($offset+$limit)."&limit=$limit\">next $limit</a>";
 
     echo "</div>";
     echo "<pre>\n";

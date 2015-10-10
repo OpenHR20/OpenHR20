@@ -598,14 +598,11 @@ void COM_wireless_command_parse (uint8_t * rfm_framebuf, uint8_t rfm_framepos) {
 			pos++;
             break;
 		case 'B':
-			{
-  				if ((rfm_framebuf[pos]==0x13) && (rfm_framebuf[pos+1]==0x24)) {
-                      cli();
-                      wdt_enable(WDTO_15MS); //wd on,15ms
-                      while(1); //loop till reset
-    			}
-    			pos+=2;
-			}
+  			if ((rfm_framebuf[pos]==0x13) && (rfm_framebuf[pos+1]==0x24))
+				reboot=true;
+			wireless_putchar(rfm_framebuf[pos]);
+			wireless_putchar(rfm_framebuf[pos+1]);
+    		pos+=2;
 			break;
         case 'M':
             CTL_change_mode(rfm_framebuf[pos++]);

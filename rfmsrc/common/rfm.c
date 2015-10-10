@@ -144,8 +144,8 @@ void RFM_init(void)
 		RFM_RX_CONTROL_P20_VDI  | 
 		RFM_RX_CONTROL_VDI_FAST |
 		RFM_RX_CONTROL_BW(RFM_BAUD_RATE) |
-		RFM_RX_CONTROL_GAIN_0   |
-		RFM_RX_CONTROL_RSSI_85
+		RFM_RX_CONTROL_GAIN_14   |
+		RFM_RX_CONTROL_RSSI_97
 	 );
 
 	// 6. Data Filter Command
@@ -181,7 +181,14 @@ void RFM_init(void)
 	 );
 
     // 12. PLL Setting Command
-    
+	RFM_SPI_16(
+		RFM_PLL					|
+		RFM_PLL_uC_CLK_10		|
+		RFM_PLL_DELAY_OFF		|
+		RFM_PLL_DITHER_OFF		|
+		RFM_PLL_BIRATE_LOW		
+	);
+
 	// 13. Transmitter Register Write Command
 
 	// 14. Wake-Up Timer Command

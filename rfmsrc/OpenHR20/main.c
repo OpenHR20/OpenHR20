@@ -41,6 +41,7 @@
 #include <avr/sleep.h>
 #include <avr/version.h>
 #include <avr/fuse.h>
+#include <avr/wdt.h>
 
 // HR20 Project includes
 #include "config.h"
@@ -78,6 +79,8 @@ void load_defauls(void);                   // load default values
 void callback_settemp(uint8_t);            // called from RTC to set new reftemp
 void setautomode(bool);                    // activate/deactivate automode
 uint8_t input_temp(uint8_t);
+
+bool reboot = false;
 
 // Check AVR LibC Version >= 1.6.0
 #if __AVR_LIBC_VERSION__ < 10600UL
@@ -167,6 +170,11 @@ int __attribute__ ((noreturn)) main(void)
 			if (rfm_mode == rfmmode_tx_done)
 			{
                 wirelessSendDone();
+				if (reboot) {
+					cli();
+					wdt_enable(WDTO_15MS); //wd on,15ms
+					while(1); //loop till reset
+				}
 			}
   			else if ((rfm_mode == rfmmode_rx) || (rfm_mode == rfmmode_rx_owf))
   			{
