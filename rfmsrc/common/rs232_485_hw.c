@@ -161,11 +161,13 @@ void RS_Init(void)
             #if defined(MASTER_CONFIG_H)
 			  UCSR0B = _BV(RXCIE0) | _BV(RXEN0);
 			#endif
+		#else
 			// todo: decide between 2way RS232 and one way debugging only
-            #elif (defined COM_RS232) || (defined COM_RS485) 
+            #if (defined COM_RS232) || (defined COM_RS485) 
                 UCSR0B = _BV(RXCIE0) | _BV(RXEN0);
             #endif
             UCSR0C = (_BV(UCSZ00) | _BV(UCSZ01));     // Asynchron 8N1
+		#endif
 	#if !defined(_AVR_IOM16_H_) && !defined(_AVR_IOM32_H_) && !defined(_AVR_IOM328P_H_)
     PCMSK0 |= (1<<PCINT0); // activate interrupt
   #endif
