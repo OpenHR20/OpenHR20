@@ -207,7 +207,7 @@ void wirelessTimer(void) {
         wirelessTimerCase = WL_TIMER_RX_TMO;
         while (ASSR & (_BV(TCR2UB))) {;}
         RTC_timer_set(RTC_TIMER_RFM, (uint8_t)(RTC_s256 + WLTIME_SYNC_TIMEOUT));    
-        break;
+        return;
     case WL_TIMER_RX_TMO:
         if (rfm_mode!= rfmmode_tx) {
             RFM_INT_DIS();
