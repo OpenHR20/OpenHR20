@@ -82,7 +82,8 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
     /* 1f */ uint8_t temp_cal_table4; //!< temperature calibration table
     /* 20 */ uint8_t temp_cal_table5; //!< temperature calibration table
     /* 21 */ uint8_t temp_cal_table6; //!< temperature calibration table
-    /* 22 */ uint8_t timer_mode; //!< =0 only one program, =1 programs for weekdays
+    /* 22 */ uint8_t timer_mode;	//!< bit0: timermode; =0 only one program, =1 programs for weekdays
+									// >1 manual mode, the higher bits contain the saved temperature << 1
 #if HR25
     /*    */ uint8_t bat_half_thld; //!< treshold for half battery indicator [unit 0.02V]=[unit 0.01V per cell]
 #endif
@@ -245,7 +246,8 @@ uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
   /* 20 */  {614-549,614-549,      16,      255},   //!< value for 10C => 614 temperature calibration table
   /* 21 */  {675-614,675-614,      16,      255},   //!< value for 05C => 675 temperature calibration table
 #endif
-  /* 22 */  {0,           0,        0,        1},   //!< timer_mode; =0 only one program, =1 programs for weekdays 
+  /* 22 */  {0,           0,        0, ((TEMP_MAX+1)<<1)+1},	//!< bit0: timer_mode; =0 only one program, =1 programs for weekdays
+																// >1 manual mode, the higher bits contain the saved temperature << 1
 #if HR25
   /*    */  {125,       125,       80,      160},   //!< bat_half_thld; treshold for half battery indicator [unit 0.02V]=[unit 0.01V per cell]
 #endif

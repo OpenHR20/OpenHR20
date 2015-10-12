@@ -473,6 +473,13 @@ static inline void init(void)
 
 	// init keyboard
     state_wheel_prev = ~PINB & (KBI_ROT1 | KBI_ROT2);
+
+	// restore saved temperature from config.timer
+    if ( config.timer_mode > 1 ) {
+		CTL_temp_wanted = config.timer_mode >> 1;
+		CTL_mode_auto = false;
+	}
+
 }
 
 // interrupts: 

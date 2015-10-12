@@ -249,6 +249,11 @@ void CTL_temp_change_inc (int8_t ch) {
 	}
 	CTL_mode_window = 0;
     PID_force_update = 9;
+	if (!CTL_mode_auto) {
+		// save temp to config.timer_mode
+		config.timer_mode = (CTL_temp_wanted << 1) + (config.timer_mode & 0x01);
+		eeprom_config_save((uint16_t)(&config.timer_mode)-(uint16_t)(&config));
+	}
 }
 
 static uint8_t menu_temp_rewoke_type;
@@ -278,7 +283,13 @@ void CTL_change_mode(int8_t m) {
     if (CTL_mode_auto && (m != CTL_CHANGE_MODE_REWOKE)) {
         CTL_temp_auto_type = RTC_ActualTimerTemperatureType(false);
         CTL_temp_wanted=(CTL_temp_auto_type != TEMP_TYPE_INVALID ? temperature_table[CTL_temp_auto_type] : 0);
-    }
+		config.timer_mode = config.timer_mode & 0x01;
+		eeprom_config_save((uint16_t)(&config.timer_mode)-(uint16_t)(&config));
+    } else {
+		// save temp to config.timer_mode
+		config.timer_mode = (CTL_temp_wanted << 1) + (config.timer_mode & 0x01);
+		eeprom_config_save((uint16_t)(&config.timer_mode)-(uint16_t)(&config));
+	}
     CTL_mode_window = 0;
 }
 
