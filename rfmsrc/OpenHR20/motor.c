@@ -345,7 +345,11 @@ void MOTOR_timer_stop(void) {
                             MOTOR_calibration_step = -1;     // calibration error
                             CTL_set_error(CTL_ERR_MOTOR);
                         }
-                    } else {
+                    } else if (MOTOR_ManuCalibration>0){ // already calibrated, reuse eeprom data
+                            MOTOR_PosMax = MOTOR_ManuCalibration;
+                            MOTOR_calibration_step = 0;
+                            display_task = DISP_TASK_CLEAR | DISP_TASK_UPDATE;
+                    } else { // automatic calibration
                         MOTOR_Control(close);
                         MOTOR_PosStop= (a-MOTOR_MAX_IMPULSES);
                         MOTOR_calibration_step = 3;
