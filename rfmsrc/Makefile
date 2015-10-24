@@ -1,11 +1,11 @@
 #############
 # Thermostat settings
 
-# Switch to 0 to enable slave programming also via buttons/wheel
-REMOTE_SETTING_ONLY?=1
+# Uncomment to enable slave programming also via buttons/wheel
+#export REMOTE_SETTING_ONLY=0
 
 # Switch to 1 to enable slave motor startup battery compensation
-MOTOR_COMPENSATE_BATTERY?=0
+export MOTOR_COMPENSATE_BATTERY=0
 
 #############
 # Master settings
@@ -18,24 +18,24 @@ MOTOR_COMPENSATE_BATTERY?=0
 # RFM settings
 
 # Enable diagnostic to fine tune RFM frequency by default
-RFM_TUNING?=1
+export RFM_TUNING=1
 # Set default HR slave address, valid range is 1-28
-RFM_DEVICE_ADDRESS?=28
+export RFM_DEVICE_ADDRESS=28
 # Set default security keys, shared by master and slave
-SECURITY_KEY_0?=0x01
-SECURITY_KEY_1?=0x23
-SECURITY_KEY_2?=0x45
-SECURITY_KEY_3?=0x67
-SECURITY_KEY_4?=0x89
-SECURITY_KEY_5?=0x01
-SECURITY_KEY_6?=0x23
-SECURITY_KEY_7?=0x45
+export SECURITY_KEY_0=0x01
+export SECURITY_KEY_1=0x23
+export SECURITY_KEY_2=0x45
+export SECURITY_KEY_3=0x67
+export SECURITY_KEY_4=0x89
+export SECURITY_KEY_5=0x01
+export SECURITY_KEY_6=0x23
+export SECURITY_KEY_7=0x45
 
 # Main RFM frequency (depends on RFM variant)
-RFM_FREQ_MAIN?=868
+export RFM_FREQ_MAIN=868
 
 # Decimal part of the RFM frequency
-RFM_FREQ_FINE?=0.35
+export RFM_FREQ_FINE=0.35
 
 #############
 
