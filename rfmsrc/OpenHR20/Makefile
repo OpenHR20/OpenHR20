@@ -179,7 +179,7 @@ RFM_FREQ_MAIN?=868
 # Decimal part of the RFM frequency
 RFM_FREQ_FINE?=0.35
 # Enable diagnostic (RFM_TUNING=1) to fine tune RFM frequency
-RFM_TUNING?=0
+RFM_TUNING?=1
 # Various options
 TEMP_COMPENSATE_OPTION?=0
 REMOTE_SETTING_ONLY?=$(RFM)
