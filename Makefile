@@ -39,21 +39,21 @@ export RFM_FREQ_FINE=0.35
 
 #############
 
-default: HR20_rfm_int_sww master1
+default: HR20_rfm_int_sww rfm_master
 
-all: HR20_rfm_int_sww HR20_rfm_int_hww HR20_rfm_ext_sww HR20_original_sww HR20_original_hww HR25_original_sww HR25_rfm_int_sww thermotronic_sww master1
-	 cp OpenHR20/license.txt $(DEST)/
+all: HR20_rfm_int_sww HR20_rfm_int_hww HR20_rfm_ext_sww HR20_original_sww HR20_original_hww HR25_original_sww HR25_rfm_int_sww thermotronic_sww rfm_master
+	 cp src/license.txt $(DEST)/
 
 clean:
-	 $(MAKE) clean -C OpenHR20 TARGET=../$(DEST)/HR20_rfm_int_sww/hr20 OBJDIR=HR20_rfm_int_sww
-	 $(MAKE) clean -C OpenHR20 TARGET=../$(DEST)/HR20_rfm_int_hww/hr20 OBJDIR=HR20_rfm_int_hww
-	 $(MAKE) clean -C OpenHR20 TARGET=../$(DEST)/HR20_rfm_ext_sww/hr20 OBJDIR=HR20_rfm_ext_sww
-	 $(MAKE) clean -C OpenHR20 TARGET=../$(DEST)/HR20_original_sww/hr20 OBJDIR=HR20_original_sww
-	 $(MAKE) clean -C OpenHR20 TARGET=../$(DEST)/HR20_original_hww/hr20 OBJDIR=HR20_original_hww
-	 $(MAKE) clean -C OpenHR20 TARGET=../$(DEST)/HR25_original_sww/hr20 OBJDIR=HR25_original_sww
-	 $(MAKE) clean -C OpenHR20 TARGET=../$(DEST)/HR25_rfm_int_sww/hr20 OBJDIR=HR25_rfm_int_sww
-	 $(MAKE) clean -C OpenHR20 TARGET=../$(DEST)/thermotronic_sww/hr20 OBJDIR=thermotronic_sww
-	 $(MAKE) clean -C master TARGET=../$(DEST)/master1/master OBJDIR=master1
+	 $(MAKE) clean -C src TARGET=../$(DEST)/HR20_rfm_int_sww/hr20 OBJDIR=HR20_rfm_int_sww
+	 $(MAKE) clean -C src TARGET=../$(DEST)/HR20_rfm_int_hww/hr20 OBJDIR=HR20_rfm_int_hww
+	 $(MAKE) clean -C src TARGET=../$(DEST)/HR20_rfm_ext_sww/hr20 OBJDIR=HR20_rfm_ext_sww
+	 $(MAKE) clean -C src TARGET=../$(DEST)/HR20_original_sww/hr20 OBJDIR=HR20_original_sww
+	 $(MAKE) clean -C src TARGET=../$(DEST)/HR20_original_hww/hr20 OBJDIR=HR20_original_hww
+	 $(MAKE) clean -C src TARGET=../$(DEST)/HR25_original_sww/hr20 OBJDIR=HR25_original_sww
+	 $(MAKE) clean -C src TARGET=../$(DEST)/HR25_rfm_int_sww/hr20 OBJDIR=HR25_rfm_int_sww
+	 $(MAKE) clean -C src TARGET=../$(DEST)/thermotronic_sww/hr20 OBJDIR=thermotronic_sww
+	 $(MAKE) clean -C rfm-master TARGET=../$(DEST)/rfm_master/rfm_master OBJDIR=rfm_master
 	@rm -f $(DEST)/license.txt
 
 
@@ -63,7 +63,7 @@ DEST=bin
 
 HR20_rfm_int_sww:
 	 $(shell mkdir $(DEST)/$@ 2>/dev/null)
-	 $(MAKE) -C OpenHR20 \
+	 $(MAKE) -C src \
 		TARGET=../$(DEST)/$@/hr20 \
 		OBJDIR=$@ \
 		HW_WINDOW_DETECTION=0 \
@@ -71,7 +71,7 @@ HR20_rfm_int_sww:
 
 HR20_rfm_int_hww:
 	 $(shell mkdir $(DEST)/$@ 2>/dev/null)
-	 $(MAKE) -C OpenHR20 \
+	 $(MAKE) -C src \
 		TARGET=../$(DEST)/$@/hr20 \
 		OBJDIR=$@ \
 		HW_WINDOW_DETECTION=1 \
@@ -79,7 +79,7 @@ HR20_rfm_int_hww:
 
 HR20_rfm_ext_sww:
 	 $(shell mkdir $(DEST)/$@ 2>/dev/null)
-	 $(MAKE) -C OpenHR20 \
+	 $(MAKE) -C src \
 		TARGET=../$(DEST)/$@/hr20 \
 		OBJDIR=$@ \
 		HW_WINDOW_DETECTION=0\
@@ -88,7 +88,7 @@ HR20_rfm_ext_sww:
 	 
 HR20_original_sww:
 	 $(shell mkdir $(DEST)/$@ 2>/dev/null)
-	 $(MAKE) -C OpenHR20 \
+	 $(MAKE) -C src \
 		TARGET=../$(DEST)/$@/hr20 \
 		OBJDIR=$@ \
 		HW_WINDOW_DETECTION=0 \
@@ -97,7 +97,7 @@ HR20_original_sww:
 
 HR20_original_hww:
 	 $(shell mkdir $(DEST)/$@ 2>/dev/null)
-	 $(MAKE) -C OpenHR20 \
+	 $(MAKE) -C src \
 		TARGET=../$(DEST)/$@/hr20 \
 		OBJDIR=$@ \
 		HW_WINDOW_DETECTION=1 \
@@ -106,7 +106,7 @@ HR20_original_hww:
 
 HR25_original_sww:
 	 $(shell mkdir $(DEST)/$@ 2>/dev/null)
-	 $(MAKE) -C OpenHR20 \
+	 $(MAKE) -C src \
 		TARGET=../$(DEST)/$@/hr20 \
 		OBJDIR=$@ \
 		HW_WINDOW_DETECTION=0 \
@@ -116,7 +116,7 @@ HR25_original_sww:
 
 HR25_rfm_int_sww:
 	 $(shell mkdir $(DEST)/$@ 2>/dev/null)
-	 $(MAKE) -C OpenHR20 \
+	 $(MAKE) -C src \
 		TARGET=../$(DEST)/$@/hr20 \
 		OBJDIR=$@ \
 		HW_WINDOW_DETECTION=0 \
@@ -126,7 +126,7 @@ HR25_rfm_int_sww:
 
 thermotronic_sww:
 	 $(shell mkdir $(DEST)/$@ 2>/dev/null)
-	 $(MAKE) -C OpenHR20 \
+	 $(MAKE) -C src \
 		TARGET=../$(DEST)/$@/hr20 \
 		OBJDIR=$@ \
 		HW_WINDOW_DETECTION=0 \
@@ -134,10 +134,10 @@ thermotronic_sww:
 		HW=THERMOTRONIC \
 		REV=-DREVISION=\\\"$(REV)\\\"
 
-master1:
+rfm_master:
 	 $(shell mkdir $(DEST)/$@ 2>/dev/null)
-	 $(MAKE) -C master \
-		TARGET=../$(DEST)/$@/master \
+	 $(MAKE) -C rfm-master \
+		TARGET=../$(DEST)/$@/rfm_master \
 		OBJDIR=$@ \
 		${MASTERTYPE} \
 		REV=-DREVISION=\\\"$(REV)\\\"
