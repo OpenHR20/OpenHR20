@@ -1,9 +1,0 @@
-<area shape="rect" href="$rtc_8c.html#b8af71f73c795ab4a51ce37fde7227c8" title="RTC_DowTimerSet" alt="" coords="147,5,277,32">
-<area shape="rect" href="$rtc_8c.html#b44e123b79e370221eebcf0b54117656" title="RTC_SetDay" alt="" coords="164,56,260,82">
-<area shape="rect" href="$rtc_8c.html#642053a2f72f9140504a670cf773bc3f" title="RTC_SetHour" alt="" coords="163,106,261,133">
-<area shape="rect" href="$rtc_8c.html#d5361c1808f3c2b83cfef43dbcd4dcda" title="RTC_SetMinute" alt="" coords="156,157,268,184">
-<area shape="rect" href="$rtc_8c.html#78e43a62ca81b30bdc18fdac8c9de86d" title="RTC_SetMonth" alt="" coords="157,208,267,234">
-<area shape="rect" href="$rtc_8c.html#84d90bf85967c4a6a85aa983e866ffa6" title="RTC_SetSecond" alt="" coords="153,258,271,285">
-<area shape="rect" href="$rtc_8c.html#513f58a88804ffe64143710477e381d5" title="RTC_SetYear" alt="" coords="163,309,261,336">
-<area shape="rect" href="$rtc_8c.html#7db3ce7f7e4cc3043152456a48486800" title="RTC_SetDayOfWeek" alt="" coords="325,208,469,234">
-<area shape="rect" href="$rtc_8c.html#0416acbc4e6bd2538b043216daaea68d" title="RTC_NoLeapyear" alt="" coords="517,208,640,234">

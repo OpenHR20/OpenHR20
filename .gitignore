@@ -24,9 +24,6 @@
 *.elf
 *.bin
 *.eep
-<<<<<<< HEAD
-.dep
-=======
 *.dep
 *.sym
 trunk/source/obj
@@ -34,4 +31,4 @@ rfmsrc/OpenHR20/obj
 rfmsrc/OpenHR20/hr20.txt
 rfmsrc/master/obj
 rfmsrc/master/master.txt
->>>>>>> github/master
+.DS_Store
