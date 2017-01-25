@@ -42,7 +42,7 @@
 #include "keyboard.h"
 #include "controller.h"
 #include "debug.h"
-#include "../common/rtc.h"
+#include "common/rtc.h"
 
 
 // global Vars for keypress and wheel status

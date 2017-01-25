@@ -54,7 +54,7 @@
 #include "main.h"
 #include "lcd.h"
 #include "task.h"
-#include "../common/rtc.h"
+#include "common/rtc.h"
 #include "eeprom.h"
 
 // Local Defines

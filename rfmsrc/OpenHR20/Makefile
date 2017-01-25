@@ -80,7 +80,6 @@ FORMAT = ihex
 OBJDIR = obj
 
 
-
 # List C source files here. (C dependencies are automatically generated.)
 # order of this files have effect on code size (relaxing), therefore it divided to 2 parts
 SRC =  \
@@ -88,19 +87,22 @@ SRC =  \
     controller.c \
     watch.c \
     com.c \
-    wireless.c \
-    rfm.c \
-    cmac.c \
-
-SRC_B =  \
-    rtc.c \
     main.c \
     keyboard.c \
     adc.c \
-    eeprom.c \
     menu.c \
-    lcd.c \
+    lcd.c 
+
+SRC_B_DIR=../common
+
+SRC_B =  \
+    rtc.c \
+    cmac.c \
+    eeprom.c \
+    rfm.c \
     rs232_485_hw.c \
+    wireless.c
+
 
 
 # List Assembler source files here.
@@ -130,7 +132,7 @@ DEBUG = dwarf-2
 #     Each directory must be seperated by a space.
 #     Use forward slashes for directory separators.
 #     For a directory that has spaces, enclose it in quotes.
-EXTRAINCDIRS = 
+EXTRAINCDIRS = ..
 
 
 # Compiler flag to set the C Standard level.
@@ -146,7 +148,91 @@ CDEFS = -DF_CPU=$(F_CPU)UL
 
 
 # Place -D or -U options here for ASM sources
-ADEFS = -DF_CPU=$(F_CPU)
+ADEFS = -DF_CPU=$(F_CPU) -DXTEA_ENC
+# We need only encryption
+# ADEFS+=-DXTEA_DEC
+
+
+# Default options values, no manual flag overidden because of incompatibilites
+# Incompatibilities handled below with $(error ...)
+# Define RFM to 0 to disable support for the RFM Radio Moodule in the Code
+ifeq ($(HW),THERMOTRONIC)
+ RFM?=0
+else
+ RFM?=1
+endif
+# Set default baud rate for RFM
+RFM_BAUD_RATE?=19200
+# Set default HR slave address, valid range is 1-28
+RFM_DEVICE_ADDRESS?=28
+# Set default security keys
+SECURITY_KEY_0?=0x01
+SECURITY_KEY_1?=0x23
+SECURITY_KEY_2?=0x45
+SECURITY_KEY_3?=0x67
+SECURITY_KEY_4?=0x89
+SECURITY_KEY_5?=0xab
+SECURITY_KEY_6?=0xcd
+SECURITY_KEY_7?=0xef
+# Main RFM frequency (depends on RFM variant)
+RFM_FREQ_MAIN?=868
+# Decimal part of the RFM frequency
+RFM_FREQ_FINE?=0.35
+# Enable diagnostic (RFM_TUNING=1) to fine tune RFM frequency
+RFM_TUNING?=1
+# Various options
+TEMP_COMPENSATE_OPTION?=0
+REMOTE_SETTING_ONLY?=$(RFM)
+HW_WINDOW_DETECTION?=0
+MENU_SHOW_BATTERY?=1
+MOTOR_COMPENSATE_BATTERY?=0
+NO_AUTORETURN_FROM_ALT_MENUES?=0
+CALIBRATION_RESETS_sumError?=0
+BLOCK_INTEGRATOR_AFTER_VALVE_CHANGE?=0
+BOOST_CONTROLER_AFTER_CHANGE?=0
+ifeq ($(RFM),1)
+ RFM_WIRE?=JD_INTERNAL
+endif
+ifeq ($(RFM_WIRE),MARIOJTAG)
+ DISABLE_JTAG?=1
+endif
+ifeq ($(RFM_WIRE),TK_INTERNAL)
+ DISABLE_JTAG?=1
+endif
+# Define to 1 to disable JTAG
+DISABLE_JTAG?=0
+
+# Check options and issue an error if consistent (rather than silently forcing compatible options)
+ifeq ($(RFM),1)
+ ifeq ($(HW),THERMOTRONIC)
+  $(error ERROR: THERMOTRONIC with RFM12 not implemented.)
+ endif
+ ifneq ($(RFM_WIRE),JD_INTERNAL)
+  ifeq ($(RFM_WIRE),TK_INTERNAL)
+   ifneq ($(HW),HR25)
+    $(error ERROR: RFM_WIRE_TK_INTERNAL applicable for HR25 hardware only.)
+   endif
+  else
+   ifeq ($(RFM_WIRE),MARIOJTAG)
+    ifeq ($(HW_WINDOW_DETECTION),1)
+     $(error ERROR: HW_WINDOW_DETECTION incompatible with MARIOJTAG wiring.)
+    endif
+   else
+    $(error ERROR: Unknown wiring option.)
+   endif
+  endif
+  ifeq ($(DISABLE_JTAG),0)
+   $(error ERROR: JTAG must be disabled to use MARIOJTAG or TK_INTERNAL wiring.)
+  endif
+ endif
+else
+ ifneq ($(RFM_WIRE),)
+  $(error ERROR: Enable RFM to use RFM_WIRE_... options.)
+ endif
+ ifeq ($(REMOTE_SETTING_ONLY),1)
+  $(error ERROR: Enable RFM to use REMOTE_SETTING_ONLY.)
+ endif
+endif
 
 
 #---------------- Compiler Options C ----------------
@@ -159,18 +245,43 @@ ADEFS = -DF_CPU=$(F_CPU)
 CFLAGS = -g$(DEBUG)
 CFLAGS += $(CDEFS)
 CFLAGS += $(REV)
-CFLAGS += $(RFM)
-CFLAGS += $(RFMFLAGS)
-CFLAGS += $(HRFLAGS)
-CFLAGS += $(TEMP_COMPENSATE_OPTION)
-CFLAGS += $(HW_WINDOW_DETECTION)
-CFLAGS += $(MENU_SHOW_BATTERY)
-CFLAGS += $(MOTOR_COMPENSATE_BATTERY)
-CFLAGS += $(NO_AUTORETURN_FROM_ALT_MENUES)
-CFLAGS += $(CALIBRATION_RESETS_sumError)
-CFLAGS += $(REMOTE_SETTING_ONLY)
-CFLAGS += $(BLOCK_INTEGRATOR_AFTER_VALVE_CHANGE)
-CFLAGS += $(BOOST_CONTROLER_AFTER_CHANGE)
+CFLAGS += -DRFM=$(RFM)
+ifeq ($(RFM),1)
+CFLAGS += -DRFM_BAUD_RATE=$(RFM_BAUD_RATE)
+CFLAGS += -DRFM_DEVICE_ADDRESS=$(RFM_DEVICE_ADDRESS)
+CFLAGS += -DSECURITY_KEY_0=$(SECURITY_KEY_0)
+CFLAGS += -DSECURITY_KEY_1=$(SECURITY_KEY_1)
+CFLAGS += -DSECURITY_KEY_2=$(SECURITY_KEY_2)
+CFLAGS += -DSECURITY_KEY_3=$(SECURITY_KEY_3)
+CFLAGS += -DSECURITY_KEY_4=$(SECURITY_KEY_4)
+CFLAGS += -DSECURITY_KEY_5=$(SECURITY_KEY_5)
+CFLAGS += -DSECURITY_KEY_6=$(SECURITY_KEY_6)
+CFLAGS += -DSECURITY_KEY_7=$(SECURITY_KEY_7)
+CFLAGS += -DRFM_FREQ_MAIN=$(RFM_FREQ_MAIN)
+CFLAGS += -DRFM_FREQ_FINE=$(RFM_FREQ_FINE)
+CFLAGS += -DRFM_TUNING=$(RFM_TUNING)
+endif
+CFLAGS += -DTEMP_COMPENSATE_OPTION=$(TEMP_COMPENSATE_OPTION)
+CFLAGS += -DHW_WINDOW_DETECTION=$(HW_WINDOW_DETECTION)
+CFLAGS += -DMENU_SHOW_BATTERY=$(MENU_SHOW_BATTERY)
+CFLAGS += -DMOTOR_COMPENSATE_BATTERY=$(MOTOR_COMPENSATE_BATTERY)
+CFLAGS += -DNO_AUTORETURN_FROM_ALT_MENUES=$(NO_AUTORETURN_FROM_ALT_MENUES)
+CFLAGS += -DCALIBRATION_RESETS_sumError=$(CALIBRATION_RESETS_sumError)
+CFLAGS += -DREMOTE_SETTING_ONLY=$(REMOTE_SETTING_ONLY)
+CFLAGS += -DBLOCK_INTEGRATOR_AFTER_VALVE_CHANGE=$(BLOCK_INTEGRATOR_AFTER_VALVE_CHANGE)
+CFLAGS += -DBOOST_CONTROLER_AFTER_CHANGE=$(BOOST_CONTROLER_AFTER_CHANGE)
+ifeq ($(RFM_WIRE),MARIOJTAG)
+ CFLAGS += -DRFM_WIRE_MARIOJTAG=1
+else
+ ifeq ($(RFM_WIRE),TK_INTERNAL)
+  CFLAGS += -DRFM_WIRE_TK_INTERNAL=1
+ else
+  ifeq ($(RFM_WIRE),JD_INTERNAL)
+   CFLAGS += -DRFM_WIRE_JD_INTERNAL=1
+  endif
+ endif
+endif
+CFLAGS += -DDISABLE_JTAG=$(DISABLE_JTAG)
 CFLAGS += $(FLAGS)
 CFLAGS += -O$(OPT)
 CFLAGS += -funsigned-char
@@ -184,7 +295,7 @@ CFLAGS += -Wstrict-prototypes
 #CFLAGS += -Wundef
 #CFLAGS += -Wunreachable-code
 #CFLAGS += -Wsign-compare
-CFLAGS += -Wa,-adhlns=$(<:%.c=$(OBJDIR)/%.lst)
+CFLAGS += -Wa,-adhlns=$(@:%.o=%.lst)
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 CFLAGS += $(CSTANDARD)
 #optimizations flags 
@@ -212,7 +323,7 @@ endif
 #             files -- see avr-libc docs [FIXME: not yet described there]
 #  -listing-cont-lines: Sets the maximum number of continuation lines of hex 
 #       dump that will be displayed for a given single line of source input.
-ASFLAGS = $(ADEFS) -Wa,-adhlns=$(<:%.S=$(OBJDIR)/%.lst),-gstabs,--listing-cont-lines=100
+ASFLAGS = $(ADEFS) -Wa,-adhlns=$(@:%.o=%.lst),-gstabs,--listing-cont-lines=100
 
 
 #---------------- Library Options ----------------
@@ -523,9 +634,22 @@ extcoff: $(TARGET).elf
 	@echo "Configuration" >> $@
 	@echo "Hardware type $(HW)" >> $@
 	@echo "RFM=$(RFM)" >> $@
-	@echo "RFMFLAGS=$(RFMFLAGS)" >> $@
-	@echo "HRFLAGS=$(HRFLAGS)" >> $@
+	@echo "RFM_DEVICE_ADDRESS=$(RFM_DEVICE_ADDRESS)" >> $@
+	@echo "SECURITY_KEY=$(SECURITY_KEY_0) $(SECURITY_KEY_1) $(SECURITY_KEY_2) $(SECURITY_KEY_3) $(SECURITY_KEY_4) $(SECURITY_KEY_5) $(SECURITY_KEY_6) $(SECURITY_KEY_7)" >> $@
+	@echo "RFM_FREQ_MAIN=$(RFM_FREQ_MAIN)" >> $@
+	@echo "RFM_FREQ_FINE=$(RFM_FREQ_FINE)" >> $@
+	@echo "RFM_TUNING=$(RFM_TUNING)" >> $@
+	@echo "TEMP_COMPENSATE_OPTION=$(TEMP_COMPENSATE_OPTION)" >> $@
+	@echo "REMOTE_SETTING_ONLY=$(REMOTE_SETTING_ONLY)" >> $@
 	@echo "HW_WINDOW_DETECTION=$(HW_WINDOW_DETECTION)" >> $@
+	@echo "MENU_SHOW_BATTERY=$(MENU_SHOW_BATTERY)" >> $@
+	@echo "MOTOR_COMPENSATE_BATTERY=$(MOTOR_COMPENSATE_BATTERY)" >> $@
+	@echo "NO_AUTORETURN_FROM_ALT_MENUES=$(NO_AUTORETURN_FROM_ALT_MENUES)" >> $@
+	@echo "CALIBRATION_RESETS_sumError=$(CALIBRATION_RESETS_sumError)" >> $@
+	@echo "BLOCK_INTEGRATOR_AFTER_VALVE_CHANGE=$(BLOCK_INTEGRATOR_AFTER_VALVE_CHANGE)" >> $@
+	@echo "BOOST_CONTROLER_AFTER_CHANGE=$(BOOST_CONTROLER_AFTER_CHANGE)" >> $@
+	@echo "RFM_WIRE=$(RFM_WIRE)" >> $@
+	@echo "DISABLE_JTAG=$(DISABLE_JTAG)" >> $@
 	@echo "==================================" >> $@
 	@echo >> $@
 	$(ELFSIZE) >> $@
@@ -576,11 +700,16 @@ extcoff: $(TARGET).elf
 %.elf: $(OBJ)
 	@echo
 	@echo $(MSG_LINKING) $@
-	$(CC) $(ALL_CFLAGS) $^ --output $@ $(LDFLAGS)
+	$(CC) $(ALL_CFLAGS) $(OBJ) --output $@ $(LDFLAGS)
 
 
 # Compile: create object files from C source files.
 $(OBJDIR)/%.o : %.c
+	@echo
+	@echo $(MSG_COMPILING) $<
+	$(CC) -c $(ALL_CFLAGS) $< -o $@ 
+
+$(OBJDIR)/%.o : $(SRC_B_DIR)/%.c
 	@echo
 	@echo $(MSG_COMPILING) $<
 	$(CC) -c $(ALL_CFLAGS) $< -o $@ 
@@ -592,11 +721,15 @@ $(OBJDIR)/%.o : %.c
 
 
 # Assemble: create object files from assembler source files.
-$(OBJDIR)/%.o : %.S
+$(OBJDIR)/%.o : $(SRC_B_DIR)/%.S
 	@echo
 	@echo $(MSG_ASSEMBLING) $<
 	$(CC) -c $(ALL_ASFLAGS) $< -o $@
 
+$(OBJDIR)/%.o : %.S
+	@echo
+	@echo $(MSG_ASSEMBLING) $<
+	$(CC) -c $(ALL_ASFLAGS) $< -o $@
 
 # Create preprocessed source for use in sending a bug report.
 %.i : %.c

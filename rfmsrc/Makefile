@@ -1,11 +1,11 @@
 #############
 # Thermostat settings
 
-# Enable slave programming also via buttons/wheel
-#HRFLAGS += -DREMOTE_SETTING_ONLY=0
+# Uncomment to enable slave programming also via buttons/wheel
+#export REMOTE_SETTING_ONLY=0
 
-# Enable slave motor startup battery compensation
-#HRFLAGS += -DMOTOR_COMPENSATE_BATTERY=1
+# Switch to 1 to enable slave motor startup battery compensation
+export MOTOR_COMPENSATE_BATTERY=0
 
 #############
 # Master settings
@@ -17,28 +17,25 @@
 #############
 # RFM settings
 
-# Enable diagnostic to fine tune RFM frequency
-RFMFLAGS += -DRFM_TUNING=1
-
+# Enable diagnostic to fine tune RFM frequency by default
+export RFM_TUNING=1
 # Set default HR slave address, valid range is 1-28
-# Do not set on master, thus use HRFLAGS
-HRFLAGS += -DRFM_DEVICE_ADDRESS=28
-
+export RFM_DEVICE_ADDRESS=28
 # Set default security keys, shared by master and slave
-RFMFLAGS += -DSECURITY_KEY_0=0x01
-RFMFLAGS += -DSECURITY_KEY_1=0x23
-RFMFLAGS += -DSECURITY_KEY_2=0x45
-RFMFLAGS += -DSECURITY_KEY_3=0x67
-RFMFLAGS += -DSECURITY_KEY_4=0x89
-RFMFLAGS += -DSECURITY_KEY_5=0x01
-RFMFLAGS += -DSECURITY_KEY_6=0x23
-RFMFLAGS += -DSECURITY_KEY_7=0x45
+export SECURITY_KEY_0=0x01
+export SECURITY_KEY_1=0x23
+export SECURITY_KEY_2=0x45
+export SECURITY_KEY_3=0x67
+export SECURITY_KEY_4=0x89
+export SECURITY_KEY_5=0x01
+export SECURITY_KEY_6=0x23
+export SECURITY_KEY_7=0x45
 
 # Main RFM frequency (depends on RFM variant)
-RFMFLAGS += -DRFM_FREQ_MAIN=868
+export RFM_FREQ_MAIN=868
 
 # Decimal part of the RFM frequency
-RFMFLAGS += -DRFM_FREQ_FINE=0.35
+export RFM_FREQ_FINE=0.35
 
 #############
 
@@ -57,6 +54,7 @@ clean:
 	 $(MAKE) clean -C OpenHR20 TARGET=../$(DEST)/HR25_rfm_int_sww/hr20 OBJDIR=HR25_rfm_int_sww
 	 $(MAKE) clean -C OpenHR20 TARGET=../$(DEST)/thermotronic_sww/hr20 OBJDIR=thermotronic_sww
 	 $(MAKE) clean -C master TARGET=../$(DEST)/master1/master OBJDIR=master1
+	@rm -f $(DEST)/license.txt
 
 
 VER=
@@ -68,9 +66,7 @@ HR20_rfm_int_sww:
 	 $(MAKE) -C OpenHR20 \
 		TARGET=../$(DEST)/$@/hr20 \
 		OBJDIR=$@ \
-		HW_WINDOW_DETECTION=-DHW_WINDOW_DETECTION=0 \
-		RFMFLAGS='${RFMFLAGS}' \
-		HRFLAGS='${HRFLAGS}' \
+		HW_WINDOW_DETECTION=0 \
 		REV=-DREVISION=\\\"$(REV)\\\"
 
 HR20_rfm_int_hww:
@@ -78,9 +74,7 @@ HR20_rfm_int_hww:
 	 $(MAKE) -C OpenHR20 \
 		TARGET=../$(DEST)/$@/hr20 \
 		OBJDIR=$@ \
-		HW_WINDOW_DETECTION=-DHW_WINDOW_DETECTION=1 \
-		RFMFLAGS='${RFMFLAGS}' \
-		HRFLAGS='${HRFLAGS}' \
+		HW_WINDOW_DETECTION=1 \
 		REV=-DREVISION=\\\"$(REV)\\\"
 
 HR20_rfm_ext_sww:
@@ -88,10 +82,8 @@ HR20_rfm_ext_sww:
 	 $(MAKE) -C OpenHR20 \
 		TARGET=../$(DEST)/$@/hr20 \
 		OBJDIR=$@ \
-		HW_WINDOW_DETECTION=-DHW_WINDOW_DETECTION=0\
-		RFM=-DRFM_WIRE_MARIOJTAG=1 \
-		RFMFLAGS='${RFMFLAGS}' \
-		HRFLAGS='${HRFLAGS}' \
+		HW_WINDOW_DETECTION=0\
+		RFM_WIRE=MARIOJTAG \
 		REV=-DREVISION=\\\"$(REV)\\\"
 	 
 HR20_original_sww:
@@ -99,10 +91,8 @@ HR20_original_sww:
 	 $(MAKE) -C OpenHR20 \
 		TARGET=../$(DEST)/$@/hr20 \
 		OBJDIR=$@ \
-		HW_WINDOW_DETECTION=-DHW_WINDOW_DETECTION=0 \
-		RFM=-DRFM=0 \
-		RFMFLAGS='${RFMFLAGS}' \
-		HRFLAGS='${HRFLAGS}' \
+		HW_WINDOW_DETECTION=0 \
+		RFM=0 \
 		REV=-DREVISION=\\\"$(REV)\\\"
 
 HR20_original_hww:
@@ -110,10 +100,8 @@ HR20_original_hww:
 	 $(MAKE) -C OpenHR20 \
 		TARGET=../$(DEST)/$@/hr20 \
 		OBJDIR=$@ \
-		HW_WINDOW_DETECTION=-DHW_WINDOW_DETECTION=1 \
-		RFM=-DRFM=0 \
-		RFMFLAGS='${RFMFLAGS}' \
-		HRFLAGS='${HRFLAGS}' \
+		HW_WINDOW_DETECTION=1 \
+		RFM=0 \
 		REV=-DREVISION=\\\"$(REV)\\\"
 
 HR25_original_sww:
@@ -121,11 +109,9 @@ HR25_original_sww:
 	 $(MAKE) -C OpenHR20 \
 		TARGET=../$(DEST)/$@/hr20 \
 		OBJDIR=$@ \
-		HW_WINDOW_DETECTION=-DHW_WINDOW_DETECTION=0 \
-		RFM=-DRFM=0 \
+		HW_WINDOW_DETECTION=0 \
+		RFM=0 \
 		HW=HR25 \
-		RFMFLAGS='${RFMFLAGS}' \
-		HRFLAGS='${HRFLAGS}' \
 		REV=-DREVISION=\\\"$(REV)\\\"
 
 HR25_rfm_int_sww:
@@ -133,11 +119,9 @@ HR25_rfm_int_sww:
 	 $(MAKE) -C OpenHR20 \
 		TARGET=../$(DEST)/$@/hr20 \
 		OBJDIR=$@ \
-		HW_WINDOW_DETECTION=-DHW_WINDOW_DETECTION=0 \
-		RFM=-DRFM_WIRE_TK_INTERNAL=1 \
+		HW_WINDOW_DETECTION=0 \
+		RFM_WIRE=TK_INTERNAL \
 		HW=HR25 \
-		RFMFLAGS='${RFMFLAGS}' \
-		HRFLAGS='${HRFLAGS}' \
 		REV=-DREVISION=\\\"$(REV)\\\"
 
 thermotronic_sww:
@@ -145,11 +129,9 @@ thermotronic_sww:
 	 $(MAKE) -C OpenHR20 \
 		TARGET=../$(DEST)/$@/hr20 \
 		OBJDIR=$@ \
-		HW_WINDOW_DETECTION=-DHW_WINDOW_DETECTION=0 \
-		RFM=-DRFM=0 \
+		HW_WINDOW_DETECTION=0 \
+		RFM=0 \
 		HW=THERMOTRONIC \
-		RFMFLAGS='${RFMFLAGS}' \
-		HRFLAGS='${HRFLAGS}' \
 		REV=-DREVISION=\\\"$(REV)\\\"
 
 master1:
@@ -157,6 +139,5 @@ master1:
 	 $(MAKE) -C master \
 		TARGET=../$(DEST)/$@/master \
 		OBJDIR=$@ \
-		RFMFLAGS='${RFMFLAGS}' \
 		${MASTERTYPE} \
 		REV=-DREVISION=\\\"$(REV)\\\"

@@ -88,15 +88,18 @@ OBJDIR = obj
 
 # List C source files here. (C dependencies are automatically generated.)
 SRC = main.c \
-rs232_485_hw.c \
 com.c \
-rfm.c \
-rtc.c \
-cmac.c \
-eeprom.c \
-wireless.c \
 queue.c
 
+SRC_B_DIR=../common
+
+SRC_B =  \
+    rtc.c \
+    cmac.c \
+    eeprom.c \
+    rfm.c \
+    rs232_485_hw.c \
+    wireless.c
 
 # List C++ source files here. (C dependencies are automatically generated.)
 CPPSRC = 
@@ -129,7 +132,7 @@ DEBUG = dwarf-2
 #     Each directory must be seperated by a space.
 #     Use forward slashes for directory separators.
 #     For a directory that has spaces, enclose it in quotes.
-EXTRAINCDIRS = 
+EXTRAINCDIRS = ..
 
 
 # Compiler flag to set the C Standard level.
@@ -145,8 +148,9 @@ CDEFS = -DF_CPU=$(F_CPU)UL
 
 
 # Place -D or -U options here for ASM sources
-ADEFS = -DF_CPU=$(F_CPU)
-
+ADEFS = -DF_CPU=$(F_CPU) -DXTEA_ENC
+# We need only encryption
+# ADEFS+=-DXTEA_DEC
 
 # Place -D or -U options here for C++ sources
 CPPDEFS = -DF_CPU=$(F_CPU)UL
@@ -154,6 +158,21 @@ CPPDEFS = -DF_CPU=$(F_CPU)UL
 #CPPDEFS += -D__STDC_CONSTANT_MACROS
 
 
+# Set default security keys
+SECURITY_KEY_0?=0x01
+SECURITY_KEY_1?=0x23
+SECURITY_KEY_2?=0x45
+SECURITY_KEY_3?=0x67
+SECURITY_KEY_4?=0x89
+SECURITY_KEY_5?=0xab
+SECURITY_KEY_6?=0xcd
+SECURITY_KEY_7?=0xef
+# Main RFM frequency (depends on RFM variant)
+RFM_FREQ_MAIN?=868
+# Decimal part of the RFM frequency
+RFM_FREQ_FINE?=0.35
+# Enable diagnostic (RFM_TUNING=1) to fine tune RFM frequency
+RFM_TUNING?=0
 
 #---------------- Compiler Options C ----------------
 #  -g*:          generate debugging information
@@ -165,7 +184,17 @@ CPPDEFS = -DF_CPU=$(F_CPU)UL
 CFLAGS = -g$(DEBUG)
 CFLAGS += $(CDEFS)
 CFLAGS += $(REV)
-CFLAGS += $(RFMFLAGS)
+CFLAGS += -DSECURITY_KEY_0=$(SECURITY_KEY_0)
+CFLAGS += -DSECURITY_KEY_1=$(SECURITY_KEY_1)
+CFLAGS += -DSECURITY_KEY_2=$(SECURITY_KEY_2)
+CFLAGS += -DSECURITY_KEY_3=$(SECURITY_KEY_3)
+CFLAGS += -DSECURITY_KEY_4=$(SECURITY_KEY_4)
+CFLAGS += -DSECURITY_KEY_5=$(SECURITY_KEY_5)
+CFLAGS += -DSECURITY_KEY_6=$(SECURITY_KEY_6)
+CFLAGS += -DSECURITY_KEY_7=$(SECURITY_KEY_7)
+CFLAGS += -DRFM_FREQ_MAIN=$(RFM_FREQ_MAIN)
+CFLAGS += -DRFM_FREQ_FINE=$(RFM_FREQ_FINE)
+CFLAGS += -DRFM_TUNING=$(RFM_TUNING)
 CFLAGS += $(MASTERFLAGS)
 CFLAGS += -O$(OPT)
 CFLAGS += -funsigned-char
@@ -179,7 +208,7 @@ CFLAGS += -Wstrict-prototypes
 #CFLAGS += -Wundef
 #CFLAGS += -Wunreachable-code
 #CFLAGS += -Wsign-compare
-CFLAGS += -Wa,-adhlns=$(<:%.c=$(OBJDIR)/%.lst)
+CFLAGS += -Wa,-adhlns=$(@:%.o=%.lst)
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 CFLAGS += $(CSTANDARD)
 #optimizations flags 
@@ -214,7 +243,7 @@ CFLAGS += -Wundef
 #CPPFLAGS += -Wstrict-prototypes
 #CPPFLAGS += -Wunreachable-code
 #CPPFLAGS += -Wsign-compare
-CPPFLAGS += -Wa,-adhlns=$(<:%.cpp=$(OBJDIR)/%.lst)
+CPPFLAGS += -Wa,-adhlns=$(@:%.o=%.lst)
 CPPFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 #CPPFLAGS += $(CSTANDARD)
 
@@ -228,7 +257,7 @@ CPPFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 #             files -- see avr-libc docs [FIXME: not yet described there]
 #  -listing-cont-lines: Sets the maximum number of continuation lines of hex 
 #       dump that will be displayed for a given single line of source input.
-ASFLAGS = $(ADEFS) -Wa,-adhlns=$(<:%.S=$(OBJDIR)/%.lst),-gstabs,--listing-cont-lines=100
+ASFLAGS = $(ADEFS) -Wa,-adhlns=$(@:%.o=%.lst),-gstabs,--listing-cont-lines=100
 
 
 #---------------- Library Options ----------------
@@ -403,10 +432,10 @@ MSG_CREATING_LIBRARY = Creating library:
 
 
 # Define all object files.
-OBJ = $(SRC:%.c=$(OBJDIR)/%.o) $(CPPSRC:%.cpp=$(OBJDIR)/%.o) $(ASRC:%.S=$(OBJDIR)/%.o) 
+OBJ = $(SRC:%.c=$(OBJDIR)/%.o) $(CPPSRC:%.cpp=$(OBJDIR)/%.o) $(ASRC:%.S=$(OBJDIR)/%.o) $(SRC_B:%.c=$(OBJDIR)/%.o)
 
 # Define all listing files.
-LST = $(SRC:%.c=$(OBJDIR)/%.lst) $(CPPSRC:%.cpp=$(OBJDIR)/%.lst) $(ASRC:%.S=$(OBJDIR)/%.lst) 
+LST = $(SRC:%.c=$(OBJDIR)/%.lst) $(CPPSRC:%.cpp=$(OBJDIR)/%.lst) $(ASRC:%.S=$(OBJDIR)/%.lst) $(SRC_B:%.c=$(OBJDIR)/%.lst)
 
 
 # Compiler flags to generate dependency files.
@@ -548,7 +577,10 @@ extcoff: $(TARGET).elf
 	$(REMOVE) $@
 	@echo "Configuration" >> $@
 	@echo "Hardware type: MCU $(MCU) at $(F_CPU)Hz" >> $@
-	@echo "RFMFLAGS=$(RFMFLAGS)" >> $@
+	@echo "SECURITY_KEY=$(SECURITY_KEY_0) $(SECURITY_KEY_1) $(SECURITY_KEY_2) $(SECURITY_KEY_3) $(SECURITY_KEY_4) $(SECURITY_KEY_5) $(SECURITY_KEY_6) $(SECURITY_KEY_7)" >> $@
+	@echo "RFM_FREQ_MAIN=$(RFM_FREQ_MAIN)" >> $@
+	@echo "RFM_FREQ_FINE=$(RFM_FREQ_FINE)" >> $@
+	@echo "RFM_TUNING=$(RFM_TUNING)" >> $@
 	@echo "MASTERFLAGS=$(MASTERFLAGS)" >> $@
 	@echo "==================================" >> $@
 	@echo >> $@
@@ -608,6 +640,10 @@ $(OBJDIR)/%.o : %.c
 	@echo $(MSG_COMPILING) $<
 	$(CC) -c $(ALL_CFLAGS) $< -o $@ 
 
+$(OBJDIR)/%.o : $(SRC_B_DIR)/%.c
+	@echo
+	@echo $(MSG_COMPILING) $<
+	$(CC) -c $(ALL_CFLAGS) $< -o $@
 
 # Compile: create object files from C++ source files.
 $(OBJDIR)/%.o : %.cpp
@@ -627,11 +663,15 @@ $(OBJDIR)/%.o : %.cpp
 
 
 # Assemble: create object files from assembler source files.
-$(OBJDIR)/%.o : %.S
+$(OBJDIR)/%.o : $(SRC_B_DIR)/%.S
 	@echo
 	@echo $(MSG_ASSEMBLING) $<
 	$(CC) -c $(ALL_ASFLAGS) $< -o $@
 
+$(OBJDIR)/%.o : %.S
+	@echo
+	@echo $(MSG_ASSEMBLING) $<
+	$(CC) -c $(ALL_ASFLAGS) $< -o $@
 
 # Create preprocessed source for use in sending a bug report.
 %.i : %.c
@@ -655,6 +695,8 @@ clean_list :
 	$(REMOVE) $(TARGET).txt
 	$(REMOVE) $(SRC:%.c=$(OBJDIR)/%.o)
 	$(REMOVE) $(SRC:%.c=$(OBJDIR)/%.lst)
+	$(REMOVE) $(SRC_B:%.c=$(OBJDIR)/%.o)
+	$(REMOVE) $(SRC_B:%.c=$(OBJDIR)/%.lst)
 	$(REMOVE) $(ASRC:%.S=$(OBJDIR)/%.o)
 	$(REMOVE) $(ASRC:%.S=$(OBJDIR)/%.lst)
 	$(REMOVE) $(SRC:.c=.s)

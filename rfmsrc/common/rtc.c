@@ -44,7 +44,7 @@
 // HR20 Project includes
 #include "config.h"
 #include "main.h"
-#include "../common/rtc.h"
+#include "rtc.h"
 #include "task.h"
 #if !defined(MASTER_CONFIG_H)
     #include "eeprom.h"

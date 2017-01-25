@@ -33,8 +33,8 @@
 
 #include <string.h>
 #include "config.h"
-#include "../common/xtea.h"
-#include "../common/wireless.h"
+#include "xtea.h"
+#include "wireless.h"
 
 #if RFM
 

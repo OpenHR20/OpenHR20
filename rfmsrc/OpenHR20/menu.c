@@ -38,7 +38,7 @@
 #include "keyboard.h"
 #include "adc.h"
 #include "lcd.h"
-#include "../common/rtc.h"
+#include "common/rtc.h"
 #include "motor.h"
 #include "eeprom.h"
 #include "debug.h"

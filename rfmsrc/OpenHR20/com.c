@@ -39,16 +39,16 @@
 
 #include "config.h"
 #include "com.h"
-#include "../common/rs232_485.h"
+#include "common/rs232_485.h"
 #include "main.h"
-#include "../common/rtc.h"
+#include "common/rtc.h"
 #include "adc.h"
 #include "task.h"
 #include "watch.h"
 #include "eeprom.h"
 #include "controller.h"
 #include "menu.h"
-#include "../common/wireless.h"
+#include "common/wireless.h"
 #include "debug.h"
 
 

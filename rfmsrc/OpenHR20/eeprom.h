@@ -37,11 +37,11 @@
 #include <avr/eeprom.h>
 #include "debug.h"
 #include "main.h"
-#include "../common/rtc.h"
+#include "common/rtc.h"
 #include "adc.h"
 #if (RFM == 1)
 	#include "rfm_config.h"
-	#include "../common/rfm.h"
+	#include "common/rfm.h"
 #endif
 
 
@@ -195,9 +195,6 @@ uint8_t EEPROM ee_reserved2_60 [60] = {
 };
     
 ; // reserved for future
-#if CONFIG_ENABLE_D
-    #error D_Factor have not EEPROM configuration
-#endif
 
 uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
 // order on this table depend to config_t

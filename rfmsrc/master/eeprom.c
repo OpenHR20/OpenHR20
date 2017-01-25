@@ -1,3 +1,3 @@
 // use file from common folder
 
-#include "../common/eeprom.c"
+#include "common/eeprom.c"
