@@ -130,11 +130,12 @@ static char COM_getchar(void) {
 	if (rx_buff_in!=rx_buff_out) {
 		c=rx_buff[rx_buff_out++];
 		rx_buff_out%=RX_BUFF_SIZE;
-    	COM_requests--;
+		if (c == '\n')
+			COM_requests--;
 	} else {
-    	COM_requests=0;
-        c='\0';
-    }
+		COM_requests=0;
+		c='\0';
+	}
 	sei();
 	return c;
 }
