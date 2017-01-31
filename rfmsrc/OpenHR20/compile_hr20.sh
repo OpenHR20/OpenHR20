@@ -43,11 +43,11 @@ if [ -z "$ADDR" ]; then
 	exit 1;
 fi
 
-#-DRFM_TUNING=1 \
 make clean HW=$HW
 make RFM=1 \
 RFM_TUNING=1 \
-RFM_FREQ=868 \
+RFM_FREQ_MAIN=868 \
+RFM_FREQ_FINE=0.35 \
 RFM_BAUD_RATE=9600 \
 SECURITY_KEY_0=0x${KEY0} \
 SECURITY_KEY_1=0x${KEY1} \

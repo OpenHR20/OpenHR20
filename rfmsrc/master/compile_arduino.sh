@@ -1,7 +1,9 @@
 #!/bin/sh
+# Arduino shares HW configuration with NANODE
 make clean
 make RFM_TUNING=1 \
-RFM_FREQ=868 \
+RFM_FREQ_MAIN=868 \
+RFM_FREQ_FINE=0.35 \
 SECURITY_KEY_0=0x01 \
 SECURITY_KEY_1=0x23 \
 SECURITY_KEY_2=0x45 \
@@ -10,4 +12,5 @@ SECURITY_KEY_4=0x89 \
 SECURITY_KEY_5=0x01 \
 SECURITY_KEY_6=0x23 \
 SECURITY_KEY_7=0x45 \
-MCU=atmega328p
+NANODE=1
+
