@@ -172,7 +172,7 @@ static char COM_getchar(void)
 static void COM_flush(void)
 {
 	if (tx_buff_in != tx_buff_out) {
-#if (defined COM_RS232) || (defined COM_RS485)
+#ifdef COM_RS232
 		RS_startSend();
 #else
 #error "need todo"

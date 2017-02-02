@@ -155,7 +155,7 @@ static char COM_getchar(void)
 void COM_flush(void)
 {
 	if (tx_buff_in != tx_buff_out) {
-#if (defined COM_RS232) || (defined COM_RS485)
+#ifdef COM_RS232
 		RS_startSend();
 #elif THERMOTRONIC                      //UART for THERMOTRONIC not implemented
 #else
@@ -272,7 +272,7 @@ static void print_version(bool sync)
 void COM_init(void)
 {
 	print_version(false);
-#if (defined COM_RS232) || (defined COM_RS485) && (THERMOTRONIC != 1)
+#ifdef COM_RS232
 	RS_Init();
 #endif
 	COM_flush();

@@ -475,7 +475,7 @@ static inline void init(void)
 ISR(PCINT0_vect){
 	uint8_t pine = PINE;
 
-#if (defined COM_RS232) || (defined COM_RS485)
+#ifdef COM_RS232
 	RS_interrupt(pine);
 #endif
 

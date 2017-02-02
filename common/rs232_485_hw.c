@@ -44,7 +44,7 @@
 #include "rs232_485.h"
 
 /* The following must be AFTER the last include line */
-#if (defined COM_RS232) || (defined COM_RS485)
+#ifdef COM_RS232
 
 #if defined (_AVR_IOM169_H_) || defined (_AVR_IOM32_H_)
 #define UDR0 UDR
@@ -130,10 +130,6 @@ ISR(USART_TX_vect)
 
 #endif
 {
-#if defined COM_RS485
-	// TODO: change rs485 to receive
-#error "code is not complete for rs485"
-#endif
 	UCSR0B &= ~(_BV(TXCIE0) | _BV(TXEN0));
 }
 
@@ -160,7 +156,7 @@ void RS_Init(void)
 #endif
 #else
 	// todo: decide between 2way RS232 and one way debugging only
-#if (defined COM_RS232) || (defined COM_RS485)
+#ifdef COM_RS232
 	UCSR0B = _BV(RXCIE0) | _BV(RXEN0);
 #endif
 	UCSR0C = (_BV(UCSZ00) | _BV(UCSZ01));         // Asynchron 8N1
@@ -181,10 +177,6 @@ void RS_Init(void)
 void RS_startSend(void)
 {
 	cli();
-#if defined COM_RS485
-	// TODO: change rs485 to transmit
-#error "code is not complete for rs485"
-#endif
 	if ((UCSR0B & _BV(UDRIE0)) == 0) {
 		UCSR0B &= ~(_BV(TXCIE0));
 		UCSR0A |= _BV(TXC0);         // clear interrupt flag

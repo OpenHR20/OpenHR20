@@ -72,8 +72,7 @@
 // Note we should only enable of of the following at one time
 /* we support RS232 */
 #define COM_RS232 1
-/* we support RS485 */
-/* #define COM_RS485  */
+
 /* Our default Adress, if not set or invalid */
 /* #define COM_DEF_ADR 1 */
 
