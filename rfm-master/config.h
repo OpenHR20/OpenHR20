@@ -29,19 +29,19 @@
  * \brief      This headerfile only contains information about the configuration of the HR20E and its functionality
  * \author     Juergen Sachs (juergen-sachs-at-gmx-dot-de) Jiri Dobry <jdobry-at-centrum-dot-cz>
  * \date       $Date$
- * $Rev$ 
+ * $Rev$
  */
 
 /*
-In this file we define only configuration parameters, for example what kind of control port we have.
-*/
+ * In this file we define only configuration parameters, for example what kind of control port we have.
+ */
 
 #pragma once
 
 #define CONFIG_H  1
 #define MASTER_CONFIG_H  1
 
-// AVR LibC includes 
+// AVR LibC includes
 #include <stdint.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -63,8 +63,8 @@ In this file we define only configuration parameters, for example what kind of c
 #define STR(x) _STR(x)
 
 #ifndef REVISION
- #define REVISION "$Rev$"
-#endif 
+#define REVISION "$Rev$"
+#endif
 #define VERSION_STRING  "V: OpenHR20 master SW version 1.1 build " __DATE__ " " __TIME__ " " REVISION
 
 // Parameters for the COMM-Port
@@ -78,38 +78,38 @@ In this file we define only configuration parameters, for example what kind of c
 /* #define COM_DEF_ADR 1 */
 
 #if (NANODE == 1)
- #define LED_RX_on() (PORTD |= _BV(PD5))
- #define LED_RX_off() (PORTD &= ~_BV(PD5))
+#define LED_RX_on() (PORTD |= _BV(PD5))
+#define LED_RX_off() (PORTD &= ~_BV(PD5))
 
- #define LED_sync_on()        (PORTD |= _BV(PD6))
- #define LED_sync_off()  (PORTD &= ~_BV(PD6))
+#define LED_sync_on()        (PORTD |= _BV(PD6))
+#define LED_sync_off()  (PORTD &= ~_BV(PD6))
 #elif (JEENODE == 1)
- // jeenode has only one LED, use it for both functions
- #define LED_RX_on()   (PORTB &= ~_BV(PB1))
- #define LED_RX_off()    (PORTB |= _BV(PB1))
+// jeenode has only one LED, use it for both functions
+#define LED_RX_on()   (PORTB &= ~_BV(PB1))
+#define LED_RX_off()    (PORTB |= _BV(PB1))
 
- #define LED_sync_on() (PORTB &= ~_BV(PB1))
- #define LED_sync_off()  (PORTB |= _BV(PB1))
+#define LED_sync_on() (PORTB &= ~_BV(PB1))
+#define LED_sync_off()  (PORTB |= _BV(PB1))
 #else
- #if (ATMEGA32_DEV_BOARD == 1)
-  #define LED_RX_on() (PORTA |= _BV(PA1))
-  #define LED_RX_off() (PORTA &= ~_BV(PA1))
- #else
-  #define LED_RX_on() (PORTD |= _BV(PD7))
-  #define LED_RX_off() (PORTD &= ~_BV(PD7))
- #endif
- #define LED_sync_on()        (PORTA |= _BV(PA2))
- #define LED_sync_off()  (PORTA &= ~_BV(PA2))
+#if (ATMEGA32_DEV_BOARD == 1)
+#define LED_RX_on() (PORTA |= _BV(PA1))
+#define LED_RX_off() (PORTA &= ~_BV(PA1))
+#else
+#define LED_RX_on() (PORTD |= _BV(PD7))
+#define LED_RX_off() (PORTD &= ~_BV(PD7))
+#endif
+#define LED_sync_on()        (PORTA |= _BV(PA2))
+#define LED_sync_off()  (PORTA &= ~_BV(PA2))
 #endif
 
 #define RFM 1 //!< define RFM to 1 if you want to have support for the RFM Radio Moodule in the Code
 
 #if (RFM == 1)
-	#define RFM_DEVICE_ADDRESS 0x00
-	#define DISABLE_JTAG           0
+#define RFM_DEVICE_ADDRESS 0x00
+#define DISABLE_JTAG           0
 #else
-	#define DISABLE_JTAG           0
-    #define RFM_TUNING             0
+#define DISABLE_JTAG           0
+#define RFM_TUNING             0
 #endif
 
 /* compiler compatibility */
@@ -119,34 +119,34 @@ In this file we define only configuration parameters, for example what kind of c
 
 // some handy macros
 
-#define	ELEMCNT(A)							(sizeof(A) / ELEMSIZE(A))
-#define	OFFSETOF(TYPE, ELEM)				((size_t)((char *)&((TYPE *) 0)->ELEM - (char*)((TYPE*)NULL)))
-#define CMP(X,Y)							(((X) == (Y)) ? 0 : (((X) < (Y)) ? -1 : +1))
-#define LITERAL_STRLEN(S)					(sizeof(S) - sizeof('\0'))
-#define ARRAY(TYPE, PTR, INDEX)				((TYPE*)(PTR))[INDEX]
+#define ELEMCNT(A)                                                      (sizeof(A) / ELEMSIZE(A))
+#define OFFSETOF(TYPE, ELEM)                            ((size_t)((char *)&((TYPE *)0)->ELEM - (char *)((TYPE *)NULL)))
+#define CMP(X, Y)                                                        (((X) == (Y)) ? 0 : (((X) < (Y)) ? -1 : +1))
+#define LITERAL_STRLEN(S)                                       (sizeof(S) - sizeof('\0'))
+#define ARRAY(TYPE, PTR, INDEX)                         ((TYPE *)(PTR))[INDEX]
 
-#define IN_RANGE(MIN, TEST, MAX)			(((MIN) <= (TEST)) && ((TEST) <= (MAX)))
-#define OUTOF_RANGE(MIN, TEST, MAX)			(((MIN) > (TEST)) || ((TEST) > (MAX)))
-#define TOLOWER(C)							((C) | 0x20)
-#define TOUPPER(C)							((C) & ~0x20)
-#define CHRTOINT(C)							((C) - (char)('0'))
-#define CHRXTOINT(C)						(IN_RANGE('0', (C), '9') ? ((C) - (char)('0')) : (TOLOWER(C) - 'a' + 0x0a) )
+#define IN_RANGE(MIN, TEST, MAX)                        (((MIN) <= (TEST)) && ((TEST) <= (MAX)))
+#define OUTOF_RANGE(MIN, TEST, MAX)                     (((MIN) > (TEST)) || ((TEST) > (MAX)))
+#define TOLOWER(C)                                                      ((C) | 0x20)
+#define TOUPPER(C)                                                      ((C)&~0x20)
+#define CHRTOINT(C)                                                     ((C)-(char)('0'))
+#define CHRXTOINT(C)                                            (IN_RANGE('0', (C), '9') ? ((C)-(char)('0')) : (TOLOWER(C) - 'a' + 0x0a))
 
-#define HIBYTE(I16)							((I16) >> 8)
-#define LOBYTE(I16)							((I16) & 0xff)
+#define HIBYTE(I16)                                                     ((I16) >> 8)
+#define LOBYTE(I16)                                                     ((I16) & 0xff)
 
-#define MAX(A, B)							(((A) > (B)) ? (A) : (B))
-#define MIN(A, B)							(((A) < (B)) ? (A) : (B))
+#define MAX(A, B)                                                       (((A) > (B)) ? (A) : (B))
+#define MIN(A, B)                                                       (((A) < (B)) ? (A) : (B))
 
-#define MKINT16(HI8, LO8)					(((HI8) << 8) | LO8)
+#define MKINT16(HI8, LO8)                                       (((HI8) << 8) | LO8)
 
 
 // typedefs
 typedef enum { false, true } bool;
 
 // Some default Values
-#define BOOT_DD         1  //!< Boot-Up date: day
-#define BOOT_MM         1  //!< Boot-Up date: month
-#define BOOT_YY        13  //!< Boot-Up date: year
-#define BOOT_hh        12  //!< Boot-Up time: hour
-#define BOOT_mm        00  //!< Boot-Up time: minutes
+#define BOOT_DD         1       //!< Boot-Up date: day
+#define BOOT_MM         1       //!< Boot-Up date: month
+#define BOOT_YY        13       //!< Boot-Up date: year
+#define BOOT_hh        12       //!< Boot-Up time: hour
+#define BOOT_mm        00       //!< Boot-Up time: minutes

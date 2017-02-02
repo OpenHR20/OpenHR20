@@ -31,4 +31,4 @@
  * $Rev$
  */
 
-bool cmac_calc (uint8_t* m, uint8_t bytes, uint8_t* data_prefix, bool check);
+bool cmac_calc(uint8_t *m, uint8_t bytes, uint8_t *data_prefix, bool check);

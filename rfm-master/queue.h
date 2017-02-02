@@ -36,16 +36,15 @@
 #define Q_ITEMS 50
 
 typedef struct {
-    uint8_t len;
-    uint8_t addr;
-    uint8_t bank;
-    uint8_t data[4];
-} q_item_t;  
+	uint8_t len;
+	uint8_t addr;
+	uint8_t bank;
+	uint8_t data[4];
+} q_item_t;
 
 // extern q_item_t Q_buf[Q_ITEMS];
 
 
-uint8_t* Q_push(uint8_t len, uint8_t addr, uint8_t bank);
+uint8_t *Q_push(uint8_t len, uint8_t addr, uint8_t bank);
 void Q_clean(uint8_t addr_preserve);
-q_item_t* Q_get(uint8_t addr, uint8_t bank, uint8_t skip);
-
+q_item_t *Q_get(uint8_t addr, uint8_t bank, uint8_t skip);

@@ -8,7 +8,7 @@
  *              GCC 4.2.2
  *
  *  copyright:  2008 Dario Carluccio (hr20-at-carluccio-dot-de)
- *              2008 Jiri Dobry (jdobry-at-centrum-dot-cz) 
+ *              2008 Jiri Dobry (jdobry-at-centrum-dot-cz)
  *              2008 Mario Fischer (MarioFischer-at-gmx-dot-net)
  *              2007 Michael Smola (Michael-dot-Smola-at-gmx-dot-net)
  *
@@ -37,28 +37,28 @@
 #pragma once // multi-iclude prevention. gcc knows this pragma
 #if RFM
 
-#define RFM_SPI_16(OUTVAL)			rfm_spi16(OUTVAL) //<! a function that gets a uint16_t (clocked out value) and returns a uint16_t (clocked in value)
+#define RFM_SPI_16(OUTVAL)                      rfm_spi16(OUTVAL) //<! a function that gets a uint16_t (clocked out value) and returns a uint16_t (clocked in value)
 
-#define RFM_SPI_SELECT        		(RFM_NSEL_PORT &= ~_BV(RFM_NSEL_BITPOS))
-#define RFM_SPI_DESELECT      		(RFM_NSEL_PORT |= _BV(RFM_NSEL_BITPOS))
+#define RFM_SPI_SELECT                  (RFM_NSEL_PORT &= ~_BV(RFM_NSEL_BITPOS))
+#define RFM_SPI_DESELECT                (RFM_NSEL_PORT |= _BV(RFM_NSEL_BITPOS))
 
-#define RFM_SPI_MOSI_LOW      		(RFM_SDI_PORT &= ~_BV(RFM_SDI_BITPOS))
-#define RFM_SPI_MOSI_HIGH     		(RFM_SDI_PORT |= _BV(RFM_SDI_BITPOS))
+#define RFM_SPI_MOSI_LOW                (RFM_SDI_PORT &= ~_BV(RFM_SDI_BITPOS))
+#define RFM_SPI_MOSI_HIGH               (RFM_SDI_PORT |= _BV(RFM_SDI_BITPOS))
 
-#define RFM_SPI_MISO_GET			(RFM_SDO_PIN & _BV(RFM_SDO_BITPOS))
+#define RFM_SPI_MISO_GET                        (RFM_SDO_PIN & _BV(RFM_SDO_BITPOS))
 
-#define RFM_SPI_SCK_LOW       		(RFM_SCK_PORT &= ~_BV(RFM_SCK_BITPOS))
-#define RFM_SPI_SCK_HIGH      		(RFM_SCK_PORT |= _BV(RFM_SCK_BITPOS))
+#define RFM_SPI_SCK_LOW                 (RFM_SCK_PORT &= ~_BV(RFM_SCK_BITPOS))
+#define RFM_SPI_SCK_HIGH                (RFM_SCK_PORT |= _BV(RFM_SCK_BITPOS))
 
-#define RFM_TESTPIN_INIT			
-#define RFM_TESTPIN_ON				
-#define RFM_TESTPIN_OFF				
-#define RFM_TESTPIN_TOG				
+#define RFM_TESTPIN_INIT
+#define RFM_TESTPIN_ON
+#define RFM_TESTPIN_OFF
+#define RFM_TESTPIN_TOG
 
-#define RFM_CONFIG_DISABLE			0x00 //<! RFM_CONFIG_*** are combinable flags, what the RFM shold do
-#define RFM_CONFIG_BROADCASTSTATUS	0x01 //<! Flag that enables the HR20's status broadcast every minute
+#define RFM_CONFIG_DISABLE                      0x00    //<! RFM_CONFIG_*** are combinable flags, what the RFM shold do
+#define RFM_CONFIG_BROADCASTSTATUS      0x01            //<! Flag that enables the HR20's status broadcast every minute
 
-#define RFM_CONFIG_ENABLEALL		0xff
+#define RFM_CONFIG_ENABLEALL            0xff
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -69,41 +69,41 @@
 
 // Interrupt bits, latched ////////////////////////////////////////////////////
 
-#define RFM_STATUS_FFIT 0x8000 // RX FIFO reached the progr. number of bits
-                               // Cleared by any FIFO read method
+#define RFM_STATUS_FFIT 0x8000  // RX FIFO reached the progr. number of bits
+                                // Cleared by any FIFO read method
 
-#define RFM_STATUS_RGIT 0x8000 // TX register is ready to receive
-                               // Cleared by TX write
+#define RFM_STATUS_RGIT 0x8000  // TX register is ready to receive
+                                // Cleared by TX write
 
-#define RFM_STATUS_POR  0x4000 // Power On reset
-                               // Cleared by read status
+#define RFM_STATUS_POR  0x4000  // Power On reset
+                                // Cleared by read status
 
-#define RFM_STATUS_RGUR 0x2000 // TX register underrun, register over write
-                               // Cleared by read status
+#define RFM_STATUS_RGUR 0x2000  // TX register underrun, register over write
+                                // Cleared by read status
 
-#define RFM_STATUS_FFOV 0x2000 // RX FIFO overflow
-                               // Cleared by read status
+#define RFM_STATUS_FFOV 0x2000  // RX FIFO overflow
+                                // Cleared by read status
 
-#define RFM_STATUS_WKUP 0x1000 // Wake up timer overflow
-                               // Cleared by read status
+#define RFM_STATUS_WKUP 0x1000  // Wake up timer overflow
+                                // Cleared by read status
 
-#define RFM_STATUS_EXT  0x0800 // Interupt changed to low
-                               // Cleared by read status
+#define RFM_STATUS_EXT  0x0800  // Interupt changed to low
+                                // Cleared by read status
 
-#define RFM_STATUS_LBD  0x0400 // Low battery detect
+#define RFM_STATUS_LBD  0x0400  // Low battery detect
 
 // Status bits ////////////////////////////////////////////////////////////////
 
-#define RFM_STATUS_FFEM 0x0200 // FIFO is empty
-#define RFM_STATUS_ATS  0x0100 // TX mode: Strong enough RF signal
-#define RFM_STATUS_RSSI 0x0100 // RX mode: signal strength above programmed limit
-#define RFM_STATUS_DQD  0x0080 // Data Quality detector output
-#define RFM_STATUS_CRL  0x0040 // Clock recovery lock
-#define RFM_STATUS_ATGL 0x0020 // Toggling in each AFC cycle
+#define RFM_STATUS_FFEM 0x0200  // FIFO is empty
+#define RFM_STATUS_ATS  0x0100  // TX mode: Strong enough RF signal
+#define RFM_STATUS_RSSI 0x0100  // RX mode: signal strength above programmed limit
+#define RFM_STATUS_DQD  0x0080  // Data Quality detector output
+#define RFM_STATUS_CRL  0x0040  // Clock recovery lock
+#define RFM_STATUS_ATGL 0x0020  // Toggling in each AFC cycle
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// 1. Configuration Setting Command 
+// 1. Configuration Setting Command
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -116,25 +116,25 @@
 #define RFM_CONFIG_BAND_868      0x8020
 #define RFM_CONFIG_BAND_915      0x8030
 #define RFM_CONFIG_X_8_5pf       0x8000 // Crystal Load Capacitor
-#define RFM_CONFIG_X_9_0pf       0x8001 
-#define RFM_CONFIG_X_9_5pf       0x8002 
-#define RFM_CONFIG_X_10_0pf      0x8003 
+#define RFM_CONFIG_X_9_0pf       0x8001
+#define RFM_CONFIG_X_9_5pf       0x8002
+#define RFM_CONFIG_X_10_0pf      0x8003
 #define RFM_CONFIG_X_10_5pf      0x8004
 #define RFM_CONFIG_X_11_0pf      0x8005
-#define RFM_CONFIG_X_11_5pf      0x8006 
-#define RFM_CONFIG_X_12_0pf      0x8007 
-#define RFM_CONFIG_X_12_5pf      0x8008 
+#define RFM_CONFIG_X_11_5pf      0x8006
+#define RFM_CONFIG_X_12_0pf      0x8007
+#define RFM_CONFIG_X_12_5pf      0x8008
 #define RFM_CONFIG_X_13_0pf      0x8009
 #define RFM_CONFIG_X_13_5pf      0x800A
-#define RFM_CONFIG_X_14_0pf      0x800B 
-#define RFM_CONFIG_X_14_5pf      0x800C 
-#define RFM_CONFIG_X_15_0pf      0x800D 
+#define RFM_CONFIG_X_14_0pf      0x800B
+#define RFM_CONFIG_X_14_5pf      0x800C
+#define RFM_CONFIG_X_15_0pf      0x800D
 #define RFM_CONFIG_X_15_5pf      0x800E
 #define RFM_CONFIG_X_16_0pf      0x800F
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// 2. Power Management Command 
+// 2. Power Management Command
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -150,40 +150,40 @@
 #define RFM_POWER_MANAGEMENT_DC  0x8201 // Disable clock output of CLK pin
 
 #ifndef RFM_CLK_OUTPUT
-    #error RFM_CLK_OUTPUT must be defined to 0 or 1
+#error RFM_CLK_OUTPUT must be defined to 0 or 1
 #endif
 #if RFM_CLK_OUTPUT
-    #define RFM_TX_ON_PRE() RFM_SPI_16( \
-                                RFM_POWER_MANAGEMENT_ES | \
-                                RFM_POWER_MANAGEMENT_EX )    
-    #define RFM_TX_ON()     RFM_SPI_16( \
-                                RFM_POWER_MANAGEMENT_ET | \
-                                RFM_POWER_MANAGEMENT_ES | \
-                                RFM_POWER_MANAGEMENT_EX )    
-    #define RFM_RX_ON()     RFM_SPI_16( \
-                                RFM_POWER_MANAGEMENT_ER | \
-                                RFM_POWER_MANAGEMENT_EBB | \
-                                RFM_POWER_MANAGEMENT_ES | \
-                                RFM_POWER_MANAGEMENT_EX )
-    #define RFM_OFF()       RFM_SPI_16( \
-                                RFM_POWER_MANAGEMENT_EX )
+#define RFM_TX_ON_PRE() RFM_SPI_16( \
+		RFM_POWER_MANAGEMENT_ES | \
+		RFM_POWER_MANAGEMENT_EX)
+#define RFM_TX_ON()     RFM_SPI_16( \
+		RFM_POWER_MANAGEMENT_ET | \
+		RFM_POWER_MANAGEMENT_ES | \
+		RFM_POWER_MANAGEMENT_EX)
+#define RFM_RX_ON()     RFM_SPI_16( \
+		RFM_POWER_MANAGEMENT_ER | \
+		RFM_POWER_MANAGEMENT_EBB | \
+		RFM_POWER_MANAGEMENT_ES | \
+		RFM_POWER_MANAGEMENT_EX)
+#define RFM_OFF()       RFM_SPI_16( \
+		RFM_POWER_MANAGEMENT_EX)
 #else
-    #define RFM_TX_ON_PRE() RFM_SPI_16( \
-                                RFM_POWER_MANAGEMENT_DC | \
-                                RFM_POWER_MANAGEMENT_ES | \
-                                RFM_POWER_MANAGEMENT_EX )    
-    #define RFM_TX_ON()     RFM_SPI_16( \
-                                RFM_POWER_MANAGEMENT_DC | \
-                                RFM_POWER_MANAGEMENT_ET | \
-                                RFM_POWER_MANAGEMENT_ES | \
-                                RFM_POWER_MANAGEMENT_EX )    
-    #define RFM_RX_ON()     RFM_SPI_16( \
-                                RFM_POWER_MANAGEMENT_DC  | \
-                                RFM_POWER_MANAGEMENT_ER | \
-                                RFM_POWER_MANAGEMENT_EBB | \
-                                RFM_POWER_MANAGEMENT_ES | \
-                                RFM_POWER_MANAGEMENT_EX )
-    #define RFM_OFF()       RFM_SPI_16(RFM_POWER_MANAGEMENT_DC)
+#define RFM_TX_ON_PRE() RFM_SPI_16( \
+		RFM_POWER_MANAGEMENT_DC | \
+		RFM_POWER_MANAGEMENT_ES | \
+		RFM_POWER_MANAGEMENT_EX)
+#define RFM_TX_ON()     RFM_SPI_16( \
+		RFM_POWER_MANAGEMENT_DC | \
+		RFM_POWER_MANAGEMENT_ET | \
+		RFM_POWER_MANAGEMENT_ES | \
+		RFM_POWER_MANAGEMENT_EX)
+#define RFM_RX_ON()     RFM_SPI_16( \
+		RFM_POWER_MANAGEMENT_DC | \
+		RFM_POWER_MANAGEMENT_ER | \
+		RFM_POWER_MANAGEMENT_EBB | \
+		RFM_POWER_MANAGEMENT_ES | \
+		RFM_POWER_MANAGEMENT_EX)
+#define RFM_OFF()       RFM_SPI_16(RFM_POWER_MANAGEMENT_DC)
 #endif
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -191,12 +191,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#define RFM_FREQUENCY            0xA000 
+#define RFM_FREQUENCY            0xA000
 
-#define RFM_FREQ_315Band(v) (uint16_t)((v/10.0-31)*4000)
-#define RFM_FREQ_433Band(v) (uint16_t)((v/10.0-43)*4000)
-#define RFM_FREQ_868Band(v) (uint16_t)((v/20.0-43)*4000)
-#define RFM_FREQ_915Band(v) (uint16_t)((v/30.0-30)*4000)
+#define RFM_FREQ_315Band(v) (uint16_t)((v / 10.0 - 31) * 4000)
+#define RFM_FREQ_433Band(v) (uint16_t)((v / 10.0 - 43) * 4000)
+#define RFM_FREQ_868Band(v) (uint16_t)((v / 20.0 - 43) * 4000)
+#define RFM_FREQ_915Band(v) (uint16_t)((v / 30.0 - 30) * 4000)
 
 // helper macros to derive macro name from main frequency
 #define IntRFM_FREQ_Band(v) RFM_FREQ_ ## v ## Band
@@ -211,15 +211,15 @@
 /////////////////////////////////////////////////////////////////////////////////
 
 #ifndef RFM_BAUD_RATE
- #define RFM_BAUD_RATE           19200
+#define RFM_BAUD_RATE           19200
 #endif
 
 #ifndef RFM_FREQ_MAIN
- #define RFM_FREQ_MAIN           868
+#define RFM_FREQ_MAIN           868
 #endif
 
 #ifndef RFM_FREQ_FINE
- #define RFM_FREQ_FINE           0.35
+#define RFM_FREQ_FINE           0.35
 #endif
 
 #define RFM_FREQ_DEC            (RFM_FREQ_MAIN + RFM_FREQ_FINE)
@@ -234,7 +234,7 @@
 #define RFM_DATA_RATE_57600      0xC605
 
 // Using this formula as specified in the datasheet results in a slightly inflated data rate due to rounding. Original: #define RFM_SET_DATARATE_ORIG(baud)		( ((baud)<5400) ? (RFM_DATA_RATE_CS|((43104/(baud))-1)) : (RFM_DATA_RATE|((344828UL/(baud))-1)) )
-#define RFM_SET_DATARATE(baud)		( ((baud)<4800) ? (RFM_DATA_RATE_CS|((43104/(baud)))) : (RFM_DATA_RATE|((344828UL/(baud)))) )
+#define RFM_SET_DATARATE(baud)          (((baud) < 4800) ? (RFM_DATA_RATE_CS | ((43104 / (baud)))) : (RFM_DATA_RATE | ((344828UL / (baud)))))
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -242,22 +242,22 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#define RFM_RX_CONTROL           0x9000 
+#define RFM_RX_CONTROL           0x9000
 
 #define RFM_RX_CONTROL_P20_INT   0x9000 // Pin20 = ExternalInt
 #define RFM_RX_CONTROL_P20_VDI   0x9400 // Pin20 = VDI out
-                                            
-#define RFM_RX_CONTROL_VDI_FAST  0x9000 // fast   VDI Response time 
-#define RFM_RX_CONTROL_VDI_MED   0x9100 // medium 
+
+#define RFM_RX_CONTROL_VDI_FAST  0x9000 // fast   VDI Response time
+#define RFM_RX_CONTROL_VDI_MED   0x9100 // medium
 #define RFM_RX_CONTROL_VDI_SLOW  0x9200 // slow
 #define RFM_RX_CONTROL_VDI_ON    0x9300 // Always on
 
-#define RFM_RX_CONTROL_BW_400    0x9020 // bandwidth 400kHz 
-#define RFM_RX_CONTROL_BW_340    0x9040 // bandwidth 340kHz 
-#define RFM_RX_CONTROL_BW_270    0x9060 // bandwidth 270kHz 
-#define RFM_RX_CONTROL_BW_200    0x9080 // bandwidth 200kHz 
-#define RFM_RX_CONTROL_BW_134    0x90A0 // bandwidth 134kHz 
-#define RFM_RX_CONTROL_BW_67     0x90C0 // bandwidth 67kHz 
+#define RFM_RX_CONTROL_BW_400    0x9020 // bandwidth 400kHz
+#define RFM_RX_CONTROL_BW_340    0x9040 // bandwidth 340kHz
+#define RFM_RX_CONTROL_BW_270    0x9060 // bandwidth 270kHz
+#define RFM_RX_CONTROL_BW_200    0x9080 // bandwidth 200kHz
+#define RFM_RX_CONTROL_BW_134    0x90A0 // bandwidth 134kHz
+#define RFM_RX_CONTROL_BW_67     0x90C0 // bandwidth 67kHz
 
 #define RFM_RX_CONTROL_GAIN_0    0x9000 // LNA gain  0db
 #define RFM_RX_CONTROL_GAIN_6    0x9008 // LNA gain -6db
@@ -273,13 +273,13 @@
 //#define RFM_RX_CONTROL_RSSI_67   0x9006 // DRSSI threshold -67dbm // RF12B reserved
 //#define RFM_RX_CONTROL_RSSI_61   0x9007 // DRSSI threshold -61dbm // RF12B reserved
 
-#define RFM_RX_CONTROL_BW(baud)		(((baud)<8000) ? \
-									RFM_RX_CONTROL_BW_67 : \
-									( \
-										((baud)<30000) ? \
-										RFM_RX_CONTROL_BW_134 : \
-										RFM_RX_CONTROL_BW_200 \
-									))
+#define RFM_RX_CONTROL_BW(baud)         (((baud) < 8000) ? \
+					 RFM_RX_CONTROL_BW_67 : \
+					 ( \
+						 ((baud) < 30000) ? \
+						 RFM_RX_CONTROL_BW_134 : \
+						 RFM_RX_CONTROL_BW_200 \
+					 ))
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -306,9 +306,9 @@
 #define RFM_FIFO_AL              0xCA04 // FIFO Start condition sync-word/always
 #define RFM_FIFO_FF              0xCA02 // Enable FIFO fill
 #define RFM_FIFO_DR              0xCA01 // Disable hi sens reset mode
-#define RFM_FIFO_IT(level)       (RFM_FIFO | (( (level) & 0xF)<<4))
+#define RFM_FIFO_IT(level)       (RFM_FIFO | (((level) & 0xF) << 4))
 
-#define RFM_FIFO_OFF()            RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR)
+#define RFM_FIFO_OFF()            RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_DR)
 #define RFM_FIFO_ON()             RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR)
 
 /////////////////////////////////////////////////////////////////////////////
@@ -340,10 +340,10 @@
 
 // Limits the value of the frequency offset register to the next values:
 
-#define RFM_AFC_RANGE_LIMIT_NO    0xC400 // 0: No restriction
-#define RFM_AFC_RANGE_LIMIT_15_16 0xC410 // 1: +15 fres to -16 fres
-#define RFM_AFC_RANGE_LIMIT_7_8   0xC420 // 2: +7 fres to -8 fres
-#define RFM_AFC_RANGE_LIMIT_3_4   0xC430 // 3: +3 fres to -4 fres
+#define RFM_AFC_RANGE_LIMIT_NO    0xC400        // 0: No restriction
+#define RFM_AFC_RANGE_LIMIT_15_16 0xC410        // 1: +15 fres to -16 fres
+#define RFM_AFC_RANGE_LIMIT_7_8   0xC420        // 2: +7 fres to -8 fres
+#define RFM_AFC_RANGE_LIMIT_3_4   0xC430        // 3: +3 fres to -4 fres
 
 // fres=2.5 kHz in 315MHz and 433MHz Bands
 // fres=5.0 kHz in 868MHz Band
@@ -388,21 +388,21 @@
 #define RFM_TX_CONTROL_MOD_240   0x98F0
 #define RFM_TX_CONTROL_MP        0x9900
 
-#define RFM_TX_CONTROL_MOD(baud)	(((baud)<8000) ? \
-									RFM_TX_CONTROL_MOD_45 : \
-									( \
-										((baud)<20000) ? \
-										RFM_TX_CONTROL_MOD_60 : \
-										( \
-											((baud)<30000) ? \
-											RFM_TX_CONTROL_MOD_75 : \
-											( \
-												((baud)<40000) ? \
-												RFM_TX_CONTROL_MOD_90 : \
-												RFM_TX_CONTROL_MOD_120 \
-											) \
-										) \
-									))
+#define RFM_TX_CONTROL_MOD(baud)        (((baud) < 8000) ? \
+					 RFM_TX_CONTROL_MOD_45 : \
+					 ( \
+						 ((baud) < 20000) ? \
+						 RFM_TX_CONTROL_MOD_60 : \
+						 ( \
+							 ((baud) < 30000) ? \
+							 RFM_TX_CONTROL_MOD_75 : \
+							 ( \
+								 ((baud) < 40000) ? \
+								 RFM_TX_CONTROL_MOD_90 : \
+								 RFM_TX_CONTROL_MOD_120 \
+							 ) \
+						 ) \
+					 ))
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -410,17 +410,17 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 
-#define RFM_PLL					0xCC02
-#define RFM_PLL_uC_CLK_10		0x70
-#define RFM_PLL_uC_CLK_3_3		0x50
-#define RFM_PLL_uC_CLK_2_5		0x30
+#define RFM_PLL                                 0xCC02
+#define RFM_PLL_uC_CLK_10               0x70
+#define RFM_PLL_uC_CLK_3_3              0x50
+#define RFM_PLL_uC_CLK_2_5              0x30
 
-#define RFM_PLL_DELAY_ON		0x80
-#define RFM_PLL_DELAY_OFF		0x00
-#define RFM_PLL_DITHER_ON		0x00
-#define RFM_PLL_DITHER_OFF		0x40
-#define RFM_PLL_BIRATE_HI		0x01
-#define RFM_PLL_BIRATE_LOW		0x00
+#define RFM_PLL_DELAY_ON                0x80
+#define RFM_PLL_DELAY_OFF               0x00
+#define RFM_PLL_DITHER_ON               0x00
+#define RFM_PLL_DITHER_OFF              0x40
+#define RFM_PLL_BIRATE_HI               0x01
+#define RFM_PLL_BIRATE_LOW              0x00
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -429,7 +429,7 @@
 /////////////////////////////////////////////////////////////////////////////
 
 //#define RFM_WRITE(byte)  RFM_SPI_16(0xB800 | ((byte) & 0xFF))
-#define RFM_WRITE(byte)  RFM_SPI_16(0xB800 | (byte) )
+#define RFM_WRITE(byte)  RFM_SPI_16(0xB800 | (byte))
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -437,35 +437,35 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#define RFM_WAKEUP_TIMER         0xE000 
+#define RFM_WAKEUP_TIMER         0xE000
 #define RFM_WAKEUP_SET(time)     RFM_SPI_16(RFM_WAKEUP_TIMER | (time))
 
-#define RFM_WAKEUP_480s          (RFM_WAKEUP_TIMER |(11 << 8)| 234)
-#define RFM_WAKEUP_240s          (RFM_WAKEUP_TIMER |(10 << 8)| 234)
-#define RFM_WAKEUP_120s          (RFM_WAKEUP_TIMER |(9  << 8)| 234)
-#define RFM_WAKEUP_119s          (RFM_WAKEUP_TIMER |(9  << 8)| 232)
+#define RFM_WAKEUP_480s          (RFM_WAKEUP_TIMER | (11 << 8) | 234)
+#define RFM_WAKEUP_240s          (RFM_WAKEUP_TIMER | (10 << 8) | 234)
+#define RFM_WAKEUP_120s          (RFM_WAKEUP_TIMER | (9 << 8) | 234)
+#define RFM_WAKEUP_119s          (RFM_WAKEUP_TIMER | (9 << 8) | 232)
 
-#define RFM_WAKEUP_60s           (RFM_WAKEUP_TIMER |(8 << 8) | 235)
-#define RFM_WAKEUP_59s           (RFM_WAKEUP_TIMER |(8 << 8) | 230)
+#define RFM_WAKEUP_60s           (RFM_WAKEUP_TIMER | (8 << 8) | 235)
+#define RFM_WAKEUP_59s           (RFM_WAKEUP_TIMER | (8 << 8) | 230)
 
-#define RFM_WAKEUP_30s           (RFM_WAKEUP_TIMER |(7 << 8) | 235)
-#define RFM_WAKEUP_29s           (RFM_WAKEUP_TIMER |(7 << 8) | 227)
+#define RFM_WAKEUP_30s           (RFM_WAKEUP_TIMER | (7 << 8) | 235)
+#define RFM_WAKEUP_29s           (RFM_WAKEUP_TIMER | (7 << 8) | 227)
 
-#define RFM_WAKEUP_8s            (RFM_WAKEUP_TIMER |(5 << 8) | 250)
-#define RFM_WAKEUP_7s            (RFM_WAKEUP_TIMER |(5 << 8) | 219)
-#define RFM_WAKEUP_6s            (RFM_WAKEUP_TIMER |(6 << 8) |  94)
-#define RFM_WAKEUP_5s            (RFM_WAKEUP_TIMER |(5 << 8) | 156)
-#define RFM_WAKEUP_4s            (RFM_WAKEUP_TIMER |(5 << 8) | 125)
-#define RFM_WAKEUP_1s            (RFM_WAKEUP_TIMER |(2 << 8) | 250)
-#define RFM_WAKEUP_900ms         (RFM_WAKEUP_TIMER |(2 << 8) | 225)
-#define RFM_WAKEUP_800ms         (RFM_WAKEUP_TIMER |(2 << 8) | 200)
-#define RFM_WAKEUP_700ms         (RFM_WAKEUP_TIMER |(2 << 8) | 175)
-#define RFM_WAKEUP_600ms         (RFM_WAKEUP_TIMER |(2 << 8) | 150)
-#define RFM_WAKEUP_500ms         (RFM_WAKEUP_TIMER |(2 << 8) | 125)
-#define RFM_WAKEUP_400ms         (RFM_WAKEUP_TIMER |(2 << 8) | 100)
-#define RFM_WAKEUP_300ms         (RFM_WAKEUP_TIMER |(2 << 8) |  75)
-#define RFM_WAKEUP_200ms         (RFM_WAKEUP_TIMER |(2 << 8) |  50)
-#define RFM_WAKEUP_100ms         (RFM_WAKEUP_TIMER |(2 << 8) |  25)
+#define RFM_WAKEUP_8s            (RFM_WAKEUP_TIMER | (5 << 8) | 250)
+#define RFM_WAKEUP_7s            (RFM_WAKEUP_TIMER | (5 << 8) | 219)
+#define RFM_WAKEUP_6s            (RFM_WAKEUP_TIMER | (6 << 8) | 94)
+#define RFM_WAKEUP_5s            (RFM_WAKEUP_TIMER | (5 << 8) | 156)
+#define RFM_WAKEUP_4s            (RFM_WAKEUP_TIMER | (5 << 8) | 125)
+#define RFM_WAKEUP_1s            (RFM_WAKEUP_TIMER | (2 << 8) | 250)
+#define RFM_WAKEUP_900ms         (RFM_WAKEUP_TIMER | (2 << 8) | 225)
+#define RFM_WAKEUP_800ms         (RFM_WAKEUP_TIMER | (2 << 8) | 200)
+#define RFM_WAKEUP_700ms         (RFM_WAKEUP_TIMER | (2 << 8) | 175)
+#define RFM_WAKEUP_600ms         (RFM_WAKEUP_TIMER | (2 << 8) | 150)
+#define RFM_WAKEUP_500ms         (RFM_WAKEUP_TIMER | (2 << 8) | 125)
+#define RFM_WAKEUP_400ms         (RFM_WAKEUP_TIMER | (2 << 8) | 100)
+#define RFM_WAKEUP_300ms         (RFM_WAKEUP_TIMER | (2 << 8) | 75)
+#define RFM_WAKEUP_200ms         (RFM_WAKEUP_TIMER | (2 << 8) | 50)
+#define RFM_WAKEUP_100ms         (RFM_WAKEUP_TIMER | (2 << 8) | 25)
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -502,27 +502,27 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <stdint.h>
-void RFM_init (void);
+void RFM_init(void);
 uint16_t rfm_spi16(uint16_t outval);
 
 ///////////////////////////////////////////////////////////////////////////////
 
 // RFM air protocol flags:
 
-#define RFMPROTO_FLAGS_BITASK_PACKETTYPE		0b11000000 //!< the uppermost 2 bits of the flags field encode the packettype
-#define RFMPROTO_FLAGS_PACKETTYPE_BROADCAST		0b00000000 //!< broadcast packettype (message from hr20, protocol; step 1)
-#define RFMPROTO_FLAGS_PACKETTYPE_COMMAND		0b01000000 //!< command packettype (message to hr20, protocol; step 2)
-#define RFMPROTO_FLAGS_PACKETTYPE_REPLY			0b10000000 //!< reply packettype (message from hr20, protocol; step 3)
-#define RFMPROTO_FLAGS_PACKETTYPE_SPECIAL		0b11000000 //!< currently unused packettype
+#define RFMPROTO_FLAGS_BITASK_PACKETTYPE                0b11000000      //!< the uppermost 2 bits of the flags field encode the packettype
+#define RFMPROTO_FLAGS_PACKETTYPE_BROADCAST             0b00000000      //!< broadcast packettype (message from hr20, protocol; step 1)
+#define RFMPROTO_FLAGS_PACKETTYPE_COMMAND               0b01000000      //!< command packettype (message to hr20, protocol; step 2)
+#define RFMPROTO_FLAGS_PACKETTYPE_REPLY                 0b10000000      //!< reply packettype (message from hr20, protocol; step 3)
+#define RFMPROTO_FLAGS_PACKETTYPE_SPECIAL               0b11000000      //!< currently unused packettype
 
-#define RFMPROTO_FLAGS_BITASK_DEVICETYPE		0b00011111 //!< the lowermost 5 bytes denote the device type. this way other sensors and actors may coexist
-#define RFMPROTO_FLAGS_DEVICETYPE_OPENHR20		0b00010100 //!< topen HR20 device type. 10100 is for decimal 20
+#define RFMPROTO_FLAGS_BITASK_DEVICETYPE                0b00011111      //!< the lowermost 5 bytes denote the device type. this way other sensors and actors may coexist
+#define RFMPROTO_FLAGS_DEVICETYPE_OPENHR20              0b00010100      //!< topen HR20 device type. 10100 is for decimal 20
 
-#define RFMPROTO_IS_PACKETTYPE_BROADCAST(FLAGS)	( RFMPROTO_FLAGS_PACKETTYPE_BROADCAST == ((FLAGS) & RFMPROTO_FLAGS_BITASK_PACKETTYPE) )
-#define RFMPROTO_IS_PACKETTYPE_COMMAND(FLAGS)	( RFMPROTO_FLAGS_PACKETTYPE_COMMAND   == ((FLAGS) & RFMPROTO_FLAGS_BITASK_PACKETTYPE) )
-#define RFMPROTO_IS_PACKETTYPE_REPLY(FLAGS)		( RFMPROTO_FLAGS_PACKETTYPE_REPLY     == ((FLAGS) & RFMPROTO_FLAGS_BITASK_PACKETTYPE) )
-#define RFMPROTO_IS_PACKETTYPE_SPECIAL(FLAGS)	( RFMPROTO_FLAGS_PACKETTYPE_SPECIAL   == ((FLAGS) & RFMPROTO_FLAGS_BITASK_PACKETTYPE) )
-#define RFMPROTO_IS_DEVICETYPE_OPENHR20(FLAGS)	( RFMPROTO_FLAGS_DEVICETYPE_OPENHR20  == ((FLAGS) & RFMPROTO_FLAGS_BITASK_DEVICETYPE) )
+#define RFMPROTO_IS_PACKETTYPE_BROADCAST(FLAGS) (RFMPROTO_FLAGS_PACKETTYPE_BROADCAST == ((FLAGS)&RFMPROTO_FLAGS_BITASK_PACKETTYPE))
+#define RFMPROTO_IS_PACKETTYPE_COMMAND(FLAGS)   (RFMPROTO_FLAGS_PACKETTYPE_COMMAND == ((FLAGS)&RFMPROTO_FLAGS_BITASK_PACKETTYPE))
+#define RFMPROTO_IS_PACKETTYPE_REPLY(FLAGS)             (RFMPROTO_FLAGS_PACKETTYPE_REPLY == ((FLAGS)&RFMPROTO_FLAGS_BITASK_PACKETTYPE))
+#define RFMPROTO_IS_PACKETTYPE_SPECIAL(FLAGS)   (RFMPROTO_FLAGS_PACKETTYPE_SPECIAL == ((FLAGS)&RFMPROTO_FLAGS_BITASK_PACKETTYPE))
+#define RFMPROTO_IS_DEVICETYPE_OPENHR20(FLAGS)  (RFMPROTO_FLAGS_DEVICETYPE_OPENHR20 == ((FLAGS)&RFMPROTO_FLAGS_BITASK_DEVICETYPE))
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -530,13 +530,12 @@ uint16_t rfm_spi16(uint16_t outval);
 
 #define RFM_FRAME_MAX 80
 
-typedef enum {rfmmode_stop=0, 
-              rfmmode_start_tx=1,
-              rfmmode_tx=2,
-              rfmmode_tx_done=3,
-              rfmmode_rx=4,
-              rfmmode_rx_owf=5,
-              } rfm_mode_t;
+typedef enum { rfmmode_stop = 0,
+	       rfmmode_start_tx = 1,
+	       rfmmode_tx = 2,
+	       rfmmode_tx_done = 3,
+	       rfmmode_rx = 4,
+	       rfmmode_rx_owf = 5, } rfm_mode_t;
 
 extern uint8_t rfm_framebuf[RFM_FRAME_MAX];
 extern uint8_t rfm_framesize;
@@ -544,7 +543,7 @@ extern uint8_t rfm_framepos;
 extern rfm_mode_t rfm_mode;
 
 #if !defined(MASTER_CONFIG_H)
-  void RFM_interrupt(uint8_t pine);
+void RFM_interrupt(uint8_t pine);
 #endif // !defined(MASTER_CONFIG_H)
 
 #define rfm_start_tx()

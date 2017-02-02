@@ -33,29 +33,29 @@
 
 #pragma once
 
-extern uint8_t CTL_temp_wanted; //!< wanted temperature
-extern uint8_t CTL_temp_wanted_last;   // desired temperatur value used for last PID control
+extern uint8_t CTL_temp_wanted;         //!< wanted temperature
+extern uint8_t CTL_temp_wanted_last;    // desired temperatur value used for last PID control
 extern uint8_t CTL_temp_auto_type;
 extern uint8_t CTL_mode_auto;
 extern int8_t PID_force_update;      // signed value, val<0 means disable force updates
 extern uint8_t CTL_error;
 extern uint8_t CTL_mode_window;
 
-#define mode_window() (CTL_mode_window!=0)
+#define mode_window() (CTL_mode_window != 0)
 
 #define VALVE_HISTORY_LEN 1
 extern uint8_t valveHistory[VALVE_HISTORY_LEN];
 #define valve_wanted (valveHistory[0])
 
-#define CTL_update_temp_auto() (CTL_temp_auto_type=TEMP_TYPE_INVALID)
-#define CTL_test_auto() (CTL_mode_auto && (CTL_temp_auto_type != TEMP_TYPE_INVALID) && (temperature_table[CTL_temp_auto_type]==CTL_temp_wanted))
-#define CTL_set_temp(t) (PID_force_update = 10, CTL_temp_wanted=t)
+#define CTL_update_temp_auto() (CTL_temp_auto_type = TEMP_TYPE_INVALID)
+#define CTL_test_auto() (CTL_mode_auto && (CTL_temp_auto_type != TEMP_TYPE_INVALID) && (temperature_table[CTL_temp_auto_type] == CTL_temp_wanted))
+#define CTL_set_temp(t) (PID_force_update = 10, CTL_temp_wanted = t)
 
 void CTL_set_error(int8_t err_code);
 void CTL_clear_error(int8_t err_code);
 
 void CTL_update(bool minute_ch);
-void CTL_temp_change_inc (int8_t ch);
+void CTL_temp_change_inc(int8_t ch);
 
 #define CTL_CHANGE_MODE        -1
 #define CTL_CHANGE_MODE_REWOKE -2
@@ -63,21 +63,21 @@ void CTL_temp_change_inc (int8_t ch);
 void CTL_change_mode(int8_t dif);
 
 #define DEFINE_INTEGRATOR_BLOCK 6
-#define I_ERR_TOLLERANCE_AROUND_0 15 // unit 0,01°C. Set it quite restrictive !
-#define I_ERR_WEIGHT 25 //impact of error on I part
+#define I_ERR_TOLLERANCE_AROUND_0 15    // unit 0,01°C. Set it quite restrictive !
+#define I_ERR_WEIGHT 25                 //impact of error on I part
 
 extern uint8_t CTL_integratorBlock;
 
 
 // ERRORS
-#define CTL_ERR_BATT_LOW                (1<<7)
-#define CTL_ERR_BATT_WARNING            (1<<6)
-#define CTL_ERR_NA_5                    (1<<5)
-#define CTL_ERR_RFM_SYNC                (1<<4)
-#define CTL_ERR_MOTOR                   (1<<3)
-#define CTL_ERR_MONTAGE                 (1<<2)
-#define CTL_ERR_NA_1                    (1<<1)
-#define CTL_ERR_NA_0                    (1<<0)
+#define CTL_ERR_BATT_LOW                (1 << 7)
+#define CTL_ERR_BATT_WARNING            (1 << 6)
+#define CTL_ERR_NA_5                    (1 << 5)
+#define CTL_ERR_RFM_SYNC                (1 << 4)
+#define CTL_ERR_MOTOR                   (1 << 3)
+#define CTL_ERR_MONTAGE                 (1 << 2)
+#define CTL_ERR_NA_1                    (1 << 1)
+#define CTL_ERR_NA_0                    (1 << 0)
 
 extern int32_t sumError;
 extern int8_t CTL_interatorCredit;

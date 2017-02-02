@@ -37,33 +37,32 @@
 #include <avr/eeprom.h>
 #include "common/rtc.h"
 #if (RFM == 1)
-	#include "rfm_config.h"
-	#include "common/rfm.h"
+#include "rfm_config.h"
+#include "common/rfm.h"
 #endif
 
 
 #define EEPROM __attribute__((section(".eeprom")))
 
-typedef struct { // each variables must be uint8_t or int8_t without exception
-#if (RFM==1)
-	/* 00...07 */ uint8_t security_key[8]; //!< key for encrypted radio messasges
- #if (RFM_TUNING>0)
-    /* 08 */ int8_t RFM_freqAdjust; //!< RFM12 Frequency adjustment
-    /* 09 */ uint8_t RFM_tuning; //!< RFM12 tuning mode
- #endif
+typedef struct {                                        // each variables must be uint8_t or int8_t without exception
+#if (RFM == 1)
+	/* 00...07 */ uint8_t	security_key[8];        //!< key for encrypted radio messasges
+#if (RFM_TUNING > 0)
+	/* 08 */ int8_t		RFM_freqAdjust;         //!< RFM12 Frequency adjustment
+	/* 09 */ uint8_t	RFM_tuning;             //!< RFM12 tuning mode
 #endif
-
+#endif
 } config_t;
 
 extern config_t config;
-#define config_raw ((uint8_t *) &config)
-#define kx_d ((uint8_t *) &config.temp_cal_table0)
-#define temperature_table ((uint8_t *) &config.temperature0)
+#define config_raw ((uint8_t *)&config)
+#define kx_d ((uint8_t *)&config.temp_cal_table0)
+#define temperature_table ((uint8_t *)&config.temperature0)
 #define CONFIG_RAW_SIZE (sizeof(config_t))
 
 extern uint8_t EEPROM ee_layout;
 
-#define EE_LAYOUT (0xE1) //!< EEPROM layout version (Experimental 1) 
+#define EE_LAYOUT (0xE1) //!< EEPROM layout version (Experimental 1)
 
 #ifdef __EEPROM_C__
 // this is definition, not just declaration
@@ -75,39 +74,39 @@ extern uint8_t EEPROM ee_layout;
 uint8_t EEPROM ee_reserved1 = 0x00; // do not use EEPROM address 0
 uint8_t EEPROM ee_reserved2 = 0x00;
 uint8_t EEPROM ee_reserved3 = 0x00;
-uint8_t EEPROM ee_layout    = EE_LAYOUT; //!< EEPROM layout version 
+uint8_t EEPROM ee_layout = EE_LAYOUT;    //!< EEPROM layout version
 
 /* eeprom address 0x004 */
 
 uint8_t EEPROM ee_reserved2_60 [60] = {
-    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-    0xff, 0xff, 0xff, 0xff 
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+	0xff, 0xff, 0xff, 0xff
 };
 
 /* eeprom address 0x040 */
 
-uint8_t EEPROM ee_config[][4] ={  // must be alligned to 4 bytes
+uint8_t EEPROM ee_config[][4] = {  // must be alligned to 4 bytes
 // order on this table depend to config_t
 // /*idx*/ {value,  default,    min,    max},
-#if (RFM==1)
-  /* 00 */  {SECURITY_KEY_0, SECURITY_KEY_0, 0x00, 0xff},   //!< security_key[0] for encrypted radio messasges
-  /* 01 */  {SECURITY_KEY_1, SECURITY_KEY_1, 0x00, 0xff},   //!< security_key[1] for encrypted radio messasges
-  /* 02 */  {SECURITY_KEY_2, SECURITY_KEY_2, 0x00, 0xff},   //!< security_key[2] for encrypted radio messasges
-  /* 03 */  {SECURITY_KEY_3, SECURITY_KEY_3, 0x00, 0xff},   //!< security_key[3] for encrypted radio messasges
-  /* 04 */  {SECURITY_KEY_4, SECURITY_KEY_4, 0x00, 0xff},   //!< security_key[4] for encrypted radio messasges
-  /* 05 */  {SECURITY_KEY_5, SECURITY_KEY_5, 0x00, 0xff},   //!< security_key[5] for encrypted radio messasges
-  /* 06 */  {SECURITY_KEY_6, SECURITY_KEY_6, 0x00, 0xff},   //!< security_key[6] for encrypted radio messasges
-  /* 07 */  {SECURITY_KEY_7, SECURITY_KEY_7, 0x00, 0xff},   //!< security_key[7] for encrypted radio messasges
- #if (RFM_TUNING>0)
-  /*    */  {0, 0, 0x00, 0xff},   //!< RFM12 Frequency adjustment, 2's complement
-  /*    */  {RFM_TUNING_MODE, RFM_TUNING_MODE, 0x00, 0xff},   //!< RFM12 tuning mode, 0 = tuning mode off (narrow, high data rate), 1 = tuning mode on (wide, low data rate)
- #endif
+#if (RFM == 1)
+	/* 00 */ { SECURITY_KEY_0,  SECURITY_KEY_0,  0x00, 0xff },      //!< security_key[0] for encrypted radio messasges
+	/* 01 */ { SECURITY_KEY_1,  SECURITY_KEY_1,  0x00, 0xff },      //!< security_key[1] for encrypted radio messasges
+	/* 02 */ { SECURITY_KEY_2,  SECURITY_KEY_2,  0x00, 0xff },      //!< security_key[2] for encrypted radio messasges
+	/* 03 */ { SECURITY_KEY_3,  SECURITY_KEY_3,  0x00, 0xff },      //!< security_key[3] for encrypted radio messasges
+	/* 04 */ { SECURITY_KEY_4,  SECURITY_KEY_4,  0x00, 0xff },      //!< security_key[4] for encrypted radio messasges
+	/* 05 */ { SECURITY_KEY_5,  SECURITY_KEY_5,  0x00, 0xff },      //!< security_key[5] for encrypted radio messasges
+	/* 06 */ { SECURITY_KEY_6,  SECURITY_KEY_6,  0x00, 0xff },      //!< security_key[6] for encrypted radio messasges
+	/* 07 */ { SECURITY_KEY_7,  SECURITY_KEY_7,  0x00, 0xff },      //!< security_key[7] for encrypted radio messasges
+#if (RFM_TUNING > 0)
+	/*    */ { 0,		    0,		     0x00, 0xff },      //!< RFM12 Frequency adjustment, 2's complement
+	/*    */ { RFM_TUNING_MODE, RFM_TUNING_MODE, 0x00, 0xff },      //!< RFM12 tuning mode, 0 = tuning mode off (narrow, high data rate), 1 = tuning mode on (wide, low data rate)
+#endif
 
 #endif
 };
@@ -121,11 +120,11 @@ void eeprom_config_init(bool restore_default);
 void eeprom_config_save(uint8_t idx);
 
 uint16_t eeprom_timers_read_raw(uint16_t offset);
-#define timers_get_raw_index(dow,slot) (dow*RTC_TIMERS_PER_DOW+slot)
+#define timers_get_raw_index(dow, slot) (dow * RTC_TIMERS_PER_DOW + slot)
 void eeprom_timers_write_raw(uint16_t offset, uint16_t value);
-#define eeprom_timers_write(dow,slot,value) (eeprom_timers_write_raw((dow*RTC_TIMERS_PER_DOW+slot),value))
+#define eeprom_timers_write(dow, slot, value) (eeprom_timers_write_raw((dow * RTC_TIMERS_PER_DOW + slot), value))
 
-extern uint8_t  timers_patch_offset;
+extern uint8_t timers_patch_offset;
 extern uint16_t timers_patch_data;
 
 

@@ -36,27 +36,27 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#include "config.h"	// General Setup configuration
+#include "config.h"     // General Setup configuration
 
 //! HR20 runs on 4MHz
 #ifndef F_CPU
 #define F_CPU 4000000UL
 #endif
 
-#define nop() asm("nop;")
+#define nop() asm ("nop;")
 
-#define c2temp(c) (c*2)
-#define calc_temp(t) (((uint16_t)t)*50)   // result unit is 1/100 C
-#define TEMP_MIN    c2temp (5)   // 5�C
-#define TEMP_DEFAULT    c2temp (20) // 20�C
-#define TEMP_MAX    c2temp (30) // 30�C
+#define c2temp(c) (c * 2)
+#define calc_temp(t) (((uint16_t)t) * 50)       // result unit is 1/100 C
+#define TEMP_MIN    c2temp(5)                   // 5�C
+#define TEMP_DEFAULT    c2temp(20)              // 20�C
+#define TEMP_MAX    c2temp(30)                  // 30�C
 
 // public prototypes
 void delay(uint16_t);                   // delay
 
 extern bool reboot;
 
-#define power_up_ADC() (PRR = (1<<PRTIM1)|(1<<PRSPI))  
-#define power_down_ADC() (PRR = (1<<PRTIM1)|(1<<PRSPI)|(1<<PRADC))  
+#define power_up_ADC() (PRR = (1 << PRTIM1) | (1 << PRSPI))
+#define power_down_ADC() (PRR = (1 << PRTIM1) | (1 << PRSPI) | (1 << PRADC))
 
 #endif /* MAIN_H */

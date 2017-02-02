@@ -31,7 +31,7 @@
  * \date       $Date$
  * $Rev$
  */
- 
+
 #include <stdint.h>
 #include <string.h>
 
@@ -47,24 +47,24 @@ static q_item_t Q_buf[Q_ITEMS];
  *
  *  \note
  ******************************************************************************/
-uint8_t* Q_push(uint8_t len, uint8_t addr, uint8_t bank) {
-    uint8_t i;
-    uint8_t free=0xff;
-    
-    for (i=0;i<Q_ITEMS;i++) {
-        if ((Q_buf[i].addr == addr) && (Q_buf[i].bank == bank)) {
-            free=0xff;
-        } else { 
-            if ((free==0xff)&&(Q_buf[i].addr == 0)) {
-                free=i;
-            }  
-        }
-    }
-    if (free==0xff) return NULL;
-    Q_buf[free].len=len;
-    Q_buf[free].addr=addr;
-    Q_buf[free].bank=bank;
-    return Q_buf[free].data;
+uint8_t *Q_push(uint8_t len, uint8_t addr, uint8_t bank)
+{
+	uint8_t i;
+	uint8_t free = 0xff;
+
+	for (i = 0; i < Q_ITEMS; i++) {
+		if ((Q_buf[i].addr == addr) && (Q_buf[i].bank == bank)) {
+			free = 0xff;
+		} else {
+			if ((free == 0xff) && (Q_buf[i].addr == 0))
+				free = i;
+		}
+	}
+	if (free == 0xff) return NULL;
+	Q_buf[free].len = len;
+	Q_buf[free].addr = addr;
+	Q_buf[free].bank = bank;
+	return Q_buf[free].data;
 }
 
 /*!
@@ -73,12 +73,13 @@ uint8_t* Q_push(uint8_t len, uint8_t addr, uint8_t bank) {
  *
  *  \note
  ******************************************************************************/
-void Q_clean(uint8_t addr_preserve) {
-    uint8_t i;
-    for (i=0;i<Q_ITEMS;i++) {
-        if (Q_buf[i].addr != addr_preserve)
-            Q_buf[i].addr =0;
-    }    
+void Q_clean(uint8_t addr_preserve)
+{
+	uint8_t i;
+
+	for (i = 0; i < Q_ITEMS; i++)
+		if (Q_buf[i].addr != addr_preserve)
+			Q_buf[i].addr = 0;
 }
 
 /*!
@@ -87,12 +88,12 @@ void Q_clean(uint8_t addr_preserve) {
  *
  *  \note
  ******************************************************************************/
-q_item_t * Q_get(uint8_t addr, uint8_t bank, uint8_t skip) {
-    uint8_t i;
-    for (i=0;i<Q_ITEMS;i++) {
-        if ((Q_buf[i].addr == addr) && (Q_buf[i].bank == bank)) {
-            if ((skip--)==0) return Q_buf+i;
-        }
-    }
-    return NULL;
+q_item_t *Q_get(uint8_t addr, uint8_t bank, uint8_t skip)
+{
+	uint8_t i;
+
+	for (i = 0; i < Q_ITEMS; i++)
+		if ((Q_buf[i].addr == addr) && (Q_buf[i].bank == bank))
+			if ((skip--) == 0) return Q_buf + i;
+	return NULL;
 }

@@ -38,7 +38,8 @@
 
 #if RFM
 
-bool cmac_calc (uint8_t* m, uint8_t bytes, uint8_t* data_prefix, bool check) {
+bool cmac_calc(uint8_t *m, uint8_t bytes, uint8_t *data_prefix, bool check)
+{
 /*   reference: http://csrc.nist.gov/publications/nistpubs/800-38B/SP_800-38B.pdf
  *   1.Let Mlen = message length in bits
  *   2.Let n = Mlen / 64
@@ -51,49 +52,49 @@ bool cmac_calc (uint8_t* m, uint8_t bytes, uint8_t* data_prefix, bool check) {
  *   5.Let C0 = 0
  *   6.For i = 1 to n, let Ci = ENC_KMAC(Ci-1 XOR Mi).
  *   7.Let MAC = MSB32(Cn). (4 most significant byte)
- *   8.Add MAC to end of "m" 
+ *   8.Add MAC to end of "m"
  */
-  
-    uint8_t i,j;
-    uint8_t buf[8];
-    if (data_prefix==NULL) {
-        for (i=0;i<8;buf[i++]=0) {;}
-    } else {
-        memcpy(buf,data_prefix,8);
-        xtea_enc(buf, buf, K_mac);
-    } 
+
+	uint8_t i, j;
+	uint8_t buf[8];
+
+	if (data_prefix == NULL) {
+		for (i = 0; i < 8; buf[i++] = 0);
+	} else {
+		memcpy(buf, data_prefix, 8);
+		xtea_enc(buf, buf, K_mac);
+	}
 
 
-    for (i=0; i<bytes; ) { // i modification inside loop
-        uint8_t x=i;
-        i+=8;
-        uint8_t* Kx;
-        if (i>=bytes) Kx=((i==bytes)?K1:K2);
-        for (j=0;j<8;j++,x++) {
-            uint8_t tmp;
-            if (x<bytes) tmp=m[x];
-            else tmp=((x==bytes)?0x80:0);
-            if (i>=bytes) tmp ^= Kx[j];
-            buf[j] ^= tmp;
-        }
-        xtea_enc(buf, buf, K_mac);
-    }
-    if (check) {
-        for (i=0;i<4;i++) {
-            if (m[bytes+i]!=buf[i]) return false;
-        }
-    } else {
-        memcpy(m+bytes,buf,4);
-    }
-    return true;
-    #if 0
-    // hack to use __prologue_saves__ and __epilogue_restores__ rather push&pop
-    asm ( "" ::: 
-        "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", 
-        "r9", "r10", "r11", "r12", "r13", "r14", "r15", "r16", 
-        "r17", "r18", "r19", "r20", "r21", "r22", "r23", "r24" 
-        ); 
-    #endif
+	for (i = 0; i < bytes; ) { // i modification inside loop
+		uint8_t x = i;
+		i += 8;
+		uint8_t *Kx;
+		if (i >= bytes) Kx = ((i == bytes) ? K1 : K2);
+		for (j = 0; j < 8; j++, x++) {
+			uint8_t tmp;
+			if (x < bytes) tmp = m[x];
+			else tmp = ((x == bytes) ? 0x80 : 0);
+			if (i >= bytes) tmp ^= Kx[j];
+			buf[j] ^= tmp;
+		}
+		xtea_enc(buf, buf, K_mac);
+	}
+	if (check) {
+		for (i = 0; i < 4; i++)
+			if (m[bytes + i] != buf[i]) return false;
+	} else {
+		memcpy(m + bytes, buf, 4);
+	}
+	return true;
+#if 0
+	// hack to use __prologue_saves__ and __epilogue_restores__ rather push&pop
+	asm ("" :::
+	     "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8",
+	     "r9", "r10", "r11", "r12", "r13", "r14", "r15", "r16",
+	     "r17", "r18", "r19", "r20", "r21", "r22", "r23", "r24"
+	     );
+#endif
 }
 
 #endif // RFM

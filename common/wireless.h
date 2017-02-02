@@ -32,31 +32,31 @@
  */
 
 
-extern uint8_t Keys[5*8]; // 40 bytes
-#define K_mac (Keys+0*8)
-#define K_enc (Keys+1*8)
-#define K1 (Keys+3*8)
-#define K2 (Keys+4*8)
-#define K_m (Keys+3*8)  /* share same position as K1 & K2 */
+extern uint8_t Keys[5 * 8]; // 40 bytes
+#define K_mac (Keys + 0 * 8)
+#define K_enc (Keys + 1 * 8)
+#define K1 (Keys + 3 * 8)
+#define K2 (Keys + 4 * 8)
+#define K_m (Keys + 3 * 8)  /* share same position as K1 & K2 */
 // note: do not change order of keys in Keys array, it depend to crypto_init
 
 void crypto_init(void);
 void wirelessReceivePacket(void);
 #if defined(MASTER_CONFIG_H)
-    void wirelessSendSync(void);
-    extern uint8_t wl_packet_bank;
-    void wirelessTimer2(void);
+void wirelessSendSync(void);
+extern uint8_t wl_packet_bank;
+void wirelessTimer2(void);
 #else
-    extern bool wireless_async;
-    void wirelesTimeSyncCheck(void);
-#endif 
+extern bool wireless_async;
+void wirelesTimeSyncCheck(void);
+#endif
 void wirelessSendDone(void);
 void wirelessTimer(void);
 
-#if (RFM==1)
+#if (RFM == 1)
 void wireless_putchar(uint8_t ch);
 #else
-#define wireless_putchar(ch) 
+#define wireless_putchar(ch)
 #endif
 
 
@@ -67,26 +67,26 @@ extern uint8_t wl_force_addr2;
 extern uint32_t wl_force_flags;
 
 #if !defined(MASTER_CONFIG_H)
-#define WLTIME_SYNC (0xfd)  // prepare to receive timesync / slave only 
-#define WLTIME_START (RTC_TIMER_CALC(50)) // communication start
-#define WLTIME_TIMEOUT (RTC_TIMER_CALC(80)) // slave RX timeout
-#define WLTIME_SYNC_TIMEOUT (RTC_TIMER_CALC(50)) // slave RX timeout
-#define WLTIME_STOP (RTC_TIMER_CALC(900)) // last possible communication
+#define WLTIME_SYNC (0xfd)                              // prepare to receive timesync / slave only
+#define WLTIME_START (RTC_TIMER_CALC(50))               // communication start
+#define WLTIME_TIMEOUT (RTC_TIMER_CALC(80))             // slave RX timeout
+#define WLTIME_SYNC_TIMEOUT (RTC_TIMER_CALC(50))        // slave RX timeout
+#define WLTIME_STOP (RTC_TIMER_CALC(900))               // last possible communication
 #endif
-#define WLTIME_LED_TIMEOUT (RTC_TIMER_CALC(300)) // packet blink time
+#define WLTIME_LED_TIMEOUT (RTC_TIMER_CALC(300))        // packet blink time
 
 /* this allow to ignore defined sync packets
  * it is allowed only if last received sync not contain any communication request
- */  
+ */
 #define WL_SKIP_SYNC 3
 extern uint8_t wl_skip_sync;
 
 #if !defined(MASTER_CONFIG_H)
 typedef enum {
-    WL_TIMER_NONE,
-    WL_TIMER_FIRST,
-    WL_TIMER_RX_TMO,
-    WL_TIMER_SYNC // slave only
+	WL_TIMER_NONE,
+	WL_TIMER_FIRST,
+	WL_TIMER_RX_TMO,
+	WL_TIMER_SYNC // slave only
 } wirelessTimerCase_t;
 extern wirelessTimerCase_t wirelessTimerCase;
 #endif

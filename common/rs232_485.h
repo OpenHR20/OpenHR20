@@ -34,17 +34,17 @@
 #pragma once
 
 #if (defined COM_RS232) || (defined COM_RS485)
-	
-    #if defined(_AVR_IOM169P_H_) || defined(_AVR_IOM329_H_)
-		#define RS_need_clock() (UCSR0B & (_BV(TXEN0) | _BV(RXEN0)))
-		#define RS_enable_rx() (UCSR0B |= _BV(RXEN0) | _BV(RXCIE0))
-	#elif defined(_AVR_IOM169_H_) || defined(_AVR_IOM16_H_) || defined(_AVR_IOM32_H_)
-		#define RS_need_clock() (UCSRB & (_BV(TXEN) | _BV(RXEN)))
-		#define RS_enable_rx() (UCSRB |= _BV(RXEN) | _BV(RXCIE))
-	#endif
-	void RS_startSend(void);
-	void RS_Init(void);
-    void RS_interrupt(uint8_t pine);
-#else 
-	#define RS_need_clock() (0)
+
+#if defined(_AVR_IOM169P_H_) || defined(_AVR_IOM329_H_)
+#define RS_need_clock() (UCSR0B & (_BV(TXEN0) | _BV(RXEN0)))
+#define RS_enable_rx() (UCSR0B |= _BV(RXEN0) | _BV(RXCIE0))
+#elif defined(_AVR_IOM169_H_) || defined(_AVR_IOM16_H_) || defined(_AVR_IOM32_H_)
+#define RS_need_clock() (UCSRB & (_BV(TXEN) | _BV(RXEN)))
+#define RS_enable_rx() (UCSRB |= _BV(RXEN) | _BV(RXCIE))
+#endif
+void RS_startSend(void);
+void RS_Init(void);
+void RS_interrupt(uint8_t pine);
+#else
+#define RS_need_clock() (0)
 #endif

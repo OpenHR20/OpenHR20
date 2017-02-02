@@ -34,8 +34,8 @@
 #pragma once
 
 extern int8_t menu_auto_update_timeout;
-extern bool menu_locked; 
+extern bool menu_locked;
 
-bool menu_controller(void); 
+bool menu_controller(void);
 void menu_view(bool update);
 void menu_update_hourbar(uint8_t dow);
