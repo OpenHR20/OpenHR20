@@ -448,7 +448,7 @@ static inline void init(void)
 	//! Initialize the motor
 	MOTOR_Init();
 
-	//1 Initialize the LCD
+	//! Initialize the LCD
 	LCD_Init();
 
 #if RFM
