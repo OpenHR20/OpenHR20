@@ -39,7 +39,7 @@
 
 #include "config.h"
 #include "com.h"
-#include "common/rs232_485.h"
+#include "common/rs232.h"
 #include "main.h"
 #include "common/rtc.h"
 #include "adc.h"

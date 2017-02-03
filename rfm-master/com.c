@@ -41,7 +41,7 @@
 #include "config.h"
 #include "main.h"
 #include "com.h"
-#include "common/rs232_485.h"
+#include "common/rs232.h"
 #include "common/rtc.h"
 #include "common/wireless.h"
 #include "task.h"

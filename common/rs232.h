@@ -24,8 +24,8 @@
  */
 
 /*!
- * \file       rs232_485.h
- * \brief      rs232 and rs485 header
+ * \file       rs232.h
+ * \brief      rs232 header
  * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>
  * \date       $Date$
  * $Rev$

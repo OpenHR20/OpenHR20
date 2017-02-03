@@ -25,8 +25,8 @@
  */
 
 /*!
- * \file       rs232_485_hw.c
- * \brief      hardware layer of the rs232 and rs485
+ * \file       rs232_hw.c
+ * \brief      hardware layer of the rs232
  * \author     Juergen Sachs (juergen-sachs-at-gmx-dot-de); Jiri Dobry <jdobry-at-centrum-dot-cz>
  * \date       $Date$
  * $Rev$
@@ -41,7 +41,7 @@
 #include "config.h"
 #include "main.h"
 #include "com.h"
-#include "rs232_485.h"
+#include "rs232.h"
 
 /* The following must be AFTER the last include line */
 #ifdef COM_RS232
