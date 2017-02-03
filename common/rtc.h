@@ -134,11 +134,7 @@ void RTC_SetSecond100(uint8_t);                         // Set 1/100 second
 void RTC_SetDay(int8_t);                                // Set day
 void RTC_SetMonth(int8_t);                              // Set month
 void RTC_SetYear(uint8_t);                              // Set year
-#if 0
-bool RTC_SetDate(int8_t, int8_t, int8_t);               // Set Date, and do all the range checking
-#else
-#define RTC_SetDate(d, m, y) (RTC_SetYear(y), RTC_SetMonth(m), RTC_SetDay(d))
-#endif
+#define RTC_SetDate(d, m, y) (RTC_SetYear(y), RTC_SetMonth(m), RTC_SetDay(d)) // Set Date, and do all the range checking
 
 bool RTC_DowTimerSet(rtc_dow_t, uint8_t, uint16_t, timermode_t timermode); // set day of week timer
 uint16_t RTC_DowTimerGet(rtc_dow_t dow, uint8_t slot, timermode_t *timermode);

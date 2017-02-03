@@ -536,38 +536,6 @@ static void RTC_SetDayOfWeek(void)
 	menu_update_hourbar((config.timer_mode == 1) ? RTC.DOW : 0);
 #endif
 }
-#if 0
-/*!
- *******************************************************************************
- *
- *  Set Date, and do all the range checking
- *
- *  \note
- *     return true if date is valid and set, otherwise false
- *
- ******************************************************************************/
-bool RTC_SetDate(int8_t dd, int8_t mm, int8_t yy)
-{
-	// Get current date for restauration in case of an error
-	uint8_t old_yy = RTC_GetYearYY();
-	uint8_t old_mm = RTC_GetMonth();
-
-	// Set and check values
-	if (mm > 0 && mm < 13 && dd > 0) {
-		RTC_SetYear(yy);
-		RTC_SetMonth(mm);
-		if (dd <= RTC_DaysOfMonth()) {
-			RTC_SetDay(dd);
-			return true;
-		}
-	}
-
-	// Restore old date
-	RTC_SetYear(old_yy);
-	RTC_SetMonth(old_mm);
-	return false;
-}
-#endif
 
 uint8_t RTC_timer_todo = 0;
 uint8_t RTC_timer_done = 0;
