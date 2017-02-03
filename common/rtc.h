@@ -87,7 +87,7 @@ typedef enum {
 	temperature0 = 0, temperature1 = 1, temperature2 = 2, temperature3 = 3
 } timermode_t;
 
-/* rtc_t structure can be used for encryption, in this case it must be 8 byte ling and same on both sides */
+/* rtc_t structure can be used for encryption, in this case it must be 8 byte long and same on both sides */
 typedef struct {
 	uint8_t YY;     //!< \brief Date: Year (0-255) -> 2000 - 2255
 	uint8_t MM;     //!< \brief Date: Month
