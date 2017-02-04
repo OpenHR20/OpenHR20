@@ -522,11 +522,11 @@ void LCD_PrintHexW(uint16_t value, uint8_t mode)
  *  \note  You have to call \ref LCD_Update() to trigger update on LCD if not
  *         it is triggered automatically at change of bitframe
  *
- *  \note  range for desired temperature 5,0°C - 30°C, OFF and ON
+ *  \note  range for desired temperature 5,0ï¿½C - 30ï¿½C, OFF and ON
  *
  *  \param temp<BR>
  *     - TEMP_MIN-1          : \c OFF <BR>
- *     - TEMP_MIN to TEMP_MAX : temperature = temp/2  [5,0°C - 30°C]
+ *     - TEMP_MIN to TEMP_MAX : temperature = temp/2  [5,0ï¿½C - 30ï¿½C]
  *     - TEMP_MAX+1          : \c ON  <BR>
  *     -    other: \c invalid <BR>
  *  \param mode  \ref LCD_MODE_ON, \ref LCD_MODE_OFF, \ref LCD_MODE_BLINK_1
@@ -571,8 +571,8 @@ void LCD_PrintTemp(uint8_t temp, uint8_t mode)
  *
  *
  *  \param temp temperature in 1/100 deg C<BR>
- *     min:  -999 => -9,9°C
- *     max:  9999 => 99,9°C
+ *     min:  -999 => -9,9ï¿½C
+ *     max:  9999 => 99,9ï¿½C
  *  \param mode  \ref LCD_MODE_ON, \ref LCD_MODE_OFF, \ref LCD_MODE_BLINK_1
  ******************************************************************************/
 void LCD_PrintTempInt(int16_t temp, uint8_t mode)
@@ -600,14 +600,14 @@ void LCD_PrintTempInt(int16_t temp, uint8_t mode)
 	LCD_SetSeg(LCD_SEG_COL1, mode);         // decimal point
 #endif
 
-	// 1/100°C not printed
+	// 1/100ï¿½C not printed
 	LCD_PrintDec3(temp / 10, START_POS, mode);
 
 	if (neg)
 		// negative Temp
 		LCD_PrintChar(LCD_CHAR_neg, START_POS + 2, mode);
 	else if (temp < 1000)
-		// Temp < 10°C
+		// Temp < 10ï¿½C
 		LCD_PrintChar(LCD_CHAR_NULL, START_POS + 2, mode);
 }
 
@@ -664,14 +664,6 @@ void LCD_SetHourBarSeg(uint8_t seg, uint8_t mode)
  ******************************************************************************/
 void LCD_HourBarBitmap(uint32_t bitmap)
 {
-#if 0
-	uint8_t i;
-	for (i = 0; i < 24; i++) {
-		uint8_t segment = pgm_read_byte(&LCD_SegHourBarOffsetTablePrgMem[i]);
-		LCD_SetSeg(segment, (((uint8_t)bitmap & 1) ? LCD_MODE_ON : LCD_MODE_OFF));
-		bitmap = bitmap >> 1;
-	}
-#else
 	asm volatile (
 		"    movw r14,r22                                     " "\n"
 		"    mov  r16,r24                                     " "\n"
@@ -695,135 +687,8 @@ void LCD_HourBarBitmap(uint32_t bitmap)
 		: "I" (LCD_MODE_ON)
 		: "r14", "r15", "r16", "r28", "r29", "r30", "r31"
 		);
-#endif
 }
 
-
-/*!
- *******************************************************************************
- *  Set all segments from left up to val and clear all other segments
- *
- *  \note  You have to call \ref LCD_Update() to trigger update on LCD if not
- *         it is triggered automatically at change of bitframe
- *
- *  \param seg No of the last hour bar segment to be set 0-23
- *  \param mode  \ref LCD_MODE_ON, \ref LCD_MODE_OFF, \ref LCD_MODE_BLINK_1
- ******************************************************************************/
-#if 0
-void LCD_SetHourBarBar(uint8_t val, uint8_t mode)
-{
-	uint8_t i;
-
-	// Only Segment 0:23
-	if (val > 23)
-		val = 23;
-	// For each Segment 0:23
-	for (i = 0; i < 24; i++) {
-		if (i > val)
-			LCD_SetHourBarSeg(i, LCD_MODE_OFF);
-		else
-			LCD_SetHourBarSeg(i, mode);
-	}
-}
-#endif
-
-
-/*!
- *******************************************************************************
- *  Set only one segment and clear all others
- *
- *  \note You have to call \ref LCD_Update() to trigger update on LCD if not
- *         it is triggered automatically at change of bitframe
- *
- *  \param seg No of the hour bar segment to be set 0-23
- *  \param mode  \ref LCD_MODE_ON, \ref LCD_MODE_OFF, \ref LCD_MODE_BLINK_1
- ******************************************************************************/
-#if 0
-void LCD_SetHourBarVal(uint8_t val, uint8_t mode)
-{
-	uint8_t i;
-
-	// Only Segment 0:23
-	if (val > 23)
-		val = 23;
-	// For each Segment 0:23
-	for (i = 0; i < 24; i++) {
-		if (i == val)
-			LCD_SetHourBarSeg(i, mode);
-		else
-			LCD_SetHourBarSeg(i, LCD_MODE_OFF);
-	}
-}
-#endif
-
-
-/*!
- *******************************************************************************
- *  Clear LCD Display
- *
- *  \note Sets all Segments of the to \ref LCD_MODE_OFF
- ******************************************************************************/
-#if 0
-void LCD_ClearAll(void)
-{
-	LCD_AllSegments(LCD_MODE_OFF);
-}
-#endif
-
-/*!
- *******************************************************************************
- *  Clear hour-bar
- *
- *  \note Sets all Hour-Bar Segments to \ref LCD_MODE_OFF
- ******************************************************************************/
-#if 0
-void LCD_ClearHourBar(void)
-{
-	LCD_SetHourBarVal(23, LCD_MODE_OFF);
-	LCD_Update();
-}
-#endif
-
-/*!
- *******************************************************************************
- *  Clear all Symbols
- *
- *  \note  Sets Symbols <tt> AUTO MANU PROG SUN MOON SNOW</tt>
- *         to \ref LCD_MODE_OFF
- ******************************************************************************/
-#if 0
-void LCD_ClearSymbols(void)
-{
-	LCD_SetSeg(LCD_SEG_AUTO, LCD_MODE_OFF);
-	LCD_SetSeg(LCD_SEG_MANU, LCD_MODE_OFF);
-	LCD_SetSeg(LCD_SEG_PROG, LCD_MODE_OFF);
-	LCD_SetSeg(LCD_SEG_SUN, LCD_MODE_OFF);
-	LCD_SetSeg(LCD_SEG_MOON, LCD_MODE_OFF);
-	LCD_SetSeg(LCD_SEG_SNOW, LCD_MODE_OFF);
-
-	LCD_Update();
-}
-#endif
-
-/*!
- *******************************************************************************
- *  Clear all 7 segment fields
- *
- *  \note  Sets the four 7 Segment and the Columns to \ref LCD_MODE_OFF
- ******************************************************************************/
-#if 0
-void LCD_ClearNumbers(void)
-{
-	LCD_PrintChar(LCD_CHAR_NULL, 3, LCD_MODE_OFF);
-	LCD_PrintChar(LCD_CHAR_NULL, 2, LCD_MODE_OFF);
-	LCD_PrintChar(LCD_CHAR_NULL, 1, LCD_MODE_OFF);
-	LCD_PrintChar(LCD_CHAR_NULL, 0, LCD_MODE_OFF);
-	LCD_SetSeg(LCD_SEG_COL1, LCD_MODE_OFF);
-	LCD_SetSeg(LCD_SEG_COL2, LCD_MODE_OFF);
-
-	LCD_Update();
-}
-#endif
 
 /*!
  *******************************************************************************

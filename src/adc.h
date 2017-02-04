@@ -73,8 +73,6 @@
 *   Prototypes
 *****************************************************************************/
 
-bool     ADC_Get_Bat_isOk(void);            // Status of battery ok?
-
 bool task_ADC(void);
 void start_task_ADC(void);
 

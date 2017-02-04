@@ -86,14 +86,6 @@ bool cmac_calc(uint8_t *m, uint8_t bytes, uint8_t *data_prefix, bool check)
 			else
 				memcpy(m + bytes, buf, 4);
 	return true;
-#if 0
-	// hack to use __prologue_saves__ and __epilogue_restores__ rather push&pop
-	asm ("" :::
-	     "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8",
-	     "r9", "r10", "r11", "r12", "r13", "r14", "r15", "r16",
-	     "r17", "r18", "r19", "r20", "r21", "r22", "r23", "r24"
-	     );
-#endif
 }
 
 #endif // RFM

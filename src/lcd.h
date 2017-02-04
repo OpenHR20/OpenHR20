@@ -60,10 +60,6 @@ extern uint8_t LCD_force_update;                //!< \brief force update LCD
 
 void LCD_Init(void);                                            // Init the LCD Controller
 void LCD_AllSegments(uint8_t);                                  // Set all segments to LCD_MODE
-void LCD_ClearAll(void);                                        // Clear all segments
-void LCD_ClearHourBar(void);                                    // Clear 24 bar segments
-void LCD_ClearSymbols(void);                                    // Clear AUTO MANU PROG SUN MOON SNOW
-void LCD_ClearNumbers(void);                                    // Clear 7 Segments and Collumns
 
 void LCD_PrintDec(uint8_t, uint8_t, uint8_t);                   // Print DEC-val (0-99)
 void LCD_PrintDec3(uint16_t value, uint8_t pos, uint8_t mode);  // Print DEC-val (0-255)
@@ -71,8 +67,8 @@ void LCD_PrintDecW(uint16_t, uint8_t);                          // Print DEC-val
 void LCD_PrintHex(uint8_t, uint8_t, uint8_t);                   // Print HEX-val (0-ff)
 void LCD_PrintHexW(uint16_t, uint8_t);                          // Print HEX-val (0-ffff)
 void LCD_PrintChar(uint8_t, uint8_t, uint8_t);                  // Print one digit
-void LCD_PrintTemp(uint8_t, uint8_t);                           // Print temperature (val+4,9)°C
-void LCD_PrintTempInt(int16_t, uint8_t);                        // Print temperature (val/100)°C
+void LCD_PrintTemp(uint8_t, uint8_t);                           // Print temperature (val+4,9)ï¿½C
+void LCD_PrintTempInt(int16_t, uint8_t);                        // Print temperature (val/100)ï¿½C
 void LCD_PrintDayOfWeek(uint8_t, uint8_t);                      // Print Day of Week (german)
 void LCD_PrintStringID(uint8_t id, uint8_t mode);               // Print LCD string ID
 #define LCD_PrintDayOfWeek(dow, mode) (LCD_PrintStringID(dow, mode))

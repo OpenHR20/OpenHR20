@@ -101,33 +101,6 @@ static void update_ring(uint8_t type, int16_t value)
 
 /*!
  *******************************************************************************
- *  Get temperature
- *
- *  \returns temperature in 1/100 degrees Celsius (1987: 19,87�C)
- *
- *  \note
- *  - measurment has been performed before using \ref ADC_Measure_Temp
- *  - Attention: negative values are possible
- ******************************************************************************/
-#if 0
-int16_t ADC_Get_Temp_Degree(void)            // Get Temperature in 1/100 Deg �C
-{
-	int32_t degree;
-
-	degree = ADC_Convert_To_Degree();
-
-	if (degree < INT16_MIN)
-		return INT16_MIN;
-	else if (degree > INT16_MAX)
-		return INT16_MAX;
-	else
-		return (int16_t)degree;
-}
-#endif
-
-
-/*!
- *******************************************************************************
  *  Get battery voltage
  *
  *  \returns battery voltage in mV
@@ -145,22 +118,6 @@ static int16_t ADC_Get_Bat_Voltage(uint16_t adc)             // Get Batteriy Vol
 	return (int16_t)millivolt;
 }
 
-
-/*!
- *******************************************************************************
- *  Get battery status
- *
- *  \returns false if battery is low
- *
- *  \note
- *  - none
- ******************************************************************************/
-#if 0
-bool ADC_Get_Bat_isOk(void)
-{
-	return ADC_Get_Bat_Voltage() > ADC_LOW_BATT_LEVEL;
-}
-#endif
 
 /*!
  *******************************************************************************
