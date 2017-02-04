@@ -523,10 +523,9 @@ static void RTC_SetDayOfWeek(void)
 
 	// Day of year
 	day_of_year = pgm_read_word(&(daysInYear[RTC.MM - 1])) + RTC.DD;
-	if (RTC.MM > 2) { // february
+	if (RTC.MM > 2)   // february
 		if (!RTC_NoLeapyear())
 			day_of_year++;
-	}
 	// calc weekday
 	tmp_dow = RTC.YY + ((RTC.YY - 1) / 4) - ((RTC.YY - 1) / 100) + day_of_year;
 	// set DOW
@@ -564,6 +563,7 @@ void RTC_timer_set(uint8_t timer_id, uint8_t time)
 		}
 	}
 #if defined(MASTER_CONFIG_H)
+	// cppcheck-suppress uninitvar
 	RTC_next_compare = next;
 #else
 	if (OCR2A != next) {
@@ -704,6 +704,7 @@ ISR(TIMER1_COMPA_vect) {
 				}
 			}
 		}
+		// cppcheck-suppress uninitvar
 		RTC_next_compare = next;
 	}
 }

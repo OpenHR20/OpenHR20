@@ -388,12 +388,12 @@ void wirelessReceivePacket(void)
 						time_sync_tmo = 20;
 						while (ASSR & (_BV(TCR2UB)))
 							;
-							/*
-							 * Reading of the TCNT2 Register shortly after wake-up from Power-save may give an incorrect
-							 * result. Since TCNT2 is clocked on the asynchronous TOSC clock, reading TCNT2 must be
-							 * done through a register synchronized to the internal I/O clock domain. Synchronization takes
-							 * place for every rising TOSC1 edge.
-							 */
+						/*
+						 * Reading of the TCNT2 Register shortly after wake-up from Power-save may give an incorrect
+						 * result. Since TCNT2 is clocked on the asynchronous TOSC clock, reading TCNT2 must be
+						 * done through a register synchronized to the internal I/O clock domain. Synchronization takes
+						 * place for every rising TOSC1 edge.
+						 */
 						if (RTC_s256 > 0x80) {
 							// round to upper number compencastion
 							RTC_s256 = 4;

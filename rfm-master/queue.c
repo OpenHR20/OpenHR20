@@ -53,12 +53,11 @@ uint8_t *Q_push(uint8_t len, uint8_t addr, uint8_t bank)
 	uint8_t free = 0xff;
 
 	for (i = 0; i < Q_ITEMS; i++) {
-		if ((Q_buf[i].addr == addr) && (Q_buf[i].bank == bank)) {
+		if ((Q_buf[i].addr == addr) && (Q_buf[i].bank == bank))
 			free = 0xff;
-		} else {
-			if ((free == 0xff) && (Q_buf[i].addr == 0))
-				free = i;
-		}
+		else
+		if ((free == 0xff) && (Q_buf[i].addr == 0))
+			free = i;
 	}
 	if (free == 0xff) return NULL;
 	Q_buf[free].len = len;

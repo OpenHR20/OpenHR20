@@ -39,6 +39,12 @@ export RFM_FREQ_FINE=0.35
 
 #############
 
+beauty:
+	 uncrustify rfm-master/*.h rfm-master/*.c src/*.h src/*.c common/*.h common/*.c -c /opt/local/share/uncrustify/linux.cfg --no-backup
+
+check:
+	 cppcheck --inline-suppr --force . >/dev/null #2> err.txt
+
 default: HR20_rfm_int_sww rfm_master
 
 all: HR20_rfm_int_sww HR20_rfm_int_hww HR20_rfm_ext_sww HR20_original_sww HR20_original_hww HR25_original_sww HR25_rfm_int_sww thermotronic_sww rfm_master
@@ -85,7 +91,7 @@ HR20_rfm_ext_sww:
 		HW_WINDOW_DETECTION=0\
 		RFM_WIRE=MARIOJTAG \
 		REV=-DREVISION=\\\"$(REV)\\\"
-	 
+
 HR20_original_sww:
 	 $(shell mkdir $(DEST)/$@ 2>/dev/null)
 	 $(MAKE) -C src \

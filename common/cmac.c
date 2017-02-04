@@ -80,12 +80,11 @@ bool cmac_calc(uint8_t *m, uint8_t bytes, uint8_t *data_prefix, bool check)
 		}
 		xtea_enc(buf, buf, K_mac);
 	}
-	if (check) {
+	if (check)
 		for (i = 0; i < 4; i++)
 			if (m[bytes + i] != buf[i]) return false;
-	} else {
-		memcpy(m + bytes, buf, 4);
-	}
+			else
+				memcpy(m + bytes, buf, 4);
 	return true;
 #if 0
 	// hack to use __prologue_saves__ and __epilogue_restores__ rather push&pop

@@ -209,6 +209,7 @@ void CTL_update(bool minute_ch)
 						// condition inside loop is stupid, but produce shorter code
 						valveHistory[i] = new_valve;
 					else
+						// cppcheck-suppress negativeIndex
 						valveHistory[i] = valveHistory[i - 1];
 				}
 				valveHistory[0] = new_valve;

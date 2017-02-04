@@ -75,6 +75,7 @@ uint16_t rfm_spi16(uint16_t outval)
 		{
 			ret <<= 1;
 			if (RFM_SPI_MISO_GET)
+				// cppcheck-suppress uninitvar
 				ret |= 1;
 		}
 		RFM_SPI_SCK_LOW;

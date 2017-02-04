@@ -412,10 +412,10 @@ static inline void init(void)
 	DDRF = (1 << PF2); // PF2  activate tempsensor
 	PORTF = 0xf5;
 
-#else   //HR20 without RFM
-	DDRE = (1 << PE3) | (1 << PE1); // PE3  activate lighteye
-	PORTE = (1 << PE2) | (1 << PE1) | (1 << PE0); // PE2 | TXD | RXD(pullup);
-	DDRF = (1 << PF3);      // PF3  activate tempsensor
+#else                                                   //HR20 without RFM
+	DDRE = (1 << PE3) | (1 << PE1);                 // PE3  activate lighteye
+	PORTE = (1 << PE2) | (1 << PE1) | (1 << PE0);   // PE2 | TXD | RXD(pullup);
+	DDRF = (1 << PF3);                              // PF3  activate tempsensor
 	PORTF = 0xf3;
 #endif
 
