@@ -33,3 +33,4 @@ rfm-master/obj
 rfm-master/master.txt
 .DS_Store
 bin/
+*.gch
