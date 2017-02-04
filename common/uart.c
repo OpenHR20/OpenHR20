@@ -192,7 +192,7 @@ void UART_startSend(void)
 void UART_interrupt(uint8_t pine)
 {
 	if ((pine & (1 << PE0)) == 0) {
-		UART_enable_rx();                 // it is macro, not function
+		UART_enable_rx();               // it is macro, not function
 		PCMSK0 &= ~(1 << PCINT0);       // deactivate interrupt
 	}
 }
