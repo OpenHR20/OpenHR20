@@ -156,7 +156,7 @@ void COM_flush(void)
 {
 	if (tx_buff_in != tx_buff_out) {
 #ifdef COM_UART
-		RS_startSend();
+		UART_startSend();
 #elif THERMOTRONIC                      //UART for THERMOTRONIC not implemented
 #else
 		//#error "need todo"
@@ -273,7 +273,7 @@ void COM_init(void)
 {
 	print_version(false);
 #ifdef COM_UART
-	RS_Init();
+	UART_init();
 #endif
 	COM_flush();
 }

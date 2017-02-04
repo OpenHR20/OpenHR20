@@ -173,7 +173,7 @@ static void COM_flush(void)
 {
 	if (tx_buff_in != tx_buff_out) {
 #ifdef COM_UART
-		RS_startSend();
+		UART_startSend();
 #else
 #error "need todo"
 #endif
@@ -278,7 +278,7 @@ static void print_version(void)
 void COM_init(void)
 {
 	print_version();
-	RS_Init();
+	UART_init();
 	COM_flush();
 }
 

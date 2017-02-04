@@ -127,7 +127,6 @@ ISR(USART0_TX_vect)
 ISR(USART_TXC_vect)
 #elif defined (_AVR_IOM328P_H_)
 ISR(USART_TX_vect)
-
 #endif
 {
 	UCSR0B &= ~(_BV(TXCIE0) | _BV(TXEN0));
@@ -135,15 +134,14 @@ ISR(USART_TX_vect)
 
 /*!
  *******************************************************************************
- *  Initialize serial, setup Baudrate
+ *  Initialize UART, setup Baudrate
  *
  *  \note
  *  - set Baudrate
  ******************************************************************************/
-void RS_Init(void)
+void UART_init(void)
 {
 	// Baudrate
-	//long ubrr_val = ((F_CPU)/(baud*8L)-1);
 	uint16_t ubrr_val = ((F_CPU) / (COM_BAUD_RATE * 8L) - 1);
 
 	UCSR0A = _BV(U2X0);
@@ -159,7 +157,7 @@ void RS_Init(void)
 #ifdef COM_UART
 	UCSR0B = _BV(RXCIE0) | _BV(RXEN0);
 #endif
-	UCSR0C = (_BV(UCSZ00) | _BV(UCSZ01));         // Asynchron 8N1
+	UCSR0C = _BV(UCSZ00) | _BV(UCSZ01);         // Asynchron 8N1
 #endif
 #if !defined(_AVR_IOM16_H_) && !defined(_AVR_IOM32_H_) && !defined(_AVR_IOM328P_H_)
 	PCMSK0 |= (1 << PCINT0); // activate interrupt
@@ -174,7 +172,7 @@ void RS_Init(void)
  *  - we send the first char to serial port
  *  - start the interrupt
  ******************************************************************************/
-void RS_startSend(void)
+void UART_startSend(void)
 {
 	cli();
 	if ((UCSR0B & _BV(UDRIE0)) == 0) {
@@ -189,12 +187,12 @@ void RS_startSend(void)
 #if !defined(MASTER_CONFIG_H)
 /*!
  *******************************************************************************
- * Pinchange Interupt, RS handling part
+ * Pinchange Interupt, UART handling part
  ******************************************************************************/
-void RS_interrupt(uint8_t pine)
+void UART_interrupt(uint8_t pine)
 {
 	if ((pine & (1 << PE0)) == 0) {
-		RS_enable_rx();                 // it is macro, not function
+		UART_enable_rx();                 // it is macro, not function
 		PCMSK0 &= ~(1 << PCINT0);       // deactivate interrupt
 	}
 }

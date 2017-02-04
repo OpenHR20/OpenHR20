@@ -136,7 +136,7 @@ int __attribute__ ((noreturn)) main(void)
 			((ASSR & (_BV(OCR2UB) | _BV(TCN2UB) | _BV(TCR2UB))) == 0) // ATmega169 datasheet chapter 17.8.1
 			) {
 			// nothing to do, go to sleep
-			if (timer0_need_clock() || RS_need_clock()) {
+			if (timer0_need_clock() || UART_need_clock()) {
 				SMCR = (0 << SM1) | (0 << SM0) | (1 << SE); // Idle mode
 			} else {
 				if (sleep_with_ADC)

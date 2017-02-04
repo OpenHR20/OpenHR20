@@ -36,15 +36,15 @@
 #ifdef COM_UART
 
 #if defined(_AVR_IOM169P_H_) || defined(_AVR_IOM329_H_)
-#define RS_need_clock() (UCSR0B & (_BV(TXEN0) | _BV(RXEN0)))
-#define RS_enable_rx() (UCSR0B |= _BV(RXEN0) | _BV(RXCIE0))
+#define UART_need_clock() (UCSR0B & (_BV(TXEN0) | _BV(RXEN0)))
+#define UART_enable_rx() (UCSR0B |= _BV(RXEN0) | _BV(RXCIE0))
 #elif defined(_AVR_IOM169_H_) || defined(_AVR_IOM16_H_) || defined(_AVR_IOM32_H_)
-#define RS_need_clock() (UCSRB & (_BV(TXEN) | _BV(RXEN)))
-#define RS_enable_rx() (UCSRB |= _BV(RXEN) | _BV(RXCIE))
+#define UART_need_clock() (UCSRB & (_BV(TXEN) | _BV(RXEN)))
+#define UART_enable_rx() (UCSRB |= _BV(RXEN) | _BV(RXCIE))
 #endif
-void RS_startSend(void);
-void RS_Init(void);
-void RS_interrupt(uint8_t pine);
+void UART_startSend(void);
+void UART_init(void);
+void UART_interrupt(uint8_t pine);
 #else
-#define RS_need_clock() (0)
+#define UART_need_clock() (0)
 #endif
