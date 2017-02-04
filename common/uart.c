@@ -25,8 +25,8 @@
  */
 
 /*!
- * \file       rs232_hw.c
- * \brief      hardware layer of the rs232
+ * \file       uart.c
+ * \brief      hardware layer of the UART
  * \author     Juergen Sachs (juergen-sachs-at-gmx-dot-de); Jiri Dobry <jdobry-at-centrum-dot-cz>
  * \date       $Date$
  * $Rev$
@@ -41,10 +41,10 @@
 #include "config.h"
 #include "main.h"
 #include "com.h"
-#include "rs232.h"
+#include "uart.h"
 
 /* The following must be AFTER the last include line */
-#ifdef COM_RS232
+#ifdef COM_UART
 
 #if defined (_AVR_IOM169_H_) || defined (_AVR_IOM32_H_)
 #define UDR0 UDR
@@ -155,8 +155,8 @@ void RS_Init(void)
 	UCSR0B = _BV(RXCIE0) | _BV(RXEN0);
 #endif
 #else
-	// todo: decide between 2way RS232 and one way debugging only
-#ifdef COM_RS232
+	// todo: decide between 2way UART and one way debugging only
+#ifdef COM_UART
 	UCSR0B = _BV(RXCIE0) | _BV(RXEN0);
 #endif
 	UCSR0C = (_BV(UCSZ00) | _BV(UCSZ01));         // Asynchron 8N1
@@ -200,4 +200,4 @@ void RS_interrupt(uint8_t pine)
 }
 #endif
 
-#endif /* COM_RS232 */
+#endif /* COM_UART */

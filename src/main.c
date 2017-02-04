@@ -56,7 +56,7 @@
 #include "debug.h"
 #include "menu.h"
 #include "com.h"
-#include "common/rs232.h"
+#include "common/uart.h"
 #include "controller.h"
 
 #if RFM
@@ -475,7 +475,7 @@ static inline void init(void)
 ISR(PCINT0_vect){
 	uint8_t pine = PINE;
 
-#ifdef COM_RS232
+#ifdef COM_UART
 	RS_interrupt(pine);
 #endif
 

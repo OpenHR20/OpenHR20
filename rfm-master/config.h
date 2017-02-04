@@ -70,8 +70,8 @@
 // Parameters for the COMM-Port
 #define COM_BAUD_RATE 38400
 // Note we should only enable of of the following at one time
-/* we support RS232 */
-#define COM_RS232 1
+/* we support UART */
+#define COM_UART 1
 
 /* Our default Adress, if not set or invalid */
 /* #define COM_DEF_ADR 1 */

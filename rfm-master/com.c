@@ -41,7 +41,7 @@
 #include "config.h"
 #include "main.h"
 #include "com.h"
-#include "common/rs232.h"
+#include "common/uart.h"
 #include "common/rtc.h"
 #include "common/wireless.h"
 #include "task.h"
@@ -172,7 +172,7 @@ static char COM_getchar(void)
 static void COM_flush(void)
 {
 	if (tx_buff_in != tx_buff_out) {
-#ifdef COM_RS232
+#ifdef COM_UART
 		RS_startSend();
 #else
 #error "need todo"

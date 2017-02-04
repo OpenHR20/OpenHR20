@@ -98,7 +98,7 @@ SRC_B =  \
     cmac.c \
     eeprom.c \
     rfm.c \
-    rs232_hw.c \
+    uart.c \
     wireless.c
 
 # List C++ source files here. (C dependencies are automatically generated.)

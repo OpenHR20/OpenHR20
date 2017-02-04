@@ -39,7 +39,7 @@
 
 #include "config.h"
 #include "com.h"
-#include "common/rs232.h"
+#include "common/uart.h"
 #include "main.h"
 #include "common/rtc.h"
 #include "adc.h"
@@ -155,7 +155,7 @@ static char COM_getchar(void)
 void COM_flush(void)
 {
 	if (tx_buff_in != tx_buff_out) {
-#ifdef COM_RS232
+#ifdef COM_UART
 		RS_startSend();
 #elif THERMOTRONIC                      //UART for THERMOTRONIC not implemented
 #else
@@ -272,7 +272,7 @@ static void print_version(bool sync)
 void COM_init(void)
 {
 	print_version(false);
-#ifdef COM_RS232
+#ifdef COM_UART
 	RS_Init();
 #endif
 	COM_flush();

@@ -24,8 +24,8 @@
  */
 
 /*!
- * \file       rs232.h
- * \brief      rs232 header
+ * \file       uart.h
+ * \brief      UART header
  * \author     Jiri Dobry <jdobry-at-centrum-dot-cz>
  * \date       $Date$
  * $Rev$
@@ -33,7 +33,7 @@
 
 #pragma once
 
-#ifdef COM_RS232
+#ifdef COM_UART
 
 #if defined(_AVR_IOM169P_H_) || defined(_AVR_IOM329_H_)
 #define RS_need_clock() (UCSR0B & (_BV(TXEN0) | _BV(RXEN0)))
