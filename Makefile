@@ -43,7 +43,7 @@ beauty:
 	 uncrustify rfm-master/*.h rfm-master/*.c src/*.h src/*.c common/*.h common/*.c -c /opt/local/share/uncrustify/linux.cfg --no-backup
 
 check:
-	 cppcheck --inline-suppr --force . >/dev/null #2> err.txt
+	 cppcheck --inline-suppr --force . >/dev/null
 
 default: HR20_rfm_int_sww rfm_master
 
