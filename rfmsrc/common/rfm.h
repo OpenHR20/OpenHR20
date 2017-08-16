@@ -391,10 +391,10 @@
 #define RFM_TX_CONTROL_MOD(baud)	(((baud)<8000) ? \
 									RFM_TX_CONTROL_MOD_45 : \
 									( \
-										((baud)<20000) ? \
+										((baud)<30000) ? \
 										RFM_TX_CONTROL_MOD_60 : \
 										( \
-											((baud)<30000) ? \
+											((baud)<40000) ? \
 											RFM_TX_CONTROL_MOD_75 : \
 											( \
 												((baud)<40000) ? \
