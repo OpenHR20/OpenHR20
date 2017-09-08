@@ -397,7 +397,7 @@
 											((baud)<40000) ? \
 											RFM_TX_CONTROL_MOD_75 : \
 											( \
-												((baud)<40000) ? \
+												((baud)<60000) ? \
 												RFM_TX_CONTROL_MOD_90 : \
 												RFM_TX_CONTROL_MOD_120 \
 											) \
