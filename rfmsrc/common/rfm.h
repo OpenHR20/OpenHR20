@@ -273,10 +273,11 @@
 //#define RFM_RX_CONTROL_RSSI_67   0x9006 // DRSSI threshold -67dbm // RF12B reserved
 //#define RFM_RX_CONTROL_RSSI_61   0x9007 // DRSSI threshold -61dbm // RF12B reserved
 
-#define RFM_RX_CONTROL_BW(baud)		(((baud)<8000) ? \
+// See datasheet page 37
+#define RFM_RX_CONTROL_BW(baud)		(((baud)<20000) ? \
 									RFM_RX_CONTROL_BW_67 : \
 									( \
-										((baud)<30000) ? \
+										((baud)<100000) ? \
 										RFM_RX_CONTROL_BW_134 : \
 										RFM_RX_CONTROL_BW_200 \
 									))
@@ -388,21 +389,15 @@
 #define RFM_TX_CONTROL_MOD_240   0x98F0
 #define RFM_TX_CONTROL_MP        0x9900
 
-#define RFM_TX_CONTROL_MOD(baud)	(((baud)<8000) ? \
+// See datasheet page 37
+#define RFM_TX_CONTROL_MOD(baud)	(((baud)<20000) ? \
 									RFM_TX_CONTROL_MOD_45 : \
 									( \
-										((baud)<20000) ? \
-										RFM_TX_CONTROL_MOD_60 : \
-										( \
-											((baud)<30000) ? \
-											RFM_TX_CONTROL_MOD_75 : \
-											( \
-												((baud)<40000) ? \
-												RFM_TX_CONTROL_MOD_90 : \
-												RFM_TX_CONTROL_MOD_120 \
-											) \
+										((baud)<100000) ? \
+										RFM_TX_CONTROL_MOD_90 : \
+											RFM_TX_CONTROL_MOD_120 \
 										) \
-									))
+									)
 
 /////////////////////////////////////////////////////////////////////////////
 //
