@@ -410,10 +410,10 @@
 #define RFM_PLL_uC_CLK_3_3		0x50
 #define RFM_PLL_uC_CLK_2_5		0x30
 
-#define RFM_PLL_DELAY_ON		0x80
+#define RFM_PLL_DELAY_ON		0x08
 #define RFM_PLL_DELAY_OFF		0x00
 #define RFM_PLL_DITHER_ON		0x00
-#define RFM_PLL_DITHER_OFF		0x40
+#define RFM_PLL_DITHER_OFF		0x04
 #define RFM_PLL_BIRATE_HI		0x01
 #define RFM_PLL_BIRATE_LOW		0x00
 
