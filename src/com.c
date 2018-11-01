@@ -340,6 +340,7 @@ void COM_print_debug(uint8_t type)
 #if (RFM == 1)
 	bool sync = (type == 2);
 	if (!sync) {
+        wireless_buf_ptr=0;
 		wireless_async = true;
 		wireless_putchar('D');
 	}

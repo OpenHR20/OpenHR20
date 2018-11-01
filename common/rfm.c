@@ -135,19 +135,17 @@ void RFM_init(void)
 
 	// 5. Receiver Control Command
 	RFM_SPI_16(
-		RFM_RX_CONTROL_P20_VDI |
-		RFM_RX_CONTROL_VDI_FAST |
+		RFM_RX_CONTROL_P20_VDI  | 
+		RFM_RX_CONTROL_VDI_MED |
 		RFM_RX_CONTROL_BW(RFM_BAUD_RATE) |
-		RFM_RX_CONTROL_GAIN_14 |
-		RFM_RX_CONTROL_RSSI_97
-		);
+		RFM_RX_CONTROL_GAIN_6   |
+		RFM_RX_CONTROL_RSSI_103
+	 );
 
 	// 6. Data Filter Command
 	RFM_SPI_16(
-		RFM_DATA_FILTER_AL |
-		RFM_DATA_FILTER_ML |
-		RFM_DATA_FILTER_DQD(3)
-		);
+		RFM_DATA_FILTER_DQD(4)
+	 );
 
 	// 7. FIFO and Reset Mode Command
 	RFM_SPI_16(

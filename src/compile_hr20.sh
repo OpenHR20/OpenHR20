@@ -13,9 +13,9 @@ KEY1=23
 KEY2=45
 KEY3=67
 KEY4=89
-KEY5=01
-KEY6=23
-KEY7=45
+KEY5=ab
+KEY6=cd
+KEY7=ef
 
 while [ "$#" -ne 0 ]; do
 	if [ "$1" == "--addr" ]; then
@@ -43,12 +43,12 @@ if [ -z "$ADDR" ]; then
 	exit 1;
 fi
 
-#-DRFM_TUNING=1 \
 make clean HW=$HW
 make RFM=1 \
 RFM_TUNING=1 \
-RFM_FREQ=868 \
-RFM_BAUD_RATE=9600 \
+RFM_FREQ_MAIN=868 \
+RFM_FREQ_FINE=0.35 \
+RFM_BAUD_RATE=19200 \
 SECURITY_KEY_0=0x${KEY0} \
 SECURITY_KEY_1=0x${KEY1} \
 SECURITY_KEY_2=0x${KEY2} \

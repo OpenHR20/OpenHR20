@@ -67,11 +67,11 @@ extern uint8_t wl_force_addr2;
 extern uint32_t wl_force_flags;
 
 #if !defined(MASTER_CONFIG_H)
-#define WLTIME_SYNC (0xfd)                              // prepare to receive timesync / slave only
-#define WLTIME_START (RTC_TIMER_CALC(50))               // communication start
-#define WLTIME_TIMEOUT (RTC_TIMER_CALC(80))             // slave RX timeout
-#define WLTIME_SYNC_TIMEOUT (RTC_TIMER_CALC(50))        // slave RX timeout
-#define WLTIME_STOP (RTC_TIMER_CALC(900))               // last possible communication
+#define WLTIME_SYNC (0xfa)  // prepare to receive timesync / slave only 
+#define WLTIME_START (RTC_TIMER_CALC(200)) // communication start
+#define WLTIME_TIMEOUT (RTC_TIMER_CALC(80)) // slave RX timeout
+#define WLTIME_SYNC_TIMEOUT (RTC_TIMER_CALC(80)) // slave RX timeout
+#define WLTIME_STOP (RTC_TIMER_CALC(700)) // last possible communication
 #endif
 #define WLTIME_LED_TIMEOUT (RTC_TIMER_CALC(300))        // packet blink time
 
