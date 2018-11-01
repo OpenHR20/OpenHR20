@@ -39,12 +39,6 @@ export RFM_FREQ_FINE=0.35
 
 #############
 
-beauty:
-	 uncrustify rfm-master/*.h rfm-master/*.c src/*.h src/*.c common/*.h common/*.c -c /opt/local/share/uncrustify/linux.cfg --no-backup
-
-check:
-	 cppcheck --inline-suppr --force . >/dev/null
-
 default: HR20_rfm_int_sww rfm_master
 
 all: HR20_rfm_int_sww HR20_rfm_int_hww HR20_rfm_ext_sww HR20_original_sww HR20_original_hww HR25_original_sww HR25_rfm_int_sww thermotronic_sww rfm_master
@@ -62,6 +56,11 @@ clean:
 	 $(MAKE) clean -C rfm-master TARGET=../$(DEST)/rfm_master/rfm_master OBJDIR=rfm_master
 	@rm -f $(DEST)/license.txt
 
+beauty:
+	 uncrustify rfm-master/*.h rfm-master/*.c src/*.h src/*.c common/*.h common/*.c -c /opt/local/share/uncrustify/linux.cfg --no-backup
+
+check:
+	 cppcheck --inline-suppr --force . >/dev/null
 
 VER=
 
