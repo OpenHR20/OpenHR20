@@ -476,7 +476,7 @@ ISR(PCINT0_vect){
 	uint8_t pine = PINE;
 
 #ifdef COM_UART
-	RS_interrupt(pine);
+	UART_interrupt(pine);
 #endif
 
 	MOTOR_interrupt(pine);
