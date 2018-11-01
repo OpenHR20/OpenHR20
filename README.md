@@ -17,3 +17,13 @@ make HW_WINDOW_DETECTION=1
 
 thermotronic HW
 make HW=THERMOTRONIC
+
+
+PINOUT
+
+ATmega169PV <Func>(<Port,Pin>/<No.>)
++---+-----------+-----------+-----------+------------+
+|Vcc|RXD(PE0/02)|TDO(PF6/55)|TMS(PF5/56)|/RST(PG5/20)|
++---+-----------+-----------+-----------+------------+
+|GND|TDI(PF7/54)|TXD(PE1/03)|TCK(PF4/57)|    (PE2/04)|
++---+-----------+-----------+-----------+------------+
