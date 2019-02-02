@@ -295,6 +295,7 @@ void CTL_change_mode(int8_t m)
 		eeprom_config_save((uint16_t)(&config.timer_mode) - (uint16_t)(&config));
 	}
 	CTL_mode_window = 0;
+	display_task = DISP_TASK_CLEAR | DISP_TASK_UPDATE;
 }
 
 //! Summation of errors, used for integrate calculations
