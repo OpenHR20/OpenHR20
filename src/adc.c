@@ -187,6 +187,7 @@ static int16_t dummy_adc = 0;
  ******************************************************************************/
 bool task_ADC(void)
 {
+	int16_t ad;
 	switch (state_ADC) {
 	case 1:                                                                         //step 1
 		// set ADC control and status register
@@ -197,7 +198,7 @@ bool task_ADC(void)
 		break;
 	case 3: //step 3
 	{
-		int16_t ad = ADCW;
+		ad = ADCW;
 		if ((ad > dummy_adc + ADC_TOLERANCE) || (ad < dummy_adc - ADC_TOLERANCE)) {
 			// adc noise protection, repeat measure
 REPEAT_ADC:
@@ -221,7 +222,7 @@ REPEAT_ADC:
 		break;
 	case 5: //step 5
 	{
-		int16_t ad = ADCW;
+		ad = ADCW;
 		if ((ad > dummy_adc + ADC_TOLERANCE) || (ad < dummy_adc - ADC_TOLERANCE))
 			// adc noise protection, repeat measure
 			goto REPEAT_ADC; // optimization

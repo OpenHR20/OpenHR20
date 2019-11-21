@@ -472,7 +472,7 @@ static void clr_show2(uint8_t seg1, uint8_t seg2)
 	LCD_SetSeg(seg1, LCD_MODE_ON);
 	LCD_SetSeg(seg2, LCD_MODE_ON);
 }
-
+#if HR25
 static void clr_show3(uint8_t seg1, uint8_t seg2, uint8_t seg3)
 {
 	LCD_AllSegments(LCD_MODE_OFF);
@@ -480,7 +480,7 @@ static void clr_show3(uint8_t seg1, uint8_t seg2, uint8_t seg3)
 	LCD_SetSeg(seg2, LCD_MODE_ON);
 	LCD_SetSeg(seg3, LCD_MODE_ON);
 }
-
+#endif
 static void show_selected_temperature_type(uint8_t type, uint8_t mode)
 {
 	//  temperature0    SNOW
@@ -612,7 +612,12 @@ void menu_view(bool clear)
 		if (clear) clr_show1(CTL_mode_auto ? LCD_SEG_AUTO : LCD_SEG_MANU);
 		if (MOTOR_calibration_step > 0) {
 			LCD_PrintChar(LCD_CHAR_A, 3, LCD_MODE_ON);
+// Ignore strict aliasing for MOTOR_ManuCalibration
+// (saved in EEPROM as single bytes and accessed as int16)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
 			if (MOTOR_ManuCalibration == -1) LCD_PrintChar(LCD_CHAR_d, 2, LCD_MODE_ON);
+#pragma GCC diagnostic pop
 			LCD_PrintChar(MOTOR_calibration_step % 10, 0, LCD_MODE_ON);
 			break;
 		} else {
