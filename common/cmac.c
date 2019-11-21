@@ -69,7 +69,11 @@ bool cmac_calc(uint8_t *m, uint8_t bytes, uint8_t *data_prefix, bool check)
 	for (i = 0; i < bytes; ) { // i modification inside loop
 		uint8_t x = i;
 		i += 8;
+// Ignore maybe ununitialized for Kx, since it is filled (line 77) before being used (line 82)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 		uint8_t *Kx;
+#pragma GCC diagnostic pop
 		if (i >= bytes) Kx = ((i == bytes) ? K1 : K2);
 		for (j = 0; j < 8; j++, x++) {
 			uint8_t tmp;

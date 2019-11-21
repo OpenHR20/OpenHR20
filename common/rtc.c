@@ -562,6 +562,11 @@ void RTC_timer_set(uint8_t timer_id, uint8_t time)
 			}
 		}
 	}
+
+// Ignore maybe ununitialized for next, following above comment
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+
 #if defined(MASTER_CONFIG_H)
 	// cppcheck-suppress uninitvar
 	RTC_next_compare = next;
@@ -571,6 +576,9 @@ void RTC_timer_set(uint8_t timer_id, uint8_t time)
 		OCR2A = next;
 	}
 #endif
+
+#pragma GCC diagnostic pop
+
 	sei();
 #if !defined(MASTER_CONFIG_H)
 	TIMSK2 |= (1 << OCIE2A); // enable interupt again
@@ -661,11 +669,15 @@ ISR(TIMER2_COMP_vect) {
 			}
 		}
 	}
+// Ignore maybe ununitialized for next, following above comment
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 	if (OCR2A != next) {
 		// while (ASSR & (1<<OCR2UB)) {;} // ATmega169 datasheet chapter 17.8.1
 		// waiting is not needed, it not allow timer state machine
 		OCR2A = next;
 	}
+#pragma GCC diagnostic pop
 	if (RTC_timer_todo == 0) TIMSK2 &= ~(1 << OCIE2A);
 }
 #else
@@ -705,7 +717,11 @@ ISR(TIMER1_COMPA_vect) {
 			}
 		}
 		// cppcheck-suppress uninitvar
+// Ignore maybe ununitialized for next, following above comment
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 		RTC_next_compare = next;
+#pragma GCC diagnostic pop
 	}
 }
 #endif
