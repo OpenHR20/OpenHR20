@@ -59,7 +59,7 @@ rfm_mode_t rfm_mode = rfmmode_stop;
 uint16_t rfm_spi16(uint16_t outval)
 {
 	uint8_t i;
-	uint16_t ret; // =0; <- not needeed will be shifted out
+	uint16_t ret = 0; // <- not needeed will be shifted out ; Reintroduced to fix maybe-uninitialized
 
 	RFM_SPI_SELECT;
 
@@ -75,7 +75,6 @@ uint16_t rfm_spi16(uint16_t outval)
 		{
 			ret <<= 1;
 			if (RFM_SPI_MISO_GET)
-				// cppcheck-suppress uninitvar
 				ret |= 1;
 		}
 		RFM_SPI_SCK_LOW;
@@ -277,7 +276,7 @@ ISR(RFM_INT_vect){
 			if (rfm_framepos >= RFM_FRAME_MAX) rfm_mode = rfmmode_rx_owf;
 			task |= TASK_RFM; // inform the rfm task about next RX byte
 		} else if (rfm_mode == rfmmode_rx_owf) {
-			RFM_READ_FIFO();
+			RFM_DISCARD_FIFO();
 			task |= TASK_RFM;       // inform the rfm task about next RX byte
 		}
 		cli();                          // disable global interrupts

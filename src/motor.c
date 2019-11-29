@@ -115,6 +115,10 @@ void MOTOR_updateCalibration(uint8_t cal_type)
 			}
 		}
 		if (MOTOR_calibration_step == -2) {
+// Ignore strict aliasing for MOTOR_ManuCalibration
+// (saved in EEPROM as single bytes and accessed as int16)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
 			if (cal_type == 3) {
 				MOTOR_ManuCalibration = -1; // automatic calibration
 				eeprom_config_save((uint16_t)(&config.MOTOR_ManuCalibration_L) - (uint16_t)(&config));
@@ -124,6 +128,7 @@ void MOTOR_updateCalibration(uint8_t cal_type)
 			}
 			MOTOR_calibration_step = 1;
 			display_task = DISP_TASK_CLEAR | DISP_TASK_UPDATE;
+#pragma GCC diagnostic pop
 		}
 	}
 }
@@ -334,6 +339,10 @@ void MOTOR_timer_stop(void)
 				int16_t a = MOTOR_PosAct;       // volatile variable optimization
 				if (MOTOR_calibration_step == 2) {
 					MOTOR_PosMax = a;
+// Ignore strict aliasing for MOTOR_ManuCalibration
+// (saved in EEPROM as single bytes and accessed as int16)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
 					if (MOTOR_ManuCalibration == 0) {
 						if (a >= MOTOR_MIN_IMPULSES) {
 							MOTOR_ManuCalibration = a;
@@ -354,6 +363,7 @@ void MOTOR_timer_stop(void)
 						MOTOR_PosStop = (a - MOTOR_MAX_IMPULSES);
 						MOTOR_calibration_step = 3;
 					}
+#pragma GCC diagnostic pop
 				} else {
 					MOTOR_PosAct = MOTOR_PosMax; // motor position cleanup
 				}
