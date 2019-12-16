@@ -57,7 +57,7 @@ clean:
 	@rm -f $(DEST)/license.txt
 
 beauty:
-	 uncrustify rfm-master/*.h rfm-master/*.c src/*.h src/*.c common/*.h common/*.c -c /opt/local/share/uncrustify/linux.cfg --no-backup
+	 uncrustify rfm-master/*.h rfm-master/*.c src/*.h src/*.c common/*.h common/*.c -c uncrustify.conf --replace --no-backup
 
 check:
 	 cppcheck --inline-suppr --force . >/dev/null
