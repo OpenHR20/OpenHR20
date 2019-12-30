@@ -106,9 +106,12 @@ ISR(USART_UDRE_vect)
 {
 	char c;
 
-	if ((c = COM_tx_char_isr()) != '\0') {
+	if ((c = COM_tx_char_isr()) != '\0')
+	{
 		UDR0 = c;
-	} else {                        // no more chars, disable Interrupt
+	}
+	else                            // no more chars, disable Interrupt
+	{
 		UCSR0B &= ~(_BV(UDRIE0));
 		UCSR0A |= _BV(TXC0);    // clear interrupt flag
 		UCSR0B |= (_BV(TXCIE0));
@@ -175,7 +178,8 @@ void UART_init(void)
 void UART_startSend(void)
 {
 	cli();
-	if ((UCSR0B & _BV(UDRIE0)) == 0) {
+	if ((UCSR0B & _BV(UDRIE0)) == 0)
+	{
 		UCSR0B &= ~(_BV(TXCIE0));
 		UCSR0A |= _BV(TXC0);         // clear interrupt flag
 		UCSR0B |= _BV(UDRIE0) | _BV(TXEN0);
@@ -191,7 +195,8 @@ void UART_startSend(void)
  ******************************************************************************/
 void UART_interrupt(uint8_t pine)
 {
-	if ((pine & (1 << PE0)) == 0) {
+	if ((pine & (1 << PE0)) == 0)
+	{
 		UART_enable_rx();               // it is macro, not function
 		PCMSK0 &= ~(1 << PCINT0);       // deactivate interrupt
 	}

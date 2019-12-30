@@ -93,7 +93,8 @@ static inline void MOTOR_H_BRIDGE_stop(void)
 *   Typedefs
 *****************************************************************************/
 //! motor direction
-typedef enum {
+typedef enum
+{
 	close = -1, stop = 0, open = 1
 } motor_dir_t;
 

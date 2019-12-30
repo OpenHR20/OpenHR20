@@ -66,15 +66,19 @@ void task_keyboard(void)
 {
 	{                                                       // wheel
 		uint8_t wheel = keys & (KBI_ROT1 | KBI_ROT2);
-		if ((wheel ^ state_wheel_prev) & KBI_ROT1) {    //only ROT1 have interrupt, change detection
-			if ((wheel == 0) || (wheel == (KBI_ROT1 | KBI_ROT2))) {
+		if ((wheel ^ state_wheel_prev) & KBI_ROT1)      //only ROT1 have interrupt, change detection
+		{
+			if ((wheel == 0) || (wheel == (KBI_ROT1 | KBI_ROT2)))
+			{
 #ifdef LCD_UPSIDE_DOWN
 				kb_events |= KB_EVENT_WHEEL_PLUS;
 #else
 				kb_events |= KB_EVENT_WHEEL_MINUS;
 #endif
 				long_quiet = 0;
-			} else {
+			}
+			else
+			{
 #ifdef LCD_UPSIDE_DOWN
 				kb_events |= KB_EVENT_WHEEL_MINUS;
 #else
@@ -87,37 +91,49 @@ void task_keyboard(void)
 	} // wheel
 	{ // other keys
 		uint8_t front = keys & (KBI_PROG | KBI_C | KBI_AUTO);
-		if (front != state_front_prev) {
-			if (front && (state_front_prev == 0) && kb_timeout) {
-				if (front == KBI_PROG) {
+		if (front != state_front_prev)
+		{
+			if (front && (state_front_prev == 0) && kb_timeout)
+			{
+				if (front == KBI_PROG)
+				{
 					kb_events |= KB_EVENT_PROG;
 					allow_rewoke = true;
-				} else if (front == KBI_C) {
+				}
+				else if (front == KBI_C)
+				{
 					kb_events |= KB_EVENT_C;
 					allow_rewoke = true;
-				} else if (front == KBI_AUTO) {
+				}
+				else if (front == KBI_AUTO)
+				{
 					kb_events |= KB_EVENT_AUTO;
 					allow_rewoke = true;
 				}
 			}
 
-			if (allow_rewoke) {
+			if (allow_rewoke)
+			{
 				// some key was pressed, and keep key pressed and add some other key
 				// we need "REVOKE" event
-				if ((state_front_prev == KBI_PROG) && ((front ^ KBI_PROG) != KBI_PROG)) {
+				if ((state_front_prev == KBI_PROG) && ((front ^ KBI_PROG) != KBI_PROG))
+				{
 					kb_events |= KB_EVENT_PROG_REWOKE;
 					allow_rewoke = false;
 				}
-				if ((state_front_prev == KBI_C) && ((front ^ KBI_C) != KBI_C)) {
+				if ((state_front_prev == KBI_C) && ((front ^ KBI_C) != KBI_C))
+				{
 					kb_events |= KB_EVENT_C_REWOKE;
 					allow_rewoke = false;
 				}
-				if ((state_front_prev == KBI_AUTO) && ((front ^ KBI_AUTO) != KBI_AUTO)) {
+				if ((state_front_prev == KBI_AUTO) && ((front ^ KBI_AUTO) != KBI_AUTO))
+				{
 					kb_events |= KB_EVENT_AUTO_REWOKE;
 					allow_rewoke = false;
 				}
 			}
-			if (kb_timeout) { // keyboard noise cancellation
+			if (kb_timeout)   // keyboard noise cancellation
+			{
 				kb_timeout = false;
 				// while (ASSR & (1<<OCR2UB)) {;} //this is not needed; kb_timeout==true means that OCR2A must be free
 				RTC_timer_set(RTC_TIMER_KB, TCNT2 + KEYBOARD_NOISE_CANCELATION);
@@ -139,22 +155,31 @@ void task_keyboard(void)
  ******************************************************************************/
 void task_keyboard_long_press_detect(void)
 {
-	if (!state_front_prev) {
-		if (++long_quiet == 0) {
+	if (!state_front_prev)
+	{
+		if (++long_quiet == 0)
+		{
 			// overload protection, nothing to do, event was generated previous
 			long_quiet--;
 			return;
 		}
 		if (long_quiet == LONG_QUIET_THLD)
+		{
 			kb_events |= KB_EVENT_NONE_LONG;
-	} else { // if (! state_front_prev)
-		if (++long_press == 0) {
+		}
+	}
+	else     // if (! state_front_prev)
+	{
+		if (++long_press == 0)
+		{
 			// overload protection, nothing to do, event was generated previous
 			long_press--;
 			return;
 		}
-		if (long_press == LONG_PRESS_THLD) {
-			switch (state_front_prev) {
+		if (long_press == LONG_PRESS_THLD)
+		{
+			switch (state_front_prev)
+			{
 			case KBI_PROG:
 				kb_events |= KB_EVENT_PROG_LONG | KB_EVENT_PROG_REWOKE;
 				break;
@@ -201,14 +226,23 @@ bool mont_contact_pooling(void)
 #endif
 	// low active
 	disable_mont_input();
-	if (mont_contact & KBI_MONT) {
+	if (mont_contact & KBI_MONT)
+	{
 		CTL_set_error(CTL_ERR_MONTAGE);
 		sumError = 0;
 		return 0;
-	} else {
+	}
+	else
+	{
 		CTL_clear_error(CTL_ERR_MONTAGE);
-		if (mont_contact & KBI_C) return 2;
-		if (mont_contact & KBI_PROG) return 3;
+		if (mont_contact & KBI_C)
+		{
+			return 2;
+		}
+		if (mont_contact & KBI_PROG)
+		{
+			return 3;
+		}
 		return 1;
 	}
 #endif
@@ -222,7 +256,8 @@ bool mont_contact_pooling(void)
  *  - create task for keyboard scan and wake up
  *  - read keyboard status
  ******************************************************************************/
-ISR(PCINT1_vect){
+ISR(PCINT1_vect)
+{
 	enable_rot2_input();
 	task |= TASK_KB;
 	asm volatile ("nop");

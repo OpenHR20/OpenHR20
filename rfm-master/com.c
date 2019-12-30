@@ -80,18 +80,26 @@ extern uint8_t onsync;
 static void COM_putchar(char c)
 {
 	cli();
-	if ((tx_buff_in + 1) % TX_BUFF_SIZE != tx_buff_out) {
+	if ((tx_buff_in + 1) % TX_BUFF_SIZE != tx_buff_out)
+	{
 		tx_buff[tx_buff_in++] = c;
 		tx_buff_in %= TX_BUFF_SIZE;
-	} else {
+	}
+	else
+	{
 		// mark end on buffer owerflow to recognize this situation
-		if (tx_buff_in == 0) {
+		if (tx_buff_in == 0)
+		{
 			tx_buff[TX_BUFF_SIZE - 2] = '*';
 			tx_buff[TX_BUFF_SIZE - 1] = '\n';
-		} else if (tx_buff_in == 1) {
+		}
+		else if (tx_buff_in == 1)
+		{
 			tx_buff[TX_BUFF_SIZE - 1] = '*';
 			tx_buff[0] = '\n';
-		} else {
+		}
+		else
+		{
 			tx_buff[tx_buff_in - 2] = '*';
 			tx_buff[tx_buff_in - 1] = '\n';
 		}
@@ -109,7 +117,8 @@ char COM_tx_char_isr(void)
 {
 	wdt_reset();
 	char c = '\0';
-	if (tx_buff_in != tx_buff_out) {
+	if (tx_buff_in != tx_buff_out)
+	{
 		c = tx_buff[tx_buff_out++];
 		tx_buff_out %= TX_BUFF_SIZE;
 	}
@@ -125,15 +134,21 @@ static volatile uint8_t COM_requests;
  ******************************************************************************/
 void COM_rx_char_isr(char c)
 {
-	if (c != '\0') {                        // ascii based protocol, \0 char is not alloweed, ignore it
-		if (c == '\r') c = '\n';        // mask diffrence between operating systems
+	if (c != '\0')                          // ascii based protocol, \0 char is not alloweed, ignore it
+	{
+		if (c == '\r')
+		{
+			c = '\n';               // mask diffrence between operating systems
+		}
 		rx_buff[rx_buff_in++] = c;
 		rx_buff_in %= RX_BUFF_SIZE;
-		if (rx_buff_in == rx_buff_out) { // buffer overloaded, drop oldest char
+		if (rx_buff_in == rx_buff_out)   // buffer overloaded, drop oldest char
+		{
 			rx_buff_out++;
 			rx_buff_out %= RX_BUFF_SIZE;
 		}
-		if (c == '\n') {
+		if (c == '\n')
+		{
 			task |= TASK_COM;
 			COM_requests++;
 		}
@@ -151,11 +166,17 @@ static char COM_getchar(void)
 	char c;
 
 	cli();
-	if (rx_buff_in != rx_buff_out) {
+	if (rx_buff_in != rx_buff_out)
+	{
 		c = rx_buff[rx_buff_out++];
 		rx_buff_out %= RX_BUFF_SIZE;
-		if (c == '\n') COM_requests--;
-	} else {
+		if (c == '\n')
+		{
+			COM_requests--;
+		}
+	}
+	else
+	{
 		COM_requests = 0;
 		c = '\0';
 	}
@@ -171,7 +192,8 @@ static char COM_getchar(void)
  ******************************************************************************/
 static void COM_flush(void)
 {
-	if (tx_buff_in != tx_buff_out) {
+	if (tx_buff_in != tx_buff_out)
+	{
 #ifdef COM_UART
 		UART_startSend();
 #else
@@ -189,7 +211,8 @@ static void COM_flush(void)
  ******************************************************************************/
 static void print_decXX(uint8_t i)
 {
-	if (i >= 100) {
+	if (i >= 100)
+	{
 		COM_putchar(i / 100 + '0');
 		i %= 100;
 	}
@@ -220,14 +243,22 @@ static void print_hexXX(uint8_t i)
 	uint8_t x = i >> 4;
 
 	if (x >= 10)
+	{
 		COM_putchar(x + 'a' - 10);
+	}
 	else
+	{
 		COM_putchar(x + '0');
+	}
 	x = i & 0xf;
 	if (x >= 10)
+	{
 		COM_putchar(x + 'a' - 10);
+	}
 	else
+	{
 		COM_putchar(x + '0');
+	}
 }
 
 /*!
@@ -254,7 +285,9 @@ void print_s_p(const char *s)
 	char c;
 
 	for (c = pgm_read_byte(s); c; ++s, c = pgm_read_byte(s))
+	{
 		COM_putchar(c);
+	}
 }
 
 /*!
@@ -329,22 +362,39 @@ static char COM_hex_parse(uint8_t n, bool n_test)
 {
 	uint8_t i;
 
-	for (i = 0; i < n; i++) {
+	for (i = 0; i < n; i++)
+	{
 		uint8_t c = COM_getchar() - '0';
-		if (c > 9) { // chars < '0' overload var c
+		if (c > 9)   // chars < '0' overload var c
+		{
 			if ((c >= ('a' - '0')) && (c <= ('f' - '0')))
+			{
 				c -= (('a' - '0') - 10);
-			else return c + '0';
+			}
+			else
+			{
+				return c + '0';
+			}
 		}
 		if (i & 1)
+		{
 			com_hex[i >> 1] += c;
+		}
 		else
+		{
 			com_hex[i >> 1] = (uint8_t)c << 4;
+		}
 	}
-	if (!n_test) return '\0';
+	if (!n_test)
+	{
+		return '\0';
+	}
 	{
 		char c;
-		if ((c = COM_getchar()) != '\n') return c;
+		if ((c = COM_getchar()) != '\n')
+		{
+			return c;
+		}
 	}
 	return '\0';
 }
@@ -396,22 +446,38 @@ void COM_commad_parse(void)
 {
 	char c;
 
-	while (COM_requests) {
-		switch (c = COM_getchar()) {
+	while (COM_requests)
+	{
+		switch (c = COM_getchar())
+		{
 		case 'V':
-			if (COM_getchar() == '\n') print_version();
+			if (COM_getchar() == '\n')
+			{
+				print_version();
+			}
 			c = '\0';
 			break;
 		case 'D':
-			if (COM_getchar() == '\n') COM_print_debug(-1);
+			if (COM_getchar() == '\n')
+			{
+				COM_print_debug(-1);
+			}
 			c = '\0';
 			break;
 		case 'Y':
-			if (COM_hex_parse(3 * 2, true) != '\0') break; RTC_SetDate(com_hex[2], com_hex[1], com_hex[0]);
+			if (COM_hex_parse(3 * 2, true) != '\0')
+			{
+				break;
+			}
+			RTC_SetDate(com_hex[2], com_hex[1], com_hex[0]);
 			print_s_p(PSTR("OK"));
 			break;
 		case 'H':
-			if (COM_hex_parse(4 * 2, true) != '\0') break; cli();
+			if (COM_hex_parse(4 * 2, true) != '\0')
+			{
+				break;
+			}
+			cli();
 			RTC_SetHour(com_hex[0]);
 			RTC_SetMinute(com_hex[1]);
 			RTC_SetSecond(com_hex[2]);
@@ -422,61 +488,112 @@ void COM_commad_parse(void)
 			break;
 #if (RFM == 1)
 		case 'O':
-			if (COM_hex_parse(2 * 2, true) != '\0') break; wl_force_addr1 = com_hex[0];
+			if (COM_hex_parse(2 * 2, true) != '\0')
+			{
+				break;
+			}
+			wl_force_addr1 = com_hex[0];
 			wl_force_addr2 = com_hex[1];
 			print_s_p(PSTR("OK"));
 			break;
 		case 'P':
-			if (COM_hex_parse(4 * 2, true) != '\0') break; memcpy(&wl_force_flags, com_hex, 4);
+			if (COM_hex_parse(4 * 2, true) != '\0')
+			{
+				break;
+			}
+			memcpy(&wl_force_flags, com_hex, 4);
 			wl_force_addr1 = 0xff;
 			print_s_p(PSTR("OK"));
 			break;
 #endif
 		case ':': // intel hex for writing eeprom
-			if (COM_hex_parse(4 * 2, false) != '\0') break; uint8_t byteCount = com_hex[0];
+			if (COM_hex_parse(4 * 2, false) != '\0')
+			{
+				break;
+			}
+			uint8_t byteCount = com_hex[0];
 			uint16_t address = (com_hex[1] << 8) | com_hex[2];
 			uint8_t recordType = com_hex[3];
-			if (recordType != 0) {
+			if (recordType != 0)
+			{
 				COM_hex_parse(2 * 1, true);     // soak up the checksum and newline
 				break;                          // not a data record - we'll guess it is an end record
 			}
 			uint8_t len = 0;
-			while (len != byteCount) {
-				if (COM_hex_parse(2 * 1, false) != '\0') break; EEPROM_write(address + len, com_hex[0]);
+			while (len != byteCount)
+			{
+				if (COM_hex_parse(2 * 1, false) != '\0')
+				{
+					break;
+				}
+				EEPROM_write(address + len, com_hex[0]);
 				len++;
 			}
 			com_hex[0] = address & 0xff;
 			print_idx(c);
 			COM_hex_parse(2 * 1, true); // soak up the checksum and newline
 			byteCount = 0;
-			while (len != byteCount) {
+			while (len != byteCount)
+			{
 				print_hexXX(EEPROM_read(address + byteCount));
 				byteCount++;
 			}
 			break;
 		case 'G':
 		case 'S':
-			if (c == 'G') {
-				if (COM_hex_parse(1 * 2, true) != '\0') break;
-			} else {
-				if (COM_hex_parse(2 * 2, true) != '\0') break; if (com_hex[0] < CONFIG_RAW_SIZE) {
+			if (c == 'G')
+			{
+				if (COM_hex_parse(1 * 2, true) != '\0')
+				{
+					break;
+				}
+			}
+			else
+			{
+				if (COM_hex_parse(2 * 2, true) != '\0')
+				{
+					break;
+				}
+				if (com_hex[0] < CONFIG_RAW_SIZE)
+				{
 					config_raw[com_hex[0]] = (uint8_t)(com_hex[1]);
 					eeprom_config_save(com_hex[0]);
 				}
 			}
 			print_idx(c);
 			if (com_hex[0] == 0xff)
+			{
 				print_hexXX(EE_LAYOUT);
+			}
 			else
+			{
 				print_hexXX(config_raw[com_hex[0]]);
+			}
 			break;
 		case '(':
 		{
-			if (COM_hex_parse(1 * 2, false) != '\0') break; uint8_t addr = com_hex[0];
-			if (COM_getchar() != '-') break; if (COM_hex_parse(1, false) != '\0') break; uint8_t bank = com_hex[0] >> 4;
-			if (COM_getchar() != ')') break; uint8_t ch = COM_getchar();
+			if (COM_hex_parse(1 * 2, false) != '\0')
+			{
+				break;
+			}
+			uint8_t addr = com_hex[0];
+			if (COM_getchar() != '-')
+			{
+				break;
+			}
+			if (COM_hex_parse(1, false) != '\0')
+			{
+				break;
+			}
+			uint8_t bank = com_hex[0] >> 4;
+			if (COM_getchar() != ')')
+			{
+				break;
+			}
+			uint8_t ch = COM_getchar();
 			uint8_t len = 0;
-			switch (ch) {
+			switch (ch)
+			{
 			case 'D':
 			case 'V':
 				len = 0;
@@ -499,18 +616,34 @@ void COM_commad_parse(void)
 			default:
 				break;
 			}
-			if (COM_hex_parse(len * 2, true) != '\0') break; uint8_t *d = Q_push(len + 1, addr, bank);
-			if (d == NULL) break; d[0] = ch;
+			if (COM_hex_parse(len * 2, true) != '\0')
+			{
+				break;
+			}
+			uint8_t *d = Q_push(len + 1, addr, bank);
+			if (d == NULL)
+			{
+				break;
+			}
+			d[0] = ch;
 			memcpy(d + 1, com_hex, len);
 			print_s_p(PSTR("OK"));
 		}
 		break;
 		case 'B':
 		{
-			if (COM_hex_parse(2 * 2, true) != '\0') break; if ((com_hex[0] == 0x13) && (com_hex[1] == 0x24)) {
+			if (COM_hex_parse(2 * 2, true) != '\0')
+			{
+				break;
+			}
+			if ((com_hex[0] == 0x13) && (com_hex[1] == 0x24))
+			{
 				cli();
 				wdt_enable(WDTO_15MS);  //wd on,15ms
-				while (1);              //loop till reset
+				while (1)
+				{
+					;               //loop till reset
+				}
 			}
 		}
 		break;
@@ -518,7 +651,10 @@ void COM_commad_parse(void)
 			c = '\0';
 			break;
 		}
-		if (c != '\0') COM_putchar('\n');
+		if (c != '\0')
+		{
+			COM_putchar('\n');
+		}
 		COM_flush();
 	}
 }
@@ -540,7 +676,8 @@ void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok)
 	print_decXX(RTC_GetSecond());
 	COM_putchar('.');
 	print_decXX(RTC_s100);
-	if (mac_ok && (len >= (2 + 4))) {
+	if (mac_ok && (len >= (2 + 4)))
+	{
 		print_s_p(PSTR(" PKT"));
 		print_hexXXXX(seq++);
 #if (RFM_TUNING > 0)
@@ -551,54 +688,74 @@ void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok)
 		// manipulate afc to be in a form suitable to store in the openhr20
 		// eeprom. AFC 0x10 = sign bit. 0xf = value
 		if (afc > 0xf)
+		{
 			afc |= 0xf0;
+		}
 		print_hexXX(0 - afc);
 #endif
 		len -= 6; // mac is correct and not needed
 		d += 2;
 		COM_putchar('\n');
-	} else {
+	}
+	else
+	{
 		print_s_p(PSTR(" ERR"));
 		print_hexXXXX(seq++);
 		bool dots = false;
-		if (len > 10) {
+		if (len > 10)
+		{
 			len = 10; // debug output limitation
 			dots = true;
 		}
-		while ((len--) > 0) {
+		while ((len--) > 0)
+		{
 			COM_putchar(' ');
 			print_hexXX(*(d++));
 		}
 		if (dots)
+		{
 			print_s_p(PSTR("..."));
+		}
 		COM_putchar('\n');
 		COM_flush();
 		return;
 	}
-	if (len == 0) {
+	if (len == 0)
+	{
 		COM_flush();
 		return;
-	} else {
+	}
+	else
+	{
 		COM_putchar('(');
 		print_hexXX(addr);
 		COM_putchar(')');
 		print_s_p(PSTR("{\n"));
 	}
 
-	while (len > 0) {
+	while (len > 0)
+	{
 		if (d[0] & 0x80)
+		{
 			COM_putchar('*');
+		}
 		else
+		{
 			COM_putchar('-');
+		}
 		d[0] &= 0x7f;
-		switch (d[0]) {
+		switch (d[0])
+		{
 		case 'V':
-			while (1) {
-				if ((--len) < 0) {
+			while (1)
+			{
+				if ((--len) < 0)
+				{
 					print_incomplete_mark(len);
 					break;
 				}
-				if (*d == '\n') {
+				if (*d == '\n')
+				{
 					d++;
 					break;
 				}
@@ -610,7 +767,8 @@ void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok)
 		case 'M':
 			COM_putchar(d[0]);
 			len -= 10;
-			if (len < 0) {
+			if (len < 0)
+			{
 				print_incomplete_mark(len);
 				break;
 			}
@@ -630,8 +788,14 @@ void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok)
 			print_decXXXX(((uint16_t)d[6] << 8) | d[7]);
 			print_s_p(PSTR(" E"));
 			print_hexXX(d[3]);
-			if ((d[2] & 0x40) != 0) print_s_p(PSTR(" W"));
-			if ((d[2] & 0x80) != 0) print_s_p(PSTR(" L"));
+			if ((d[2] & 0x40) != 0)
+			{
+				print_s_p(PSTR(" W"));
+			}
+			if ((d[2] & 0x80) != 0)
+			{
+				print_s_p(PSTR(" L"));
+			}
 			d += 10;
 			break;
 		case 'T':
@@ -639,7 +803,8 @@ void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok)
 		case 'W':
 			COM_putchar(d[0]);
 			len -= 4;
-			if (len < 0) {
+			if (len < 0)
+			{
 				print_incomplete_mark(len);
 				break;
 			}
@@ -655,7 +820,8 @@ void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok)
 		case 'S':
 			COM_putchar(d[0]);
 			len -= 3;
-			if (len < 0) {
+			if (len < 0)
+			{
 				print_incomplete_mark(len);
 				break;
 			}
@@ -669,7 +835,8 @@ void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok)
 		case 'L':
 			COM_putchar(d[0]);
 			len -= 2;
-			if (len < 0) {
+			if (len < 0)
+			{
 				print_incomplete_mark(len);
 				break;
 			}
@@ -677,7 +844,8 @@ void COM_dump_packet(uint8_t *d, int8_t len, bool mac_ok)
 			d += 2;
 			break;
 		default:
-			while ((len--) > 0) {
+			while ((len--) > 0)
+			{
 				COM_putchar(' ');
 				print_hexXX(*(d++));
 			}
@@ -712,8 +880,12 @@ void COM_req_RTC(void)
 {
 	uint8_t s = RTC_GetSecond();
 
-	if (s == 0) print_s_p(PSTR("RTC?\n"));
-	if ((s == 29) || (s == 59)) {
+	if (s == 0)
+	{
+		print_s_p(PSTR("RTC?\n"));
+	}
+	if ((s == 29) || (s == 59))
+	{
 		COM_putchar('N');
 		COM_putchar((s == 59) ? '0' : '1');
 		COM_putchar('?');
@@ -725,20 +897,37 @@ void COM_req_RTC(void)
 #endif
 		return;
 	}
-	if (s >= 30) {
+	if (s >= 30)
+	{
 #if (RFM == 1)
-		if (wl_force_addr1 > 0) {
-			if (wl_force_addr1 == 0xff) {
+		if (wl_force_addr1 > 0)
+		{
+			if (wl_force_addr1 == 0xff)
+			{
 				s -= 29;
-				if (((wl_force_flags >> s) & 1) == 0) return;
-			} else {
-				if (RTC_GetSecond() & 1) s = wl_force_addr2;
-				else s = wl_force_addr1;
+				if (((wl_force_flags >> s) & 1) == 0)
+				{
+					return;
+				}
 			}
-		} else
+			else
+			{
+				if (RTC_GetSecond() & 1)
+				{
+					s = wl_force_addr2;
+				}
+				else
+				{
+					s = wl_force_addr1;
+				}
+			}
+		}
+		else
 #endif
 		return;
-	} else {
+	}
+	else
+	{
 		s++;
 	}
 	COM_putchar('(');

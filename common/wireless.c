@@ -91,12 +91,16 @@ void crypto_init(void)
 	memcpy(K_m, config.security_key, 8);
 	memcpy_P(K_m + 8, Km_upper, sizeof(Km_upper));
 	for (i = 0; i < 3 * 8; i++)
+	{
 		Keys[i] = 0xc0 + i;
+	}
 	xtea_enc(K_mac, K_mac, K_m);            /* generate K_mac low 8 bytes */
 	xtea_enc(K_enc, K_enc, K_m);            /* generate K_mac high 8 bytes  and K_enc low 8 bytes*/
 	xtea_enc(K_enc + 8, K_enc + 8, K_m);    /* generate K_enc high 8 bytes */
 	for (i = 0; i < 8; i++)                 // smaller&faster than memset
+	{
 		K1[i] = 0;
+	}
 	xtea_enc(K1, K1, K_mac);
 	asm (
 		"   movw  R30,%A0   \n"
@@ -106,7 +110,7 @@ void crypto_init(void)
 		"   rcall left_roll \n" /* generate K2 */
 		:: "y" (K1)
 		: "r26", "r27", "r30", "r31"
-		);
+	);
 #if defined(MASTER_CONFIG_H)
 	LED_RX_off();
 	LED_sync_off();
@@ -132,7 +136,7 @@ asm (
 	"   brcc roll_loop        \n"   // 8 times loop
 	"   sbiw r28,8            \n"   // Y-=8
 	"   ret "
-	);
+);
 
 /*!
  *******************************************************************************
@@ -144,13 +148,18 @@ static void encrypt_decrypt(uint8_t *p, uint8_t len)
 	uint8_t i = 0;
 	uint8_t buf[8];
 
-	while (i < len) {
+	while (i < len)
+	{
 		xtea_enc(buf, &RTC, K_enc);
 		RTC.pkt_cnt++;
-		do {
+		do
+		{
 			p[i] ^= buf[i & 7];
 			i++;
-			if (i >= len) return; //done
+			if (i >= len)
+			{
+				return;       //done
+			}
 		} while ((i & 7) != 0);
 	}
 }
@@ -176,7 +185,11 @@ void wirelessSendDone(void)
 
 #if !defined(MASTER_CONFIG_H)
 	wirelessTimerCase = WL_TIMER_RX_TMO;
-	while (ASSR & (_BV(TCR2UB))); RTC_timer_set(RTC_TIMER_RFM, (uint8_t)(RTC_s256 + WLTIME_TIMEOUT));
+	while (ASSR & (_BV(TCR2UB)))
+	{
+		;
+	}
+	RTC_timer_set(RTC_TIMER_RFM, (uint8_t)(RTC_s256 + WLTIME_TIMEOUT));
 	COM_print_time('r');
 #endif
 }
@@ -189,7 +202,8 @@ void wirelessTimer(void)
 {
 #if !defined(MASTER_CONFIG_H)
 	COM_print_time('t');
-	switch (wirelessTimerCase) {
+	switch (wirelessTimerCase)
+	{
 	case WL_TIMER_FIRST:
 		wirelessSendPacket(true);
 		break;
@@ -205,10 +219,15 @@ void wirelessTimer(void)
 		rfm_framepos = 0;
 		rfm_mode = rfmmode_rx;
 		wirelessTimerCase = WL_TIMER_RX_TMO;
-		while (ASSR & (_BV(TCR2UB))); RTC_timer_set(RTC_TIMER_RFM, (uint8_t)(RTC_s256 + WLTIME_SYNC_TIMEOUT));
+		while (ASSR & (_BV(TCR2UB)))
+		{
+			;
+		}
+		RTC_timer_set(RTC_TIMER_RFM, (uint8_t)(RTC_s256 + WLTIME_SYNC_TIMEOUT));
 		return;
 	case WL_TIMER_RX_TMO:
-		if (rfm_mode != rfmmode_tx) {
+		if (rfm_mode != rfmmode_tx)
+		{
 			RFM_INT_DIS();
 			rfm_mode = rfmmode_stop;
 			RFM_OFF();
@@ -333,15 +352,18 @@ static bool debug_R_send = false;
 void wirelessReceivePacket(void)
 {
 #if DEBUG_PRINT_ADDITIONAL_TIMESTAMPS
-	if (!debug_R_send) {
+	if (!debug_R_send)
+	{
 		COM_print_time('R');
 		debug_R_send = true;
 	}
 #endif
-	if (rfm_framepos >= 1) {
+	if (rfm_framepos >= 1)
+	{
 		if (((rfm_framebuf[0] & 0x7f) >= RFM_FRAME_MAX) // reject noise
 		    || ((rfm_framebuf[0] & 0x7f) < 4 + 2)
-		    || (rfm_framepos >= RFM_FRAME_MAX)) {
+		    || (rfm_framepos >= RFM_FRAME_MAX))
+		{
 			// reject invalid data
 #if DEBUG_PRINT_ADDITIONAL_TIMESTAMPS
 			debug_R_send = false;
@@ -352,49 +374,62 @@ void wirelessReceivePacket(void)
 			return; // !!! return !!!
 		}
 
-		if (rfm_framepos >= (rfm_framebuf[0] & 0x7f)) {
+		if (rfm_framepos >= (rfm_framebuf[0] & 0x7f))
+		{
 #if DEBUG_PRINT_ADDITIONAL_TIMESTAMPS
 			debug_R_send = false;
 #endif
 
 			RFM_INT_DIS(); // disable RFM interrupt
 			if (rfm_framepos > (rfm_framebuf[0] & 0x7f))
+			{
 				rfm_framepos = (rfm_framebuf[0] & 0x7f);
+			}
 
 			{
 				bool mac_ok;
 #if !defined(MASTER_CONFIG_H)
-				if ((rfm_framebuf[0] & 0x80) == 0x80) {
+				if ((rfm_framebuf[0] & 0x80) == 0x80)
+				{
 					//sync packet
 					mac_ok = cmac_calc(rfm_framebuf + 1, (rfm_framebuf[0] & 0x7f) - 5, NULL, true);
 					COM_dump_packet(rfm_framebuf, rfm_framepos, mac_ok);
-					if (mac_ok) {
+					if (mac_ok)
+					{
 						rfm_mode = rfmmode_stop;
 						RFM_OFF();
 						RTC_timer_destroy(WL_TIMER_RX_TMO);
 
-						if (rfm_framebuf[0] == 0x8b) {
+						if (rfm_framebuf[0] == 0x8b)
+						{
 							wl_force_addr1 = rfm_framebuf[5];
 							wl_force_addr2 = rfm_framebuf[6];
-						} else if (rfm_framebuf[0] == 0x8d) {
+						}
+						else if (rfm_framebuf[0] == 0x8d)
+						{
 							wl_force_addr1 = 0xff;
 							// wl_force_addr2=0xff;
 							memcpy(&wl_force_flags, rfm_framebuf + 5, 4);
-						} else {
+						}
+						else
+						{
 #if (WL_SKIP_SYNC)
 							wl_skip_sync = WL_SKIP_SYNC;
 #endif
 						}
 						time_sync_tmo = 20;
 						while (ASSR & (_BV(TCR2UB)))
+						{
 							;
+						}
 						/*
 						 * Reading of the TCNT2 Register shortly after wake-up from Power-save may give an incorrect
 						 * result. Since TCNT2 is clocked on the asynchronous TOSC clock, reading TCNT2 must be
 						 * done through a register synchronized to the internal I/O clock domain. Synchronization takes
 						 * place for every rising TOSC1 edge.
 						 */
-						if (RTC_s256 > 0x80) {
+						if (RTC_s256 > 0x80)
+						{
 							// round to upper number compencastion
 							RTC_s256 = 4;
 							cli(); RTC_timer_done |= _BV(RTC_TIMER_OVF); sei();
@@ -402,7 +437,8 @@ void wirelessReceivePacket(void)
 						}
 						GTCCR = _BV(PSR2);
 						RTC_s256 = 10;
-						while (ASSR & (_BV(TCN2UB))) {
+						while (ASSR & (_BV(TCN2UB)))
+						{
 							;
 							// wait for clock sync
 							// it can take 2*1/32768 sec = 61us
@@ -418,7 +454,8 @@ void wirelessReceivePacket(void)
 						cli(); RTC_timer_done &= ~_BV(RTC_TIMER_RTC); sei(); // do not add one second
 						return;
 					}
-				} else
+				}
+				else
 #endif
 				{
 					RTC.pkt_cnt += (rfm_framepos + 7 - 2 - 4) / 8;
@@ -429,24 +466,31 @@ void wirelessReceivePacket(void)
 					COM_dump_packet(rfm_framebuf, rfm_framepos, mac_ok);
 #if defined(MASTER_CONFIG_H)
 					uint8_t addr = rfm_framebuf[1];
-					if (mac_ok) {
+					if (mac_ok)
+					{
 						LED_RX_on();
 						RTC_timer_set(RTC_TIMER_RFM, (uint8_t)(RTC_s100 + WLTIME_LED_TIMEOUT));
 						q_item_t *p;
 						uint8_t skip = 0;
 						uint8_t i = 0;
 						while ((p = Q_get(addr, wl_packet_bank, skip++)) != NULL)
+						{
 							for (i = 0; i < (*p).len; i++)
+							{
 								wireless_putchar((*p).data[i]);
+							}
+						}
 						wl_packet_bank++;
 						wirelessSendPacket();
 						return;
 					}
 #else
-					if (mac_ok && (rfm_framebuf[1] == 0)) { // Accept commands from master only
+					if (mac_ok && (rfm_framebuf[1] == 0))   // Accept commands from master only
+					{
 						wireless_buf_ptr = 0;
 						RTC_timer_destroy(WL_TIMER_RX_TMO);
-						if (rfm_framepos == 4 + 2) { // empty packet don't need reply
+						if (rfm_framepos == 4 + 2)   // empty packet don't need reply
+						{
 							rfm_mode = rfmmode_stop;
 							RFM_OFF();
 							return;
@@ -458,7 +502,9 @@ void wirelessReceivePacket(void)
 							uint8_t i;
 							uint8_t j = RFM_FRAME_MAX - 1;
 							for (i = rfm_framepos - 5; i >= 2; i--)
+							{
 								rfm_framebuf[j--] = rfm_framebuf[i];
+							}
 						}
 						COM_wireless_command_parse(rfm_framebuf + RFM_FRAME_MAX + 6 - rfm_framepos, rfm_framepos - 6);
 						wirelessSendPacket(false);
@@ -484,8 +530,10 @@ void wirelessReceivePacket(void)
 void wirelesTimeSyncCheck(void)
 {
 	time_sync_tmo--;
-	if (time_sync_tmo <= 0) {
-		if ((time_sync_tmo == 0) || (time_sync_tmo < -30)) {
+	if (time_sync_tmo <= 0)
+	{
+		if ((time_sync_tmo == 0) || (time_sync_tmo < -30))
+		{
 			time_sync_tmo = 0;
 			RFM_INT_DIS();
 			RFM_FIFO_OFF();
@@ -494,7 +542,9 @@ void wirelesTimeSyncCheck(void)
 			rfm_framepos = 0;
 			rfm_mode = rfmmode_rx;
 			RFM_INT_EN();     // enable RFM interrupt
-		} else if (time_sync_tmo < -4) {
+		}
+		else if (time_sync_tmo < -4)
+		{
 			RFM_INT_DIS();
 			RFM_OFF();      // turn everything off
 			CTL_set_error(CTL_ERR_RFM_SYNC);
@@ -511,11 +561,16 @@ bool wireless_async = false;
  ******************************************************************************/
 void wireless_putchar(uint8_t b)
 {
-	if (!wireless_async) {
+	if (!wireless_async)
+	{
 		// synchronous buffer
 		if (rfm_framesize < RFM_FRAME_MAX - 4 - 2)
+		{
 			rfm_framebuf[rfm_framesize++] = b;
-	} else {
+		}
+	}
+	else
+	{
 #else
 void wireless_putchar(uint8_t b)
 {
@@ -523,7 +578,9 @@ void wireless_putchar(uint8_t b)
 #endif
 		// asynchronous buffer
 		if (wireless_buf_ptr < WIRELESS_BUF_MAX)
+		{
 			wireless_framebuf[wireless_buf_ptr++] = b;
+		}
 	}
 }
 

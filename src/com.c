@@ -74,7 +74,8 @@ static uint8_t rx_buff_out = 0;
 void COM_putchar(char c)
 {
 	cli();
-	if ((tx_buff_in + 1) % TX_BUFF_SIZE != tx_buff_out) {
+	if ((tx_buff_in + 1) % TX_BUFF_SIZE != tx_buff_out)
+	{
 		tx_buff[tx_buff_in++] = c;
 		tx_buff_in %= TX_BUFF_SIZE;
 	}
@@ -91,7 +92,8 @@ char COM_tx_char_isr(void)
 {
 	char c = '\0';
 
-	if (tx_buff_in != tx_buff_out) {
+	if (tx_buff_in != tx_buff_out)
+	{
 		c = tx_buff[tx_buff_out++];
 		tx_buff_out %= TX_BUFF_SIZE;
 	}
@@ -107,15 +109,21 @@ static volatile uint8_t COM_requests;
  ******************************************************************************/
 void COM_rx_char_isr(char c)
 {
-	if (c != '\0') {                        // ascii based protocol, \0 char is not alloweed, ignore it
-		if (c == '\r') c = '\n';        // mask diffrence between operating systems
+	if (c != '\0')                          // ascii based protocol, \0 char is not alloweed, ignore it
+	{
+		if (c == '\r')
+		{
+			c = '\n';               // mask diffrence between operating systems
+		}
 		rx_buff[rx_buff_in++] = c;
 		rx_buff_in %= RX_BUFF_SIZE;
-		if (rx_buff_in == rx_buff_out) { // buffer overloaded, drop oldest char
+		if (rx_buff_in == rx_buff_out)   // buffer overloaded, drop oldest char
+		{
 			rx_buff_out++;
 			rx_buff_out %= RX_BUFF_SIZE;
 		}
-		if (c == '\n') {
+		if (c == '\n')
+		{
 			task |= TASK_COM;
 			COM_requests++;
 		}
@@ -133,12 +141,17 @@ static char COM_getchar(void)
 	char c;
 
 	cli();
-	if (rx_buff_in != rx_buff_out) {
+	if (rx_buff_in != rx_buff_out)
+	{
 		c = rx_buff[rx_buff_out++];
 		rx_buff_out %= RX_BUFF_SIZE;
 		if (c == '\n')
+		{
 			COM_requests--;
-	} else {
+		}
+	}
+	else
+	{
 		COM_requests = 0;
 		c = '\0';
 	}
@@ -154,7 +167,8 @@ static char COM_getchar(void)
  ******************************************************************************/
 void COM_flush(void)
 {
-	if (tx_buff_in != tx_buff_out) {
+	if (tx_buff_in != tx_buff_out)
+	{
 #ifdef COM_UART
 		UART_startSend();
 #elif THERMOTRONIC                      //UART for THERMOTRONIC not implemented
@@ -174,7 +188,8 @@ void COM_flush(void)
  ******************************************************************************/
 static void print_decXX(uint8_t i)
 {
-	if (i >= 100) {
+	if (i >= 100)
+	{
 		COM_putchar(i / 100 + '0');
 		i %= 100;
 	}
@@ -205,14 +220,22 @@ static void print_hexXX(uint8_t i)
 	uint8_t x = i >> 4;
 
 	if (x >= 10)
+	{
 		COM_putchar(x + 'a' - 10);
+	}
 	else
+	{
 		COM_putchar(x + '0');
+	}
 	x = i & 0xf;
 	if (x >= 10)
+	{
 		COM_putchar(x + 'a' - 10);
+	}
 	else
+	{
 		COM_putchar(x + '0');
+	}
 }
 
 /*!
@@ -238,7 +261,9 @@ static void print_s_p(const char *s)
 	char c;
 
 	for (c = pgm_read_byte(s); c; ++s, c = pgm_read_byte(s))
+	{
 		COM_putchar(c);
+	}
 }
 
 /*!
@@ -253,10 +278,14 @@ static void print_version(bool sync)
 
 	COM_putchar('V');
 	char c;
-	for (c = pgm_read_byte(s); c; ++s, c = pgm_read_byte(s)) {
+	for (c = pgm_read_byte(s); c; ++s, c = pgm_read_byte(s))
+	{
 		COM_putchar(c);
 #if RFM == 1
-		if (sync) wireless_putchar(c);
+		if (sync)
+		{
+			wireless_putchar(c);
+		}
 #endif
 	}
 }
@@ -309,9 +338,13 @@ void COM_print_debug(uint8_t type)
 	print_decXXXX(temp_average);
 	print_s_p(PSTR(" S: "));
 	if (CTL_temp_wanted_last > TEMP_MAX + 1)
+	{
 		print_s_p(PSTR("BOOT"));
+	}
 	else
+	{
 		print_decXXXX(calc_temp(CTL_temp_wanted_last));
+	}
 	print_s_p(PSTR(" B: "));
 	print_decXXXX(bat_average);
 #if DEBUG_PRINT_I_SUM
@@ -325,22 +358,30 @@ void COM_print_debug(uint8_t type)
 	print_s_p(PSTR(" Ie: "));       //jr
 	print_hexXX(CTL_creditExpiration);
 #endif
-	if (CTL_error != 0) {
+	if (CTL_error != 0)
+	{
 		print_s_p(PSTR(" E:"));
 		print_hexXX(CTL_error);
 	}
 	if (type > 0)
+	{
 		print_s_p(PSTR(" X"));
+	}
 	if (mode_window())
+	{
 		print_s_p(PSTR(" W"));
+	}
 	if (menu_locked)
+	{
 		print_s_p(PSTR(" L"));
+	}
 	COM_putchar('\n');
 	COM_flush();
 #if (RFM == 1)
 	bool sync = (type == 2);
-	if (!sync) {
-        wireless_buf_ptr=0;
+	if (!sync)
+	{
+		wireless_buf_ptr = 0;
 		wireless_async = true;
 		wireless_putchar('D');
 	}
@@ -382,21 +423,35 @@ static char COM_hex_parse(uint8_t n)
 {
 	uint8_t i;
 
-	for (i = 0; i < n; i++) {
+	for (i = 0; i < n; i++)
+	{
 		uint8_t c = COM_getchar() - '0';
-		if (c > 9) { // chars < '0' overload var c
+		if (c > 9)   // chars < '0' overload var c
+		{
 			if ((c >= ('a' - '0')) && (c <= ('f' - '0')))
+			{
 				c -= (('a' - '0') - 10);
-			else return c + '0';
+			}
+			else
+			{
+				return c + '0';
+			}
 		}
 		if (i & 1)
+		{
 			com_hex[i >> 1] += c;
+		}
 		else
+		{
 			com_hex[i >> 1] = (uint8_t)c << 4;
+		}
 	}
 	{
 		char c;
-		if ((c = COM_getchar()) != '\n') return c;
+		if ((c = COM_getchar()) != '\n')
+		{
+			return c;
+		}
 	}
 	return '\0';
 }
@@ -443,45 +498,82 @@ void COM_commad_parse(void)
 {
 	char c;
 
-	while (COM_requests) {
-		switch (c = COM_getchar()) {
+	while (COM_requests)
+	{
+		switch (c = COM_getchar())
+		{
 		case 'V':
-			if (COM_getchar() == '\n') print_version(false);
+			if (COM_getchar() == '\n')
+			{
+				print_version(false);
+			}
 			c = '\0';
 			break;
 #if ENABLE_LOCAL_COMMANDS
 		case 'D':
-			if (COM_getchar() == '\n') COM_print_debug(1);
+			if (COM_getchar() == '\n')
+			{
+				COM_print_debug(1);
+			}
 			c = '\0';
 			break;
 		case 'T':
 		{
-			if (COM_hex_parse(1 * 2) != '\0') break; print_idx(c, com_hex[0]);
+			if (COM_hex_parse(1 * 2) != '\0')
+			{
+				break;
+			}
+			print_idx(c, com_hex[0]);
 			print_hexXXXX(watch(com_hex[0]));
 		}
 		break;
 		case 'G':
 		case 'S':
-			if (c == 'G') {
-				if (COM_hex_parse(1 * 2) != '\0') break;
-			} else {
-				if (COM_hex_parse(2 * 2) != '\0') break; if (com_hex[0] < CONFIG_RAW_SIZE) {
+			if (c == 'G')
+			{
+				if (COM_hex_parse(1 * 2) != '\0')
+				{
+					break;
+				}
+			}
+			else
+			{
+				if (COM_hex_parse(2 * 2) != '\0')
+				{
+					break;
+				}
+				if (com_hex[0] < CONFIG_RAW_SIZE)
+				{
 					config_raw[com_hex[0]] = (uint8_t)(com_hex[1]);
 					eeprom_config_save(com_hex[0]);
 				}
 			}
 			print_idx(c, com_hex[0]);
 			if (com_hex[0] == 0xff)
+			{
 				print_hexXX(EE_LAYOUT);
+			}
 			else
+			{
 				print_hexXX(config_raw[com_hex[0]]);
+			}
 			break;
 		case 'R':
 		case 'W':
-			if (c == 'R') {
-				if (COM_hex_parse(1 * 2) != '\0') break;
-			} else {
-				if (COM_hex_parse(3 * 2) != '\0') break; RTC_DowTimerSet(
+			if (c == 'R')
+			{
+				if (COM_hex_parse(1 * 2) != '\0')
+				{
+					break;
+				}
+			}
+			else
+			{
+				if (COM_hex_parse(3 * 2) != '\0')
+				{
+					break;
+				}
+				RTC_DowTimerSet(
 					com_hex[0] >> 4,
 					com_hex[0] & 0xf,
 					(((uint16_t)(com_hex[1]) & 0xf) << 8) + (uint16_t)(com_hex[2]),
@@ -493,12 +585,20 @@ void COM_commad_parse(void)
 					      timers_get_raw_index((com_hex[0] >> 4), (com_hex[0] & 0xf))));
 			break;
 		case 'Y':
-			if (COM_hex_parse(3 * 2) != '\0') break; RTC_SetDate(com_hex[2], com_hex[1], com_hex[0]);
+			if (COM_hex_parse(3 * 2) != '\0')
+			{
+				break;
+			}
+			RTC_SetDate(com_hex[2], com_hex[1], com_hex[0]);
 			COM_print_debug(1);
 			c = '\0';
 			break;
 		case 'H':
-			if (COM_hex_parse(3 * 2) != '\0') break; RTC_SetHour(com_hex[0]);
+			if (COM_hex_parse(3 * 2) != '\0')
+			{
+				break;
+			}
+			RTC_SetHour(com_hex[0]);
 			RTC_SetMinute(com_hex[1]);
 			RTC_SetSecond(com_hex[2]);
 			COM_print_debug(1);
@@ -506,23 +606,54 @@ void COM_commad_parse(void)
 			break;
 		case 'B':
 		{
-			if (COM_hex_parse(2 * 2) != '\0') break; if ((com_hex[0] == 0x13) && (com_hex[1] == 0x24)) {
+			if (COM_hex_parse(2 * 2) != '\0')
+			{
+				break;
+			}
+			if ((com_hex[0] == 0x13) && (com_hex[1] == 0x24))
+			{
 				cli();
 				wdt_enable(WDTO_15MS);  //wd on,15ms
-				while (1);              //loop till reset
+				while (1)
+				{
+					;               //loop till reset
+				}
 			}
 		}
 		break;
 		case 'M':
-			if (COM_hex_parse(1 * 2) != '\0') break; CTL_change_mode(com_hex[0]);
+			if (COM_hex_parse(1 * 2) != '\0')
+			{
+				break;
+			}
+			CTL_change_mode(com_hex[0]);
 			COM_print_debug(1);
 			break;
 		case 'A':
-			if (COM_hex_parse(1 * 2) != '\0') break; if (com_hex[0] < TEMP_MIN - 1) break; if (com_hex[0] > TEMP_MAX + 1) break; CTL_set_temp(com_hex[0]);
+			if (COM_hex_parse(1 * 2) != '\0')
+			{
+				break;
+			}
+			if (com_hex[0] < TEMP_MIN - 1)
+			{
+				break;
+			}
+			if (com_hex[0] > TEMP_MAX + 1)
+			{
+				break;
+			}
+			CTL_set_temp(com_hex[0]);
 			COM_print_debug(1);
 			break;
 		case 'L':
-			if (COM_hex_parse(1 * 2) != '\0') break; if (com_hex[0] <= 1) menu_locked = com_hex[0];
+			if (COM_hex_parse(1 * 2) != '\0')
+			{
+				break;
+			}
+			if (com_hex[0] <= 1)
+			{
+				menu_locked = com_hex[0];
+			}
 			print_hexXX(menu_locked);
 			break;
 #endif
@@ -532,7 +663,10 @@ void COM_commad_parse(void)
 			c = '\0';
 			break;
 		}
-		if (c != '\0') COM_putchar('\n');
+		if (c != '\0')
+		{
+			COM_putchar('\n');
+		}
 		COM_flush();
 #if (RFM == 1)
 		rfm_start_tx();
@@ -556,10 +690,12 @@ void COM_wireless_command_parse(uint8_t *rfm_framebuf, uint8_t rfm_framepos)
 {
 	uint8_t pos = 0;
 
-	while (rfm_framepos > pos) {
+	while (rfm_framepos > pos)
+	{
 		uint8_t c = rfm_framebuf[pos++];
 		wireless_putchar(c | 0x80);
-		switch (c) {
+		switch (c)
+		{
 		case 'V':
 			print_version(true);
 			break;
@@ -573,23 +709,33 @@ void COM_wireless_command_parse(uint8_t *rfm_framebuf, uint8_t rfm_framepos)
 			break;
 		case 'G':
 		case 'S':
-			if (c == 'S') {
-				if (rfm_framebuf[pos] < CONFIG_RAW_SIZE) {
+			if (c == 'S')
+			{
+				if (rfm_framebuf[pos] < CONFIG_RAW_SIZE)
+				{
 					config_raw[rfm_framebuf[pos]] = (uint8_t)(rfm_framebuf[pos + 1]);
 					eeprom_config_save(rfm_framebuf[pos]);
 				}
 			}
 			wireless_putchar(rfm_framebuf[pos]);
 			if (rfm_framebuf[pos] == 0xff)
+			{
 				wireless_putchar(EE_LAYOUT);
+			}
 			else
+			{
 				wireless_putchar(config_raw[rfm_framebuf[pos]]);
-			if (c == 'S') pos++;
+			}
+			if (c == 'S')
+			{
+				pos++;
+			}
 			pos++;
 			break;
 		case 'R':
 		case 'W':
-			if (c == 'W') {
+			if (c == 'W')
+			{
 				RTC_DowTimerSet(
 					rfm_framebuf[pos] >> 4,
 					rfm_framebuf[pos] & 0xf,
@@ -600,12 +746,17 @@ void COM_wireless_command_parse(uint8_t *rfm_framebuf, uint8_t rfm_framepos)
 			wireless_putchar(rfm_framebuf[pos]);
 			COM_wireless_word(eeprom_timers_read_raw(
 						  timers_get_raw_index((rfm_framebuf[pos] >> 4), (rfm_framebuf[pos] & 0xf))));
-			if (c == 'W') pos += 2;
+			if (c == 'W')
+			{
+				pos += 2;
+			}
 			pos++;
 			break;
 		case 'B':
 			if ((rfm_framebuf[pos] == 0x13) && (rfm_framebuf[pos + 1] == 0x24))
+			{
 				reboot = true;
+			}
 			wireless_putchar(rfm_framebuf[pos]);
 			wireless_putchar(rfm_framebuf[pos + 1]);
 			pos += 2;
@@ -615,11 +766,22 @@ void COM_wireless_command_parse(uint8_t *rfm_framebuf, uint8_t rfm_framepos)
 			COM_print_debug(2);
 			break;
 		case 'A':
-			if (rfm_framebuf[pos] < TEMP_MIN - 1) break; if (rfm_framebuf[pos] > TEMP_MAX + 1) break; CTL_set_temp(rfm_framebuf[pos++]);
+			if (rfm_framebuf[pos] < TEMP_MIN - 1)
+			{
+				break;
+			}
+			if (rfm_framebuf[pos] > TEMP_MAX + 1)
+			{
+				break;
+			}
+			CTL_set_temp(rfm_framebuf[pos++]);
 			COM_print_debug(2);
 			break;
 		case 'L':
-			if (rfm_framebuf[pos] <= 1) menu_locked = rfm_framebuf[pos];
+			if (rfm_framebuf[pos] <= 1)
+			{
+				menu_locked = rfm_framebuf[pos];
+			}
 			wireless_putchar(menu_locked);
 			pos++;
 			break;
@@ -634,9 +796,13 @@ void COM_wireless_command_parse(uint8_t *rfm_framebuf, uint8_t rfm_framepos)
 void COM_debug_print_motor(int8_t dir, uint16_t m, uint8_t pwm)
 {
 	if (dir > 0)
+	{
 		COM_putchar('+');
+	}
 	else if (dir < 0)
+	{
 		COM_putchar('-');
+	}
 	COM_putchar(' ');
 	print_hexXXXX(m);
 	COM_putchar(' ');
@@ -673,25 +839,32 @@ void COM_dump_packet(uint8_t *d, uint8_t len, bool mac_ok)
 	print_decXX((task & TASK_RTC) ? RTC_GetSecond() + 1 : RTC_GetSecond());
 	COM_putchar('.');
 	print_hexXX(RTC_s256);
-	if (mac_ok && (len >= (2 + 4))) {
+	if (mac_ok && (len >= (2 + 4)))
+	{
 		print_s_p(PSTR(" PKT"));
 		len -= 4; // mac is correct and not needed
-	} else {
+	}
+	else
+	{
 		print_s_p(PSTR(" ERR"));
 	}
 	print_hexXXXX(seq++);
 	COM_putchar(':');
 	bool dots = false;
-	if (len > 10) {
+	if (len > 10)
+	{
 		len = 10; // debug output limitation
 		dots = true;
 	}
-	while ((len--) > 0) {
+	while ((len--) > 0)
+	{
 		COM_putchar(' ');
 		print_hexXX(*(d++));
 	}
 	if (dots)
+	{
 		print_s_p(PSTR("..."));
+	}
 	COM_putchar('\n');
 	COM_flush();
 }

@@ -111,7 +111,10 @@ void RTC_Init(void)
 	// => 1 sec between each overflow
 
 	// wait for TCN2UB and TCR2UB to be cleared
-	while ((ASSR & (_BV(TCN2UB) | _BV(TCR2UB))) != 0);
+	while ((ASSR & (_BV(TCN2UB) | _BV(TCR2UB))) != 0)
+	{
+		;
+	}
 
 	TIFR2 = 0xFF;                           // clear interrupt-flags
 	TIMSK2 |= (1 << TOIE2);                 // enable Timer2 overflow interrupt
@@ -231,10 +234,22 @@ void RTC_SetSecond100(uint8_t second100)
  ******************************************************************************/
 bool RTC_DowTimerSet(rtc_dow_t dow, uint8_t slot, uint16_t time, timermode_t timermode)
 {
-	if (dow >= 8) return false;
-	if (slot >= RTC_TIMERS_PER_DOW) return false;
-	if (timermode > temperature3) return false;
-	if (time >= 60 * 25) time = 0xfff;
+	if (dow >= 8)
+	{
+		return false;
+	}
+	if (slot >= RTC_TIMERS_PER_DOW)
+	{
+		return false;
+	}
+	if (timermode > temperature3)
+	{
+		return false;
+	}
+	if (time >= 60 * 25)
+	{
+		time = 0xfff;
+	}
 	// to table format see to \ref ee_timers
 	eeprom_timers_write(dow, slot, time | ((uint16_t)timermode << 12));
 	return true;
@@ -283,25 +298,36 @@ static uint8_t RTC_FindTimerRawIndex(uint8_t dow, uint16_t time_minutes)
 	int8_t raw_index = -1;
 	uint8_t i;
 
-	for (i = 0; i < search_timers; i++) {
+	for (i = 0; i < search_timers; i++)
+	{
 		{
 			uint8_t idx_raw = timers_get_raw_index(dow, 0);
 			uint8_t stop = idx_raw + RTC_TIMERS_PER_DOW;
 			uint16_t maxtime = 0;
 			// each timer until time_minutes
-			for (; idx_raw < stop; idx_raw++) {
+			for (; idx_raw < stop; idx_raw++)
+			{
 				// check if timer > maxtime and timer <= actual time
 				uint16_t table_time = eeprom_timers_read_raw(idx_raw) & 0x0fff;
-				if (table_time >= 24 * 60) continue;
-				if ((table_time >= maxtime) && (table_time <= time_minutes)) {
+				if (table_time >= 24 * 60)
+				{
+					continue;
+				}
+				if ((table_time >= maxtime) && (table_time <= time_minutes))
+				{
 					maxtime = table_time;
 					raw_index = idx_raw;
 				}
 			}
 		}
 		if (raw_index >= 0)
+		{
 			break;
-		if (dow > 0) dow = (dow + (7 - 2)) % 7 + 1;
+		}
+		if (dow > 0)
+		{
+			dow = (dow + (7 - 2)) % 7 + 1;
+		}
 		time_minutes = 24 * 60;
 	}
 	return raw_index;
@@ -323,18 +349,30 @@ int32_t RTC_DowTimerGetHourBar(uint8_t dow)
 	int8_t bar_pos = 23;
 	uint32_t bitmap = 0;
 
-	while (time > 0) {
+	while (time > 0)
+	{
 		int8_t raw_idx = RTC_FindTimerRawIndex(dow, time);
 		uint16_t table_time = ((raw_idx >= 0) ? eeprom_timers_read_raw(raw_idx) : 0);
 		bool bit = ((table_time & 0x3000) >= 0x2000);
 		if ((table_time & 0xfff) < time)
-			time = (table_time & 0xfff) - 1;
-		else
-			time = -1;
 		{
-			while (((int16_t)(bar_pos)) * 60 > time) {
-				if (bit) bitmap |= 1;
-				if (bar_pos > 0) bitmap = (bitmap << 1);
+			time = (table_time & 0xfff) - 1;
+		}
+		else
+		{
+			time = -1;
+		}
+		{
+			while (((int16_t)(bar_pos)) * 60 > time)
+			{
+				if (bit)
+				{
+					bitmap |= 1;
+				}
+				if (bar_pos > 0)
+				{
+					bitmap = (bitmap << 1);
+				}
 				bar_pos--;
 			}
 		}
@@ -359,10 +397,20 @@ uint8_t RTC_ActualTimerTemperatureType(bool exact)
 	int8_t raw_index = RTC_FindTimerRawIndex(dow, minutes);
 	uint16_t data = eeprom_timers_read_raw(raw_index);
 
-	if (raw_index < 0) return TEMP_TYPE_INVALID; //not found
-	if (exact) {
-		if ((data & 0xfff) != minutes) return TEMP_TYPE_INVALID;
-		if ((raw_index / RTC_TIMERS_PER_DOW) != dow) return TEMP_TYPE_INVALID;
+	if (raw_index < 0)
+	{
+		return TEMP_TYPE_INVALID;            //not found
+	}
+	if (exact)
+	{
+		if ((data & 0xfff) != minutes)
+		{
+			return TEMP_TYPE_INVALID;
+		}
+		if ((raw_index / RTC_TIMERS_PER_DOW) != dow)
+		{
+			return TEMP_TYPE_INVALID;
+		}
 	}
 	return (data >> 12) & 3;
 }
@@ -391,26 +439,34 @@ void RTC_AddOneSecond(void)
 #if (RFM == 1)
 	RTC.pkt_cnt = 0;
 #endif
-	if (++RTC.ss >= 60) {
+	if (++RTC.ss >= 60)
+	{
 		RTC.ss = 0;
 		// notify com.c about the changed minute
-		if (++RTC.mm >= 60) {
+		if (++RTC.mm >= 60)
+		{
 			RTC.mm = 0;
 			// add one hour
-			if (++RTC.hh >= 24) {
+			if (++RTC.hh >= 24)
+			{
 				RTC.hh = 0;
 				RTC_AddOneDay();
 			}
 			// start of summertime: March, 2:00:00 ?
-			if ((RTC.MM == 3) && (RTC.hh == 2)) {
+			if ((RTC.MM == 3) && (RTC.hh == 2))
+			{
 				// Last Sunday ?
 				if (RTC_IsLastSunday())
+				{
 					RTC.hh++; // 2:00 -> 3:00
+				}
 			}
 			// end of summertime: October, 03:00, RTC_DS == 0
-			if ((RTC.MM == 10) && (RTC.hh == 3) && (RTC_DS == 0)) {
+			if ((RTC.MM == 10) && (RTC.hh == 3) && (RTC_DS == 0))
+			{
 				// Last Sunday ?
-				if (RTC_IsLastSunday()) {
+				if (RTC_IsLastSunday())
+				{
 					RTC.hh--; // 3:00 -> 2:00
 					RTC_DS = 1;
 				}
@@ -435,9 +491,11 @@ static void RTC_AddOneDay(void)
 
 	// How many day has actual month
 	dom = RTC_DaysOfMonth();
-	if (++RTC.DD > dom) {                   // Next Month
+	if (++RTC.DD > dom)                     // Next Month
+	{
 		RTC.DD = 1;
-		if (++RTC.MM > 12) {            // Next year
+		if (++RTC.MM > 12)              // Next year
+		{
 			RTC.MM = 1;
 			RTC.YY++;
 		}
@@ -464,7 +522,9 @@ static uint8_t RTC_DaysOfMonth()
 	uint8_t dom = pgm_read_byte(&RTC_DayOfMonthTablePrgMem[RTC.MM - 1]);
 
 	if ((RTC.MM == 2) && (!RTC_NoLeapyear()))
+	{
 		return 29; // leapyear feb=29
+	}
 	return dom;
 }
 
@@ -478,16 +538,24 @@ static uint8_t RTC_DaysOfMonth()
 static bool RTC_IsLastSunday(void)
 {
 	if (RTC.DOW != 7)       // sunday ?
+	{
 		return 0;       // not sunday
+	}
 	// March or October ?
 	if (RTC.MM == 3)
+	{
 		// last seven days of month
 		return RTC.DD > (31 - 7);
+	}
 	else if (RTC.MM == 10)
+	{
 		// last seven days of month
 		return RTC.DD > (30 - 7);
+	}
 	else
+	{
 		return 0; // not march or october
+	}
 }
 
 
@@ -524,8 +592,12 @@ static void RTC_SetDayOfWeek(void)
 	// Day of year
 	day_of_year = pgm_read_word(&(daysInYear[RTC.MM - 1])) + RTC.DD;
 	if (RTC.MM > 2)   // february
+	{
 		if (!RTC_NoLeapyear())
+		{
 			day_of_year++;
+		}
+	}
 	// calc weekday
 	tmp_dow = RTC.YY + ((RTC.YY - 1) / 4) - ((RTC.YY - 1) / 100) + day_of_year;
 	// set DOW
@@ -554,9 +626,12 @@ void RTC_timer_set(uint8_t timer_id, uint8_t time)
 	RTC_timer_time[timer_id - 1] = time;
 	t2 = TCNT2;
 	dif = 255;
-	for (i = 0; i < RTC_TIMERS; i++) {
-		if ((RTC_timer_todo & (2 << i))) {
-			if ((RTC_timer_time[i] - t2) <= dif) {
+	for (i = 0; i < RTC_TIMERS; i++)
+	{
+		if ((RTC_timer_todo & (2 << i)))
+		{
+			if ((RTC_timer_time[i] - t2) <= dif)
+			{
 				next = RTC_timer_time[i];
 				dif = next - t2;
 			}
@@ -571,8 +646,12 @@ void RTC_timer_set(uint8_t timer_id, uint8_t time)
 	// cppcheck-suppress uninitvar
 	RTC_next_compare = next;
 #else
-	if (OCR2A != next) {
-		while (ASSR & (1 << OCR2UB));   // ATmega169 datasheet chapter 17.8.1
+	if (OCR2A != next)
+	{
+		while (ASSR & (1 << OCR2UB))
+		{
+			;                       // ATmega169 datasheet chapter 17.8.1
+		}
 		OCR2A = next;
 	}
 #endif
@@ -597,7 +676,8 @@ void RTC_timer_set(uint8_t timer_id, uint8_t time)
  ******************************************************************************/
 #if !TASK_IS_SFR || DEBUG_PRINT_RTC_TICKS
 // not optimized
-ISR(TIMER2_OVF_vect) {
+ISR(TIMER2_OVF_vect)
+{
 	task |= TASK_RTC;   // increment second and check Dow_Timer
 	RTC_timer_done |= _BV(RTC_TIMER_OVF) | _BV(RTC_TIMER_RTC);
 #if (DEBUG_PRINT_RTC_TICKS)
@@ -610,23 +690,23 @@ ISR_NAKED ISR(TIMER2_OVF_vect)
 {
 	asm volatile (
 		"__my_tmp_reg__ = 16" "\n"
-	        /* prologue */
+		/* prologue */
 		"	push __my_tmp_reg__""\n"
 		"   in __my_tmp_reg__,__SREG__" "\n"
 		"	push __my_tmp_reg__""\n"
-	        /* prologue end  */
+		/* prologue end  */
 		"	sbi %0,%1""\t\n"
 		"   lds __my_tmp_reg__,RTC_timer_done" "\n"
 		"	ori __my_tmp_reg__,%2""\n"
 		"   sts RTC_timer_done,__my_tmp_reg__" "\n"
-	        /* epilogue */
+		/* epilogue */
 		"	pop __my_tmp_reg__""\n"
 		"   out __SREG__,__my_tmp_reg__" "\n"
 		"	pop __my_tmp_reg__""\n"
 		"	reti""\n"
-	        /* epilogue end */
-		::"I" (_SFR_IO_ADDR(task)), "I" (TASK_RTC_BIT), "M" (_BV(RTC_TIMER_OVF) | _BV(RTC_TIMER_RTC))
-		);
+		/* epilogue end */
+		: : "I" (_SFR_IO_ADDR(task)), "I" (TASK_RTC_BIT), "M" (_BV(RTC_TIMER_OVF) | _BV(RTC_TIMER_RTC))
+	);
 }
 #endif
 extern volatile bool kb_timeout;
@@ -639,21 +719,25 @@ extern volatile bool kb_timeout;
  *  \note - disable this interrupt
  *
  ******************************************************************************/
-ISR(TIMER2_COMP_vect) {
+ISR(TIMER2_COMP_vect)
+{
 	uint8_t t2 = TCNT2 - 1;
 
 	task |= TASK_RTC;
 #if (DEBUG_PRINT_RTC_TICKS)
 	COM_putchar('%');
 #endif
-	if ((RTC_timer_todo & _BV(RTC_TIMER_KB)) && (t2 == RTC_timer_time[RTC_TIMER_KB - 1])) {
+	if ((RTC_timer_todo & _BV(RTC_TIMER_KB)) && (t2 == RTC_timer_time[RTC_TIMER_KB - 1]))
+	{
 		kb_timeout = true; // keyboard noise cancelation
 		RTC_timer_todo &= ~_BV(RTC_TIMER_KB);
 	}
 	{
 		uint8_t i;
-		for (i = 2; i <= RTC_TIMERS; i++) {
-			if ((RTC_timer_todo & _BV(i)) && (t2 == RTC_timer_time[i - 1])) {
+		for (i = 2; i <= RTC_TIMERS; i++)
+		{
+			if ((RTC_timer_todo & _BV(i)) && (t2 == RTC_timer_time[i - 1]))
+			{
 				RTC_timer_done |= _BV(i);
 				RTC_timer_todo &= ~_BV(i);
 			}
@@ -661,9 +745,12 @@ ISR(TIMER2_COMP_vect) {
 	}
 	uint8_t dif = 255;
 	uint8_t i, next;  // next is uninitialized, it is correct
-	for (i = 0; i < RTC_TIMERS; i++) {
-		if ((RTC_timer_todo & (2 << i))) {
-			if ((RTC_timer_time[i] - t2) <= dif) {
+	for (i = 0; i < RTC_TIMERS; i++)
+	{
+		if ((RTC_timer_todo & (2 << i)))
+		{
+			if ((RTC_timer_time[i] - t2) <= dif)
+			{
 				next = RTC_timer_time[i];
 				dif = next - t2;
 			}
@@ -672,13 +759,17 @@ ISR(TIMER2_COMP_vect) {
 // Ignore maybe ununitialized for next, following above comment
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-	if (OCR2A != next) {
+	if (OCR2A != next)
+	{
 		// while (ASSR & (1<<OCR2UB)) {;} // ATmega169 datasheet chapter 17.8.1
 		// waiting is not needed, it not allow timer state machine
 		OCR2A = next;
 	}
 #pragma GCC diagnostic pop
-	if (RTC_timer_todo == 0) TIMSK2 &= ~(1 << OCIE2A);
+	if (RTC_timer_todo == 0)
+	{
+		TIMSK2 &= ~(1 << OCIE2A);
+	}
 }
 #else
 /*!
@@ -691,16 +782,21 @@ ISR(TIMER2_COMP_vect) {
  *
  ******************************************************************************/
 volatile uint8_t RTC_s100 = 0;
-ISR(TIMER1_COMPA_vect) {
-	if (++RTC_s100 >= 100) {
+ISR(TIMER1_COMPA_vect)
+{
+	if (++RTC_s100 >= 100)
+	{
 		task |= TASK_RTC; // increment second and check Dow_Timer
 		RTC_s100 = 0;
 		// RTC_timer_done |= _BV(RTC_TIMER_OVF);
 	}
-	if (RTC_timer_todo && (RTC_next_compare == RTC_s100)) {
+	if (RTC_timer_todo && (RTC_next_compare == RTC_s100))
+	{
 		uint8_t i;
-		for (i = 1; i <= RTC_TIMERS; i++) {
-			if ((RTC_timer_todo & _BV(i)) && (RTC_s100 == RTC_timer_time[i - 1])) {
+		for (i = 1; i <= RTC_TIMERS; i++)
+		{
+			if ((RTC_timer_todo & _BV(i)) && (RTC_s100 == RTC_timer_time[i - 1]))
+			{
 				RTC_timer_done |= _BV(i);
 				RTC_timer_todo &= ~_BV(i);
 				task |= TASK_TIMER; // increment second and check Dow_Timer
@@ -708,9 +804,12 @@ ISR(TIMER1_COMPA_vect) {
 		}
 		uint8_t dif = 255;
 		uint8_t next;
-		for (i = 0; i < RTC_TIMERS; i++) {
-			if ((RTC_timer_todo & (2 << i))) {
-				if ((RTC_timer_time[i] - RTC_s100) < dif) {
+		for (i = 0; i < RTC_TIMERS; i++)
+		{
+			if ((RTC_timer_todo & (2 << i)))
+			{
+				if ((RTC_timer_time[i] - RTC_s100) < dif)
+				{
 					next = RTC_timer_time[i];
 					dif = next - RTC_s100;
 				}
@@ -758,25 +857,36 @@ void calibrate_rco(void)
 	// Calibrate using 128(0x80) calibration cycles
 	uint8_t cycles = 0x80;
 	uint16_t count;
-	do {
+	do
+	{
 		count = 0;
 		TCNT2 = 0x00; // Reset async timer/counter
 
 		// Wait until async timer is updated  (Async Status reg. busy flags).
-		while (ASSR & ((1 << OCR2UB) | (1 << TCN2UB) | (1 << TCR2UB)));
+		while (ASSR & ((1 << OCR2UB) | (1 << TCN2UB) | (1 << TCR2UB)))
+		{
+			;
+		}
 
 		// this loop needs to take exactly LOOP_CYCLES CPU cycles!
 		// make sure your compiler does not mess with it!
 		do
+		{
 			count++;
-		while (TCNT2 < EXTERNAL_TICKS);
+		} while (TCNT2 < EXTERNAL_TICKS);
 
 		if (count > countVal)
+		{
 			OSCCAL--;
+		}
 		else if (count < countVal)
+		{
 			OSCCAL++;
+		}
 		else
+		{
 			break; //cycles=0xFF;
+		}
 	} while (--cycles);
 }
 #endif

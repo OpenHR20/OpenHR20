@@ -45,7 +45,7 @@
 
 #define LCD_CONTRAST_INITIAL  14        //!< initial LCD contrast (0-15)
 #define LCD_BLINK_FRAMES      12        //!< refreshes for each frame @ 48 frames/s
-                                        //!< 12 refreshes -> 4Hz Blink frequency
+//!< 12 refreshes -> 4Hz Blink frequency
 #define LCD_BITPLANES          2        //!< \brief two bitplanes for blinking
 
 /*****************************************************************************
@@ -67,8 +67,8 @@ void LCD_PrintDecW(uint16_t, uint8_t);                          // Print DEC-val
 void LCD_PrintHex(uint8_t, uint8_t, uint8_t);                   // Print HEX-val (0-ff)
 void LCD_PrintHexW(uint16_t, uint8_t);                          // Print HEX-val (0-ffff)
 void LCD_PrintChar(uint8_t, uint8_t, uint8_t);                  // Print one digit
-void LCD_PrintTemp(uint8_t, uint8_t);                           // Print temperature (val+4,9)�C
-void LCD_PrintTempInt(int16_t, uint8_t);                        // Print temperature (val/100)�C
+void LCD_PrintTemp(uint8_t, uint8_t);                           // Print temperature (val+4,9)°C
+void LCD_PrintTempInt(int16_t, uint8_t);                        // Print temperature (val/100)°C
 void LCD_PrintDayOfWeek(uint8_t, uint8_t);                      // Print Day of Week (german)
 void LCD_PrintStringID(uint8_t id, uint8_t mode);               // Print LCD string ID
 #define LCD_PrintDayOfWeek(dow, mode) (LCD_PrintStringID(dow, mode))

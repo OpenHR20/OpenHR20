@@ -80,10 +80,13 @@ static void shift_ring(void)
 {
 	ring_pos = (ring_pos + 1) % AVERAGE_LEN;
 	if (ring_used < AVERAGE_LEN)
+	{
 		ring_used++;
+	}
 
 #if !HW_WINDOW_DETECTION
-	if (ring_pos == 0) {
+	if (ring_pos == 0)
+	{
 		ring_buf_temp_avgs[ring_buf_temp_avgs_pos] = temp_average;
 		ring_buf_temp_avgs_pos = (ring_buf_temp_avgs_pos + 1) % AVGS_BUFFER_LEN;
 	}
@@ -133,11 +136,16 @@ static int16_t ADC_Convert_To_Degree(int16_t adc)
 	uint8_t i;
 	int16_t kx = TEMP_CAL_OFFSET + (int16_t)kx_d[0];
 
-	for (i = 1; i < TEMP_CAL_N - 1; i++) {
+	for (i = 1; i < TEMP_CAL_N - 1; i++)
+	{
 		if (adc < kx + kx_d[i])
+		{
 			break;
+		}
 		else
+		{
 			kx += kx_d[i];
+		}
 	} // if condintion in loop is not reach i==TEMP_CAL_N-1
 
 	/*! dummy never overload int16_t
@@ -148,7 +156,7 @@ static int16_t ADC_Convert_To_Degree(int16_t adc)
 	dummy = (int16_t)(
 		(((int32_t)(adc - kx)) * (-TEMP_CAL_STEP))
 		/ (int32_t)(kx_d[i])
-		);
+	);
 
 	dummy += TEMP_CAL_N * TEMP_CAL_STEP - ((int16_t)(i - 1)) * TEMP_CAL_STEP;
 #if TEMP_COMPENSATE_OPTION
@@ -188,7 +196,9 @@ static int16_t dummy_adc = 0;
 bool task_ADC(void)
 {
 	int16_t ad;
-	switch (state_ADC) {
+
+	switch (state_ADC)
+	{
 	case 1:                                                                         //step 1
 		// set ADC control and status register
 		ADCSRA = (1 << ADEN) | (1 << ADPS2) | (1 << ADPS0) | (1 << ADIE);       // prescaler=32
@@ -199,7 +209,8 @@ bool task_ADC(void)
 	case 3: //step 3
 	{
 		ad = ADCW;
-		if ((ad > dummy_adc + ADC_TOLERANCE) || (ad < dummy_adc - ADC_TOLERANCE)) {
+		if ((ad > dummy_adc + ADC_TOLERANCE) || (ad < dummy_adc - ADC_TOLERANCE))
+		{
 			// adc noise protection, repeat measure
 REPEAT_ADC:
 			dummy_adc = ad;
@@ -224,8 +235,10 @@ REPEAT_ADC:
 	{
 		ad = ADCW;
 		if ((ad > dummy_adc + ADC_TOLERANCE) || (ad < dummy_adc - ADC_TOLERANCE))
+		{
 			// adc noise protection, repeat measure
 			goto REPEAT_ADC; // optimization
+		}
 		int16_t t = ADC_Convert_To_Degree(ad);
 		update_ring(TEMP_RING_TYPE, t);
 #if DEBUG_PRINT_MEASURE
@@ -257,7 +270,8 @@ REPEAT_ADC:
 
 #if !TASK_IS_SFR
 // not optimized
-ISR(ADC_vect) {
+ISR(ADC_vect)
+{
 	task |= TASK_ADC;
 }
 #else
@@ -268,8 +282,8 @@ ISR_NAKED ISR(ADC_vect)
 	asm volatile (
 		"	sbi %0,%1""\t\n"
 		"	reti""\t\n"
-	        /* epilogue end */
-		::"I" (_SFR_IO_ADDR(task)), "I" (TASK_ADC_BIT)
-		);
+		/* epilogue end */
+		: : "I" (_SFR_IO_ADDR(task)), "I" (TASK_ADC_BIT)
+	);
 }
 #endif

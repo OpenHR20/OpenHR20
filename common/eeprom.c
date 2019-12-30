@@ -73,7 +73,9 @@ uint8_t EEPROM_read(uint16_t address)
 {
 	/* Wait for completion of previous write */
 	while (EECR & (1 << EEWE))
+	{
 		;
+	}
 	EEAR = address;
 	EECR |= (1 << EERE);
 	return EEDR;
@@ -88,7 +90,9 @@ uint8_t config_read(uint8_t cfg_address, uint8_t cfg_type)
 {
 	/* Wait for completion of previous write */
 	while (EECR & (1 << EEWE))
+	{
 		;
+	}
 	EEAR = (((uint16_t)cfg_address) << 2) + cfg_type + (uint16_t)(&ee_config);
 	EECR |= (1 << EERE);
 	return EEDR;
@@ -107,7 +111,9 @@ void EEPROM_write(uint16_t address, uint8_t data)
 {
 	/* Wait for completion of previous write */
 	while (EECR & (1 << EEWE))
+	{
 		;
+	}
 	EEAR = address;
 	EEDR = data;
 	asm ("cli");
@@ -133,14 +139,20 @@ void eeprom_config_init(bool restore_default)
 	// set to allow erase and write in one operation
 	EECR |= (EEPM1 | EEPM0);
 #endif
-	for (i = 0; i < CONFIG_RAW_SIZE; i++) {
-		if (restore_default) {
+	for (i = 0; i < CONFIG_RAW_SIZE; i++)
+	{
+		if (restore_default)
+		{
 			*config_ptr = config_default(i); // default value
-		} else {
+		}
+		else
+		{
 			*config_ptr = config_value(i);
 			if ((*config_ptr < config_min(i))               //min
 			    || (*config_ptr > config_max(i)))           //max
+			{
 				*config_ptr = config_default(i);        // default value
+			}
 		}
 		eeprom_config_save(i);                                  // update if default value is restored
 		config_ptr++;
@@ -156,11 +168,15 @@ void eeprom_config_init(bool restore_default)
  ******************************************************************************/
 void eeprom_config_save(uint8_t idx)
 {
-	if (idx < CONFIG_RAW_SIZE) {
-		if (config_raw[idx] != config_value(idx)) {
+	if (idx < CONFIG_RAW_SIZE)
+	{
+		if (config_raw[idx] != config_value(idx))
+		{
 			if ((config_raw[idx] < config_min(idx))         //min
 			    || (config_raw[idx] > config_max(idx)))     //max
+			{
 				config_raw[idx] = config_default(idx);  // default value
+			}
 			config_write(idx, config_raw[idx]);
 		}
 	}
@@ -179,10 +195,13 @@ uint16_t timers_patch_data;
  ******************************************************************************/
 uint16_t eeprom_timers_read_raw(uint8_t offset)
 {
-	if (offset != timers_patch_offset) {
+	if (offset != timers_patch_offset)
+	{
 		uint16_t eeaddr = (uint16_t)offset * (uint16_t)sizeof(ee_timers[0][0]) + (uint16_t)ee_timers;
 		return (EEPROM_read(eeaddr + 1) << 8) + EEPROM_read(eeaddr); //litle endian
-	} else {
+	}
+	else
+	{
 		return timers_patch_data;
 	}
 }
@@ -196,7 +215,10 @@ uint16_t eeprom_timers_read_raw(uint8_t offset)
  ******************************************************************************/
 void eeprom_timers_write_raw(uint8_t offset, uint16_t value)
 {
-	if (offset >= (uint8_t)(sizeof(ee_timers) / sizeof(ee_timers[0][0]))) return;   // EEPROM protection
+	if (offset >= (uint8_t)(sizeof(ee_timers) / sizeof(ee_timers[0][0])))
+	{
+		return;                                                                 // EEPROM protection
+	}
 	uint16_t eeaddr = (uint16_t)offset * (uint16_t)sizeof(ee_timers[0][0]) + (uint16_t)ee_timers;
 	EEPROM_write(eeaddr, value & 0xff);                                             //litle endian
 	EEPROM_write(eeaddr + 1, (value >> 8));                                         //litle endian

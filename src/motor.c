@@ -91,11 +91,15 @@ static uint8_t MOTOR_wait_for_new_calibration = 5;
  ******************************************************************************/
 void MOTOR_updateCalibration(uint8_t cal_type)
 {
-	if (cal_type == 0) {
+	if (cal_type == 0)
+	{
 		MOTOR_Control(stop);            // stop motor
 		MOTOR_PosAct = 0;               // not calibrated
 		MOTOR_PosMax = 0;               // not calibrated
-		if (MOTOR_calibration_step > 0) display_task = DISP_TASK_CLEAR | DISP_TASK_UPDATE;
+		if (MOTOR_calibration_step > 0)
+		{
+			display_task = DISP_TASK_CLEAR | DISP_TASK_UPDATE;
+		}
 		MOTOR_calibration_step = -2;    // not calibrated
 		MOTOR_wait_for_new_calibration = 5;
 		CTL_clear_error(CTL_ERR_MOTOR);
@@ -104,26 +108,36 @@ void MOTOR_updateCalibration(uint8_t cal_type)
 #endif
 		CTL_integratorBlock = DEFINE_INTEGRATOR_BLOCK;
 		CTL_interatorCredit = config.I_max_credit;
-	} else {
-		if (MOTOR_wait_for_new_calibration != 0) {
+	}
+	else
+	{
+		if (MOTOR_wait_for_new_calibration != 0)
+		{
 			MOTOR_wait_for_new_calibration--;
-		} else {
-			if (MOTOR_calibration_step == 1) {
+		}
+		else
+		{
+			if (MOTOR_calibration_step == 1)
+			{
 				MOTOR_calibration_step++;
 				MOTOR_PosStop = +MOTOR_MAX_IMPULSES;
 				MOTOR_Control(open);
 			}
 		}
-		if (MOTOR_calibration_step == -2) {
+		if (MOTOR_calibration_step == -2)
+		{
 // Ignore strict aliasing for MOTOR_ManuCalibration
 // (saved in EEPROM as single bytes and accessed as int16)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
-			if (cal_type == 3) {
+			if (cal_type == 3)
+			{
 				MOTOR_ManuCalibration = -1; // automatic calibration
 				eeprom_config_save((uint16_t)(&config.MOTOR_ManuCalibration_L) - (uint16_t)(&config));
 				eeprom_config_save((uint16_t)(&config.MOTOR_ManuCalibration_H) - (uint16_t)(&config));
-			} else if (cal_type == 2) {
+			}
+			else if (cal_type == 2)
+			{
 				MOTOR_ManuCalibration = 0; // not calibrated
 			}
 			MOTOR_calibration_step = 1;
@@ -143,9 +157,13 @@ void MOTOR_updateCalibration(uint8_t cal_type)
 uint8_t MOTOR_GetPosPercent(void)
 {
 	if (MOTOR_IsCalibrated())
+	{
 		return (uint8_t)((MOTOR_PosAct * 10) / (MOTOR_PosMax / 10));
+	}
 	else
+	{
 		return 255;
+	}
 }
 
 volatile uint8_t MOTOR_PosOvershoot = 0; // detected motor overshoot
@@ -162,13 +180,19 @@ volatile uint8_t MOTOR_PosOvershoot = 0; // detected motor overshoot
 void MOTOR_Goto(uint8_t percent)
 {
 	// works only if calibrated
-	if (MOTOR_IsCalibrated() && !MOTOR_eye_test()) {
+	if (MOTOR_IsCalibrated() && !MOTOR_eye_test())
+	{
 		// set stop position
-		if (percent == 100) {
+		if (percent == 100)
+		{
 			MOTOR_PosStop = MOTOR_PosMax;
-		} else if (percent == 0) {
+		}
+		else if (percent == 0)
+		{
 			MOTOR_PosStop = 0;
-		} else {
+		}
+		else
+		{
 			// MOTOR_PosMax>>2 and 100>>2 => overload protection
 #if (MOTOR_MAX_IMPULSES >> 2) * (100 >> 2) > INT16_MAX
 #error variable OVERLOAD possible
@@ -180,9 +204,13 @@ void MOTOR_Goto(uint8_t percent)
 			int16_t a = MOTOR_PosAct;       // volatile variable optimization
 			int16_t s = MOTOR_PosStop;      // volatile variable optimization
 			if (a > s + MOTOR_PosOvershoot)
+			{
 				MOTOR_Control(close);
+			}
 			else if (a < s - MOTOR_PosOvershoot)
+			{
 				MOTOR_Control(open);
+			}
 		}
 	}
 }
@@ -196,9 +224,18 @@ void MOTOR_Goto(uint8_t percent)
  ******************************************************************************/
 static void MOTOR_pwm_set(int16_t pwm)
 {
-	if (pwm > config.motor_pwm_max) OCR0A = config.motor_pwm_max;
-	else if (pwm < config.motor_pwm_min) OCR0A = config.motor_pwm_min;
-	else OCR0A = (uint8_t)pwm;
+	if (pwm > config.motor_pwm_max)
+	{
+		OCR0A = config.motor_pwm_max;
+	}
+	else if (pwm < config.motor_pwm_min)
+	{
+		OCR0A = config.motor_pwm_min;
+	}
+	else
+	{
+		OCR0A = (uint8_t)pwm;
+	}
 }
 
 static uint8_t motor_diag_ignore = MOTOR_IGNORE_IMPULSES;
@@ -223,7 +260,8 @@ static uint8_t pine_last = 0;
  ******************************************************************************/
 static void MOTOR_Control(motor_dir_t direction)
 {
-	if (direction == stop) {                        // motor off
+	if (direction == stop)                          // motor off
+	{
 #if (DEBUG_PRINT_MOTOR > 1)
 #if THERMOTRONIC == 1
 		COM_putchar((PINE & _BV(PE1)) ? 'Y' : 'y');
@@ -233,15 +271,18 @@ static void MOTOR_Control(motor_dir_t direction)
 #endif
 		MOTOR_H_BRIDGE_stop();
 		MOTOR_Dir = stop;
-	} else {                                        // motor on
-		if (MOTOR_Dir != direction) {
+	}
+	else                                            // motor on
+	{
+		if (MOTOR_Dir != direction)
+		{
 			MOTOR_eye_enable();
 			motor_diag_cnt = 0; last_eye_change = 0; longest_low_eye = 0;
 			motor_diag_ignore = MOTOR_IGNORE_IMPULSES;
 			MOTOR_Dir_Counter = (MOTOR_Dir = direction);
 			motor_max_time_for_impulse = ((uint16_t)config.motor_speed *
-						      ((MOTOR_IsCalibrated()) ?
-						       (uint16_t)config.motor_end_detect_run
+						      ((MOTOR_IsCalibrated())
+						       ? (uint16_t)config.motor_end_detect_run
 						       : (uint16_t)config.motor_end_detect_cal) / 100) << 3;
 			motor_timer = motor_max_time_for_impulse << 2;  // *4 (for motor start-up)
 			TIFR0 = (1 << TOV0);                            // clean interrupt flag
@@ -261,7 +302,8 @@ static void MOTOR_Control(motor_dir_t direction)
 				MOTOR_pwm_set(config.motor_pwm_max);
 #endif
 			}
-			if (direction == close) {
+			if (direction == close)
+			{
 				// set pins of H-Bridge
 				MOTOR_H_BRIDGE_close();
 #if THERMOTRONIC == 1
@@ -271,7 +313,9 @@ static void MOTOR_Control(motor_dir_t direction)
 				TCCR0A = (1 << WGM00) | (1 << WGM01) | (1 << COM0A1) | (1 << CS00);
 #endif
 				// close
-			} else {
+			}
+			else
+			{
 				// set pins of H-Bridge
 				MOTOR_H_BRIDGE_open();
 #if THERMOTRONIC == 1
@@ -300,14 +344,24 @@ static void MOTOR_Control(motor_dir_t direction)
  ******************************************************************************/
 void MOTOR_timer_pulse(void)
 {
-	if (motor_diag_ignore == 0) {
+	if (motor_diag_ignore == 0)
+	{
 		{
 			int16_t chg = (((int16_t)((motor_diag + 4) >> 3) - (int16_t)config.motor_speed)
 				       * config.motor_speed_ctl_gain) / 100;
-			if (chg > config.motor_pwm_max_step) chg = config.motor_pwm_max_step; else if (chg < -config.motor_pwm_max_step) chg = -config.motor_pwm_max_step;
+			if (chg > config.motor_pwm_max_step)
+			{
+				chg = config.motor_pwm_max_step;
+			}
+			else if (chg < -config.motor_pwm_max_step)
+			{
+				chg = -config.motor_pwm_max_step;
+			}
 			MOTOR_pwm_set(OCR0A + chg);
 		}
-	} else {
+	}
+	else
+	{
 		motor_diag_ignore--;
 	}
 
@@ -328,53 +382,74 @@ void MOTOR_timer_stop(void)
 	motor_dir_t d = MOTOR_Dir;
 
 	MOTOR_Control(stop);
-	if (motor_timer > 0) {                          // normal stop on wanted position
-		if (MOTOR_calibration_step != 0) {
+	if (motor_timer > 0)                            // normal stop on wanted position
+	{
+		if (MOTOR_calibration_step != 0)
+		{
 			MOTOR_calibration_step = -1;    // calibration error
 			CTL_set_error(CTL_ERR_MOTOR);
 		}
-	} else {                                                // stop on timeout
-		if (d == open) {                                // stopped on end
+	}
+	else                                                    // stop on timeout
+	{
+		if (d == open)                                  // stopped on end
+		{
 			{
 				int16_t a = MOTOR_PosAct;       // volatile variable optimization
-				if (MOTOR_calibration_step == 2) {
+				if (MOTOR_calibration_step == 2)
+				{
 					MOTOR_PosMax = a;
 // Ignore strict aliasing for MOTOR_ManuCalibration
 // (saved in EEPROM as single bytes and accessed as int16)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
-					if (MOTOR_ManuCalibration == 0) {
-						if (a >= MOTOR_MIN_IMPULSES) {
+					if (MOTOR_ManuCalibration == 0)
+					{
+						if (a >= MOTOR_MIN_IMPULSES)
+						{
 							MOTOR_ManuCalibration = a;
 							eeprom_config_save((uint16_t)(&config.MOTOR_ManuCalibration_L) - (uint16_t)(&config));
 							eeprom_config_save((uint16_t)(&config.MOTOR_ManuCalibration_H) - (uint16_t)(&config));
 							MOTOR_calibration_step = 0;
 							display_task = DISP_TASK_CLEAR | DISP_TASK_UPDATE;
-						} else {
+						}
+						else
+						{
 							MOTOR_calibration_step = -1; // calibration error
 							CTL_set_error(CTL_ERR_MOTOR);
 						}
-					} else if (MOTOR_ManuCalibration > 0) { // already calibrated, reuse eeprom data
+					}
+					else if (MOTOR_ManuCalibration > 0)     // already calibrated, reuse eeprom data
+					{
 						MOTOR_PosMax = MOTOR_ManuCalibration;
 						MOTOR_calibration_step = 0;
 						display_task = DISP_TASK_CLEAR | DISP_TASK_UPDATE;
-					} else { // automatic calibration
+					}
+					else     // automatic calibration
+					{
 						MOTOR_Control(close);
 						MOTOR_PosStop = (a - MOTOR_MAX_IMPULSES);
 						MOTOR_calibration_step = 3;
 					}
 #pragma GCC diagnostic pop
-				} else {
+				}
+				else
+				{
 					MOTOR_PosAct = MOTOR_PosMax; // motor position cleanup
 				}
 			}
-		} else if (d == close) { // stopped on end
+		}
+		else if (d == close)     // stopped on end
+		{
 			{
-				if (MOTOR_calibration_step == 3) {
+				if (MOTOR_calibration_step == 3)
+				{
 					MOTOR_calibration_step = 0; // calibration DONE
 					display_task = DISP_TASK_CLEAR | DISP_TASK_UPDATE;
 					MOTOR_PosMax -= MOTOR_PosAct;
-				} else if (MOTOR_PosAct > MOTOR_MIN_IMPULSES) {
+				}
+				else if (MOTOR_PosAct > MOTOR_MIN_IMPULSES)
+				{
 					MOTOR_calibration_step = -1; // calibration error
 					CTL_set_error(CTL_ERR_MOTOR);
 				}
@@ -383,7 +458,8 @@ void MOTOR_timer_stop(void)
 		}
 	}
 	if ((MOTOR_calibration_step == 0) &&
-	    (MOTOR_PosMax < MOTOR_MIN_IMPULSES)) {
+	    (MOTOR_PosMax < MOTOR_MIN_IMPULSES))
+	{
 		MOTOR_calibration_step = -1; // calibration error
 		CTL_set_error(CTL_ERR_MOTOR);
 	}
@@ -404,21 +480,30 @@ void MOTOR_interrupt(uint8_t pine)
 	// motor eye
 	// count  HIGH impulses for HR20 and LOW Pulses for THERMOTRONIC
 #if THERMOTRONIC == 1
-	if ((PCMSK0 & (1 << PCINT1)) && (((pine ^ pine_last) & (1 << PE1)) != 0)) {
+	if ((PCMSK0 & (1 << PCINT1)) && (((pine ^ pine_last) & (1 << PE1)) != 0))
+	{
 #else
-	if ((PCMSK0 & (1 << PCINT4)) && (((pine ^ pine_last) & (1 << PE4)) != 0)) {
+	if ((PCMSK0 & (1 << PCINT4)) && (((pine ^ pine_last) & (1 << PE4)) != 0))
+	{
 #endif
 		uint16_t dur = motor_diag_cnt - last_eye_change;
 		last_eye_change = motor_diag_cnt;
 #if THERMOTRONIC == 1
-		if ((pine & _BV(PE1)) != 0) {
+		if ((pine & _BV(PE1)) != 0)
+		{
 #else
-		if ((pine & _BV(PE4)) == 0) {
+		if ((pine & _BV(PE4)) == 0)
+		{
 #endif
-			if (dur > (config.motor_eye_high << 1)) {
-				if (longest_low_eye > (config.motor_eye_low << 1)) {
+			if (dur > (config.motor_eye_high << 1))
+			{
+				if (longest_low_eye > (config.motor_eye_low << 1))
+				{
 					MOTOR_PosAct += MOTOR_Dir_Counter;
-					if (!MOTOR_run_test()) MOTOR_PosOvershoot++;
+					if (!MOTOR_run_test())
+					{
+						MOTOR_PosOvershoot++;
+					}
 #if DEBUG_MOTOR_COUNTER
 					MOTOR_counter++;
 #endif
@@ -427,22 +512,32 @@ void MOTOR_interrupt(uint8_t pine)
 					motor_diag_cnt = 0;
 					last_eye_change = 0;
 					task |= TASK_MOTOR_PULSE;
-					if (MOTOR_PosAct == MOTOR_PosStop) {
+					if (MOTOR_PosAct == MOTOR_PosStop)
+					{
 						// motor fast STOP
 						MOTOR_PosOvershoot = 0;
 						MOTOR_H_BRIDGE_stop();
 						task |= (TASK_MOTOR_STOP);
-					} else {
+					}
+					else
+					{
 						motor_timer = motor_max_time_for_impulse;
 					}
-				} else {
+				}
+				else
+				{
 #if (DEBUG_PRINT_MOTOR > 1)
 					COM_putchar('~');
 #endif
 				}
 			}
-		} else {
-			if (dur > longest_low_eye) longest_low_eye = dur;
+		}
+		else
+		{
+			if (dur > longest_low_eye)
+			{
+				longest_low_eye = dur;
+			}
 		}
 	}
 	pine_last = pine;
@@ -454,9 +549,11 @@ void MOTOR_interrupt(uint8_t pine)
  * runs at 15.625 kHz , see too TCCR0A setting in MOTOR_Control()
  * \note Timer0 is only active if the motor is running
  ******************************************************************************/
-ISR(TIMER0_OVF_vect){
+ISR(TIMER0_OVF_vect)
+{
 	motor_diag_cnt++;
-	if ((uint8_t)(motor_diag_cnt >> 8) >= config.motor_close_eye_timeout) {
+	if ((uint8_t)(motor_diag_cnt >> 8) >= config.motor_close_eye_timeout)
+	{
 		// stop pwm signal and Timer0
 #if THERMOTRONIC == 1
 		TCCR0A = 0;                             //no pwm
@@ -471,11 +568,17 @@ ISR(TIMER0_OVF_vect){
 		MOTOR_eye_disable();
 		task &= ~(TASK_MOTOR_PULSE);    // just ensurance
 		MOTOR_H_BRIDGE_stop();          // ensurance that motor is stop
-	} else {
-		if (motor_timer > 0) {
+	}
+	else
+	{
+		if (motor_timer > 0)
+		{
 			motor_timer--;
-		} else {
-			if (MOTOR_run_test()) {
+		}
+		else
+		{
+			if (MOTOR_run_test())
+			{
 				motor_diag = motor_diag_cnt;
 				// motor fast STOP
 				task |= (TASK_MOTOR_STOP);

@@ -61,7 +61,7 @@
 #else
 #define TEMP_CAL_OFFSET 256     // offset of calibration points [ADC units]
 #endif
-#define TEMP_CAL_STEP 500       // step between 2 calibration points [1/100�C]
+#define TEMP_CAL_STEP 500       // step between 2 calibration points [1/100°C]
 #define TEMP_CAL_N 7            // // No. Values
 
 

@@ -137,76 +137,76 @@ const uint8_t LCD_CharTablePrgMem[] PROGMEM =
 // Look-up chars table for LCD strings (universal/numbers)
 const uint8_t LCD_StringTable[][4] PROGMEM =
 {
-	{ 32, 1,  22, 7	 },     //!<  " 1-7"
-	{ 32, 22, 1,  22 },     //!<  " -1-" MO
-	{ 32, 22, 2,  22 },     //!<  " -2-" TU
-	{ 32, 22, 3,  22 },     //!<  " -3-" WE
-	{ 32, 22, 4,  22 },     //!<  " -4-" TH
-	{ 32, 22, 5,  22 },     //!<  " -5-" FR
-	{ 32, 22, 6,  22 },     //!<  " -6-" SA
-	{ 32, 22, 7,  22 },     //!<  " -7-" SU
-	{ 11, 1,  31, 36 },     //!<  "b1oc"    LCD_STRING_bloc
-	{ 22, 22, 22, 22 },     //!<  "----"    LCD_STRING_4xminus
-	{ 32, 22, 12, 22 },     //!<  " -C-"    LCD_STRING_minusCminus
-	{ 32, 14, 28, 28 },     //!<  " Err"    LCD_STRING_Err
-	{ 0,  15, 15, 32 },     //!<  "OFF "    LCD_STRING_OFF
-	{ 0,  29, 32, 32 },     //!<  "On  "    LCD_STRING_On
-	{ 0,  18, 14, 29 },     //!<  "OPEn"    LCD_STRING_OPEn
-	{ 11, 10, 38, 38 },     //!<  "BAtt"    LCD_STRING_BAtt
-	{ 32, 14, 2,  32 },     //!<  " E2 "    LCD_STRING_E2
-	{ 32, 14, 3,  32 },     //!<  " E3 "    LCD_STRING_E3
-	{ 32, 14, 4,  32 },     //!<  " E4 "    LCD_STRING_E4
-	{ 14, 14, 18, 28 },     //!<  "EEPr"    LCD_STRING_EEPr
+	{ 32, 1,   22,	7   },  //!<  " 1-7"
+	{ 32, 22,  1,	22  },  //!<  " -1-" MO
+	{ 32, 22,  2,	22  },  //!<  " -2-" TU
+	{ 32, 22,  3,	22  },  //!<  " -3-" WE
+	{ 32, 22,  4,	22  },  //!<  " -4-" TH
+	{ 32, 22,  5,	22  },  //!<  " -5-" FR
+	{ 32, 22,  6,	22  },  //!<  " -6-" SA
+	{ 32, 22,  7,	22  },  //!<  " -7-" SU
+	{ 11, 1,   31,	36  },  //!<  "b1oc"    LCD_STRING_bloc
+	{ 22, 22,  22,	22  },  //!<  "----"    LCD_STRING_4xminus
+	{ 32, 22,  12,	22  },  //!<  " -C-"    LCD_STRING_minusCminus
+	{ 32, 14,  28,	28  },  //!<  " Err"    LCD_STRING_Err
+	{ 0,  15,  15,	32  },  //!<  "OFF "    LCD_STRING_OFF
+	{ 0,  29,  32,	32  },  //!<  "On  "    LCD_STRING_On
+	{ 0,  18,  14,	29  },  //!<  "OPEn"    LCD_STRING_OPEn
+	{ 11, 10,  38,	38  },  //!<  "BAtt"    LCD_STRING_BAtt
+	{ 32, 14,  2,	32  },  //!<  " E2 "    LCD_STRING_E2
+	{ 32, 14,  3,	32  },  //!<  " E3 "    LCD_STRING_E3
+	{ 32, 14,  4,	32  },  //!<  " E4 "    LCD_STRING_E4
+	{ 14, 14,  18,	28  },  //!<  "EEPr"    LCD_STRING_EEPr
 };
 #elif LANG == LANG_de
 // Look-up chars table for LCD strings (german)
 const uint8_t LCD_StringTable[][4] PROGMEM =
 {
-	{ 32, 1,  22, 7	 },     //!<  " 1-7"
-	{ 33, 34, 31, 32 },     //!<  Montag:     'rno '
-	{ 32, 13, 30, 32 },     //!<  Dienstag:   ' di '
-	{ 33, 34, 30, 32 },     //!<  Mittwoch:   'rni '
-	{ 32, 13, 31, 32 },     //!<  Donnerstag: ' do '
-	{ 32, 15, 28, 32 },     //!<  Freitag:    ' Fr '
-	{ 32, 5,  10, 32 },     //!<  Samstag:    ' SA '
-	{ 32, 5,  31, 32 },     //!<  Sonntag:    ' So '
-	{ 11, 1,  31, 36 },     //!<  "b1oc"    LCD_STRING_bloc
-	{ 22, 22, 22, 22 },     //!<  "----"    LCD_STRING_4xminus
-	{ 32, 22, 12, 22 },     //!<  " -C-"    LCD_STRING_minusCminus
-	{ 32, 14, 28, 28 },     //!<  " Err"    LCD_STRING_Err
-	{ 0,  15, 15, 32 },     //!<  "OFF "    LCD_STRING_OFF
-	{ 0,  29, 32, 32 },     //!<  "On  "    LCD_STRING_On
-	{ 0,  18, 14, 29 },     //!<  "OPEn"    LCD_STRING_OPEn
-	{ 11, 10, 38, 38 },     //!<  "BAtt"    LCD_STRING_BAtt
-	{ 32, 14, 2,  32 },     //!<  " E2 "    LCD_STRING_E2
-	{ 32, 14, 3,  32 },     //!<  " E3 "    LCD_STRING_E3
-	{ 32, 14, 4,  32 },     //!<  " E4 "    LCD_STRING_E4
-	{ 14, 14, 18, 28 },     //!<  "EEPr"    LCD_STRING_EEPr
+	{ 32, 1,   22,	7   },  //!<  " 1-7"
+	{ 33, 34,  31,	32  },  //!<  Montag:     'rno '
+	{ 32, 13,  30,	32  },  //!<  Dienstag:   ' di '
+	{ 33, 34,  30,	32  },  //!<  Mittwoch:   'rni '
+	{ 32, 13,  31,	32  },  //!<  Donnerstag: ' do '
+	{ 32, 15,  28,	32  },  //!<  Freitag:    ' Fr '
+	{ 32, 5,   10,	32  },  //!<  Samstag:    ' SA '
+	{ 32, 5,   31,	32  },  //!<  Sonntag:    ' So '
+	{ 11, 1,   31,	36  },  //!<  "b1oc"    LCD_STRING_bloc
+	{ 22, 22,  22,	22  },  //!<  "----"    LCD_STRING_4xminus
+	{ 32, 22,  12,	22  },  //!<  " -C-"    LCD_STRING_minusCminus
+	{ 32, 14,  28,	28  },  //!<  " Err"    LCD_STRING_Err
+	{ 0,  15,  15,	32  },  //!<  "OFF "    LCD_STRING_OFF
+	{ 0,  29,  32,	32  },  //!<  "On  "    LCD_STRING_On
+	{ 0,  18,  14,	29  },  //!<  "OPEn"    LCD_STRING_OPEn
+	{ 11, 10,  38,	38  },  //!<  "BAtt"    LCD_STRING_BAtt
+	{ 32, 14,  2,	32  },  //!<  " E2 "    LCD_STRING_E2
+	{ 32, 14,  3,	32  },  //!<  " E3 "    LCD_STRING_E3
+	{ 32, 14,  4,	32  },  //!<  " E4 "    LCD_STRING_E4
+	{ 14, 14,  18,	28  },  //!<  "EEPr"    LCD_STRING_EEPr
 };
 #elif LANG == LANG_cs
 // Look-up chars table for LCD strings (czech)
 const uint8_t LCD_StringTable[][4] PROGMEM =
 {
-	{ 32, 1,  22, 7	 },     //!<  " 1-7"
-	{ 32, 18, 31, 22 },     //!<  " Po "
-	{ 32, 37, 38, 22 },     //!<  " Ut "
-	{ 32, 5,  38, 22 },     //!<  " St "
-	{ 32, 12, 38, 22 },     //!<  " Ct "
-	{ 32, 18, 10, 22 },     //!<  " PA "
-	{ 32, 5,  31, 22 },     //!<  " So "
-	{ 32, 29, 14, 22 },     //!<  " nE "
-	{ 11, 1,  31, 36 },     //!<  "b1oc"    LCD_STRING_bloc
-	{ 22, 22, 22, 22 },     //!<  "----"    LCD_STRING_4xminus
-	{ 32, 22, 12, 22 },     //!<  " -C-"    LCD_STRING_minusCminus
-	{ 32, 14, 28, 28 },     //!<  " Err"    LCD_STRING_Err
-	{ 0,  15, 15, 32 },     //!<  "OFF "    LCD_STRING_OFF
-	{ 0,  29, 32, 32 },     //!<  "On  "    LCD_STRING_On
-	{ 0,  18, 14, 29 },     //!<  "OPEn"    LCD_STRING_OPEn
-	{ 11, 10, 38, 38 },     //!<  "BAtt"    LCD_STRING_BAtt
-	{ 32, 14, 2,  32 },     //!<  " E2 "    LCD_STRING_E2
-	{ 32, 14, 3,  32 },     //!<  " E3 "    LCD_STRING_E3
-	{ 32, 14, 4,  32 },     //!<  " E4 "    LCD_STRING_E4
-	{ 14, 14, 18, 28 },     //!<  "EEPr"    LCD_STRING_EEPr
+	{ 32, 1,   22,	7   },  //!<  " 1-7"
+	{ 32, 18,  31,	22  },  //!<  " Po "
+	{ 32, 37,  38,	22  },  //!<  " Ut "
+	{ 32, 5,   38,	22  },  //!<  " St "
+	{ 32, 12,  38,	22  },  //!<  " Ct "
+	{ 32, 18,  10,	22  },  //!<  " PA "
+	{ 32, 5,   31,	22  },  //!<  " So "
+	{ 32, 29,  14,	22  },  //!<  " nE "
+	{ 11, 1,   31,	36  },  //!<  "b1oc"    LCD_STRING_bloc
+	{ 22, 22,  22,	22  },  //!<  "----"    LCD_STRING_4xminus
+	{ 32, 22,  12,	22  },  //!<  " -C-"    LCD_STRING_minusCminus
+	{ 32, 14,  28,	28  },  //!<  " Err"    LCD_STRING_Err
+	{ 0,  15,  15,	32  },  //!<  "OFF "    LCD_STRING_OFF
+	{ 0,  29,  32,	32  },  //!<  "On  "    LCD_STRING_On
+	{ 0,  18,  14,	29  },  //!<  "OPEn"    LCD_STRING_OPEn
+	{ 11, 10,  38,	38  },  //!<  "BAtt"    LCD_STRING_BAtt
+	{ 32, 14,  2,	32  },  //!<  " E2 "    LCD_STRING_E2
+	{ 32, 14,  3,	32  },  //!<  " E3 "    LCD_STRING_E3
+	{ 32, 14,  4,	32  },  //!<  " E4 "    LCD_STRING_E4
+	{ 14, 14,  18,	28  },  //!<  "EEPr"    LCD_STRING_EEPr
 };
 #endif
 
@@ -340,7 +340,9 @@ void LCD_AllSegments(uint8_t mode)
 	uint8_t val = (mode == LCD_MODE_ON) ? 0xff : 0x00;
 
 	for (i = 0; i < LCD_REGISTER_COUNT * LCD_BITPLANES; i++)
+	{
 		((uint8_t *)LCD_Data)[i] = val;
+	}
 	LCD_used_bitplanes = 1;
 	LCD_Update();
 }
@@ -372,17 +374,21 @@ void LCD_PrintChar(uint8_t value, uint8_t pos, uint8_t mode)
 	uint8_t mask;
 
 	// Boundary Check
-	if ((pos < LCD_MAX_POS) && (value < LCD_MAX_CHARS)) {
+	if ((pos < LCD_MAX_POS) && (value < LCD_MAX_CHARS))
+	{
 		// Get Fieldbase for Position
 		if (LCD_upside_down)
+		{
 			pos = 3 - pos;
+		}
 		fieldbase = pgm_read_byte(&LCD_FieldOffsetTablePrgMem[pos]);
 		// Get Bitmap for Value
 		bitmap = pgm_read_byte(&LCD_CharTablePrgMem[value]);
 		mask = 1;
 
 		// Set 7 Bits
-		for (i = 0; i < 7; i++) {
+		for (i = 0; i < 7; i++)
+		{
 			seg = fieldbase + pgm_read_byte(&LCD_SegOffsetTablePrgMem[LCD_upside_down ? 6 - i : i]);
 			// Set or Clear?
 			LCD_SetSeg(seg, ((bitmap & mask) ? mode : LCD_MODE_OFF));
@@ -408,7 +414,8 @@ void LCD_PrintHex(uint8_t value, uint8_t pos, uint8_t mode)
 	uint8_t tmp;
 
 	// Boundary Check
-	if (pos <= 2) {
+	if (pos <= 2)
+	{
 		// 1st Digit at 0 (2)
 		tmp = value % 16;
 		LCD_PrintChar(tmp, pos, mode);
@@ -436,7 +443,8 @@ void LCD_PrintDec(uint8_t value, uint8_t pos, uint8_t mode)
 	uint8_t tmp;
 
 	// Boundary Check
-	if ((pos <= 2) && (value < 100)) {
+	if ((pos <= 2) && (value < 100))
+	{
 		// 1st Digit at 0 (2)
 		tmp = value % 10;
 		LCD_PrintChar(tmp, pos, mode);
@@ -459,8 +467,12 @@ void LCD_PrintDec(uint8_t value, uint8_t pos, uint8_t mode)
  ******************************************************************************/
 void LCD_PrintDec3(uint16_t value, uint8_t pos, uint8_t mode)
 {
-	if (value > 999) value = 999;
-	if (pos <= 1) {
+	if (value > 999)
+	{
+		value = 999;
+	}
+	if (pos <= 1)
+	{
 		// 3nd Digit
 		LCD_PrintChar(value / 100, pos + 2, mode);
 		LCD_PrintDec(value % 100, pos, mode);
@@ -484,7 +496,9 @@ void LCD_PrintDecW(uint16_t value, uint8_t mode)
 
 	// Boundary Check
 	if (value > 9999)
+	{
 		value = 9999;
+	}
 	// Print
 	tmp = (uint8_t)(value / 100);
 	LCD_PrintDec(tmp, 2, mode);
@@ -522,27 +536,34 @@ void LCD_PrintHexW(uint16_t value, uint8_t mode)
  *  \note  You have to call \ref LCD_Update() to trigger update on LCD if not
  *         it is triggered automatically at change of bitframe
  *
- *  \note  range for desired temperature 5,0�C - 30�C, OFF and ON
+ *  \note  range for desired temperature 5,0°C - 30°C, OFF and ON
  *
  *  \param temp<BR>
  *     - TEMP_MIN-1          : \c OFF <BR>
- *     - TEMP_MIN to TEMP_MAX : temperature = temp/2  [5,0�C - 30�C]
+ *     - TEMP_MIN to TEMP_MAX : temperature = temp/2  [5,0°C - 30°C]
  *     - TEMP_MAX+1          : \c ON  <BR>
  *     -    other: \c invalid <BR>
  *  \param mode  \ref LCD_MODE_ON, \ref LCD_MODE_OFF, \ref LCD_MODE_BLINK_1
  ******************************************************************************/
 void LCD_PrintTemp(uint8_t temp, uint8_t mode)
 {
-	if (temp == TEMP_MIN - 1) {
+	if (temp == TEMP_MIN - 1)
+	{
 		// OFF
 		LCD_PrintStringID(LCD_STRING_OFF, mode);
-	} else if (temp == TEMP_MAX + 1) {
+	}
+	else if (temp == TEMP_MAX + 1)
+	{
 		// On
 		LCD_PrintStringID(LCD_STRING_On, mode);
-	} else if (temp > TEMP_MAX + 1) {
+	}
+	else if (temp > TEMP_MAX + 1)
+	{
 		// Error -E rr
 		LCD_PrintStringID(LCD_STRING_Err, mode);
-	} else {
+	}
+	else
+	{
 #ifdef HR25
 #define START_POS 0
 		LCD_PrintChar(LCD_CHAR_NULL, 3, mode);
@@ -557,7 +578,9 @@ void LCD_PrintTemp(uint8_t temp, uint8_t mode)
 		LCD_PrintDec(temp >> 1, START_POS + 1, mode);
 		LCD_PrintChar(((temp & 1) ? 5 : 0), START_POS, mode);
 		if (temp < (100 / 5))
+		{
 			LCD_PrintChar(LCD_CHAR_NULL, START_POS + 2, mode);
+		}
 	}
 }
 
@@ -571,8 +594,8 @@ void LCD_PrintTemp(uint8_t temp, uint8_t mode)
  *
  *
  *  \param temp temperature in 1/100 deg C<BR>
- *     min:  -999 => -9,9�C
- *     max:  9999 => 99,9�C
+ *     min:  -999 => -9,9°C
+ *     max:  9999 => 99,9°C
  *  \param mode  \ref LCD_MODE_ON, \ref LCD_MODE_OFF, \ref LCD_MODE_BLINK_1
  ******************************************************************************/
 void LCD_PrintTempInt(int16_t temp, uint8_t mode)
@@ -581,12 +604,16 @@ void LCD_PrintTempInt(int16_t temp, uint8_t mode)
 
 	// check min / max
 	if (temp < -999)
+	{
 		temp = -999;
+	}
 
 	// negative ?
 	neg = (temp < 0);
 	if (neg)
+	{
 		temp = -temp;
+	}
 
 #ifdef HR25
 #define START_POS 0
@@ -600,15 +627,19 @@ void LCD_PrintTempInt(int16_t temp, uint8_t mode)
 	LCD_SetSeg(LCD_SEG_COL1, mode);         // decimal point
 #endif
 
-	// 1/100�C not printed
+	// 1/100°C not printed
 	LCD_PrintDec3(temp / 10, START_POS, mode);
 
 	if (neg)
+	{
 		// negative Temp
 		LCD_PrintChar(LCD_CHAR_neg, START_POS + 2, mode);
+	}
 	else if (temp < 1000)
-		// Temp < 10�C
+	{
+		// Temp < 10°C
 		LCD_PrintChar(LCD_CHAR_NULL, START_POS + 2, mode);
+	}
 }
 
 /*!
@@ -625,7 +656,8 @@ void LCD_PrintStringID(uint8_t id, uint8_t mode)
 	uint8_t tmp;
 
 	// Put 4 chars
-	for (i = 0; i < 4; i++) {
+	for (i = 0; i < 4; i++)
+	{
 		tmp = pgm_read_byte(&LCD_StringTable[id][i]);
 		LCD_PrintChar(tmp, 3 - i, mode);
 	}
@@ -686,7 +718,7 @@ void LCD_HourBarBitmap(uint32_t bitmap)
 		:
 		: "I" (LCD_MODE_ON)
 		: "r14", "r15", "r16", "r28", "r29", "r30", "r31"
-		);
+	);
 }
 
 
@@ -721,28 +753,41 @@ void LCD_SetSegReg(uint8_t r, uint8_t b, uint8_t mode)
 	// Set bits in each bitplane
 #if LCD_BITPLANES == 2
 	if (mode & 1)
+	{
 		// Set Bit in Bitplane if ON (0b11) or Blinkmode 1 (0b01)
 		LCD_Data[0][r] |= b;
+	}
 	else
+	{
 		// Clear Bit in Bitplane if OFF (0b00) or Blinkmode 2 (0b10)
 		LCD_Data[0][r] &= ~b;
+	}
 	if (mode & 2)
+	{
 		// Set Bit in Bitplane if ON (0b11) or Blinkmode 2 (0b10)
 		LCD_Data[1][r] |= b;
+	}
 	else
+	{
 		// Clear Bit in Bitplane if OFF (0b00) or Blinkmode 1 (0b01)
 		LCD_Data[1][r] &= ~b;
+	}
 
 #else
 	{
 		uint8_t bp;
-		for (bp = 0; bp < LCD_BITPLANES; bp++) {
+		for (bp = 0; bp < LCD_BITPLANES; bp++)
+		{
 			if (mode & (1 << bp))
+			{
 				// Set Bit in Bitplane if ON (0b11) or Blinkmode 1 (0b01)
 				LCD_Data[bp][r] |= b;
+			}
 			else
+			{
 				// Clear Bit in Bitplane if OFF (0b00) or Blinkmode 2 (0b10)
 				LCD_Data[bp][r] &= ~b;
+			}
 		}
 	}
 #endif
@@ -761,19 +806,24 @@ static void LCD_calc_used_bitplanes(uint8_t mode)
 {
 	uint8_t i;
 
-	if ((mode == LCD_MODE_BLINK_1) || (mode == LCD_MODE_BLINK_2)) {
+	if ((mode == LCD_MODE_BLINK_1) || (mode == LCD_MODE_BLINK_2))
+	{
 		LCD_used_bitplanes = 2;
 		return; // just optimalization
 	}
 	// mode must be LCD_MODE_ON or LCD_MODE_OFF
 	if (LCD_used_bitplanes == 1)
+	{
 		return; // just optimalization, nothing to do
 
-	for (i = 0; i < LCD_REGISTER_COUNT; i++) {
+	}
+	for (i = 0; i < LCD_REGISTER_COUNT; i++)
+	{
 #if LCD_BITPLANES != 2
 #error optimized for 2 bitplanes                         // TODO?
 #endif
-		if (LCD_Data[0][i] != LCD_Data[1][i]) {
+		if (LCD_Data[0][i] != LCD_Data[1][i])
+		{
 			LCD_used_bitplanes = 2;
 			return; // it is done
 		}
@@ -803,7 +853,8 @@ uint8_t LCD_force_update = 0;           //!< \brief force update LCD
  ******************************************************************************/
 void task_lcd_update(void)
 {
-	if (++LCD_BlinkCounter > LCD_BLINK_FRAMES) {
+	if (++LCD_BlinkCounter > LCD_BLINK_FRAMES)
+	{
 #if LCD_BITPLANES == 2
 		// optimized version for LCD_BITPLANES == 2
 		LCD_Bitplane = (LCD_Bitplane + 1) & 1;
@@ -815,7 +866,8 @@ void task_lcd_update(void)
 	}
 
 
-	if (LCD_force_update) {
+	if (LCD_force_update)
+	{
 		LCD_force_update = 0;
 		// Copy desired segment buffer to the real segments
 		LCDDR0 = LCD_Data[LCD_Bitplane][0];
@@ -836,7 +888,8 @@ void task_lcd_update(void)
 
 
 
-	if (LCD_used_bitplanes == 1) {
+	if (LCD_used_bitplanes == 1)
+	{
 		// only one bitplane used, no blinking
 		// Updated; disable LCD start of frame interrupt
 		LCDCRA &= ~(1 << LCDIE);
@@ -853,7 +906,8 @@ void task_lcd_update(void)
  ******************************************************************************/
 #if !TASK_IS_SFR
 // not optimized
-ISR(LCD_vect) {
+ISR(LCD_vect)
+{
 	task |= TASK_LCD;
 }
 #else
@@ -861,10 +915,10 @@ ISR(LCD_vect) {
 ISR_NAKED ISR(LCD_vect)
 {
 	asm volatile (
-	        // prologue and epilogue is not needed, this code  not touch flags in SREG
+		// prologue and epilogue is not needed, this code  not touch flags in SREG
 		"	sbi %0,%1""\t\n"
 		"	reti""\t\n"
-		::"I" (_SFR_IO_ADDR(task)), "I" (TASK_LCD_BIT)
-		);
+		: : "I" (_SFR_IO_ADDR(task)), "I" (TASK_LCD_BIT)
+	);
 }
 #endif

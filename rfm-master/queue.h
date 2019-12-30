@@ -35,7 +35,8 @@
 
 #define Q_ITEMS 50
 
-typedef struct {
+typedef struct
+{
 	uint8_t len;
 	uint8_t addr;
 	uint8_t bank;

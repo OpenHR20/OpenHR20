@@ -274,13 +274,13 @@
 //#define RFM_RX_CONTROL_RSSI_61   0x9007 // DRSSI threshold -61dbm // RF12B reserved
 
 // See datasheet page 37
-#define RFM_RX_CONTROL_BW(baud)		(((baud) < 20000) ? \
-									RFM_RX_CONTROL_BW_67 : \
-									( \
-										((baud) < 100000) ? \
-										RFM_RX_CONTROL_BW_134 : \
-										RFM_RX_CONTROL_BW_200 \
-									))
+#define RFM_RX_CONTROL_BW(baud)         (((baud) < 20000)   \
+					 ?          RFM_RX_CONTROL_BW_67   \
+					 : ( \
+						 ((baud) < 100000)   \
+						 ? RFM_RX_CONTROL_BW_134   \
+						 : RFM_RX_CONTROL_BW_200 \
+					 ))
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -392,14 +392,14 @@
 #define RFM_TX_CONTROL_MP        0x9900
 
 // See datasheet page 37
-#define RFM_TX_CONTROL_MOD(baud)	(((baud)<20000) ? \
-									RFM_TX_CONTROL_MOD_45 : \
-									( \
-										((baud)<100000) ? \
-										RFM_TX_CONTROL_MOD_90 : \
-											RFM_TX_CONTROL_MOD_120 \
-										) \
-									)
+#define RFM_TX_CONTROL_MOD(baud)        (((baud) < 20000)   \
+					 ?            RFM_TX_CONTROL_MOD_45   \
+					 : ( \
+						 ((baud) < 100000)   \
+						 ? RFM_TX_CONTROL_MOD_90   \
+						 : RFM_TX_CONTROL_MOD_120 \
+					 ) \
+)
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -412,12 +412,12 @@
 #define RFM_PLL_uC_CLK_3_3              0x50
 #define RFM_PLL_uC_CLK_2_5              0x30
 
-#define RFM_PLL_DELAY_ON		0x08
-#define RFM_PLL_DELAY_OFF		0x00
-#define RFM_PLL_DITHER_ON		0x00
-#define RFM_PLL_DITHER_OFF		0x04
-#define RFM_PLL_BIRATE_HI		0x01
-#define RFM_PLL_BIRATE_LOW		0x00
+#define RFM_PLL_DELAY_ON                0x08
+#define RFM_PLL_DELAY_OFF               0x00
+#define RFM_PLL_DITHER_ON               0x00
+#define RFM_PLL_DITHER_OFF              0x04
+#define RFM_PLL_BIRATE_HI               0x01
+#define RFM_PLL_BIRATE_LOW              0x00
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -527,12 +527,12 @@ uint16_t rfm_spi16(uint16_t outval);
 
 #define RFM_FRAME_MAX 80
 
-typedef enum { rfmmode_stop = 0,
+typedef enum { rfmmode_stop	= 0,
 	       rfmmode_start_tx = 1,
-	       rfmmode_tx = 2,
-	       rfmmode_tx_done = 3,
-	       rfmmode_rx = 4,
-	       rfmmode_rx_owf = 5, } rfm_mode_t;
+	       rfmmode_tx	= 2,
+	       rfmmode_tx_done	= 3,
+	       rfmmode_rx	= 4,
+	       rfmmode_rx_owf	= 5, } rfm_mode_t;
 
 extern uint8_t rfm_framebuf[RFM_FRAME_MAX];
 extern uint8_t rfm_framesize;

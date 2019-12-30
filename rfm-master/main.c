@@ -99,7 +99,9 @@ int __attribute__ ((noreturn)) main(void)
 	// We should do the following once here to have valid data from the start
 #if (RFM_TUNING > 0)
 	if (config.RFM_tuning)
+	{
 		print_s_p(PSTR(" RFM Tuning mode enabled."));
+	}
 
 #endif
 
@@ -107,10 +109,12 @@ int __attribute__ ((noreturn)) main(void)
 	 ****************************************************************************
 	 * main loop
 	 ***************************************************************************/
-	for (;; ) {
+	for (;; )
+	{
 		// go to sleep with ADC conversion start
 		asm volatile ("cli");
-		if (!task) {
+		if (!task)
+		{
 			// nothing to do, go to sleep
 			// SMCR = (0<<SM1)|(0<<SM0)|(1<<SE); // Idle mode
 
@@ -118,24 +122,32 @@ int __attribute__ ((noreturn)) main(void)
 			asm volatile ("sleep");
 			asm volatile ("nop");
 			//SMCR = (1<<SM1)|(1<<SM0)|(0<<SE); // Power-save mode
-		} else {
+		}
+		else
+		{
 			asm volatile ("sei");
 		}
 
 #if (RFM == 1)
 		// RFM12
-		if (task & TASK_RFM) {
+		if (task & TASK_RFM)
+		{
 			task &= ~TASK_RFM;
 			// PORTE |= (1<<PE2);
 
 			if (rfm_mode == rfmmode_tx_done)
+			{
 				wirelessSendDone();
+			}
 			else if ((rfm_mode == rfmmode_rx) || (rfm_mode == rfmmode_rx_owf))
+			{
 				wirelessReceivePacket();
+			}
 			continue; // on most case we have only 1 task, iprove time to sleep
 		}
 #endif
-		if (task & TASK_RTC) {
+		if (task & TASK_RTC)
+		{
 			task &= ~TASK_RTC;
 			{
 #if (RFM == 1)
@@ -143,22 +155,36 @@ int __attribute__ ((noreturn)) main(void)
 #endif
 				RTC_AddOneSecond();
 				bool minute = (RTC_GetSecond() == 0);
-				if (RTC_GetSecond() < 30) {
+				if (RTC_GetSecond() < 30)
+				{
 					Q_clean(RTC_GetSecond());
-				} else {
+				}
+				else
+				{
 					wdt_reset(); // spare WDT reset (notmaly it is in send data interrupt)
 #if (RFM == 1)
-					if (wl_force_addr1 != 0) {
-						if (wl_force_addr1 == 0xff) {
+					if (wl_force_addr1 != 0)
+					{
+						if (wl_force_addr1 == 0xff)
+						{
 							Q_clean(RTC_GetSecond() - 30);
-						} else {
-							if (RTC_GetSecond() & 1) Q_clean(wl_force_addr1);
-							else Q_clean(wl_force_addr2);
+						}
+						else
+						{
+							if (RTC_GetSecond() & 1)
+							{
+								Q_clean(wl_force_addr1);
+							}
+							else
+							{
+								Q_clean(wl_force_addr2);
+							}
 						}
 					}
 #endif
 				}
-				if ((onsync) && (minute || RTC_GetSecond() == 30)) {
+				if ((onsync) && (minute || RTC_GetSecond() == 30))
+				{
 					onsync--;
 #if (RFM == 1)
 					rfm_mode = rfmmode_stop;
@@ -168,13 +194,17 @@ int __attribute__ ((noreturn)) main(void)
 					wireless_putchar((RTC_GetMonth() << 4) + (d >> 3));
 					wireless_putchar((d << 5) + RTC_GetHour());
 					wireless_putchar((RTC_GetMinute() << 1) + ((RTC_GetSecond() == 30) ? 1 : 0));
-					if (wl_force_addr1 != 0xfe) {
-						if (wl_force_addr1 == 0xff) {
+					if (wl_force_addr1 != 0xfe)
+					{
+						if (wl_force_addr1 == 0xff)
+						{
 							wireless_putchar(((uint8_t *)&wl_force_flags)[0]);
 							wireless_putchar(((uint8_t *)&wl_force_flags)[1]);
 							wireless_putchar(((uint8_t *)&wl_force_flags)[2]);
 							wireless_putchar(((uint8_t *)&wl_force_flags)[3]);
-						} else {
+						}
+						else
+						{
 							wireless_putchar(wl_force_addr1);
 							wireless_putchar(wl_force_addr2);
 						}
@@ -186,21 +216,25 @@ int __attribute__ ((noreturn)) main(void)
 				COM_req_RTC();
 			}
 		}
-		if (task & TASK_TIMER) {
+		if (task & TASK_TIMER)
+		{
 			task &= ~TASK_TIMER;
 #if (RFM == 1)
-			if (RTC_timer_done & _BV(RTC_TIMER_RFM)) {
+			if (RTC_timer_done & _BV(RTC_TIMER_RFM))
+			{
 				cli(); RTC_timer_done &= ~_BV(RTC_TIMER_RFM); sei();
 				wirelessTimer();
 			}
-			if (RTC_timer_done & _BV(RTC_TIMER_RFM2)) {
+			if (RTC_timer_done & _BV(RTC_TIMER_RFM2))
+			{
 				cli(); RTC_timer_done &= ~_BV(RTC_TIMER_RFM2); sei();
 				wirelessTimer2();
 			}
 #endif
 		}
 		// serial communication
-		if (task & TASK_COM) {
+		if (task & TASK_COM)
+		{
 			task &= ~TASK_COM;
 			COM_commad_parse();
 			continue; // on most case we have only 1 task, iprove time to sleep

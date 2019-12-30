@@ -63,11 +63,16 @@ uint16_t rfm_spi16(uint16_t outval)
 
 	RFM_SPI_SELECT;
 
-	for (i = 16; i != 0; i--) {
+	for (i = 16; i != 0; i--)
+	{
 		if (0x8000 & outval)
+		{
 			RFM_SPI_MOSI_HIGH;
+		}
 		else
+		{
 			RFM_SPI_MOSI_LOW;
+		}
 		outval <<= 1;
 
 		RFM_SPI_SCK_HIGH;
@@ -75,7 +80,9 @@ uint16_t rfm_spi16(uint16_t outval)
 		{
 			ret <<= 1;
 			if (RFM_SPI_MISO_GET)
+			{
 				ret |= 1;
+			}
 		}
 		RFM_SPI_SCK_LOW;
 	}
@@ -111,7 +118,7 @@ void RFM_init(void)
 		RFM_CONFIG_EF |
 		RFM_CONFIG_Band(RFM_FREQ_MAIN) |
 		RFM_CONFIG_X_12_0pf
-		);
+	);
 
 	// 2. Power Management Command
 	//RFM_SPI_16(
@@ -127,30 +134,30 @@ void RFM_init(void)
 	RFM_SPI_16(
 		RFM_FREQUENCY |
 		(RFM_FREQ_Band(RFM_FREQ_MAIN)(RFM_FREQ_DEC) + adjust)
-		);
+	);
 
 	// 4. Data Rate Command
 	RFM_SPI_16(RFM_SET_DATARATE(RFM_BAUD_RATE));
 
 	// 5. Receiver Control Command
 	RFM_SPI_16(
-		RFM_RX_CONTROL_P20_VDI  | 
+		RFM_RX_CONTROL_P20_VDI  |
 		RFM_RX_CONTROL_VDI_MED |
 		RFM_RX_CONTROL_BW(RFM_BAUD_RATE) |
 		RFM_RX_CONTROL_GAIN_6   |
 		RFM_RX_CONTROL_RSSI_103
-	 );
+	);
 
 	// 6. Data Filter Command
 	RFM_SPI_16(
 		RFM_DATA_FILTER_DQD(4)
-	 );
+	);
 
 	// 7. FIFO and Reset Mode Command
 	RFM_SPI_16(
 		RFM_FIFO_IT(8) |
 		RFM_FIFO_DR
-		);
+	);
 
 	// 8. Synchron Pattern Command
 
@@ -163,13 +170,13 @@ void RFM_init(void)
 		RFM_AFC_EN |
 		RFM_AFC_OE |
 		RFM_AFC_FI
-		);
+	);
 
 	// 11. TX Configuration Control Command
 	RFM_SPI_16(
 		RFM_TX_CONTROL_MOD(RFM_BAUD_RATE) |
 		RFM_TX_CONTROL_POW_0
-		);
+	);
 
 	// 12. PLL Setting Command
 	RFM_SPI_16(
@@ -178,7 +185,7 @@ void RFM_init(void)
 		RFM_PLL_DELAY_OFF |
 		RFM_PLL_DITHER_OFF |
 		RFM_PLL_BIRATE_LOW
-		);
+	);
 
 	// 13. Transmitter Register Write Command
 
@@ -208,22 +215,29 @@ void RFM_init(void)
 #if !defined(MASTER_CONFIG_H)
 void RFM_interrupt(uint8_t pine)
 {
-	if (PCMSK0 & _BV(RFM_SDO_PCINT)) {
+	if (PCMSK0 & _BV(RFM_SDO_PCINT))
+	{
 		// RFM module interupt
-		while (RFM_SDO_PIN & _BV(RFM_SDO_BITPOS)) {
+		while (RFM_SDO_PIN & _BV(RFM_SDO_BITPOS))
+		{
 			PCMSK0 &= ~_BV(RFM_SDO_PCINT);  // disable RFM interrupt
 			sei();                          // enable global interrupts
-			if (rfm_mode == rfmmode_tx) {
+			if (rfm_mode == rfmmode_tx)
+			{
 				RFM_WRITE(rfm_framebuf[rfm_framepos++]);
-				if (rfm_framepos >= rfm_framesize) {
+				if (rfm_framepos >= rfm_framesize)
+				{
 					rfm_mode = rfmmode_tx_done;
 					task |= TASK_RFM;       // inform the rfm task about end of transmition
 					return;                 // \note !!WARNING!!
 				}
-			} else if (rfm_mode == rfmmode_rx) {
+			}
+			else if (rfm_mode == rfmmode_rx)
+			{
 				rfm_framebuf[rfm_framepos++] = RFM_READ_FIFO();
 				task |= TASK_RFM; // inform the rfm task about next RX byte
-				if (rfm_framepos >= RFM_FRAME_MAX) {
+				if (rfm_framepos >= RFM_FRAME_MAX)
+				{
 					rfm_mode = rfmmode_rx_owf;
 					// ignore any data in buffer
 					return; // RFM interrupt disabled
@@ -247,35 +261,49 @@ void RFM_interrupt(uint8_t pine)
  ******************************************************************************/
 // RFM module interupt
 volatile uint8_t afc = 0;
-ISR(RFM_INT_vect){
+ISR(RFM_INT_vect)
+{
 #if (JEENODE == 1)
 	uint16_t status = RFM_READ_STATUS();    // this also clears most interrupt sources
-	if (status & RFM_STATUS_RGIT) {         // we are using level interrupt on jeenode
+	if (status & RFM_STATUS_RGIT)           // we are using level interrupt on jeenode
+	{
 #else
-	while (RFM_SDO_PIN & _BV(RFM_SDO_BITPOS)) {
+	while (RFM_SDO_PIN & _BV(RFM_SDO_BITPOS))
+	{
 #endif
 		RFM_INT_DIS();                          // disable RFM interrupt
 		sei();                                  // enable global interrupts
 #if (JEENODE == 0)
 		uint16_t status = RFM_READ_STATUS();    // this also clears most interrupt sources
 #endif
-		if (rfm_mode == rfmmode_tx) {
+		if (rfm_mode == rfmmode_tx)
+		{
 			RFM_WRITE(rfm_framebuf[rfm_framepos++]);
-			if (rfm_framepos >= rfm_framesize) {
+			if (rfm_framepos >= rfm_framesize)
+			{
 				rfm_mode = rfmmode_tx_done;
 				task |= TASK_RFM;       // inform the rfm task about end of transmition
 				return;                 // \note !!WARNING!!
 			}
-		} else if (rfm_mode == rfmmode_rx) {
+		}
+		else if (rfm_mode == rfmmode_rx)
+		{
 			rfm_framebuf[rfm_framepos++] = RFM_READ_FIFO();
 #if (RFM_TUNING > 0)
 			if (rfm_framepos == 6)   // get AFC value
+			{
 				afc = status & 0x1f;
+			}
 
 #endif
-			if (rfm_framepos >= RFM_FRAME_MAX) rfm_mode = rfmmode_rx_owf;
+			if (rfm_framepos >= RFM_FRAME_MAX)
+			{
+				rfm_mode = rfmmode_rx_owf;
+			}
 			task |= TASK_RFM; // inform the rfm task about next RX byte
-		} else if (rfm_mode == rfmmode_rx_owf) {
+		}
+		else if (rfm_mode == rfmmode_rx_owf)
+		{
 			RFM_DISCARD_FIFO();
 			task |= TASK_RFM;       // inform the rfm task about next RX byte
 		}
