@@ -38,14 +38,13 @@
 *****************************************************************************/
 
 // Modes for LCD_SetSymbol
-#define LCD_MODE_OFF        0           //!< (0b00) segment off
-#define LCD_MODE_BLINK_1    1           //!< (0b01) segment on during 1. frame (blinking)
-#define LCD_MODE_BLINK_2    2           //!< (0b10) segment on during 2. frame (blinking)
-#define LCD_MODE_ON         3           //!< (0b11) segment permanent on
+#define LCD_MODE_OFF           0        //!< (0b00) segment off
+#define LCD_MODE_BLINK_1       1        //!< (0b01) segment on during 1. frame (blinking)
+#define LCD_MODE_BLINK_2       2        //!< (0b10) segment on during 2. frame (blinking)
+#define LCD_MODE_ON            3        //!< (0b11) segment permanent on
 
 #define LCD_CONTRAST_INITIAL  14        //!< initial LCD contrast (0-15)
-#define LCD_BLINK_FRAMES      12        //!< refreshes for each frame @ 48 frames/s
-//!< 12 refreshes -> 4Hz Blink frequency
+#define LCD_BLINK_FRAMES      12        //!< refreshes for each frame @ 48 frames/s; 12 refreshes -> 4Hz Blink frequency
 #define LCD_BITPLANES          2        //!< \brief two bitplanes for blinking
 
 /*****************************************************************************
@@ -191,8 +190,8 @@ void task_lcd_update(void);
 #define LCD_SEG_SNOW       43   //  7, 4 |  SEG120   |  [5], BIT 4
 #define LCD_SEG_SUN        44   //  7, 5 |  SEG121   |  [5], BIT 5
 //*****************************************************************
-// 10, 0 |  SEG200   |  [6], BIT 0
-// 10, 1 |  SEG201   |  [6], BIT 1
+//                                 10, 0 |  SEG200   |  [6], BIT 0
+//                                 10, 1 |  SEG201   |  [6], BIT 1
 #define LCD_SEG_MANU       50   // 10, 2 |  SEG202   |  [6], BIT 2
 #define LCD_SEG_3E         51   // 10, 3 |  SEG203   |  [6], BIT 3
 #define LCD_SEG_3D         52   // 10, 4 |  SEG204   |  [6], BIT 4
@@ -388,8 +387,8 @@ void task_lcd_update(void);
 #define LCD_SEG_SNOW       44   //  7, 4 |  SEG120   |  [5], BIT 4
 #define LCD_SEG_SUN        45   //  7, 5 |  SEG121   |  [5], BIT 5
 //*****************************************************************
-// 10, 0 |  SEG200   |  [6], BIT 0
-// 10, 1 |  SEG201   |  [6], BIT 1
+//                                 10, 0 |  SEG200   |  [6], BIT 0
+//                                 10, 1 |  SEG201   |  [6], BIT 1
 #define LCD_SEG_MANU       50   // 10, 2 |  SEG202   |  [6], BIT 2
 #define LCD_SEG_3E         51   // 10, 3 |  SEG203   |  [6], BIT 3
 #define LCD_SEG_3D         52   // 10, 4 |  SEG204   |  [6], BIT 4

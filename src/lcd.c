@@ -137,76 +137,76 @@ const uint8_t LCD_CharTablePrgMem[] PROGMEM =
 // Look-up chars table for LCD strings (universal/numbers)
 const uint8_t LCD_StringTable[][4] PROGMEM =
 {
-	{ 32, 1,   22,	7   },  //!<  " 1-7"
-	{ 32, 22,  1,	22  },  //!<  " -1-" MO
-	{ 32, 22,  2,	22  },  //!<  " -2-" TU
-	{ 32, 22,  3,	22  },  //!<  " -3-" WE
-	{ 32, 22,  4,	22  },  //!<  " -4-" TH
-	{ 32, 22,  5,	22  },  //!<  " -5-" FR
-	{ 32, 22,  6,	22  },  //!<  " -6-" SA
-	{ 32, 22,  7,	22  },  //!<  " -7-" SU
-	{ 11, 1,   31,	36  },  //!<  "b1oc"    LCD_STRING_bloc
-	{ 22, 22,  22,	22  },  //!<  "----"    LCD_STRING_4xminus
-	{ 32, 22,  12,	22  },  //!<  " -C-"    LCD_STRING_minusCminus
-	{ 32, 14,  28,	28  },  //!<  " Err"    LCD_STRING_Err
-	{ 0,  15,  15,	32  },  //!<  "OFF "    LCD_STRING_OFF
-	{ 0,  29,  32,	32  },  //!<  "On  "    LCD_STRING_On
-	{ 0,  18,  14,	29  },  //!<  "OPEn"    LCD_STRING_OPEn
-	{ 11, 10,  38,	38  },  //!<  "BAtt"    LCD_STRING_BAtt
-	{ 32, 14,  2,	32  },  //!<  " E2 "    LCD_STRING_E2
-	{ 32, 14,  3,	32  },  //!<  " E3 "    LCD_STRING_E3
-	{ 32, 14,  4,	32  },  //!<  " E4 "    LCD_STRING_E4
-	{ 14, 14,  18,	28  },  //!<  "EEPr"    LCD_STRING_EEPr
+	{ 32, 1,   22,  7   },  //!<  " 1-7"
+	{ 32, 22,  1,   22  },  //!<  " -1-" MO
+	{ 32, 22,  2,   22  },  //!<  " -2-" TU
+	{ 32, 22,  3,   22  },  //!<  " -3-" WE
+	{ 32, 22,  4,   22  },  //!<  " -4-" TH
+	{ 32, 22,  5,   22  },  //!<  " -5-" FR
+	{ 32, 22,  6,   22  },  //!<  " -6-" SA
+	{ 32, 22,  7,   22  },  //!<  " -7-" SU
+	{ 11, 1,   31,  36  },  //!<  "b1oc"    LCD_STRING_bloc
+	{ 22, 22,  22,  22  },  //!<  "----"    LCD_STRING_4xminus
+	{ 32, 22,  12,  22  },  //!<  " -C-"    LCD_STRING_minusCminus
+	{ 32, 14,  28,  28  },  //!<  " Err"    LCD_STRING_Err
+	{ 0,  15,  15,  32  },  //!<  "OFF "    LCD_STRING_OFF
+	{ 0,  29,  32,  32  },  //!<  "On  "    LCD_STRING_On
+	{ 0,  18,  14,  29  },  //!<  "OPEn"    LCD_STRING_OPEn
+	{ 11, 10,  38,  38  },  //!<  "BAtt"    LCD_STRING_BAtt
+	{ 32, 14,  2,   32  },  //!<  " E2 "    LCD_STRING_E2
+	{ 32, 14,  3,   32  },  //!<  " E3 "    LCD_STRING_E3
+	{ 32, 14,  4,   32  },  //!<  " E4 "    LCD_STRING_E4
+	{ 14, 14,  18,  28  },  //!<  "EEPr"    LCD_STRING_EEPr
 };
 #elif LANG == LANG_de
 // Look-up chars table for LCD strings (german)
 const uint8_t LCD_StringTable[][4] PROGMEM =
 {
-	{ 32, 1,   22,	7   },  //!<  " 1-7"
-	{ 33, 34,  31,	32  },  //!<  Montag:     'rno '
-	{ 32, 13,  30,	32  },  //!<  Dienstag:   ' di '
-	{ 33, 34,  30,	32  },  //!<  Mittwoch:   'rni '
-	{ 32, 13,  31,	32  },  //!<  Donnerstag: ' do '
-	{ 32, 15,  28,	32  },  //!<  Freitag:    ' Fr '
-	{ 32, 5,   10,	32  },  //!<  Samstag:    ' SA '
-	{ 32, 5,   31,	32  },  //!<  Sonntag:    ' So '
-	{ 11, 1,   31,	36  },  //!<  "b1oc"    LCD_STRING_bloc
-	{ 22, 22,  22,	22  },  //!<  "----"    LCD_STRING_4xminus
-	{ 32, 22,  12,	22  },  //!<  " -C-"    LCD_STRING_minusCminus
-	{ 32, 14,  28,	28  },  //!<  " Err"    LCD_STRING_Err
-	{ 0,  15,  15,	32  },  //!<  "OFF "    LCD_STRING_OFF
-	{ 0,  29,  32,	32  },  //!<  "On  "    LCD_STRING_On
-	{ 0,  18,  14,	29  },  //!<  "OPEn"    LCD_STRING_OPEn
-	{ 11, 10,  38,	38  },  //!<  "BAtt"    LCD_STRING_BAtt
-	{ 32, 14,  2,	32  },  //!<  " E2 "    LCD_STRING_E2
-	{ 32, 14,  3,	32  },  //!<  " E3 "    LCD_STRING_E3
-	{ 32, 14,  4,	32  },  //!<  " E4 "    LCD_STRING_E4
-	{ 14, 14,  18,	28  },  //!<  "EEPr"    LCD_STRING_EEPr
+	{ 32, 1,   22,  7   },  //!<  " 1-7"
+	{ 33, 34,  31,  32  },  //!<  Montag:     'rno '
+	{ 32, 13,  30,  32  },  //!<  Dienstag:   ' di '
+	{ 33, 34,  30,  32  },  //!<  Mittwoch:   'rni '
+	{ 32, 13,  31,  32  },  //!<  Donnerstag: ' do '
+	{ 32, 15,  28,  32  },  //!<  Freitag:    ' Fr '
+	{ 32, 5,   10,  32  },  //!<  Samstag:    ' SA '
+	{ 32, 5,   31,  32  },  //!<  Sonntag:    ' So '
+	{ 11, 1,   31,  36  },  //!<  "b1oc"    LCD_STRING_bloc
+	{ 22, 22,  22,  22  },  //!<  "----"    LCD_STRING_4xminus
+	{ 32, 22,  12,  22  },  //!<  " -C-"    LCD_STRING_minusCminus
+	{ 32, 14,  28,  28  },  //!<  " Err"    LCD_STRING_Err
+	{ 0,  15,  15,  32  },  //!<  "OFF "    LCD_STRING_OFF
+	{ 0,  29,  32,  32  },  //!<  "On  "    LCD_STRING_On
+	{ 0,  18,  14,  29  },  //!<  "OPEn"    LCD_STRING_OPEn
+	{ 11, 10,  38,  38  },  //!<  "BAtt"    LCD_STRING_BAtt
+	{ 32, 14,  2,   32  },  //!<  " E2 "    LCD_STRING_E2
+	{ 32, 14,  3,   32  },  //!<  " E3 "    LCD_STRING_E3
+	{ 32, 14,  4,   32  },  //!<  " E4 "    LCD_STRING_E4
+	{ 14, 14,  18,  28  },  //!<  "EEPr"    LCD_STRING_EEPr
 };
 #elif LANG == LANG_cs
 // Look-up chars table for LCD strings (czech)
 const uint8_t LCD_StringTable[][4] PROGMEM =
 {
-	{ 32, 1,   22,	7   },  //!<  " 1-7"
-	{ 32, 18,  31,	22  },  //!<  " Po "
-	{ 32, 37,  38,	22  },  //!<  " Ut "
-	{ 32, 5,   38,	22  },  //!<  " St "
-	{ 32, 12,  38,	22  },  //!<  " Ct "
-	{ 32, 18,  10,	22  },  //!<  " PA "
-	{ 32, 5,   31,	22  },  //!<  " So "
-	{ 32, 29,  14,	22  },  //!<  " nE "
-	{ 11, 1,   31,	36  },  //!<  "b1oc"    LCD_STRING_bloc
-	{ 22, 22,  22,	22  },  //!<  "----"    LCD_STRING_4xminus
-	{ 32, 22,  12,	22  },  //!<  " -C-"    LCD_STRING_minusCminus
-	{ 32, 14,  28,	28  },  //!<  " Err"    LCD_STRING_Err
-	{ 0,  15,  15,	32  },  //!<  "OFF "    LCD_STRING_OFF
-	{ 0,  29,  32,	32  },  //!<  "On  "    LCD_STRING_On
-	{ 0,  18,  14,	29  },  //!<  "OPEn"    LCD_STRING_OPEn
-	{ 11, 10,  38,	38  },  //!<  "BAtt"    LCD_STRING_BAtt
-	{ 32, 14,  2,	32  },  //!<  " E2 "    LCD_STRING_E2
-	{ 32, 14,  3,	32  },  //!<  " E3 "    LCD_STRING_E3
-	{ 32, 14,  4,	32  },  //!<  " E4 "    LCD_STRING_E4
-	{ 14, 14,  18,	28  },  //!<  "EEPr"    LCD_STRING_EEPr
+	{ 32, 1,   22,  7   },  //!<  " 1-7"
+	{ 32, 18,  31,  22  },  //!<  " Po "
+	{ 32, 37,  38,  22  },  //!<  " Ut "
+	{ 32, 5,   38,  22  },  //!<  " St "
+	{ 32, 12,  38,  22  },  //!<  " Ct "
+	{ 32, 18,  10,  22  },  //!<  " PA "
+	{ 32, 5,   31,  22  },  //!<  " So "
+	{ 32, 29,  14,  22  },  //!<  " nE "
+	{ 11, 1,   31,  36  },  //!<  "b1oc"    LCD_STRING_bloc
+	{ 22, 22,  22,  22  },  //!<  "----"    LCD_STRING_4xminus
+	{ 32, 22,  12,  22  },  //!<  " -C-"    LCD_STRING_minusCminus
+	{ 32, 14,  28,  28  },  //!<  " Err"    LCD_STRING_Err
+	{ 0,  15,  15,  32  },  //!<  "OFF "    LCD_STRING_OFF
+	{ 0,  29,  32,  32  },  //!<  "On  "    LCD_STRING_On
+	{ 0,  18,  14,  29  },  //!<  "OPEn"    LCD_STRING_OPEn
+	{ 11, 10,  38,  38  },  //!<  "BAtt"    LCD_STRING_BAtt
+	{ 32, 14,  2,   32  },  //!<  " E2 "    LCD_STRING_E2
+	{ 32, 14,  3,   32  },  //!<  " E3 "    LCD_STRING_E3
+	{ 32, 14,  4,   32  },  //!<  " E4 "    LCD_STRING_E4
+	{ 14, 14,  18,  28  },  //!<  "EEPr"    LCD_STRING_EEPr
 };
 #endif
 
