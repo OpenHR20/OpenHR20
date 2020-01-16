@@ -527,12 +527,12 @@ uint16_t rfm_spi16(uint16_t outval);
 
 #define RFM_FRAME_MAX 80
 
-typedef enum { rfmmode_stop	= 0,
+typedef enum { rfmmode_stop     = 0,
 	       rfmmode_start_tx = 1,
-	       rfmmode_tx	= 2,
-	       rfmmode_tx_done	= 3,
-	       rfmmode_rx	= 4,
-	       rfmmode_rx_owf	= 5, } rfm_mode_t;
+	       rfmmode_tx       = 2,
+	       rfmmode_tx_done  = 3,
+	       rfmmode_rx       = 4,
+	       rfmmode_rx_owf   = 5, } rfm_mode_t;
 
 extern uint8_t rfm_framebuf[RFM_FRAME_MAX];
 extern uint8_t rfm_framesize;

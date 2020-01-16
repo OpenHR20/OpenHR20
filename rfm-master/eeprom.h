@@ -45,11 +45,12 @@
 #define EEPROM __attribute__((section(".eeprom")))
 
 typedef struct                                          // each variables must be uint8_t or int8_t without exception
-{ #if (RFM == 1)
-	/* 00...07 */uint8_t security_key[8];           //!< key for encrypted radio messasges
+{
+ #if (RFM == 1)
+	/* 00...07 */ uint8_t security_key[8];          //!< key for encrypted radio messasges
 #if (RFM_TUNING > 0)
-	/* 08 */int8_t RFM_freqAdjust;                  //!< RFM12 Frequency adjustment
-	/* 09 */uint8_t RFM_tuning;                     //!< RFM12 tuning mode
+	/*      08 */ int8_t RFM_freqAdjust;            //!< RFM12 Frequency adjustment
+	/*      09 */ uint8_t RFM_tuning;               //!< RFM12 tuning mode
 #endif
 #endif
 } config_t;
@@ -93,19 +94,19 @@ uint8_t EEPROM ee_reserved2_60 [60] = {
 
 uint8_t EEPROM ee_config[][4] = {  // must be alligned to 4 bytes
 // order on this table depend to config_t
-// /*idx*/ {value,  default,    min,    max},
+//      /*idx*/  {          value,         default,   min,  max },
 #if (RFM == 1)
-	/* 00 */ { SECURITY_KEY_0,  SECURITY_KEY_0,  0x00,		 0xff },        //!< security_key[0] for encrypted radio messasges
-	/* 01 */ { SECURITY_KEY_1,  SECURITY_KEY_1,  0x00,		 0xff },        //!< security_key[1] for encrypted radio messasges
-	/* 02 */ { SECURITY_KEY_2,  SECURITY_KEY_2,  0x00,		 0xff },        //!< security_key[2] for encrypted radio messasges
-	/* 03 */ { SECURITY_KEY_3,  SECURITY_KEY_3,  0x00,		 0xff },        //!< security_key[3] for encrypted radio messasges
-	/* 04 */ { SECURITY_KEY_4,  SECURITY_KEY_4,  0x00,		 0xff },        //!< security_key[4] for encrypted radio messasges
-	/* 05 */ { SECURITY_KEY_5,  SECURITY_KEY_5,  0x00,		 0xff },        //!< security_key[5] for encrypted radio messasges
-	/* 06 */ { SECURITY_KEY_6,  SECURITY_KEY_6,  0x00,		 0xff },        //!< security_key[6] for encrypted radio messasges
-	/* 07 */ { SECURITY_KEY_7,  SECURITY_KEY_7,  0x00,		 0xff },        //!< security_key[7] for encrypted radio messasges
+	/* 00 */ { SECURITY_KEY_0,  SECURITY_KEY_0,  0x00, 0xff },              //!< security_key[0] for encrypted radio messasges
+	/* 01 */ { SECURITY_KEY_1,  SECURITY_KEY_1,  0x00, 0xff },              //!< security_key[1] for encrypted radio messasges
+	/* 02 */ { SECURITY_KEY_2,  SECURITY_KEY_2,  0x00, 0xff },              //!< security_key[2] for encrypted radio messasges
+	/* 03 */ { SECURITY_KEY_3,  SECURITY_KEY_3,  0x00, 0xff },              //!< security_key[3] for encrypted radio messasges
+	/* 04 */ { SECURITY_KEY_4,  SECURITY_KEY_4,  0x00, 0xff },              //!< security_key[4] for encrypted radio messasges
+	/* 05 */ { SECURITY_KEY_5,  SECURITY_KEY_5,  0x00, 0xff },              //!< security_key[5] for encrypted radio messasges
+	/* 06 */ { SECURITY_KEY_6,  SECURITY_KEY_6,  0x00, 0xff },              //!< security_key[6] for encrypted radio messasges
+	/* 07 */ { SECURITY_KEY_7,  SECURITY_KEY_7,  0x00, 0xff },              //!< security_key[7] for encrypted radio messasges
 #if (RFM_TUNING > 0)
-	/*    */ { 0,		    0,		     0x00,		 0xff },        //!< RFM12 Frequency adjustment, 2's complement
-	/*    */ { RFM_TUNING_MODE, RFM_TUNING_MODE, 0x00,		 0xff },        //!< RFM12 tuning mode, 0 = tuning mode off (narrow, high data rate), 1 = tuning mode on (wide, low data rate)
+	/*    */ {              0,               0,  0x00, 0xff },              //!< RFM12 Frequency adjustment, 2's complement
+	/*    */ { RFM_TUNING_MODE, RFM_TUNING_MODE, 0x00, 0xff },              //!< RFM12 tuning mode, 0 = tuning mode off (narrow, high data rate), 1 = tuning mode on (wide, low data rate)
 #endif
 
 #endif
