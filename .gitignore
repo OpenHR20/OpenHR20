@@ -24,14 +24,14 @@
 *.elf
 *.bin
 *.eep
-<<<<<<< HEAD
-.dep
-=======
 *.dep
 *.sym
 trunk/source/obj
-rfmsrc/OpenHR20/obj
-rfmsrc/OpenHR20/hr20.txt
-rfmsrc/master/obj
-rfmsrc/master/master.txt
->>>>>>> github/master
+src/obj
+src/hr20.txt
+rfm-master/obj
+rfm-master/master.txt
+.DS_Store
+bin/*
+!bin/ReadMe.txt
+*.gch
