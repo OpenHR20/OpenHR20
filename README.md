@@ -11,7 +11,7 @@ Currently supported thermostats are:
 
 Main improvements of this firmware are addition of wirelles and/or wired communication with central hub.
 
-Original repository is still available at [SourceForge](https://sourceforge.net/projects/openhr20/).
+Original repository is still available at [SourceForge](https://sourceforge.net/projects/openhr20/). Original description page with a lot of interesting information is available in German [here](https://www.mikrocontroller.net/articles/Heizungssteuerung_mit_Honeywell_HR20).
 
 ## Compiling
 
