@@ -9,7 +9,8 @@ Currently supported thermostats are:
 * HR25
 * THERMOTRONIC
 
-Main improvements of this firmware are addition of wirelles and/or wired communication with central hub.
+Main improvements of this firmware are addition of wireless and/or wired communication with central hub.
+
 
 Original repository is still available at [SourceForge](https://sourceforge.net/projects/openhr20/). Original description page with a lot of interesting information is available in German [here](https://www.mikrocontroller.net/articles/Heizungssteuerung_mit_Honeywell_HR20).
 
@@ -47,4 +48,3 @@ The externally accesible connector on HR20/25 thermostats allows direct connecti
 | --- | ----------- | ----------- | ----------- | ------------ |
 | Vcc | RXD(PE0/02) | TDO(PF6/55) | TMS(PF5/56) | /RST(PG5/20) |
 | GND | TDI(PF7/54) | TXD(PE1/03) | TCK(PF4/57) |     (PE2/04) |
-
