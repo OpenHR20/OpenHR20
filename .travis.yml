@@ -4,19 +4,17 @@ before_install:
 install:
 - sudo apt-get install -qq gcc-avr binutils-avr avr-libc zip
 script:
-- cd rfmsrc
 - make all
-- cd ..
 before_deploy:
-- cd rfmsrc/bin
+- cd bin
 - if [ -n "$TRAVIS_TAG" ]; then zip -r release_${TRAVIS_TAG}.zip * ; fi
-- cd ../..
+- cd ..
 deploy:
   provider: releases
   api_key:
     secure: h9Yte1JGFg71iBJwbb3GgZonsq7t9/6mJiMNuABc2uNNpnWvx/AsX5HNZqH9Zy33HZwuQGTTwvZFF4i9cESSrekq6aYMnmfhFf0kjEMXVo390lfVPUnM/EhMVhxuGkXcFByuw+OQFA9poUMJh9vd+0ZJpyBifEwReQiSf87dlNzcaBNTGnKpVVXrFG5oQ4dQOtLGhxekS6NL4qZBA9CVxXuoU9bIlSOXXTNHqA+13IVu93onNF4Ylq57TO8U6xARZIUQw3k3/JnjUvZ1VjvhpqLLo8d5Fq6/g2FpAkPaxclDHrCFSHZ+tlFIBgRlQb5KPqD9/xOKIJ9GpNiEWDfupoCLvRaHH19jVaFwBQJYxc71QYNHlDUVB2aR/9OEgUvR7LlEhcSg0jqAn3L9CJTrwXwNCHNjQOh9hvmCLcO8Qq5Sn7g6X7FVYfy0EvBYKBPBmOJtJb00uh+EnbBTLQrQgua3JlYhPrPNrr59vBm+s1OghGks/Xo92ixpVCGFZIbH0mAh51p0yCt0KZdA4oHfxZNGfosDpQNTwQ6A/e2as85P6fN15TMLv4JsJrCGJAJ8gyk+5V8BaOSP+7bmc6V7IabfwBAQbaZUZYSsyVHrQInY2b3nFYwm9k4Ug/zhy/9l7zpvsniIPRNVsSKEoKaL64juh9lawSZRqi4ukvf0HV0=
   file_glob: true
-  file: "rfmsrc/bin/release_${TRAVIS_TAG}.zip"
+  file: "bin/release_${TRAVIS_TAG}.zip"
   skip_cleanup: true
   on:
     tags: true
